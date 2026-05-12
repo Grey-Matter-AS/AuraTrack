@@ -1,14 +1,24 @@
-# Use the latest LTS version of Node
 FROM node:20-slim
 
-# Set the working directory inside the container
 WORKDIR /app
 
-# Install a simple shell and git (useful for Vite)
-RUN apt-get update && apt-get install -y git
+# system deps (minimal but correct for dev tooling)
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
-# Expose the port Vite uses (5173)
+# copy dependency manifests first (for layer caching)
+COPY package.json package-lock.json ./
+
+# install EXACT dependency tree
+RUN npm ci
+
+# copy application source
+COPY . .
+
+# Vite dev server port
 EXPOSE 5173
 
-# Command to keep the container alive and ready
-CMD ["node"]
+# run dev server properly
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
