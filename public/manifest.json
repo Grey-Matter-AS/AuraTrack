@@ -1,0 +1,16 @@
+{
+  "short_name": "AuraTrack",
+  "name": "AuraTrack: Epilepsy Monitor",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#0f172a",
+  "background_color": "#0f172a",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

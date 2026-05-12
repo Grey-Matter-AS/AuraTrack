@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { db } from './db';
 import { SYMPTOM_WIZARD, REGION_WIZARD } from './constants';
+import { DeleteModal, WizardMenu } from './components/Shared';
+import Summary from './components/Summary';
+import RecordingView from './components/RecordingView';
 
 function App() {
   const [status, setStatus] = useState('IDLE');
@@ -10,6 +13,9 @@ function App() {
   const [taggingStep, setTaggingStep] = useState('TYPE'); 
   const [tempSymptomList, setTempSymptomList] = useState([]);
   const [notes, setNotes] = useState("");
+  const [userMode, setUserMode] = useState('CARETAKER'); // Switch to 'PATIENT' to test single button
+  const [laps, setLaps] = useState({ aura: null, seizure: null, recovery: null });
+
 
   const [selections, setSelections] = useState({
     group: '', symptom: '', detail: '',
@@ -69,22 +75,31 @@ function App() {
     const endTime = Date.now();
     const duration = Math.floor((endTime - startTime) / 1000);
     
-    const dateStr = localStorage.getItem('aura_startDateReadable');
-    const timeStr = localStorage.getItem('aura_startTimeReadable');
+    // 1. Finalize the 'recovery' lap automatically if it wasn't marked
+    const finalLaps = { ...laps, recovery: endTime };
 
-    await db.events.add({
+    // 2. Build the data object
+    const eventData = {
       startTime: startTime,
       endTime: endTime,
       duration: duration,
-      date: dateStr,
-      time: timeStr,
+      laps: finalLaps, // Save the aura/seizure/recovery timestamps
+      userModeAtTime: userMode, // Useful for Phase 6 reports
+      date: localStorage.getItem('aura_startDateReadable'),
+      time: localStorage.getItem('aura_startTimeReadable'),
       type: 'Uncategorized',
-      isComplete: true
-    });
+      isComplete: false, // Remains false until the Summary/Tagging is done
+      editLog: [] // Prep for Phase 4
+    };
 
+    // 3. Save to DB and clear local storage
+    await db.events.add(eventData);
     localStorage.clear();
+    
+    // 4. Move to tagging state
     setStatus('TAGGING');
   };
+
 
   const loadHistory = async () => {
     const allEvents = await db.events.orderBy('startTime').reverse().limit(5).toArray();
@@ -114,6 +129,61 @@ function App() {
     setTaggingStep('SUMMARY'); // Jumps to the Summary screen
     setStatus('TAGGING');
   };
+
+  const handleFinalSave = async () => {
+    const lastEntry = await db.events.toCollection().last();
+    const targetId = editingId || lastEntry.id;
+
+    await db.events.update(targetId, { 
+      type: selections.type || (editingId ? (history.find(e => e.id === editingId)?.type) : 'Uncategorized'),
+      symptoms: [...tempSymptomList],
+      notes: notes,
+      isComplete: true,
+      isEdited: !!editingId,
+      lastModified: Date.now()
+    });
+
+    setNotes("");
+    await loadHistory();
+    setStatus('IDLE');
+    setEditingId(null); 
+    setTempSymptomList([]);
+    setTaggingStep('TYPE');
+    setSelections({ group: '', symptom: '', detail: '', region: '', subRegion: '', specificPart: '' });
+    setLaps({ aura: null, seizure: null, recovery: null });
+  };
+
+  const handleCancel = () => {
+    setNotes("");
+    setEditingId(null);
+    setTempSymptomList([]);
+    setTaggingStep('TYPE');
+    setStatus('IDLE');
+    setSelections({ group: '', symptom: '', detail: '', region: '', subRegion: '', specificPart: '' });
+    setLaps({ aura: null, seizure: null, recovery: null });
+  };
+
+  const recordLap = (phase) => {
+    const now = Date.now();
+    setLaps(prev => ({ ...prev, [phase]: now }));
+    
+    if ("vibrate" in navigator) {
+      navigator.vibrate(100); // Haptic Confirmation (Phase 2 Rule)
+    }
+  };
+
+  const addQuickNote = (label) => {
+    // Uses the current 'elapsed' timer value for the timestamp
+    const newNote = `[T+${elapsed}s] ${label}`;
+    
+    setNotes(prev => prev ? `${prev}\n${newNote}` : newNote);
+    
+    if ("vibrate" in navigator) {
+      navigator.vibrate(50); // Haptic feedback
+    }
+  };
+
+
 
   return (
     <div className="flex flex-col min-h-screen w-full bg-[#0f172a] font-sans text-slate-100 overflow-x-hidden">
@@ -195,18 +265,17 @@ function App() {
 
         {/* RECORDING STATE */}
         {status === 'RECORDING' && (
-          <div className="flex-1 flex flex-col items-center justify-center py-20 gap-16">
-            <div className="text-9xl font-mono font-bold tracking-tighter tabular-nums text-white drop-shadow-md">
-              {elapsed}<span className="text-3xl text-red-500 ml-2 font-sans">s</span>
-            </div>
-            <button 
-              onClick={stopRecording}
-              className="px-16 py-8 bg-white text-[#0f172a] text-3xl font-black rounded-3xl shadow-2xl active:scale-90 transition-transform uppercase"
-            >
-              STOP
-            </button>
-          </div>
+          <RecordingView 
+            elapsed={elapsed}
+            startTime={startTime}
+            laps={laps}
+            onLap={recordLap}
+            onStop={stopRecording}
+            onQuickNote={addQuickNote}
+            userMode={userMode}
+          />
         )}
+
 
         {/* TAGGING STATE */}
         {status === 'TAGGING' && (
@@ -299,8 +368,6 @@ function App() {
                 />
               )}
 
-
-
               {/* 3. REGION DRILL-DOWN (3 Layers) */}
               {taggingStep === 'R_CAT' && (
                 <WizardMenu title="Where did it happen?" options={Object.keys(REGION_WIZARD)}
@@ -350,66 +417,20 @@ function App() {
 
               {/* 4. SUMMARY / LOOP HUB */}
               {taggingStep === 'SUMMARY' && (
-                <div className="space-y-4">
-                  <p className="text-center font-bold text-slate-400 uppercase text-[10px] tracking-widest">Logged Symptoms</p>
-                  <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
-                    {tempSymptomList.map((s, i) => (
-                      <div key={i} className="bg-[#0f172a] p-3 rounded-xl border border-blue-500/20 text-xs">
-                        <p className="text-blue-400 font-bold">{s.symptom}: {s.detail}</p>
-                        <p className="text-slate-500">{s.region} › {s.specificPart}</p>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-6 w-full">
-                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Clinical Notes</p>
-                    <textarea 
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      placeholder="Triggers, missed meds, observations..."
-                      className="w-full bg-[#0f172a] border border-slate-700 rounded-2xl p-4 text-sm text-slate-300 h-24 focus:border-blue-500 outline-none transition-all"
-                    />
-                  </div>
-                  <button onClick={() => setTaggingStep('S_CAT')} className="w-full py-4 bg-[#334155] text-white rounded-xl font-bold text-sm">+ Add Another</button>
-                  {/* ... inside SUMMARY stage ... */}
-                  <button 
-                    onClick={async () => {
-                      // 1. Identify which record to update
-                      // If editingId exists, we update that specific old record.
-                      // If not, we find the one we just recorded.
-                      const lastEntry = await db.events.toCollection().last();
-                      const targetId = editingId || lastEntry.id;
-
-                      // 2. Save the new data
-                      await db.events.update(targetId, { 
-                        // We use selections.type if picked, or keep the existing one
-                        type: selections.type || (editingId ? (history.find(e => e.id === editingId)?.type) : 'Uncategorized'),
-                        symptoms: [...tempSymptomList],
-                        notes: notes,
-                        isComplete: true,
-                        isEdited: editingId ? true : false, // 🚩 Flag it as edited
-                        lastModified: Date.now()
-                      });
-                      setNotes("");
-                      // 3. Reset the App back to IDLE
-                      await loadHistory();
-                      setStatus('IDLE');
-                      setEditingId(null); 
-                      setTempSymptomList([]);
-                      setTaggingStep('TYPE');
-                      
-                      // Clear selections for next time
-                      setSelections({
-                        group: '', symptom: '', detail: '',
-                        region: '', subRegion: '', specificPart: ''
-                      });
-                    }} 
-                    className="w-full py-4 bg-green-600 text-white rounded-xl font-black uppercase shadow-lg"
-                  >
-                    Finish & Save
-                  </button>
-
-                </div>
+                <Summary 
+                  tempSymptomList={tempSymptomList}
+                  setTempSymptomList={setTempSymptomList}
+                  notes={notes}
+                  setNotes={setNotes}
+                  elapsed={elapsed}
+                  laps={laps}
+                  startTime={startTime}
+                  onAddAnother={() => setTaggingStep('S_CAT')}
+                  onSave={handleFinalSave}
+                  onCancel={handleCancel} 
+                />
               )}
+
             </div>
           </div>
         )}
@@ -425,56 +446,5 @@ function App() {
 );
 }
 
-
-function DeleteModal({ onConfirm, onCancel }) {
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-[#0f172a]/95 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-[#1e293b] w-full max-w-xs p-8 rounded-[2.5rem] border border-slate-700 shadow-2xl text-center">
-        <div className="w-16 h-16 bg-red-900/20 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
-          <span className="text-3xl font-bold">!</span>
-        </div>
-        <h3 className="text-white text-xl font-bold mb-2">Delete Record?</h3>
-        <p className="text-slate-400 text-sm mb-8 leading-relaxed">
-          This action cannot be undone. This medical entry will be permanently removed.
-        </p>
-        <div className="flex flex-col gap-3">
-          <button 
-            onClick={onConfirm}
-            className="w-full py-4 bg-red-600 text-white rounded-2xl font-black uppercase tracking-widest active:scale-95 transition-transform"
-          >
-            Yes, Delete
-          </button>
-          <button 
-            onClick={onCancel}
-            className="w-full py-4 bg-transparent text-slate-500 font-bold uppercase text-xs tracking-widest"
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-
-function WizardMenu({ title, options, onPick, onBack }) {
-  return (
-    <div className="animate-in fade-in zoom-in duration-200">
-      <div className="flex justify-between items-center mb-6">
-        {onBack ? <button onClick={onBack} className="text-blue-400 text-xs font-bold">← BACK</button> : <div/>}
-        <p className="text-center font-bold text-slate-400 uppercase text-[10px] tracking-widest">{title}</p>
-        <div className="w-8"/>
-      </div>
-      <div className="grid grid-cols-1 gap-2">
-        {options.map(opt => (
-          <button key={opt} onClick={() => onPick(opt)}
-            className="py-4 px-4 bg-[#334155] text-left text-white rounded-xl text-sm font-medium border border-slate-600/50 hover:bg-slate-700 active:scale-[0.98] transition-all">
-            {opt}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 export default App;

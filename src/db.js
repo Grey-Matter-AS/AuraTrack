@@ -2,8 +2,7 @@ import Dexie from 'dexie';
 
 export const db = new Dexie('AuraTrackDB');
 
-// We add 'date' and 'type' to the index list
-// This allows us to filter or sort by these specific fields later
-db.version(2).stores({
-  events: '++id, startTime, date, type, isComplete, isEdited'
+db.version(3).stores({
+  // We added 'notes' and 'isEdited' to the index so you can search them later
+  events: '++id, startTime, date, type, isComplete, isEdited, notes' 
 });
