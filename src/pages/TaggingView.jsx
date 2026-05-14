@@ -1,0 +1,156 @@
+import React from 'react';
+import { WizardMenu } from '../components/WizardMenu';
+import Summary from '../components/Summary';
+import { SYMPTOM_WIZARD, REGION_WIZARD, SEIZURE_TYPES } from '../data/constants';
+import { db } from '../data/db';
+
+export default function TaggingView({
+  taggingStep, setTaggingStep,
+  selections, setSelections,
+  tempSymptomList, setTempSymptomList,
+  notes, setNotes,
+  editingId, activeEventId,
+  elapsed, laps, startTime,
+  onSave, onCancel, moveSymptom
+}) {
+  const handleTypeSelect = async (val) => {
+    const targetId = editingId || activeEventId;
+    if (!targetId) { console.error('No active event found'); return; }
+    await db.events.update(targetId, { type: val });
+    setSelections({ ...selections, type: val });
+    setTaggingStep('S_CAT');
+  };
+
+  return (
+    <div className="flex-1 flex flex-col items-center w-full max-w-md h-[calc(100dvh-2rem)] overflow-hidden animate-in fade-in slide-in-from-bottom-6">
+      <div className="w-full h-full min-h-0 bg-[#1e293b] p-6 rounded-[2rem] shadow-2xl border border-slate-700/50 flex flex-col overflow-hidden">
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
+
+          {/* Step 1: Seizure Type */}
+          {taggingStep === 'TYPE' && (
+            <WizardMenu
+              title="Step 1: Seizure Type"
+              options={SEIZURE_TYPES}
+              onPick={handleTypeSelect}
+            />
+          )}
+
+          {/* Step 2-4: Symptom Drill-Down */}
+          {taggingStep === 'S_CAT' && (
+            <WizardMenu
+              title="What kind of feeling?"
+              options={Object.keys(SYMPTOM_WIZARD)}
+              onPick={v => { setSelections({ ...selections, group: v }); setTaggingStep('S_SYM'); }}
+            />
+          )}
+          {taggingStep === 'S_SYM' && (
+            <WizardMenu
+              title={selections.group}
+              options={Object.keys(SYMPTOM_WIZARD[selections.group])}
+              onPick={v => { setSelections({ ...selections, symptom: v }); setTaggingStep('S_DET'); }}
+              onBack={() => setTaggingStep('S_CAT')}
+            />
+          )}
+          {taggingStep === 'S_DET' && (
+            <WizardMenu
+              title={selections.symptom}
+              options={SYMPTOM_WIZARD[selections.group][selections.symptom].options.map(o => o.label)}
+              onPick={label => {
+                const optionObj = SYMPTOM_WIZARD[selections.group][selections.symptom].options.find(o => o.label === label);
+                const groupConfig = SYMPTOM_WIZARD[selections.group][selections.symptom];
+                const updatedSelections = {
+                  ...selections,
+                  detail: label,
+                  medical: optionObj.med,
+                  region: optionObj.forceRegion || '',
+                  subRegion: optionObj.forceSubRegion || ''
+                };
+                setSelections(updatedSelections);
+
+                if (optionObj.forceSubRegion) {
+                  setTaggingStep('R_DET');
+                  return;
+                }
+                if (groupConfig.skipRegion) {
+                  const bundle = {
+                    symptom: selections.symptom,
+                    detail: label,
+                    medical: optionObj.med,
+                    region: 'N/A',
+                    specificPart: 'Internal/General'
+                  };
+                  setTempSymptomList([...tempSymptomList, bundle]);
+                  setTaggingStep('SUMMARY');
+                } else if (optionObj.forceRegion) {
+                  setTaggingStep('R_SUB');
+                } else {
+                  setTaggingStep('R_CAT');
+                }
+              }}
+              onBack={() => setTaggingStep('S_SYM')}
+            />
+          )}
+
+          {/* Step 3-5: Region Drill-Down */}
+          {taggingStep === 'R_CAT' && (
+            <WizardMenu
+              title="Where did it happen?"
+              options={Object.keys(REGION_WIZARD)}
+              onPick={v => { setSelections({ ...selections, region: v }); setTaggingStep('R_SUB'); }}
+            />
+          )}
+          {taggingStep === 'R_SUB' && (
+            <WizardMenu
+              title={selections.region}
+              options={Object.keys(REGION_WIZARD[selections.region])}
+              onPick={v => { setSelections({ ...selections, subRegion: v }); setTaggingStep('R_DET'); }}
+              onBack={() => {
+                const optionObj = SYMPTOM_WIZARD[selections.group][selections.symptom].options.find(o => o.label === selections.detail);
+                setTaggingStep(optionObj.forceRegion ? 'S_DET' : 'R_CAT');
+              }}
+            />
+          )}
+          {taggingStep === 'R_DET' && (
+            <WizardMenu
+              title={selections.subRegion}
+              options={REGION_WIZARD[selections.region][selections.subRegion]}
+              onPick={v => {
+                const bundle = {
+                  symptom: selections.symptom,
+                  detail: selections.detail,
+                  region: selections.region,
+                  specificPart: v
+                };
+                setTempSymptomList([...tempSymptomList, bundle]);
+                setTaggingStep('SUMMARY');
+              }}
+              onBack={() => {
+                const optionObj = SYMPTOM_WIZARD[selections.group][selections.symptom].options.find(o => o.label === selections.detail);
+                setTaggingStep(optionObj.forceSubRegion ? 'S_DET' : 'R_SUB');
+              }}
+            />
+          )}
+
+          {/* Summary */}
+          {taggingStep === 'SUMMARY' && (
+            <Summary
+              tempSymptomList={tempSymptomList}
+              setTempSymptomList={setTempSymptomList}
+              notes={notes}
+              setNotes={setNotes}
+              elapsed={elapsed}
+              laps={laps}
+              startTime={startTime}
+              onAddAnother={() => setTaggingStep('S_CAT')}
+              onSave={onSave}
+              onCancel={onCancel}
+              onRemoveSymptom={index => setTempSymptomList(tempSymptomList.filter((_, i) => i !== index))}
+              onMoveSymptom={moveSymptom}
+            />
+          )}
+
+        </div>
+      </div>
+    </div>
+  );
+}
