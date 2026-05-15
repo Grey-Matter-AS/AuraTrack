@@ -113,7 +113,7 @@ function ActionBtn({ label, sub, onClick, icon, variant = 'default' }) {
 
 // ─── Main component ───────────────────────────────────────────
 
-export function SettingsForm({ settings, onUpdate, onReset }) {
+export function SettingsForm({ settings, onUpdate, onReset, pwa }) {
   const fileInputRef = useRef();
   const [storageInfo, setStorageInfo] = useState(null);
   const [statusMsg, setStatusMsg] = useState('');
@@ -408,6 +408,16 @@ export function SettingsForm({ settings, onUpdate, onReset }) {
       <Section title="About">
         <Row label="App Version"><p className="text-sm font-bold text-[var(--text-primary)]">AuraTrack v0.1.0</p></Row>
         <Row label="Database Schema"><p className="text-sm font-bold text-[var(--text-primary)]">AuraTrackDB v4</p></Row>
+        {pwa?.canInstallManually && (
+          <div>
+            <ActionBtn
+              label="Re-show Install Prompt"
+              sub="Tap if you dismissed the install banner by mistake"
+              icon="📲"
+              onClick={pwa.resetDismissal}
+            />
+          </div>
+        )}
         <div className="pt-1">
           {showResetConfirm ? (
             <div className="rounded-2xl p-4 space-y-3" style={{ backgroundColor: 'rgba(185,28,28,0.1)', border: '1px solid rgba(185,28,28,0.3)' }}>

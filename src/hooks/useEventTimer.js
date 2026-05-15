@@ -34,6 +34,7 @@ export function useEventTimer() {
     const endTime = Date.now();
     const duration = Math.floor((endTime - startTime) / 1000);
     const finalLaps = { ...laps, recovery: endTime };
+    setLaps(finalLaps);
     const date = localStorage.getItem('aura_startDateReadable');
     const time = localStorage.getItem('aura_startTimeReadable');
     ['aura_startTime', 'aura_status', 'aura_startDateReadable', 'aura_startTimeReadable'].forEach(k => localStorage.removeItem(k));

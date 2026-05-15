@@ -6,6 +6,8 @@ import { useSettings } from './hooks/useSettings';
 import { setHapticEnabled } from './utils/hapticFeedback';
 import { db } from './data/db';
 import { DeleteModal } from './components/DeleteModal';
+import { usePWAInstall } from './hooks/usePWAInstall';
+import { PWAInstallBanner } from './components/PWAInstallBanner';
 import IdleView from './pages/IdleView';
 import RecordingView from './pages/RecordingView';
 import TaggingView from './pages/TaggingView';
@@ -50,6 +52,7 @@ function App() {
   const history = useEventHistory();
   const wizard = useTaggingWizard();
   const { settings, updateSettings, resetSettings } = useSettings();
+  const pwa = usePWAInstall();
   const stoppingRef = useRef(false);
 
   // Sync haptic preference to the module singleton
@@ -136,12 +139,13 @@ function App() {
         {status === 'RECORDING'    && <RecordingView elapsed={timer.elapsed} startTime={timer.startTime} laps={timer.laps} onLap={timer.recordLap} onStop={handleStop} onEmergencyStop={handleEmergencyStop} onQuickNote={l => wizard.addQuickNote(l, timer.elapsed)} userMode={settings.userMode} quickNoteLabels={activeQuickNoteLabels} />}
         {status === 'TAGGING'      && <TaggingView {...wizard} elapsed={timer.elapsed} laps={timer.laps} startTime={timer.startTime} onSave={handleSave} onCancel={handleCancel} />}
         {status === 'HISTORY'      && <HistoryView onBack={() => setStatus('IDLE')} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail} onExport={() => setStatus('EXPORT')} historyPageSize={settings.historyPageSize} />}
-        {status === 'SETTINGS'     && <SettingsView settings={settings} onUpdate={updateSettings} onReset={resetSettings} onBack={() => setStatus('IDLE')} />}
+        {status === 'SETTINGS'     && <SettingsView settings={settings} onUpdate={updateSettings} onReset={resetSettings} onBack={() => setStatus('IDLE')} pwa={pwa} />}
         {status === 'EXPORT'       && <ExportView onBack={() => setStatus('HISTORY')} settings={settings} />}
         {status === 'EVENT_DETAIL' && <EventDetailView eventId={detailEventId} onEdit={handleEdit} onClose={() => setStatus(previousStatus)} />}
       </div>
 
       {itemToDelete && <DeleteModal onConfirm={handleDeleteConfirm} onCancel={() => setItemToDelete(null)} />}
+      <PWAInstallBanner isVisible={pwa.isVisible} isIOS={pwa.isIOS} install={pwa.install} dismiss={pwa.dismiss} />
     </div>
   );
 }

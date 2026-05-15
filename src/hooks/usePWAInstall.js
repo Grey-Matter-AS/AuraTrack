@@ -53,14 +53,21 @@ export function usePWAInstall() {
     setIsVisible(false);
   };
 
-  // True even after banner is dismissed — lets Settings show the install option as a fallback.
-  const canInstallManually = !isInstalled() && (!!deferredPrompt || ios);
+  const resetDismissal = () => {
+    localStorage.removeItem(DISMISSED_KEY);
+    if (!isInstalled() && (deferredPrompt || ios)) setIsVisible(true);
+  };
+
+  // Show the Settings re-prompt button whenever the app isn't installed, regardless of
+  // whether deferredPrompt is currently available — it may arrive in a future session.
+  const canInstallManually = !isInstalled();
 
   return {
     isVisible,
     isIOS: ios && !deferredPrompt,
     install,
     dismiss,
+    resetDismissal,
     canInstallManually,
   };
 }

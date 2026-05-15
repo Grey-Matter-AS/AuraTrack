@@ -1,7 +1,7 @@
 import React from 'react';
 import { SettingsForm } from '../components/SettingsForm';
 
-export default function SettingsView({ settings, onUpdate, onReset, onBack }) {
+export default function SettingsView({ settings, onUpdate, onReset, onBack, pwa }) {
   return (
     <div className="flex-1 flex flex-col w-full max-w-md overflow-hidden">
 
@@ -23,7 +23,7 @@ export default function SettingsView({ settings, onUpdate, onReset, onBack }) {
       </div>
 
       <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar">
-        <SettingsForm settings={settings} onUpdate={onUpdate} onReset={onReset} />
+        <SettingsForm settings={settings} onUpdate={onUpdate} onReset={onReset} pwa={pwa} />
       </div>
 
     </div>
