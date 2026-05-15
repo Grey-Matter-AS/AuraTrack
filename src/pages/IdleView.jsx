@@ -7,7 +7,7 @@ export default function IdleView({ history, onStart, onEdit, onDelete }) {
       <div className="py-10 shrink-0">
         <button
           onClick={onStart}
-          className="w-60 h-60 bg-red-600 hover:bg-red-500 active:scale-95 transition-all rounded-full shadow-[0_0_60px_rgba(225,29,72,0.4)] flex items-center justify-center text-white text-4xl font-black border-[12px] border-[#1e293b] ring-4 ring-red-900/20"
+          className="w-60 h-60 bg-red-600 active:scale-95 active:bg-red-500 transition-all rounded-full shadow-[0_0_60px_rgba(225,29,72,0.4)] flex items-center justify-center text-white text-4xl font-black border-[12px] border-[#1e293b] ring-4 ring-red-900/20"
         >
           START
         </button>

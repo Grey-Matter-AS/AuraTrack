@@ -1,157 +1,425 @@
-import React from 'react';
+import React, { useState } from 'react';
+import {
+  DndContext, closestCenter, PointerSensor, TouchSensor,
+  useSensor, useSensors, DragOverlay,
+} from '@dnd-kit/core';
+import {
+  SortableContext, useSortable, verticalListSortingStrategy, arrayMove,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
-function Summary({ 
-  tempSymptomList,
-  setTempSymptomList,  
-  notes, 
-  setNotes,
-  elapsed, 
-  laps,
-  startTime,
-  onAddAnother,
-  onSave, 
-  onCancel,
-  onRemoveSymptom,
-  onMoveSymptom
-}) {
+// ─── Drag-handle icon — ▲▼ pair signals "drag to reorder" ────
+function DragHandle(props) {
+  return (
+    <div
+      {...props}
+      className="flex flex-col items-center justify-center shrink-0 cursor-grab active:cursor-grabbing min-w-[44px] min-h-[44px] rounded-lg"
+      style={{ touchAction: 'none', color: 'var(--text-dim)', gap: '1px' }}
+      aria-label="Drag to reorder"
+    >
+      <span className="text-[11px] font-black leading-none select-none">▲</span>
+      <span className="text-[11px] font-black leading-none select-none">▼</span>
+    </div>
+  );
+}
 
-  // --- PHASE DURATION CALCULATIONS ---
-  const auraDur = laps?.aura ? Math.floor((laps.aura - startTime) / 1000) : 0;
-  
-  const seizureDur = (laps?.aura && laps?.seizure) 
-    ? Math.floor((laps.seizure - laps.aura) / 1000) 
-    : 0;
-    
-  const recoveryDur = (laps?.seizure && laps?.recovery) 
-    ? Math.floor((laps.recovery - laps.seizure) / 1000) 
-    : 0;
+// ─── One sortable symptom row ─────────────────────────────────
+function SortableSymptomRow({ symptom, index, onRemove }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: symptom._id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+  };
 
   return (
-    /* h-full and overflow-hidden lock the component to the screen glass */
-    <div className="flex flex-col h-full w-full max-w-md mx-auto animate-in fade-in slide-in-from-bottom-6 px-1 overflow-hidden">
-      
-      {/* 1. CLINICAL DURATION BREAKDOWN (Fixed Top) */}
-      <div className="bg-slate-800/40 p-6 rounded-[2.5rem] border border-slate-700/50 mb-4 shrink-0 shadow-lg">
-        <div className="flex justify-between items-end mb-4">
-          <div>
-            <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">TOTAL DURATION</p>
-            <p className="text-4xl font-mono font-black text-white leading-none">{elapsed}<span className="text-lg text-slate-500 ml-1 font-sans">S</span></p>
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="p-3 rounded-2xl border flex items-center gap-3 shadow-md"
+      {...attributes}
+    >
+      {/* Drag handle — touch-action:none prevents scroll capture on the handle only */}
+      <DragHandle {...listeners} />
+
+      <div className="flex-1 min-w-0">
+        <p className="text-blue-400 font-black text-sm uppercase tracking-tight leading-none mb-1 truncate">
+          {symptom.symptom}
+        </p>
+        <p className="text-[11px] font-medium truncate" style={{ color: 'var(--text-secondary)' }}>
+          {symptom.region} › {symptom.specificPart}
+        </p>
+      </div>
+
+      <button
+        onClick={() => onRemove(index)}
+        className="shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center text-[10px] font-black text-red-500 uppercase rounded-xl border transition-all active:bg-red-600 active:text-white"
+        style={{ backgroundColor: 'rgba(239,68,68,0.08)', borderColor: 'rgba(239,68,68,0.3)' }}
+      >
+        ✕
+      </button>
+    </div>
+  );
+}
+
+// ─── Inline editable timer (phase: aura / seizure / recovery) ─
+function EditableTimer({ phase, label, color, calcValue, manualDurations, editedTimers, onSetManualDuration }) {
+  const [stage, setStage] = useState('idle'); // idle | confirm | editing
+  const [inputVal, setInputVal] = useState('');
+
+  const displayValue = manualDurations?.[phase] ?? calcValue;
+  const isEdited     = editedTimers?.includes(phase);
+
+  const startEdit  = () => { setInputVal(String(displayValue)); setStage('editing'); };
+  const cancelEdit = () => { setStage('idle'); setInputVal(''); };
+  const saveEdit   = () => {
+    const val = parseInt(inputVal, 10);
+    if (!isNaN(val) && val >= 0) onSetManualDuration(phase, val);
+    setStage('idle'); setInputVal('');
+  };
+
+  return (
+    <div className="text-center">
+      <p className="text-[9px] font-black uppercase mb-1" style={{ color }}>{label}</p>
+
+      {stage === 'idle' && (
+        <div className="flex flex-col items-center gap-1">
+          <p className="text-lg font-mono font-black" style={{ color: 'var(--text-primary)' }}>
+            {displayValue}s
+            {isEdited && (
+              <span className="text-[8px] font-black uppercase ml-1.5 px-1 py-0.5 rounded align-middle"
+                style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)' }}>
+                edited
+              </span>
+            )}
+          </p>
+          <button
+            onClick={() => setStage('confirm')}
+            className="min-h-[36px] px-3 rounded-lg text-[9px] font-black uppercase tracking-wider active:scale-95 transition-all"
+            style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)', border: '1px solid var(--border)' }}
+          >
+            EDIT
+          </button>
+        </div>
+      )}
+
+      {stage === 'confirm' && (
+        <div className="space-y-1.5">
+          <p className="text-[9px] font-bold" style={{ color: 'var(--text-dim)' }}>Edit {label.toLowerCase()}?</p>
+          <div className="flex gap-1.5 justify-center">
+            <button onClick={startEdit}
+              className="min-h-[40px] px-3 rounded-lg text-[9px] font-black uppercase bg-amber-500 text-white active:scale-95 transition-transform">
+              YES
+            </button>
+            <button onClick={cancelEdit}
+              className="min-h-[40px] px-3 rounded-lg text-[9px] font-black uppercase active:scale-95 transition-transform"
+              style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-secondary)' }}>
+              NO
+            </button>
           </div>
-          <div className="text-right">
-            <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">LOG STATUS</p>
+        </div>
+      )}
+
+      {stage === 'editing' && (
+        <div className="flex items-center justify-center gap-1.5">
+          <input
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            value={inputVal}
+            onChange={e => setInputVal(e.target.value.replace(/\D/g, ''))}
+            className="w-14 text-center rounded-lg px-1 py-1.5 font-mono font-black outline-none"
+            style={{ backgroundColor: 'var(--bg-raised)', border: '1px solid var(--accent)', color: 'var(--text-primary)' }}
+            autoFocus
+          />
+          <span className="text-xs font-bold" style={{ color: 'var(--text-dim)' }}>s</span>
+          <button onClick={saveEdit}
+            className="min-w-[40px] min-h-[40px] px-2 rounded-lg bg-green-600 text-white font-black text-xs active:scale-95 transition-transform">
+            ✓
+          </button>
+          <button onClick={cancelEdit}
+            className="min-w-[40px] min-h-[40px] px-2 rounded-lg font-black text-xs active:scale-95 transition-transform"
+            style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)' }}>
+            ✗
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Editable total duration (larger display) ─────────────────
+function EditableTotalTimer({ calcValue, manualDurations, editedTimers, onSetManualDuration }) {
+  const [stage, setStage] = useState('idle');
+  const [inputVal, setInputVal] = useState('');
+
+  const displayValue = manualDurations?.['total'] ?? calcValue;
+  const isEdited     = editedTimers?.includes('total');
+
+  const startEdit  = () => { setInputVal(String(displayValue)); setStage('editing'); };
+  const cancelEdit = () => { setStage('idle'); setInputVal(''); };
+  const saveEdit   = () => {
+    const val = parseInt(inputVal, 10);
+    if (!isNaN(val) && val >= 0) onSetManualDuration('total', val);
+    setStage('idle'); setInputVal('');
+  };
+
+  return (
+    <div>
+      <p className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: 'var(--text-dim)' }}>
+        TOTAL DURATION
+      </p>
+
+      {stage === 'idle' && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <p className="text-4xl font-mono font-black leading-none" style={{ color: 'var(--text-primary)' }}>
+            {displayValue}<span className="text-lg font-sans ml-1" style={{ color: 'var(--text-dim)' }}>S</span>
+          </p>
+          {isEdited && (
+            <span className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded"
+              style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)' }}>
+              edited
+            </span>
+          )}
+          <button
+            onClick={() => setStage('confirm')}
+            className="min-h-[36px] px-3 rounded-lg text-[9px] font-black uppercase tracking-wider active:scale-95 transition-all"
+            style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)', border: '1px solid var(--border)' }}
+          >
+            EDIT
+          </button>
+        </div>
+      )}
+
+      {stage === 'confirm' && (
+        <div className="space-y-2">
+          <p className="text-[10px] font-bold" style={{ color: 'var(--text-dim)' }}>Edit total duration?</p>
+          <div className="flex gap-2">
+            <button onClick={startEdit}
+              className="min-h-[44px] px-4 rounded-xl text-xs font-black uppercase bg-amber-500 text-white active:scale-95 transition-transform">
+              YES, EDIT
+            </button>
+            <button onClick={cancelEdit}
+              className="min-h-[44px] px-4 rounded-xl text-xs font-black uppercase active:scale-95 transition-transform"
+              style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-secondary)' }}>
+              CANCEL
+            </button>
+          </div>
+        </div>
+      )}
+
+      {stage === 'editing' && (
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            value={inputVal}
+            onChange={e => setInputVal(e.target.value.replace(/\D/g, ''))}
+            className="w-24 text-center rounded-xl px-3 py-2 text-2xl font-mono font-black outline-none"
+            style={{ backgroundColor: 'var(--bg-raised)', border: '2px solid var(--accent)', color: 'var(--text-primary)' }}
+            autoFocus
+          />
+          <span className="text-lg font-bold" style={{ color: 'var(--text-dim)' }}>s</span>
+          <button onClick={saveEdit}
+            className="min-h-[44px] px-4 rounded-xl text-sm font-black uppercase bg-green-600 text-white active:scale-95 transition-transform">
+            ✓ SAVE
+          </button>
+          <button onClick={cancelEdit}
+            className="min-h-[44px] px-4 rounded-xl text-sm font-black uppercase active:scale-95 transition-transform"
+            style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)' }}>
+            ✗
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Main Summary component ───────────────────────────────────
+function Summary({
+  tempSymptomList,
+  setTempSymptomList,
+  notes,
+  setNotes,
+  elapsed,
+  laps,
+  startTime,
+  manualDurations,
+  editedTimers,
+  onSetManualDuration,
+  onAddAnother,
+  onSave,
+  onCancel,
+  onRemoveSymptom,
+}) {
+  const [activeId, setActiveId] = useState(null);
+
+  const auraDur     = laps?.aura    ? Math.floor((laps.aura    - startTime)          / 1000) : 0;
+  const seizureDur  = laps?.aura  && laps?.seizure   ? Math.floor((laps.seizure  - laps.aura)    / 1000) : 0;
+  const recoveryDur = laps?.seizure && laps?.recovery ? Math.floor((laps.recovery - laps.seizure) / 1000) : 0;
+
+  // When a phase timer is edited, recompute total as sum of all three phases
+  const handleSetManualDuration = (phase, val) => {
+    onSetManualDuration(phase, val);
+    if (phase !== 'total') {
+      const a = phase === 'aura'     ? val : (manualDurations?.aura     ?? auraDur);
+      const s = phase === 'seizure'  ? val : (manualDurations?.seizure  ?? seizureDur);
+      const r = phase === 'recovery' ? val : (manualDurations?.recovery ?? recoveryDur);
+      onSetManualDuration('total', a + s + r);
+    }
+  };
+
+  // Stable IDs for dnd-kit (index-based is fine since list only reorders, never slices)
+  const itemsWithId = tempSymptomList.map((s, i) => ({ ...s, _id: `symptom-${i}` }));
+
+  // Activate drag only after 8 px movement to avoid blocking scrolls
+  const pointerSensor = useSensor(PointerSensor, { activationConstraint: { distance: 8 } });
+  const touchSensor   = useSensor(TouchSensor,   { activationConstraint: { delay: 200, tolerance: 8 } });
+  const sensors       = useSensors(pointerSensor, touchSensor);
+
+  const handleDragStart = ({ active }) => setActiveId(active.id);
+
+  const handleDragEnd = ({ active, over }) => {
+    setActiveId(null);
+    if (!over || active.id === over.id) return;
+    const oldIndex = itemsWithId.findIndex(s => s._id === active.id);
+    const newIndex = itemsWithId.findIndex(s => s._id === over.id);
+    setTempSymptomList(arrayMove(tempSymptomList, oldIndex, newIndex));
+  };
+
+  const activeSymptom = activeId ? itemsWithId.find(s => s._id === activeId) : null;
+
+  return (
+    <div className="flex flex-col h-full w-full max-w-md mx-auto animate-in fade-in slide-in-from-bottom-6 px-1 overflow-hidden">
+
+      {/* 1. CLINICAL DURATION BREAKDOWN */}
+      <div className="p-5 rounded-[2.5rem] border mb-4 shrink-0 shadow-lg"
+        style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-subtle)' }}>
+        <div className="flex justify-between items-start mb-4">
+          <EditableTotalTimer
+            calcValue={elapsed}
+            manualDurations={manualDurations}
+            editedTimers={editedTimers}
+            onSetManualDuration={onSetManualDuration}
+          />
+          <div className="text-right shrink-0">
+            <p className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: 'var(--text-dim)' }}>LOG STATUS</p>
             <p className="text-xs font-black text-green-500 uppercase tracking-tighter">VERIFIED</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-3 pt-4 border-t border-slate-700/50">
-           <div className="text-center">
-             <p className="text-[9px] text-amber-500 font-black uppercase mb-1">AURA</p>
-             <p className="text-lg font-mono font-black text-white">{auraDur}s</p>
-           </div>
-           <div className="text-center">
-             <p className="text-[9px] text-red-500 font-black uppercase mb-1">SEIZURE</p>
-             <p className="text-lg font-mono font-black text-white">{seizureDur}s</p>
-           </div>
-           <div className="text-center">
-             <p className="text-[9px] text-blue-400 font-black uppercase mb-1">RECOVERY</p>
-             <p className="text-lg font-mono font-black text-white">{recoveryDur}s</p>
-           </div>
+        <div className="grid grid-cols-3 gap-2 pt-4" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+          <EditableTimer phase="aura"     label="AURA"     color="#f59e0b"
+            calcValue={auraDur}     manualDurations={manualDurations} editedTimers={editedTimers} onSetManualDuration={handleSetManualDuration} />
+          <EditableTimer phase="seizure"  label="SEIZURE"  color="#ef4444"
+            calcValue={seizureDur}  manualDurations={manualDurations} editedTimers={editedTimers} onSetManualDuration={handleSetManualDuration} />
+          <EditableTimer phase="recovery" label="RECOVERY" color="#60a5fa"
+            calcValue={recoveryDur} manualDurations={manualDurations} editedTimers={editedTimers} onSetManualDuration={handleSetManualDuration} />
         </div>
       </div>
 
-      {/* 2. SCROLLABLE MIDDLE AREA (Symptoms & Notes) */}
-      <div className="flex-1 overflow-y-auto space-y-8 pr-1 custom-scrollbar pb-6">
+      {/* 2. SCROLLABLE MIDDLE AREA */}
+      <div className="flex-1 overflow-y-auto space-y-6 pr-1 custom-scrollbar pb-6">
+
+        {/* Symptom list with drag-to-reorder */}
         <div>
-          <p className="text-center font-black text-slate-600 uppercase text-[11px] tracking-[0.3em] mb-4">LOGGED SYMPTOMS</p>
-          <div className="space-y-3">
-            {tempSymptomList.length === 0 ? (
-              <div className="py-8 text-center border-2 border-dashed border-slate-800 rounded-[2rem]">
-                 <p className="text-slate-600 italic text-sm">No symptoms tagged yet.</p>
-              </div>
-            ) : (
-              tempSymptomList.map((s, i) => (
-                <div key={i} className="bg-[#1e293b] p-4 rounded-2xl border border-slate-700 flex justify-between items-center shadow-md animate-in fade-in slide-in-from-right duration-200">
-                  <div className="flex gap-4 items-center flex-1">
-                    
-                    <div className="flex flex-col items-center gap-1 shrink-0">
-                      <button 
-                        onClick={() => onMoveSymptom(i, 'UP')}
-                        disabled={i === 0}
-                        className={`w-8 h-7 flex items-center justify-center rounded-t-lg bg-slate-800 border-x border-t border-slate-700 text-[10px] font-black ${i === 0 ? 'opacity-5' : 'text-blue-400 active:bg-blue-500 active:text-white'}`}
-                      >
-                        ▲
-                      </button>
-                      
-                      <span className="w-8 h-8 bg-slate-900 text-slate-500 font-black flex items-center justify-center text-xs border-x border-slate-800">
-                        {i + 1}
-                      </span>
+          <p className="text-center font-black uppercase text-[11px] tracking-[0.3em] mb-1" style={{ color: 'var(--text-faint)' }}>
+            LOGGED SYMPTOMS
+          </p>
+          {tempSymptomList.length > 1 && (
+            <p className="text-center text-[9px] mb-3" style={{ color: 'var(--text-faint)' }}>
+              Hold &amp; drag ≡ to reorder
+            </p>
+          )}
 
-                      <button 
-                        onClick={() => onMoveSymptom(i, 'DOWN')}
-                        disabled={i === tempSymptomList.length - 1}
-                        className={`w-8 h-7 flex items-center justify-center rounded-b-lg bg-slate-800 border-x border-b border-slate-700 text-[10px] font-black ${i === tempSymptomList.length - 1 ? 'opacity-5' : 'text-blue-400 active:bg-blue-500 active:text-white'}`}
-                      >
-                        ▼
-                      </button>
-                    </div>
+          {tempSymptomList.length === 0 ? (
+            <div className="py-8 text-center border-2 border-dashed rounded-[2rem]" style={{ borderColor: 'var(--border)' }}>
+              <p className="italic text-sm" style={{ color: 'var(--text-faint)' }}>No symptoms tagged yet.</p>
+            </div>
+          ) : (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext items={itemsWithId.map(s => s._id)} strategy={verticalListSortingStrategy}>
+                <div className="space-y-2">
+                  {itemsWithId.map((symptom, index) => (
+                    <SortableSymptomRow
+                      key={symptom._id}
+                      symptom={symptom}
+                      index={index}
+                      onRemove={onRemoveSymptom}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
 
-                    <div>
-                      <p className="text-blue-400 font-black text-sm uppercase tracking-tight leading-none mb-1">
-                        {s.symptom}
+              {/* Ghost while dragging */}
+              <DragOverlay>
+                {activeSymptom && (
+                  <div className="p-3 rounded-2xl border flex items-center gap-3 shadow-2xl opacity-90"
+                    style={{ backgroundColor: 'var(--bg-raised)', borderColor: 'var(--accent)' }}>
+                    <DragHandle />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-blue-400 font-black text-sm uppercase tracking-tight leading-none truncate">
+                        {activeSymptom.symptom}
                       </p>
-                      <p className="text-slate-400 text-[11px] font-medium">
-                        {s.region} › {s.specificPart}
+                      <p className="text-[11px] font-medium truncate" style={{ color: 'var(--text-secondary)' }}>
+                        {activeSymptom.region} › {activeSymptom.specificPart}
                       </p>
                     </div>
                   </div>
-
-                  <button 
-                    onClick={() => onRemoveSymptom(i)}
-                    className="text-[10px] font-black text-red-500 uppercase px-3 py-2 bg-red-500/10 rounded-xl border border-red-500/20 active:bg-red-500 active:text-white transition-all"
-                  >
-                    REMOVE
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
+                )}
+              </DragOverlay>
+            </DndContext>
+          )}
         </div>
 
+        {/* Notes */}
         <div className="w-full">
-          <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-3 ml-2">CLINICAL OBSERVATIONS</p>
-          <textarea 
-            value={notes} 
-            onChange={(e) => setNotes(e.target.value)}
-            className="w-full bg-slate-900 border border-slate-700 rounded-[2rem] p-6 text-base text-slate-200 min-h-[160px] focus:border-blue-500 outline-none transition-all resize-none shadow-inner"
+          <p className="text-[10px] font-black uppercase tracking-widest mb-3 ml-1" style={{ color: 'var(--text-dim)' }}>
+            CLINICAL OBSERVATIONS
+          </p>
+          <textarea
+            value={notes}
+            onChange={e => setNotes(e.target.value)}
+            className="w-full rounded-[2rem] p-5 text-base min-h-[140px] outline-none transition-all resize-none"
+            style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
             placeholder="Add triggers, medication info, or post-ictal signs..."
           />
         </div>
       </div>
 
-      {/* 3. FIXED BOTTOM ACTIONS (Anchored) */}
-      <div className="flex flex-col gap-3 py-4 shrink-0 border-t border-slate-800/50 bg-[#0f172a]">
-        <button 
-          onClick={onAddAnother} 
-          className="w-full py-4 bg-slate-800 text-white rounded-2xl font-black uppercase text-xs tracking-widest border border-slate-700 active:bg-slate-700"
+      {/* 3. FIXED BOTTOM ACTIONS */}
+      <div className="flex flex-col gap-3 py-4 shrink-0"
+        style={{ borderTop: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-card)' }}>
+        <button
+          onClick={onAddAnother}
+          className="w-full py-4 rounded-2xl font-black uppercase text-xs tracking-widest active:scale-95 transition-all"
+          style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
         >
           + ADD ANOTHER SYMPTOM
         </button>
 
-        <button 
-          onClick={onSave} 
+        <button
+          onClick={onSave}
           className="w-full py-6 bg-green-600 text-white rounded-[2.2rem] font-black uppercase text-sm tracking-[0.2em] shadow-xl active:scale-95 transition-transform"
         >
           FINISH & SAVE LOG
         </button>
 
-        <button 
+        <button
           onClick={onCancel}
-          className="w-full py-4 bg-red-900/10 border-2 border-red-500/50 text-red-500 rounded-2xl font-black uppercase text-[10px] tracking-widest active:bg-red-600 active:text-white transition-all"
+          className="w-full py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest active:bg-red-600 active:text-white transition-all"
+          style={{ backgroundColor: 'rgba(239,68,68,0.08)', border: '2px solid rgba(239,68,68,0.4)', color: '#ef4444' }}
         >
           CANCEL & DISCARD
         </button>
       </div>
-
     </div>
   );
 }

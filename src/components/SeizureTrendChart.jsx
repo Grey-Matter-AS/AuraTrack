@@ -1,0 +1,172 @@
+import React, { useState, useMemo } from 'react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+
+const TIME_WINDOWS = [
+  { label: '1D',  description: 'Last 24 Hours',  days: 1   },
+  { label: '3D',  description: 'Last 3 Days',    days: 3   },
+  { label: '7D',  description: 'Last 7 Days',    days: 7   },
+  { label: '14D', description: 'Last 14 Days',   days: 14  },
+  { label: '21D', description: 'Last 21 Days',   days: 21  },
+  { label: '1M',  description: 'Last Month',     days: 30  },
+  { label: '2M',  description: 'Last 2 Months',  days: 60  },
+  { label: '3M',  description: 'Last 3 Months',  days: 90  },
+  { label: '6M',  description: 'Last 6 Months',  days: 180 },
+  { label: '9M',  description: 'Last 9 Months',  days: 270 },
+  { label: '1Y',  description: 'Last Year',      days: 365 },
+  { label: '2Y',  description: 'Last 2 Years',   days: 730 },
+];
+
+// All bucket comparisons use timestamps — avoids locale date-string mismatch
+function buildBuckets(events, days) {
+  const now = Date.now();
+  const cutoff = now - days * 864e5;
+  const filtered = events.filter(e => e.startTime >= cutoff);
+
+  if (days <= 1) {
+    // Hourly buckets
+    return Array.from({ length: 24 }, (_, i) => {
+      const h = new Date(now);
+      h.setHours(h.getHours() - (23 - i), 0, 0, 0);
+      const hEnd = new Date(h);
+      hEnd.setHours(hEnd.getHours() + 1);
+      return {
+        label: `${h.getHours()}:00`,
+        count: filtered.filter(e => e.startTime >= h.getTime() && e.startTime < hEnd.getTime()).length,
+      };
+    });
+  }
+
+  if (days <= 90) {
+    // Daily buckets — compare by midnight timestamps, not date strings
+    return Array.from({ length: days }, (_, i) => {
+      const d = new Date(now);
+      d.setDate(d.getDate() - (days - 1 - i));
+      const dayStart = new Date(d); dayStart.setHours(0, 0, 0, 0);
+      const dayEnd   = new Date(d); dayEnd.setHours(23, 59, 59, 999);
+      return {
+        label: d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
+        count: filtered.filter(e => e.startTime >= dayStart.getTime() && e.startTime <= dayEnd.getTime()).length,
+      };
+    });
+  }
+
+  // Weekly buckets for > 90 days
+  const weeks = Math.ceil(days / 7);
+  return Array.from({ length: weeks }, (_, i) => {
+    const wStart = new Date(now);
+    wStart.setDate(wStart.getDate() - (weeks - 1 - i) * 7);
+    wStart.setHours(0, 0, 0, 0);
+    const wEnd = new Date(wStart.getTime() + 7 * 864e5);
+    return {
+      label: wStart.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
+      count: filtered.filter(e => e.startTime >= wStart.getTime() && e.startTime < wEnd.getTime()).length,
+    };
+  });
+}
+
+const CustomTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8, padding: '6px 10px', fontSize: 11 }}>
+      <p style={{ color: 'var(--text-dim)', marginBottom: 2 }}>{label}</p>
+      <p style={{ color: 'var(--text-primary)', fontWeight: 900 }}>
+        {payload[0].value} event{payload[0].value !== 1 ? 's' : ''}
+      </p>
+    </div>
+  );
+};
+
+export default function SeizureTrendChart({ allEvents }) {
+  const [windowIndex, setWindowIndex] = useState(5); // default: 1 Month
+
+  const { description, days } = TIME_WINDOWS[windowIndex];
+  const data  = useMemo(() => buildBuckets(allEvents, days), [allEvents, days]);
+  const total = data.reduce((s, d) => s + d.count, 0);
+  const tickInterval = data.length > 20 ? Math.floor(data.length / 6) : 0;
+
+  const canZoomIn  = windowIndex > 0;
+  const canZoomOut = windowIndex < TIME_WINDOWS.length - 1;
+
+  return (
+    <div
+      className="mb-4 shrink-0 p-4 rounded-2xl"
+      style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
+    >
+      {/* Zoom control row */}
+      <div className="flex items-center justify-between mb-3 gap-2">
+        {/* Zoom out: more time, fewer bars */}
+        <button
+          onClick={() => setWindowIndex(i => Math.min(i + 1, TIME_WINDOWS.length - 1))}
+          disabled={!canZoomOut}
+          className="w-11 h-11 rounded-xl font-black text-lg flex items-center justify-center active:scale-95 transition-all disabled:opacity-25"
+          style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
+          title="Zoom out"
+        >
+          −
+        </button>
+
+        {/* Current window info */}
+        <div className="flex-1 text-center">
+          <p className="text-xs font-black uppercase tracking-widest leading-tight" style={{ color: 'var(--text-primary)' }}>
+            {description}
+          </p>
+          <p className="text-[9px] font-bold mt-0.5" style={{ color: 'var(--accent)' }}>
+            {total} event{total !== 1 ? 's' : ''}
+          </p>
+        </div>
+
+        {/* Zoom in: less time, more detail */}
+        <button
+          onClick={() => setWindowIndex(i => Math.max(i - 1, 0))}
+          disabled={!canZoomIn}
+          className="w-11 h-11 rounded-xl font-black text-lg flex items-center justify-center active:scale-95 transition-all disabled:opacity-25"
+          style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
+          title="Zoom in"
+        >
+          +
+        </button>
+      </div>
+
+      {/* Chart */}
+      <ResponsiveContainer width="100%" height={120}>
+        <BarChart data={data} margin={{ top: 4, right: 2, left: -22, bottom: 0 }}>
+          <XAxis
+            dataKey="label"
+            tick={{ fontSize: 8, fill: 'var(--text-dim)' }}
+            tickLine={false}
+            axisLine={false}
+            interval={tickInterval}
+          />
+          <YAxis
+            allowDecimals={false}
+            tick={{ fontSize: 8, fill: 'var(--text-dim)' }}
+            tickLine={false}
+            axisLine={false}
+            width={22}
+          />
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--border-subtle)' }} />
+          <Bar dataKey="count" radius={[3, 3, 0, 0]}>
+            {data.map((entry, i) => (
+              <Cell key={i} fill={entry.count > 0 ? 'var(--accent)' : 'var(--bg-raised)'} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+
+      {/* Zoom level indicator dots */}
+      <div className="flex justify-center gap-1 mt-2">
+        {TIME_WINDOWS.map((_, i) => (
+          <div
+            key={i}
+            className="rounded-full transition-all"
+            style={{
+              width: i === windowIndex ? 12 : 4,
+              height: 4,
+              backgroundColor: i === windowIndex ? 'var(--accent)' : 'var(--bg-raised)',
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}

@@ -7,12 +7,13 @@ export function WizardMenu({ title, options, onPick, onBack }) {
         {onBack ? (
           <button
             onClick={onBack}
-            className="bg-slate-800 text-blue-400 px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest border border-slate-700 active:scale-95 transition-all"
+            className="px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
+            style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
           >
             ← BACK
           </button>
         ) : <div className="w-10" />}
-        <p className="text-center font-black text-slate-500 uppercase text-[11px] tracking-[0.3em]">{title}</p>
+        <p className="text-center font-black uppercase text-[11px] tracking-[0.3em]" style={{ color: 'var(--text-dim)' }}>{title}</p>
         <div className="w-10" />
       </div>
 
@@ -21,7 +22,8 @@ export function WizardMenu({ title, options, onPick, onBack }) {
           <button
             key={opt}
             onClick={() => onPick(opt)}
-            className="w-full py-7 px-8 bg-[#334155] text-left text-white rounded-[2rem] text-sm font-black uppercase tracking-widest border-2 border-slate-600/50 hover:bg-slate-700 active:scale-[0.97] transition-all shadow-lg"
+            className="w-full py-7 px-8 text-left rounded-[2rem] text-sm font-black uppercase tracking-widest active:scale-[0.97] transition-all shadow-lg"
+            style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-primary)', border: '2px solid var(--border)' }}
           >
             {opt}
           </button>

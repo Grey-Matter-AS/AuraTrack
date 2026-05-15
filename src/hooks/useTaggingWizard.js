@@ -11,9 +11,16 @@ export function useTaggingWizard() {
   const [notes, setNotes] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [activeEventId, setActiveEventId] = useState(null);
+  const [manualDurations, setManualDurationsState] = useState({});
+  const [editedTimers, setEditedTimers] = useState([]);
 
   const setActiveEvent = (id) => {
     setActiveEventId(id);
+  };
+
+  const setManualDuration = (phase, seconds) => {
+    setManualDurationsState(prev => ({ ...prev, [phase]: seconds }));
+    setEditedTimers(prev => prev.includes(phase) ? prev : [...prev, phase]);
   };
 
   const loadForEdit = (event) => {
@@ -21,15 +28,14 @@ export function useTaggingWizard() {
     setActiveEventId(event.id);
     setTempSymptomList(event.symptoms || []);
     setNotes(event.notes || '');
+    setManualDurationsState(event.manualDurations || {});
+    setEditedTimers(event.editedTimers || []);
     setTaggingStep('SUMMARY');
   };
 
   const handleFinalSave = async () => {
     const targetId = editingId || activeEventId;
-    if (!targetId) {
-      console.error('No active event found during save');
-      return;
-    }
+    if (!targetId) throw new Error('No active event to save');
 
     let type = selections.type;
     if (!type && editingId) {
@@ -43,7 +49,11 @@ export function useTaggingWizard() {
       notes,
       isComplete: true,
       isEdited: !!editingId,
-      lastModified: Date.now()
+      lastModified: Date.now(),
+      manualDurations,
+      editedTimers,
+      // Keep event.duration in sync with any manual total edit so every view reads the same value
+      ...(manualDurations?.total != null ? { duration: manualDurations.total } : {}),
     });
 
     reset();
@@ -56,6 +66,8 @@ export function useTaggingWizard() {
     setTempSymptomList([]);
     setTaggingStep('TYPE');
     setSelections(EMPTY_SELECTIONS);
+    setManualDurationsState({});
+    setEditedTimers([]);
   };
 
   const moveSymptom = (index, direction) => {
@@ -79,6 +91,8 @@ export function useTaggingWizard() {
     tempSymptomList, setTempSymptomList,
     notes, setNotes,
     editingId, activeEventId,
+    manualDurations, editedTimers,
+    setManualDuration,
     setActiveEvent,
     loadForEdit,
     handleFinalSave,

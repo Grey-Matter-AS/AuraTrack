@@ -1,1 +1,115 @@
 @import "tailwindcss";
+
+/* ─── Theme: CSS Custom Properties ──────────────────────────── */
+:root {
+  /* Backgrounds */
+  --bg-base:     #0f172a;
+  --bg-base-95:  rgba(15, 23, 42, 0.95);
+  --bg-card:     #1e293b;
+  --bg-raised:   #334155;
+  --bg-input:    #0f172a;
+
+  /* Text */
+  --text-primary:   #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-dim:       #64748b;
+  --text-faint:     #475569;
+  --text-on-raised: #ffffff;
+
+  /* Borders */
+  --border:        #334155;
+  --border-subtle: rgba(51, 65, 85, 0.5);
+
+  /* Accent (overridden by data-accent attribute) */
+  --accent: #dc2626;
+}
+
+/* Light theme overrides */
+[data-theme="light"] {
+  --bg-base:     #f8fafc;
+  --bg-base-95:  rgba(248, 250, 252, 0.95);
+  --bg-card:     #ffffff;
+  --bg-raised:   #334155; /* keep dark for filled buttons — contrast on light bg */
+  --bg-input:    #f1f5f9;
+  --text-primary:   #0f172a;
+  --text-secondary: #475569;
+  --text-dim:       #64748b;
+  --text-faint:     #94a3b8;
+  --text-on-raised: #ffffff;
+  --border:        #e2e8f0;
+  --border-subtle: rgba(226, 232, 240, 0.7);
+}
+
+/* System theme — follow OS preference */
+@media (prefers-color-scheme: light) {
+  [data-theme="system"] {
+    --bg-base:     #f8fafc;
+    --bg-base-95:  rgba(248, 250, 252, 0.95);
+    --bg-card:     #ffffff;
+    --bg-raised:   #334155;
+    --bg-input:    #f1f5f9;
+    --text-primary:   #0f172a;
+    --text-secondary: #475569;
+    --text-dim:       #64748b;
+    --text-faint:     #94a3b8;
+    --text-on-raised: #ffffff;
+    --border:        #e2e8f0;
+    --border-subtle: rgba(226, 232, 240, 0.7);
+  }
+}
+
+/* Accent colours */
+[data-accent="blue"]   { --accent: #3b82f6; }
+[data-accent="green"]  { --accent: #16a34a; }
+[data-accent="purple"] { --accent: #9333ea; }
+[data-accent="amber"]  { --accent: #d97706; }
+/* red is the :root default */
+
+/* ─── Light-mode text overrides (Tailwind hardcoded classes) ── */
+[data-theme="light"] .text-white,
+[data-theme="system"] .text-white {
+  color: var(--text-primary);
+}
+[data-theme="light"] .text-slate-100,
+[data-theme="system"] .text-slate-100 {
+  color: var(--text-primary);
+}
+[data-theme="light"] .text-slate-200,
+[data-theme="system"] .text-slate-200 {
+  color: var(--text-primary);
+}
+
+/* ─── Font size scaling ─────────────────────────────────────── */
+html:has([data-font-size="small"])  { font-size: 14px; }
+html:has([data-font-size="normal"]) { font-size: 16px; }
+html:has([data-font-size="large"])  { font-size: 18px; }
+html:has([data-font-size="xlarge"]) { font-size: 21px; }
+
+/* ─── Touch / PWA essentials ────────────────────────────────── */
+
+/* Prevent pull-to-refresh and browser swipe-back/forward navigation */
+html, body {
+  overscroll-behavior: none;
+}
+
+/* Suppress the grey tap-flash on iOS Safari */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Eliminate the 300 ms tap delay and double-tap zoom on all interactive elements */
+button, a, [role="button"], input, select, textarea {
+  touch-action: manipulation;
+}
+
+/*
+  iOS Safari zooms the viewport when an input with font-size < 16px receives focus.
+  This forces a 16px floor while still honouring larger font-size from theming.
+*/
+input, select, textarea {
+  font-size: max(16px, 1em);
+}
+
+/* ─── Utility: hide scrollbar but keep scroll behaviour ─────── */
+.custom-scrollbar { scrollbar-width: none; }
+.custom-scrollbar::-webkit-scrollbar { display: none; }

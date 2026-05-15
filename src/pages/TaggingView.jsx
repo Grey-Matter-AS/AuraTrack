@@ -10,6 +10,7 @@ export default function TaggingView({
   tempSymptomList, setTempSymptomList,
   notes, setNotes,
   editingId, activeEventId,
+  manualDurations, editedTimers, setManualDuration,
   elapsed, laps, startTime,
   onSave, onCancel, moveSymptom
 }) {
@@ -23,7 +24,7 @@ export default function TaggingView({
 
   return (
     <div className="flex-1 flex flex-col items-center w-full max-w-md h-[calc(100dvh-2rem)] overflow-hidden animate-in fade-in slide-in-from-bottom-6">
-      <div className="w-full h-full min-h-0 bg-[#1e293b] p-6 rounded-[2rem] shadow-2xl border border-slate-700/50 flex flex-col overflow-hidden">
+      <div className="w-full h-full min-h-0 p-6 rounded-[2rem] shadow-2xl flex flex-col overflow-hidden" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
         <div className="flex-1 overflow-y-auto custom-scrollbar">
 
           {/* Step 1: Seizure Type */}
@@ -141,11 +142,13 @@ export default function TaggingView({
               elapsed={elapsed}
               laps={laps}
               startTime={startTime}
+              manualDurations={manualDurations}
+              editedTimers={editedTimers}
+              onSetManualDuration={setManualDuration}
               onAddAnother={() => setTaggingStep('S_CAT')}
               onSave={onSave}
               onCancel={onCancel}
               onRemoveSymptom={index => setTempSymptomList(tempSymptomList.filter((_, i) => i !== index))}
-              onMoveSymptom={moveSymptom}
             />
           )}
 
