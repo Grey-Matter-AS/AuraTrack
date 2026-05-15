@@ -125,7 +125,7 @@ function App() {
       {showHeader && <Header onHistory={() => setStatus('HISTORY')} onSettings={() => setStatus('SETTINGS')} />}
 
       <div className="flex-1 flex flex-col items-center px-6 overflow-hidden pb-8">
-        {status === 'IDLE'         && <IdleView history={history.history} onStart={handleStart} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail} />}
+        {status === 'IDLE'         && <IdleView history={history.history} onStart={handleStart} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail}  />}
         {status === 'RECORDING'    && <RecordingView elapsed={timer.elapsed} startTime={timer.startTime} laps={timer.laps} onLap={timer.recordLap} onStop={handleStop} onEmergencyStop={handleEmergencyStop} onQuickNote={l => wizard.addQuickNote(l, timer.elapsed)} userMode={settings.userMode} quickNoteLabels={activeQuickNoteLabels} />}
         {status === 'TAGGING'      && <TaggingView {...wizard} elapsed={timer.elapsed} laps={timer.laps} startTime={timer.startTime} onSave={handleSave} onCancel={handleCancel} />}
         {status === 'HISTORY'      && <HistoryView onBack={() => setStatus('IDLE')} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail} onExport={() => setStatus('EXPORT')} historyPageSize={settings.historyPageSize} />}

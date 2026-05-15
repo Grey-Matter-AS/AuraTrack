@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { db } from '../data/db';
 import { EventCard } from '../components/EventCard';
 import { SEIZURE_TYPES } from '../data/constants';
 import SeizureTrendChart from '../components/SeizureTrendChart';
+import { buildDangerMap } from '../utils/dangerFlags';
 
 export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, onExport, historyPageSize = 10 }) {
   const [allEvents, setAllEvents] = useState([]);
@@ -22,6 +23,9 @@ export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, on
 
   const totalPages = Math.ceil(filtered.length / historyPageSize);
   const paged = filtered.slice(page * historyPageSize, (page + 1) * historyPageSize);
+
+  // Danger flags computed once against the full unfiltered list for accurate cluster detection
+  const dangerMap = useMemo(() => buildDangerMap(allEvents), [allEvents]);
 
   return (
     <div className="flex-1 flex flex-col w-full max-w-md overflow-hidden">
@@ -85,6 +89,7 @@ export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, on
               onEdit={onEdit}
               onDelete={onDelete}
               onViewDetail={onViewDetail}
+              dangerFlags={dangerMap[event.id]}
             />
           ))
         )}

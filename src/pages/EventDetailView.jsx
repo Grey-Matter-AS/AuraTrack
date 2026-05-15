@@ -1,11 +1,61 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../data/db';
+import { computeDangerFlags } from '../utils/dangerFlags';
+
+const CLUSTER_WINDOW_MS = 8 * 60 * 1000;
+
+function DangerAlert({ flags }) {
+  if (!flags?.length) return null;
+  return (
+    <div className="space-y-2 mb-2">
+      {flags.includes('long_duration') && (
+        <div
+          className="flex items-start gap-3 p-4 rounded-2xl"
+          style={{ backgroundColor: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.4)' }}
+        >
+          <span className="text-amber-500 text-xl shrink-0">⚠</span>
+          <div>
+            <p className="text-amber-500 font-black text-xs uppercase tracking-widest">Prolonged Seizure</p>
+            <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+              This event lasted more than 5 minutes. Seek medical review if not already done.
+            </p>
+          </div>
+        </div>
+      )}
+      {flags.includes('cluster') && (
+        <div
+          className="flex items-start gap-3 p-4 rounded-2xl"
+          style={{ backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.5)' }}
+        >
+          <span className="text-red-500 text-xl shrink-0">⚠</span>
+          <div>
+            <p className="text-red-500 font-black text-xs uppercase tracking-widest">Cluster / Status Epilepticus Risk</p>
+            <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+              3 or more seizures occurred within 8 minutes without confirmed recovery between them. Consult a neurologist immediately.
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function EventDetailView({ eventId, onEdit, onClose }) {
   const [event, setEvent] = useState(null);
+  const [dangerFlags, setDangerFlags] = useState([]);
 
   useEffect(() => {
-    if (eventId) db.events.get(eventId).then(setEvent);
+    if (!eventId) return;
+    db.events.get(eventId).then(async ev => {
+      setEvent(ev);
+      if (!ev) return;
+      // Load events within ±8 min window to assess cluster risk
+      const nearby = await db.events
+        .where('startTime')
+        .between(ev.startTime - CLUSTER_WINDOW_MS, ev.startTime + CLUSTER_WINDOW_MS, true, true)
+        .toArray();
+      setDangerFlags(computeDangerFlags(ev, nearby));
+    });
   }, [eventId]);
 
   if (!event) {
@@ -16,7 +66,6 @@ export default function EventDetailView({ eventId, onEdit, onClose }) {
     );
   }
 
-  // Prefer manually-edited values; fall back to lap timestamps
   const m = event.manualDurations || {};
   const auraDur     = m.aura     ?? (event.laps?.aura ? Math.floor((event.laps.aura - event.startTime) / 1000) : 0);
   const seizureDur  = m.seizure  ?? (event.laps?.aura && event.laps?.seizure  ? Math.floor((event.laps.seizure  - event.laps.aura)    / 1000) : 0);
@@ -26,7 +75,7 @@ export default function EventDetailView({ eventId, onEdit, onClose }) {
     <div className="flex-1 flex flex-col w-full max-w-md overflow-hidden">
 
       {/* Header */}
-      <div className="flex items-center gap-4 mb-6 shrink-0">
+      <div className="flex items-center gap-4 mb-4 shrink-0">
         <button
           onClick={onClose}
           className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
@@ -37,7 +86,7 @@ export default function EventDetailView({ eventId, onEdit, onClose }) {
         <h2 className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--text-dim)' }}>Event Detail</h2>
         <button
           onClick={() => onEdit(event)}
-          className="ml-auto text-[10px] font-bold text-blue-400 px-3 py-1.5 border border-blue-900/50 rounded tracking-wider uppercase"
+          className="ml-auto min-h-[40px] px-4 text-[10px] font-bold text-blue-400 border border-blue-900/50 rounded-xl tracking-wider uppercase active:bg-blue-600 active:text-white transition-all"
         >
           Edit
         </button>
@@ -45,15 +94,22 @@ export default function EventDetailView({ eventId, onEdit, onClose }) {
 
       <div className="flex-1 overflow-y-auto space-y-4 pr-1 custom-scrollbar">
 
+        {/* Danger alerts — shown above the duration card */}
+        <DangerAlert flags={dangerFlags} />
+
         {/* Duration Summary */}
         <div
           className="p-6 rounded-[2.5rem] shadow-lg"
-          style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
+          style={{
+            backgroundColor: 'var(--bg-card)',
+            border: dangerFlags.length ? '1px solid rgba(239,68,68,0.35)' : '1px solid var(--border-subtle)',
+          }}
         >
           <div className="flex justify-between items-end mb-4">
             <div>
               <p className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: 'var(--text-dim)' }}>TOTAL DURATION</p>
-              <p className="text-4xl font-mono font-black leading-none" style={{ color: 'var(--text-primary)' }}>
+              <p className="text-4xl font-mono font-black leading-none"
+                style={{ color: dangerFlags.includes('long_duration') ? '#f59e0b' : 'var(--text-primary)' }}>
                 {event.duration}<span className="text-lg ml-1 font-sans" style={{ color: 'var(--text-dim)' }}>S</span>
               </p>
             </div>
@@ -79,10 +135,7 @@ export default function EventDetailView({ eventId, onEdit, onClose }) {
         </div>
 
         {/* Metadata */}
-        <div
-          className="p-5 rounded-2xl"
-          style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
-        >
+        <div className="p-5 rounded-2xl" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
           <p className="text-[10px] font-black uppercase tracking-widest mb-3" style={{ color: 'var(--text-dim)' }}>Details</p>
           <div className="space-y-2 text-sm">
             {[['Date', event.date], ['Time', event.time]].map(([k, v]) => (
@@ -102,10 +155,7 @@ export default function EventDetailView({ eventId, onEdit, onClose }) {
 
         {/* Symptoms */}
         {event.symptoms?.length > 0 && (
-          <div
-            className="p-5 rounded-2xl"
-            style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
-          >
+          <div className="p-5 rounded-2xl" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
             <p className="text-[10px] font-black uppercase tracking-widest mb-3" style={{ color: 'var(--text-dim)' }}>Symptoms</p>
             <div className="space-y-3">
               {event.symptoms.map((s, i) => (
@@ -120,10 +170,7 @@ export default function EventDetailView({ eventId, onEdit, onClose }) {
 
         {/* Notes */}
         {event.notes && (
-          <div
-            className="p-5 rounded-2xl"
-            style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
-          >
+          <div className="p-5 rounded-2xl" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
             <p className="text-[10px] font-black uppercase tracking-widest mb-3" style={{ color: 'var(--text-dim)' }}>Clinical Observations</p>
             <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--text-primary)' }}>{event.notes}</p>
           </div>

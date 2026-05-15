@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { EventCard } from '../components/EventCard';
+import { buildDangerMap } from '../utils/dangerFlags';
 
-export default function IdleView({ history, onStart, onEdit, onDelete }) {
+export default function IdleView({ history, onStart, onEdit, onDelete, onViewDetail }) {
+  const dangerMap = useMemo(() => buildDangerMap(history), [history]);
+
   return (
     <div className="flex-1 flex flex-col items-center w-full max-w-md overflow-hidden">
       <div className="py-10 shrink-0">
@@ -33,6 +36,8 @@ export default function IdleView({ history, onStart, onEdit, onDelete }) {
                 event={event}
                 onEdit={onEdit}
                 onDelete={onDelete}
+                onViewDetail={onViewDetail}
+                dangerFlags={dangerMap[event.id]}
               />
             ))
           )}

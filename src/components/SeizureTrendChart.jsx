@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 const TIME_WINDOWS = [
   { label: '1D',  description: 'Last 24 Hours',  days: 1   },
@@ -78,6 +78,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 export default function SeizureTrendChart({ allEvents }) {
   const [windowIndex, setWindowIndex] = useState(5); // default: 1 Month
+  const [chartType, setChartType] = useState('bar');
 
   const { description, days } = TIME_WINDOWS[windowIndex];
   const data  = useMemo(() => buildBuckets(allEvents, days), [allEvents, days]);
@@ -127,30 +128,76 @@ export default function SeizureTrendChart({ allEvents }) {
         </button>
       </div>
 
+      {/* Chart type toggle */}
+      <div className="flex rounded-xl overflow-hidden mb-3" style={{ border: '1px solid var(--border)' }}>
+        {['bar', 'line'].map(type => (
+          <button
+            key={type}
+            onClick={() => setChartType(type)}
+            className="flex-1 py-1.5 text-[9px] font-black uppercase tracking-widest transition-all"
+            style={{
+              backgroundColor: chartType === type ? 'var(--accent)' : 'var(--bg-raised)',
+              color: chartType === type ? '#fff' : 'var(--text-dim)',
+            }}
+          >
+            {type}
+          </button>
+        ))}
+      </div>
+
       {/* Chart */}
       <ResponsiveContainer width="100%" height={120}>
-        <BarChart data={data} margin={{ top: 4, right: 2, left: -22, bottom: 0 }}>
-          <XAxis
-            dataKey="label"
-            tick={{ fontSize: 8, fill: 'var(--text-dim)' }}
-            tickLine={false}
-            axisLine={false}
-            interval={tickInterval}
-          />
-          <YAxis
-            allowDecimals={false}
-            tick={{ fontSize: 8, fill: 'var(--text-dim)' }}
-            tickLine={false}
-            axisLine={false}
-            width={22}
-          />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--border-subtle)' }} />
-          <Bar dataKey="count" radius={[3, 3, 0, 0]}>
-            {data.map((entry, i) => (
-              <Cell key={i} fill={entry.count > 0 ? 'var(--accent)' : 'var(--bg-raised)'} />
-            ))}
-          </Bar>
-        </BarChart>
+        {chartType === 'bar' ? (
+          <BarChart data={data} margin={{ top: 4, right: 2, left: -22, bottom: 0 }}>
+            <XAxis
+              dataKey="label"
+              tick={{ fontSize: 8, fill: 'var(--text-dim)' }}
+              tickLine={false}
+              axisLine={false}
+              interval={tickInterval}
+            />
+            <YAxis
+              allowDecimals={false}
+              tick={{ fontSize: 8, fill: 'var(--text-dim)' }}
+              tickLine={false}
+              axisLine={false}
+              width={22}
+            />
+            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--border-subtle)' }} />
+            <Bar dataKey="count" radius={[3, 3, 0, 0]}>
+              {data.map((entry, i) => (
+                <Cell key={i} fill={entry.count > 0 ? 'var(--accent)' : 'var(--bg-raised)'} />
+              ))}
+            </Bar>
+          </BarChart>
+        ) : (
+          <LineChart data={data} margin={{ top: 4, right: 2, left: -22, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" vertical={false} />
+            <XAxis
+              dataKey="label"
+              tick={{ fontSize: 8, fill: 'var(--text-dim)' }}
+              tickLine={false}
+              axisLine={false}
+              interval={tickInterval}
+            />
+            <YAxis
+              allowDecimals={false}
+              tick={{ fontSize: 8, fill: 'var(--text-dim)' }}
+              tickLine={false}
+              axisLine={false}
+              width={22}
+            />
+            <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'var(--border)', strokeWidth: 1 }} />
+            <Line
+              type="monotone"
+              dataKey="count"
+              stroke="var(--accent)"
+              strokeWidth={2}
+              dot={{ r: 3, fill: 'var(--accent)', strokeWidth: 0 }}
+              activeDot={{ r: 5, fill: 'var(--accent)' }}
+            />
+          </LineChart>
+        )}
       </ResponsiveContainer>
 
       {/* Zoom level indicator dots */}
