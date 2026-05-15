@@ -51,9 +51,11 @@ export function useEventTimer() {
     setIsRunning(true);
   };
 
-  const setElapsedForEdit = (duration) => {
-    setElapsed(duration);
+  const setForEdit = (duration, eventLaps, eventStartTime) => {
+    setElapsed(duration ?? 0);
+    setLaps(eventLaps || { aura: null, seizure: null, recovery: null });
+    setStartTime(eventStartTime || null);
   };
 
-  return { startTime, elapsed, laps, startTimer, stopTimer, recordLap, restore, setElapsedForEdit };
+  return { startTime, elapsed, laps, startTimer, stopTimer, recordLap, restore, setForEdit };
 }

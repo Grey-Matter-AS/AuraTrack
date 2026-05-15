@@ -2,8 +2,8 @@ import React, { useMemo } from 'react';
 import { EventCard } from '../components/EventCard';
 import { buildDangerMap } from '../utils/dangerFlags';
 
-export default function IdleView({ history, onStart, onEdit, onDelete, onViewDetail }) {
-  const dangerMap = useMemo(() => buildDangerMap(history), [history]);
+export default function IdleView({ history, fullHistory, onStart, onEdit, onDelete, onViewDetail }) {
+  const dangerMap = useMemo(() => buildDangerMap(fullHistory?.length ? fullHistory : history), [fullHistory, history]);
 
   return (
     <div className="flex-1 flex flex-col items-center w-full max-w-md overflow-hidden">

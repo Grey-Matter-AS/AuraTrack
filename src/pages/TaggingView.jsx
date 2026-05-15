@@ -12,7 +12,7 @@ export default function TaggingView({
   editingId, activeEventId,
   manualDurations, editedTimers, setManualDuration,
   elapsed, laps, startTime,
-  onSave, onCancel, moveSymptom
+  onSave, onCancel,
 }) {
   const handleTypeSelect = async (val) => {
     const targetId = editingId || activeEventId;
@@ -25,115 +25,10 @@ export default function TaggingView({
   return (
     <div className="flex-1 flex flex-col items-center w-full max-w-md h-[calc(100dvh-2rem)] overflow-hidden animate-in fade-in slide-in-from-bottom-6">
       <div className="w-full h-full min-h-0 p-6 rounded-[2rem] shadow-2xl flex flex-col overflow-hidden" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
-        <div className="flex-1 overflow-y-auto custom-scrollbar">
 
-          {/* Step 1: Seizure Type */}
-          {taggingStep === 'TYPE' && (
-            <WizardMenu
-              title="Step 1: Seizure Type"
-              options={SEIZURE_TYPES}
-              onPick={handleTypeSelect}
-            />
-          )}
-
-          {/* Step 2-4: Symptom Drill-Down */}
-          {taggingStep === 'S_CAT' && (
-            <WizardMenu
-              title="What kind of feeling?"
-              options={Object.keys(SYMPTOM_WIZARD)}
-              onPick={v => { setSelections({ ...selections, group: v }); setTaggingStep('S_SYM'); }}
-            />
-          )}
-          {taggingStep === 'S_SYM' && (
-            <WizardMenu
-              title={selections.group}
-              options={Object.keys(SYMPTOM_WIZARD[selections.group])}
-              onPick={v => { setSelections({ ...selections, symptom: v }); setTaggingStep('S_DET'); }}
-              onBack={() => setTaggingStep('S_CAT')}
-            />
-          )}
-          {taggingStep === 'S_DET' && (
-            <WizardMenu
-              title={selections.symptom}
-              options={SYMPTOM_WIZARD[selections.group][selections.symptom].options.map(o => o.label)}
-              onPick={label => {
-                const optionObj = SYMPTOM_WIZARD[selections.group][selections.symptom].options.find(o => o.label === label);
-                const groupConfig = SYMPTOM_WIZARD[selections.group][selections.symptom];
-                const updatedSelections = {
-                  ...selections,
-                  detail: label,
-                  medical: optionObj.med,
-                  region: optionObj.forceRegion || '',
-                  subRegion: optionObj.forceSubRegion || ''
-                };
-                setSelections(updatedSelections);
-
-                if (optionObj.forceSubRegion) {
-                  setTaggingStep('R_DET');
-                  return;
-                }
-                if (groupConfig.skipRegion) {
-                  const bundle = {
-                    symptom: selections.symptom,
-                    detail: label,
-                    medical: optionObj.med,
-                    region: 'N/A',
-                    specificPart: 'Internal/General'
-                  };
-                  setTempSymptomList([...tempSymptomList, bundle]);
-                  setTaggingStep('SUMMARY');
-                } else if (optionObj.forceRegion) {
-                  setTaggingStep('R_SUB');
-                } else {
-                  setTaggingStep('R_CAT');
-                }
-              }}
-              onBack={() => setTaggingStep('S_SYM')}
-            />
-          )}
-
-          {/* Step 3-5: Region Drill-Down */}
-          {taggingStep === 'R_CAT' && (
-            <WizardMenu
-              title="Where did it happen?"
-              options={Object.keys(REGION_WIZARD)}
-              onPick={v => { setSelections({ ...selections, region: v }); setTaggingStep('R_SUB'); }}
-            />
-          )}
-          {taggingStep === 'R_SUB' && (
-            <WizardMenu
-              title={selections.region}
-              options={Object.keys(REGION_WIZARD[selections.region])}
-              onPick={v => { setSelections({ ...selections, subRegion: v }); setTaggingStep('R_DET'); }}
-              onBack={() => {
-                const optionObj = SYMPTOM_WIZARD[selections.group][selections.symptom].options.find(o => o.label === selections.detail);
-                setTaggingStep(optionObj.forceRegion ? 'S_DET' : 'R_CAT');
-              }}
-            />
-          )}
-          {taggingStep === 'R_DET' && (
-            <WizardMenu
-              title={selections.subRegion}
-              options={REGION_WIZARD[selections.region][selections.subRegion]}
-              onPick={v => {
-                const bundle = {
-                  symptom: selections.symptom,
-                  detail: selections.detail,
-                  region: selections.region,
-                  specificPart: v
-                };
-                setTempSymptomList([...tempSymptomList, bundle]);
-                setTaggingStep('SUMMARY');
-              }}
-              onBack={() => {
-                const optionObj = SYMPTOM_WIZARD[selections.group][selections.symptom].options.find(o => o.label === selections.detail);
-                setTaggingStep(optionObj.forceSubRegion ? 'S_DET' : 'R_SUB');
-              }}
-            />
-          )}
-
-          {/* Summary */}
-          {taggingStep === 'SUMMARY' && (
+        {/* flex-1 min-h-0 wrapper gives Summary a definite, growable height in the flex column */}
+        {taggingStep === 'SUMMARY' ? (
+          <div className="flex-1 min-h-0">
             <Summary
               tempSymptomList={tempSymptomList}
               setTempSymptomList={setTempSymptomList}
@@ -150,9 +45,118 @@ export default function TaggingView({
               onCancel={onCancel}
               onRemoveSymptom={index => setTempSymptomList(tempSymptomList.filter((_, i) => i !== index))}
             />
-          )}
+          </div>
+        ) : (
+          <div className="flex-1 overflow-y-auto custom-scrollbar">
 
-        </div>
+            {/* Step 1: Seizure Type */}
+            {taggingStep === 'TYPE' && (
+              <WizardMenu
+                title="Step 1: Seizure Type"
+                options={SEIZURE_TYPES}
+                onPick={handleTypeSelect}
+              />
+            )}
+
+            {/* Step 2-4: Symptom Drill-Down */}
+            {taggingStep === 'S_CAT' && (
+              <WizardMenu
+                title="What kind of feeling?"
+                options={Object.keys(SYMPTOM_WIZARD)}
+                onPick={v => { setSelections({ ...selections, group: v }); setTaggingStep('S_SYM'); }}
+              />
+            )}
+            {taggingStep === 'S_SYM' && (
+              <WizardMenu
+                title={selections.group}
+                options={Object.keys(SYMPTOM_WIZARD[selections.group])}
+                onPick={v => { setSelections({ ...selections, symptom: v }); setTaggingStep('S_DET'); }}
+                onBack={() => setTaggingStep('S_CAT')}
+              />
+            )}
+            {taggingStep === 'S_DET' && (
+              <WizardMenu
+                title={selections.symptom}
+                options={SYMPTOM_WIZARD[selections.group][selections.symptom].options.map(o => o.label)}
+                onPick={label => {
+                  const optionObj = SYMPTOM_WIZARD[selections.group][selections.symptom].options.find(o => o.label === label);
+                  const groupConfig = SYMPTOM_WIZARD[selections.group][selections.symptom];
+                  const updatedSelections = {
+                    ...selections,
+                    detail: label,
+                    medical: optionObj.med,
+                    region: optionObj.forceRegion || '',
+                    subRegion: optionObj.forceSubRegion || ''
+                  };
+                  setSelections(updatedSelections);
+
+                  if (optionObj.forceSubRegion) {
+                    setTaggingStep('R_DET');
+                    return;
+                  }
+                  if (groupConfig.skipRegion) {
+                    const bundle = {
+                      symptom: selections.symptom,
+                      detail: label,
+                      medical: optionObj.med,
+                      region: 'N/A',
+                      specificPart: 'Internal/General'
+                    };
+                    setTempSymptomList([...tempSymptomList, bundle]);
+                    setTaggingStep('SUMMARY');
+                  } else if (optionObj.forceRegion) {
+                    setTaggingStep('R_SUB');
+                  } else {
+                    setTaggingStep('R_CAT');
+                  }
+                }}
+                onBack={() => setTaggingStep('S_SYM')}
+              />
+            )}
+
+            {/* Step 3-5: Region Drill-Down */}
+            {taggingStep === 'R_CAT' && (
+              <WizardMenu
+                title="Where did it happen?"
+                options={Object.keys(REGION_WIZARD)}
+                onPick={v => { setSelections({ ...selections, region: v }); setTaggingStep('R_SUB'); }}
+              />
+            )}
+            {taggingStep === 'R_SUB' && (
+              <WizardMenu
+                title={selections.region}
+                options={Object.keys(REGION_WIZARD[selections.region])}
+                onPick={v => { setSelections({ ...selections, subRegion: v }); setTaggingStep('R_DET'); }}
+                onBack={() => {
+                  const optionObj = SYMPTOM_WIZARD[selections.group][selections.symptom].options.find(o => o.label === selections.detail);
+                  setTaggingStep(optionObj.forceRegion ? 'S_DET' : 'R_CAT');
+                }}
+              />
+            )}
+            {taggingStep === 'R_DET' && (
+              <WizardMenu
+                title={selections.subRegion}
+                options={REGION_WIZARD[selections.region][selections.subRegion]}
+                onPick={v => {
+                  const bundle = {
+                    symptom: selections.symptom,
+                    detail: selections.detail,
+                    region: selections.region,
+                    specificPart: v
+                  };
+                  setTempSymptomList([...tempSymptomList, bundle]);
+                  setTaggingStep('SUMMARY');
+                }}
+                onBack={() => {
+                  const optionObj = SYMPTOM_WIZARD[selections.group][selections.symptom].options.find(o => o.label === selections.detail);
+                  setTaggingStep(optionObj.forceSubRegion ? 'S_DET' : 'R_SUB');
+                }}
+              />
+            )}
+
+          </div>
+        )}
+
       </div>
     </div>
   );

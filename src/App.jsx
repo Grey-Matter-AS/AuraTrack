@@ -41,8 +41,10 @@ function Header({ onSettings, onHistory }) {
 
 function App() {
   const [status, setStatus] = useState('IDLE');
+  const [previousStatus, setPreviousStatus] = useState('IDLE');
   const [itemToDelete, setItemToDelete] = useState(null);
   const [detailEventId, setDetailEventId] = useState(null);
+  const [fullHistory, setFullHistory] = useState([]);
 
   const timer = useEventTimer();
   const history = useEventHistory();
@@ -62,7 +64,12 @@ function App() {
     }
   }, []);
 
-  useEffect(() => { if (status === 'IDLE') history.load(); }, [status]);
+  useEffect(() => {
+    if (status === 'IDLE') {
+      history.load();
+      history.loadAll().then(setFullHistory);
+    }
+  }, [status]);
 
   const handleStart = () => { wizard.reset(); timer.startTimer(); setStatus('RECORDING'); };
 
@@ -79,7 +86,7 @@ function App() {
     }
   };
 
-  const handleEdit = (event) => { wizard.loadForEdit(event); timer.setElapsedForEdit(event.duration); setStatus('TAGGING'); };
+  const handleEdit = (event) => { wizard.loadForEdit(event); timer.setForEdit(event.duration, event.laps, event.startTime); setStatus('TAGGING'); };
   const handleSave = async () => {
     try {
       await wizard.handleFinalSave();
@@ -108,7 +115,7 @@ function App() {
     setStatus('IDLE');
   };
 
-  const goToDetail = (id) => { setDetailEventId(id); setStatus('EVENT_DETAIL'); };
+  const goToDetail = (id) => { setPreviousStatus(status); setDetailEventId(id); setStatus('EVENT_DETAIL'); };
   const showHeader = !['RECORDING', 'TAGGING'].includes(status);
 
   // Active quick note labels (filter empties)
@@ -125,13 +132,13 @@ function App() {
       {showHeader && <Header onHistory={() => setStatus('HISTORY')} onSettings={() => setStatus('SETTINGS')} />}
 
       <div className="flex-1 flex flex-col items-center px-6 overflow-hidden pb-8">
-        {status === 'IDLE'         && <IdleView history={history.history} onStart={handleStart} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail}  />}
+        {status === 'IDLE'         && <IdleView history={history.history} fullHistory={fullHistory} onStart={handleStart} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail} />}
         {status === 'RECORDING'    && <RecordingView elapsed={timer.elapsed} startTime={timer.startTime} laps={timer.laps} onLap={timer.recordLap} onStop={handleStop} onEmergencyStop={handleEmergencyStop} onQuickNote={l => wizard.addQuickNote(l, timer.elapsed)} userMode={settings.userMode} quickNoteLabels={activeQuickNoteLabels} />}
         {status === 'TAGGING'      && <TaggingView {...wizard} elapsed={timer.elapsed} laps={timer.laps} startTime={timer.startTime} onSave={handleSave} onCancel={handleCancel} />}
         {status === 'HISTORY'      && <HistoryView onBack={() => setStatus('IDLE')} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail} onExport={() => setStatus('EXPORT')} historyPageSize={settings.historyPageSize} />}
         {status === 'SETTINGS'     && <SettingsView settings={settings} onUpdate={updateSettings} onReset={resetSettings} onBack={() => setStatus('IDLE')} />}
         {status === 'EXPORT'       && <ExportView onBack={() => setStatus('HISTORY')} settings={settings} />}
-        {status === 'EVENT_DETAIL' && <EventDetailView eventId={detailEventId} onEdit={handleEdit} onClose={() => setStatus('IDLE')} />}
+        {status === 'EVENT_DETAIL' && <EventDetailView eventId={detailEventId} onEdit={handleEdit} onClose={() => setStatus(previousStatus)} />}
       </div>
 
       {itemToDelete && <DeleteModal onConfirm={handleDeleteConfirm} onCancel={() => setItemToDelete(null)} />}
