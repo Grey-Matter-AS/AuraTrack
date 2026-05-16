@@ -22,21 +22,36 @@ export const exportToCSV = (events) => {
 export const exportToPDF = (events) => {
   const win = window.open('', '_blank');
   if (!win) return;
+
+  const fmtSymptomPath = (s) => {
+    const path = [s.symptom, s.detail].filter(Boolean).join(' › ');
+    const loc = [s.region, s.subRegion, s.specificPart]
+      .filter(p => p && p !== 'N/A' && p !== 'Internal/General')
+      .join(' › ');
+    return loc ? `${path}  @  ${loc}` : path;
+  };
+
   win.document.write(`
     <html><head><title>AuraTrack Export</title>
     <style>
       body { font-family: monospace; padding: 20px; }
       table { border-collapse: collapse; width: 100%; }
       td, th { border: 1px solid #ccc; padding: 6px 10px; text-align: left; }
+      .symp-row td { border-top: none; color: #666; font-style: italic; font-size: 0.9em; background: #fafafa; }
     </style>
     </head><body>
     <h2>AuraTrack Event Log — ${new Date().toLocaleDateString()}</h2>
     <table>
       <thead><tr><th>Date</th><th>Time</th><th>Type</th><th>Duration</th><th>Notes</th></tr></thead>
       <tbody>
-        ${events.map(e =>
-          `<tr><td>${e.date||''}</td><td>${e.time||''}</td><td>${e.type||''}</td><td>${e.duration||0}s</td><td>${(e.notes||'').replace(/\n/g,'<br>')}</td></tr>`
-        ).join('')}
+        ${events.map(e => {
+          const syms = e.symptoms || [];
+          const eventRow = `<tr><td>${e.date||''}</td><td>${e.time||''}</td><td>${e.type||''}</td><td>${e.duration||0}s</td><td>${(e.notes||'').replace(/\n/g,'<br>')}</td></tr>`;
+          const sympRow = syms.length
+            ? `<tr class="symp-row"><td colspan="5">${syms.map(fmtSymptomPath).join('&nbsp;&nbsp;|&nbsp;&nbsp;')}</td></tr>`
+            : '';
+          return eventRow + sympRow;
+        }).join('')}
       </tbody>
     </table>
     </body></html>
@@ -161,9 +176,12 @@ export const exportNeurologistReport = (events, settings = {}) => {
     ].filter(Boolean).join('');
 
     const sympRows = (e.symptoms || []).map(s => {
-      const loc = [s.region, s.subRegion, s.specificPart].filter(Boolean).join(' › ');
+      const path = [s.symptom, s.detail].filter(Boolean).join(' › ');
+      const loc = [s.region, s.subRegion, s.specificPart]
+        .filter(p => p && p !== 'N/A' && p !== 'Internal/General')
+        .join(' › ');
       return `<tr>
-        <td style="color:#374151;padding:3px 5px">${esc(s.symptom || s.detail || '—')}</td>
+        <td style="color:#374151;padding:3px 5px">${esc(path || '—')}</td>
         <td style="color:#6b7280;font-style:italic;padding:3px 5px">${esc(s.med || '—')}</td>
         <td style="color:#6b7280;padding:3px 5px">${esc(loc || '—')}</td>
       </tr>`;
@@ -206,6 +224,25 @@ export const exportNeurologistReport = (events, settings = {}) => {
       ${e.notes ? `<div style="margin-top:6px;padding:7px 9px;background:#f9fafb;border-radius:5px;font-size:10px;color:#374151;white-space:pre-wrap">${esc(e.notes)}</div>` : ''}
     </div>`;
   }).join('');
+
+  // ── SECTION 5b: Full Symptom Log (all period events)
+  const sympLogRows = periodEvents
+    .filter(e => (e.symptoms || []).length > 0)
+    .flatMap(e => e.symptoms.map(s => {
+      const path = [s.symptom, s.detail].filter(Boolean).join(' › ');
+      const loc = [s.region, s.subRegion, s.specificPart]
+        .filter(p => p && p !== 'N/A' && p !== 'Internal/General')
+        .join(' › ');
+      return `<tr>
+        <td>${esc(e.date || '—')}</td>
+        <td>${esc(e.time || '—')}</td>
+        <td style="font-weight:700">${esc(e.type || '—')}</td>
+        <td>${esc(path)}</td>
+        <td style="font-style:italic;color:#6b7280">${esc(s.med || '—')}</td>
+        <td style="color:#6b7280">${esc(loc || '—')}</td>
+      </tr>`;
+    }))
+    .join('');
 
   // ── SECTION 6: Clinical Flags
   const flags = [];
@@ -401,6 +438,18 @@ export const exportNeurologistReport = (events, settings = {}) => {
   <div class="section">
     <h2>Condensed Event Details</h2>
     ${detailBlocks || '<p style="color:#9ca3af;font-size:11px;margin:0">No events to display.</p>'}
+  </div>
+
+  <!-- SECTION 5b: FULL SYMPTOM LOG -->
+  <div class="section">
+    <h2>Ictal Symptom Log — All Period Events</h2>
+    ${sympLogRows ? `<table>
+      <thead><tr>
+        <th>Date</th><th>Time</th><th>Type</th>
+        <th>Symptom Path</th><th>Medical Term</th><th>Location</th>
+      </tr></thead>
+      <tbody>${sympLogRows}</tbody>
+    </table>` : '<p style="color:#9ca3af;font-size:11px;margin:0">No symptoms recorded in this period.</p>'}
   </div>
 
   <!-- SECTION 6: CLINICAL FLAGS -->
