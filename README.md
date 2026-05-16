@@ -1,16 +1,146 @@
-# React + Vite
+# 🧠 AuraTrack
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+AuraTrack is a progressive web app (PWA) designed for **accurate, real-world seizure tracking**.  
+It prioritizes **reliability, clinical relevance, and usability during impaired states**, enabling both patients and caretakers to record events and generate structured reports for neurologists.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🎯 Purpose
 
-## React Compiler
+Seizure events are difficult to capture accurately in real time due to varying levels of awareness. AuraTrack is built around this constraint.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Instead of relying on perfect user input, the system is designed to:
 
-## Expanding the ESLint configuration
+- Capture **critical event timing with minimal interaction**
+- Allow **optional advanced input when possible**
+- Support **post-event reconstruction**
+- Generate **clinically meaningful reports and trends**
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
+
+## ⚙️ Key Features
+
+### ✅ 1. Smart Recording System
+- One-tap start recording (works even during aura)
+- Optional advanced phase markers:
+  - Aura
+  - Seizure
+  - Recovery
+- Automatic handling for:
+  - missed inputs
+  - user unresponsiveness
+  - prolonged events
+
+---
+
+### ✅ 2. Fault-Tolerant Event Logging
+- Events can be:
+  - fully tracked
+  - partially tracked
+  - auto-terminated
+- System preserves **uncertainty instead of guessing**
+- Later correction and enrichment supported
+
+---
+
+### ✅ 3. Post-Event Reconstruction
+- Structured tagging flow after recovery:
+  - symptoms (ordered)
+  - anatomical mapping
+  - notes
+- Designed to reflect **actual patient recall patterns**
+
+---
+
+### ✅ 4. Clinical-Grade Reporting
+
+#### 📄 Neurologist Report (PDF)
+- Recent event summary
+- Detailed event breakdowns
+- Trends and analytics
+- Clinical flags:
+  - prolonged seizures (>5 min)
+  - cluster detection
+- Designed for **2–4 page printable format**
+
+---
+
+### ✅ 5. Export & Portability
+
+- **JSON Export**
+  - Full backup of all events, settings, audit logs
+  - Used for restore, migration, and syncing
+
+- **CSV Export**
+  - Flat dataset for:
+    - Excel
+    - research analysis
+    - clinical review
+
+---
+
+### ✅ 6. Analytics & Trends
+
+Tracks and visualizes:
+
+- Seizure frequency over time
+- Duration trends
+- Phase breakdown (aura / seizure / recovery)
+- Seizure type distribution
+- Cluster detection & severity classification
+
+---
+
+### ✅ 7. Progressive Web App (PWA)
+
+- Installable on mobile and desktop
+- Works offline
+- Data stored locally via IndexedDB
+- No backend required
+
+---
+
+## 🧩 Design Philosophy
+
+AuraTrack is built around a critical insight:
+
+> User input during a seizure is unreliable.
+
+So instead of enforcing strict input flows, the system:
+
+- Accepts incomplete data ✅
+- Recovers and annotates missing information ✅
+- Avoids false assumptions ❌
+
+This ensures that data remains **clinically useful and trustworthy**.
+
+---
+
+## 🧠 Clinical Logic Highlights
+
+- **Prolonged seizure**: ≥ 5 minutes
+- **Cluster detection**: multiple seizures within short intervals
+- **Unresponsive handling**:
+  - auto-detection of inactivity
+  - safe auto-termination
+  - post-event correction
+
+---
+
+## 🚀 Tech Stack
+
+- React (Vite)
+- IndexedDB (Dexie)
+- PWA (Service Worker + Manifest)
+- jsPDF + html2canvas (PDF export)
+- Tailwind CSS
+
+---
+
+## 📦 Installation
+
+```bash
+git clone https://github.com/<your-org>/AuraTrack.git
+cd AuraTrack
+npm install
+npm run dev
