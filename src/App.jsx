@@ -18,7 +18,7 @@ import EventDetailView from './pages/EventDetailView';
 
 function Header({ onSettings, onHistory }) {
   return (
-    <div className="pt-8 pb-2 shrink-0 flex items-center justify-between px-6">
+    <div className="pt-4 pb-2 shrink-0 flex items-center justify-between px-6">
       <button
         onClick={onHistory}
         className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
@@ -127,7 +127,7 @@ function App() {
   return (
     <div
       className="flex flex-col h-screen w-full font-sans overflow-hidden select-none"
-      style={{ backgroundColor: 'var(--bg-base)', color: 'var(--text-primary)' }}
+      style={{ backgroundColor: 'var(--bg-base)', color: 'var(--text-primary)', paddingTop: 'env(safe-area-inset-top)' }}
       data-theme={settings.theme}
       data-accent={settings.accentColor}
       data-font-size={settings.fontSize}
