@@ -537,6 +537,152 @@ export const exportNeurologistReport = (events, settings = {}, medications = [],
   win.document.close();
 };
 
+// ─── Seizure Diary (one-page monthly calendar) ───────────────
+
+export const exportSeizureDiary = (allEvents, settings = {}, medications = [], month, year) => {
+  const win = window.open('', '_blank');
+  if (!win) {
+    alert('Pop-up blocked. Please allow pop-ups for this site, then try again.'); // eslint-disable-line no-alert
+    return;
+  }
+
+  const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const patientName = settings.personName || settings.caretakerName || '';
+
+  // Build a map of day-of-month → events for this month
+  const daysInMonth = new Date(year, month, 0).getDate(); // month is 1-based here
+  const firstDayOfWeek = new Date(year, month - 1, 1).getDay(); // 0=Sun
+
+  // Map: day (1–31) → array of events
+  const eventsByDay = {};
+  allEvents.forEach(e => {
+    const d = new Date(e.startTime || 0);
+    if (d.getFullYear() === year && d.getMonth() + 1 === month) {
+      const day = d.getDate();
+      if (!eventsByDay[day]) eventsByDay[day] = [];
+      eventsByDay[day].push(e);
+    }
+  });
+
+  const totalEvents = Object.values(eventsByDay).reduce((n, arr) => n + arr.length, 0);
+
+  // Type→colour mapping (matches app's seizure types)
+  const TYPE_COLORS = {
+    'Tonic-Clonic':    '#dc2626',
+    'Focal Aware':     '#f59e0b',
+    'Focal Impaired':  '#ef4444',
+    'Absence':         '#3b82f6',
+    'Aura Only':       '#a855f7',
+  };
+  const DEFAULT_COLOR = '#6b7280';
+
+  const legendTypes = [...new Set(
+    Object.values(eventsByDay).flat().map(e => e.type || 'Uncategorized')
+  )];
+
+  const legendHtml = legendTypes.map(t => {
+    const color = TYPE_COLORS[t] || DEFAULT_COLOR;
+    return `<span style="display:inline-flex;align-items:center;gap:4px;margin-right:10px;font-size:10px">
+      <span style="width:10px;height:10px;border-radius:50%;background:${color};display:inline-block"></span>${esc(t)}
+    </span>`;
+  }).join('');
+
+  // Build calendar grid cells
+  // Grid starts on Sunday (0). Offset empty cells for days before the 1st.
+  const startOffset = firstDayOfWeek; // 0=Sun
+  const totalCells = startOffset + daysInMonth;
+  const rows = Math.ceil(totalCells / 7);
+
+  let cells = '';
+  for (let cell = 0; cell < rows * 7; cell++) {
+    const dayNum = cell - startOffset + 1;
+    if (dayNum < 1 || dayNum > daysInMonth) {
+      cells += `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;min-height:60px"></div>`;
+      continue;
+    }
+    const dayEvents = eventsByDay[dayNum] || [];
+    const shown = dayEvents.slice(0, 4);
+    const extra = dayEvents.length - shown.length;
+    const dots = shown.map(e => {
+      const color = TYPE_COLORS[e.type] || DEFAULT_COLOR;
+      return `<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${color};margin:1px" title="${esc(e.type || 'Uncategorized')} at ${esc(e.time || '')}"></span>`;
+    }).join('');
+    const extraBadge = extra > 0 ? `<span style="font-size:8px;color:#9ca3af;font-weight:700">+${extra}</span>` : '';
+    const hasTriggers = dayEvents.some(e => (e.triggers || []).length > 0);
+    const triggerNote = hasTriggers
+      ? `<div style="font-size:7px;color:#d97706;font-weight:800;margin-top:2px">▲ TRIGGER</div>`
+      : '';
+    const bg = dayEvents.length > 0 ? '#fff' : '#f9fafb';
+    const border = dayEvents.length > 0 ? '2px solid #fca5a5' : '1px solid #e5e7eb';
+    cells += `<div style="background:${bg};border:${border};border-radius:6px;min-height:60px;padding:5px;display:flex;flex-direction:column">
+      <span style="font-size:11px;font-weight:${dayEvents.length > 0 ? 900 : 400};color:${dayEvents.length > 0 ? '#111827' : '#9ca3af'}">${dayNum}</span>
+      <div style="flex:1;display:flex;flex-wrap:wrap;align-items:center;gap:1px;margin-top:3px">${dots}${extraBadge}</div>
+      ${triggerNote}
+    </div>`;
+  }
+
+  const monthName = new Date(year, month - 1, 1).toLocaleString('en-GB', { month: 'long', year: 'numeric' });
+  const medLine = medications.length > 0
+    ? `Medications: ${medications.map(m => `${m.name} ${m.dose}${m.unit} ${m.frequency}`).join(' · ')}`
+    : '';
+
+  win.document.write(`<!DOCTYPE html><html><head>
+  <meta charset="UTF-8">
+  <title>AuraTrack Seizure Diary — ${esc(monthName)}</title>
+  <style>
+    @page { size: A4 landscape; margin: 12mm 14mm; }
+    * { box-sizing: border-box; }
+    body { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 11px; color: #111827; margin: 0; padding: 0; }
+    .no-print { display: block; }
+    @media print { .no-print { display: none !important; } }
+  </style>
+  </head><body>
+
+  <div class="no-print" style="background:#1e293b;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <span style="color:#94a3b8;font-size:11px;font-weight:700">AURATRACK — SEIZURE DIARY</span>
+    <button onclick="window.print()" style="background:#dc2626;color:#fff;border:none;border-radius:6px;padding:7px 18px;font-size:12px;font-weight:900;cursor:pointer">Print / Save as PDF</button>
+  </div>
+
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:10px;border-bottom:3px solid #dc2626;padding-bottom:8px">
+    <div>
+      <div style="font-size:8px;font-weight:900;letter-spacing:0.4em;color:#dc2626;text-transform:uppercase">AuraTrack</div>
+      <div style="font-size:20px;font-weight:900;letter-spacing:-0.3px">${esc(monthName)} — Seizure Diary</div>
+    </div>
+    <div style="text-align:right">
+      ${patientName ? `<div style="font-weight:800;font-size:12px">${esc(patientName)}</div>` : ''}
+      <div style="font-size:10px;color:#6b7280">${totalEvents} event${totalEvents !== 1 ? 's' : ''} recorded this month</div>
+    </div>
+  </div>
+
+  <!-- Day-of-week header -->
+  <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px">
+    ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d =>
+      `<div style="text-align:center;font-size:9px;font-weight:900;text-transform:uppercase;color:#6b7280;padding:3px 0">${d}</div>`
+    ).join('')}
+  </div>
+
+  <!-- Calendar grid -->
+  <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">
+    ${cells}
+  </div>
+
+  <!-- Footer -->
+  <div style="margin-top:10px;padding-top:8px;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">
+    <div>
+      <span style="font-size:8px;font-weight:900;text-transform:uppercase;color:#9ca3af;margin-right:6px">Legend:</span>
+      ${legendHtml || '<span style="font-size:10px;color:#9ca3af">No events</span>'}
+      <span style="margin-left:6px;display:inline-flex;align-items:center;gap:4px;font-size:10px;color:#d97706"><span style="font-weight:800">▲</span> Trigger reported</span>
+    </div>
+    ${medLine ? `<div style="font-size:9px;color:#374151;max-width:400px">${esc(medLine)}</div>` : ''}
+  </div>
+
+  <div style="margin-top:6px;font-size:8px;color:#9ca3af;border-top:1px solid #e5e7eb;padding-top:6px">
+    Generated by AuraTrack · ${new Date().toLocaleDateString('en-GB')} · All data recorded by caretaker or patient. Not a substitute for professional medical assessment.
+  </div>
+  </body></html>`);
+  win.document.close();
+};
+
 // ─── Helpers ─────────────────────────────────────────────────
 
 function dateStamp() {
