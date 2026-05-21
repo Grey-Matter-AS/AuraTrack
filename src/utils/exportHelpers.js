@@ -566,13 +566,21 @@ export const exportSeizureDiary = (allEvents, settings = {}, medications = [], m
 
   const totalEvents = Object.values(eventsByDay).reduce((n, arr) => n + arr.length, 0);
 
-  // Type→colour mapping (matches app's seizure types)
+  // Type→colour + abbreviation mapping
   const TYPE_COLORS = {
     'Tonic-Clonic':    '#dc2626',
     'Focal Aware':     '#f59e0b',
     'Focal Impaired':  '#ef4444',
     'Absence':         '#3b82f6',
     'Aura Only':       '#a855f7',
+  };
+  const TYPE_ABBREV = {
+    'Tonic-Clonic':   'TC',
+    'Focal Aware':    'FA',
+    'Focal Impaired': 'FI',
+    'Absence':        'Ab',
+    'Aura Only':      'Au',
+    'Uncategorized':  '?',
   };
   const DEFAULT_COLOR = '#6b7280';
 
@@ -582,13 +590,13 @@ export const exportSeizureDiary = (allEvents, settings = {}, medications = [], m
 
   const legendHtml = legendTypes.map(t => {
     const color = TYPE_COLORS[t] || DEFAULT_COLOR;
-    return `<span style="display:inline-flex;align-items:center;gap:4px;margin-right:10px;font-size:10px">
-      <span style="width:10px;height:10px;border-radius:50%;background:${color};display:inline-block"></span>${esc(t)}
+    const abbrev = TYPE_ABBREV[t] || t.slice(0, 2);
+    return `<span style="display:inline-flex;align-items:center;gap:4px;margin-right:12px;font-size:10px">
+      <span style="background:${color};color:#fff;border-radius:3px;padding:1px 4px;font-size:8px;font-weight:900">${abbrev}</span>${esc(t)}
     </span>`;
   }).join('');
 
   // Build calendar grid cells
-  // Grid starts on Sunday (0). Offset empty cells for days before the 1st.
   const startOffset = firstDayOfWeek; // 0=Sun
   const totalCells = startOffset + daysInMonth;
   const rows = Math.ceil(totalCells / 7);
@@ -597,26 +605,36 @@ export const exportSeizureDiary = (allEvents, settings = {}, medications = [], m
   for (let cell = 0; cell < rows * 7; cell++) {
     const dayNum = cell - startOffset + 1;
     if (dayNum < 1 || dayNum > daysInMonth) {
-      cells += `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;min-height:60px"></div>`;
+      cells += `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;min-height:64px"></div>`;
       continue;
     }
     const dayEvents = eventsByDay[dayNum] || [];
-    const shown = dayEvents.slice(0, 4);
-    const extra = dayEvents.length - shown.length;
-    const dots = shown.map(e => {
-      const color = TYPE_COLORS[e.type] || DEFAULT_COLOR;
-      return `<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${color};margin:1px" title="${esc(e.type || 'Uncategorized')} at ${esc(e.time || '')}"></span>`;
+
+    // Group by type, preserving insertion order for consistent rendering
+    const typeCounts = {};
+    dayEvents.forEach(e => {
+      const t = e.type || 'Uncategorized';
+      typeCounts[t] = (typeCounts[t] || 0) + 1;
+    });
+
+    const typeBadges = Object.entries(typeCounts).map(([type, count]) => {
+      const color = TYPE_COLORS[type] || DEFAULT_COLOR;
+      const abbrev = TYPE_ABBREV[type] || type.slice(0, 2);
+      return `<div style="display:flex;align-items:center;gap:3px;margin-top:2px">
+        <span style="background:${color};color:#fff;border-radius:3px;padding:1px 4px;font-size:8px;font-weight:900;min-width:18px;text-align:center;line-height:1.4">${count}</span>
+        <span style="font-size:8px;font-weight:800;color:${color}">${abbrev}</span>
+      </div>`;
     }).join('');
-    const extraBadge = extra > 0 ? `<span style="font-size:8px;color:#9ca3af;font-weight:700">+${extra}</span>` : '';
+
     const hasTriggers = dayEvents.some(e => (e.triggers || []).length > 0);
     const triggerNote = hasTriggers
-      ? `<div style="font-size:7px;color:#d97706;font-weight:800;margin-top:2px">▲ TRIGGER</div>`
+      ? `<div style="font-size:7px;color:#d97706;font-weight:800;margin-top:2px">▲ trigger</div>`
       : '';
     const bg = dayEvents.length > 0 ? '#fff' : '#f9fafb';
     const border = dayEvents.length > 0 ? '2px solid #fca5a5' : '1px solid #e5e7eb';
-    cells += `<div style="background:${bg};border:${border};border-radius:6px;min-height:60px;padding:5px;display:flex;flex-direction:column">
+    cells += `<div style="background:${bg};border:${border};border-radius:6px;min-height:64px;padding:5px;display:flex;flex-direction:column">
       <span style="font-size:11px;font-weight:${dayEvents.length > 0 ? 900 : 400};color:${dayEvents.length > 0 ? '#111827' : '#9ca3af'}">${dayNum}</span>
-      <div style="flex:1;display:flex;flex-wrap:wrap;align-items:center;gap:1px;margin-top:3px">${dots}${extraBadge}</div>
+      <div style="flex:1">${typeBadges}</div>
       ${triggerNote}
     </div>`;
   }
