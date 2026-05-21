@@ -28,13 +28,33 @@ export function computeDangerFlags(event, allEvents = []) {
 }
 
 /**
- * Build a dangerFlags map (id → flags[]) for an entire list in one pass.
- * Use this in list views instead of calling computeDangerFlags per event.
+ * Build a dangerFlags map (id → flags[]) for an entire list efficiently.
+ * Uses a sorted array with early termination — O(n·k) where k is the average
+ * number of events in any 16-minute window (typically very small).
  */
 export function buildDangerMap(allEvents) {
   const map = {};
-  for (const event of allEvents) {
-    map[event.id] = computeDangerFlags(event, allEvents);
+  if (!allEvents.length) return map;
+
+  const sorted = [...allEvents].sort((a, b) => (a.startTime || 0) - (b.startTime || 0));
+
+  for (let i = 0; i < sorted.length; i++) {
+    const event = sorted[i];
+    const flags = [];
+
+    if ((event.duration || 0) > LONG_DURATION_S) flags.push('long_duration');
+
+    const t = event.startTime || 0;
+    let clusterCount = event.laps?.recovery ? 0 : 1; // count self if no confirmed recovery
+    for (let j = i - 1; j >= 0 && t - (sorted[j].startTime || 0) <= CLUSTER_WINDOW_MS; j--) {
+      if (!sorted[j].laps?.recovery) clusterCount++;
+    }
+    for (let j = i + 1; j < sorted.length && (sorted[j].startTime || 0) - t <= CLUSTER_WINDOW_MS; j++) {
+      if (!sorted[j].laps?.recovery) clusterCount++;
+    }
+    if (clusterCount >= CLUSTER_MIN) flags.push('cluster');
+
+    map[event.id] = flags;
   }
   return map;
 }

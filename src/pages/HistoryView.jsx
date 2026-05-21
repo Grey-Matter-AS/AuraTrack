@@ -12,12 +12,18 @@ export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, on
   const [dateFilter, setDateFilter] = useState('');
 
   useEffect(() => {
-    db.events.orderBy('startTime').reverse().toArray().then(setAllEvents);
+    db.events.orderBy('startTime').reverse().toArray()
+      .then(setAllEvents)
+      .catch(err => console.error('Failed to load events:', err));
   }, []);
 
   const filtered = allEvents.filter(e => {
     if (typeFilter && e.type !== typeFilter) return false;
-    if (dateFilter && e.date !== dateFilter) return false;
+    if (dateFilter) {
+      const filterDay = new Date(dateFilter).setHours(0, 0, 0, 0);
+      const eventDay  = e.startTime ? new Date(e.startTime).setHours(0, 0, 0, 0) : NaN;
+      if (eventDay !== filterDay) return false;
+    }
     return true;
   });
 

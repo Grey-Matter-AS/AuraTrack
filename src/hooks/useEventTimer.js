@@ -23,21 +23,33 @@ export function useEventTimer() {
     setElapsed(0);
     setLaps({ aura: null, seizure: null, recovery: null });
     setIsRunning(true);
-    localStorage.setItem('aura_startTime', now);
-    localStorage.setItem('aura_status', 'RECORDING');
-    localStorage.setItem('aura_startDateReadable', new Date(now).toLocaleDateString());
-    localStorage.setItem('aura_startTimeReadable', new Date(now).toLocaleTimeString());
+    try {
+      localStorage.setItem('aura_startTime', now);
+      localStorage.setItem('aura_status', 'RECORDING');
+      localStorage.setItem('aura_startDateReadable', new Date(now).toLocaleDateString());
+      localStorage.setItem('aura_startTimeReadable', new Date(now).toLocaleTimeString());
+    } catch {
+      // Private browsing or storage blocked — crash recovery unavailable, recording continues
+    }
   };
 
   const stopTimer = () => {
+    if (!startTime) {
+      console.error('stopTimer called without startTime');
+      return null;
+    }
     setIsRunning(false);
     const endTime = Date.now();
     const duration = Math.floor((endTime - startTime) / 1000);
     const finalLaps = { ...laps, recovery: endTime };
     setLaps(finalLaps);
-    const date = localStorage.getItem('aura_startDateReadable');
-    const time = localStorage.getItem('aura_startTimeReadable');
-    ['aura_startTime', 'aura_status', 'aura_startDateReadable', 'aura_startTimeReadable'].forEach(k => localStorage.removeItem(k));
+    let date, time;
+    try {
+      date = localStorage.getItem('aura_startDateReadable');
+      time = localStorage.getItem('aura_startTimeReadable');
+      ['aura_startTime', 'aura_status', 'aura_startDateReadable', 'aura_startTimeReadable']
+        .forEach(k => localStorage.removeItem(k));
+    } catch { /* ignore — private browsing */ }
     return { startTime, endTime, duration, laps: finalLaps, date, time };
   };
 

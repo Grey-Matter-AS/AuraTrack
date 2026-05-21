@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useRegisterSW } from 'virtual:pwa-register/react';
 
 const DISMISSED_KEY = 'pwa_install_dismissed';
 
@@ -12,6 +13,11 @@ const isIOSDevice = () =>
 export function usePWAInstall() {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [isVisible, setIsVisible]           = useState(false);
+
+  const {
+    needRefresh: [needRefresh],
+    updateServiceWorker,
+  } = useRegisterSW({ onRegisteredSW() {}, onRegisterError() {} });
 
   const ios = isIOSDevice();
 
@@ -69,5 +75,7 @@ export function usePWAInstall() {
     dismiss,
     resetDismissal,
     canInstallManually,
+    needRefresh,
+    updateServiceWorker,
   };
 }

@@ -66,7 +66,7 @@ export default function TaggingView({
                 onPick={v => { setSelections({ ...selections, group: v }); setTaggingStep('S_SYM'); }}
               />
             )}
-            {taggingStep === 'S_SYM' && (
+            {taggingStep === 'S_SYM' && selections.group && SYMPTOM_WIZARD[selections.group] && (
               <WizardMenu
                 title={selections.group}
                 options={Object.keys(SYMPTOM_WIZARD[selections.group])}
@@ -74,7 +74,8 @@ export default function TaggingView({
                 onBack={() => setTaggingStep('S_CAT')}
               />
             )}
-            {taggingStep === 'S_DET' && (
+            {taggingStep === 'S_DET' && selections.group && selections.symptom &&
+              SYMPTOM_WIZARD[selections.group]?.[selections.symptom] && (
               <WizardMenu
                 title={selections.symptom}
                 options={SYMPTOM_WIZARD[selections.group][selections.symptom].options.map(o => o.label)}
@@ -122,18 +123,19 @@ export default function TaggingView({
                 onPick={v => { setSelections({ ...selections, region: v }); setTaggingStep('R_SUB'); }}
               />
             )}
-            {taggingStep === 'R_SUB' && (
+            {taggingStep === 'R_SUB' && selections.region && REGION_WIZARD[selections.region] && (
               <WizardMenu
                 title={selections.region}
                 options={Object.keys(REGION_WIZARD[selections.region])}
                 onPick={v => { setSelections({ ...selections, subRegion: v }); setTaggingStep('R_DET'); }}
                 onBack={() => {
-                  const optionObj = SYMPTOM_WIZARD[selections.group][selections.symptom].options.find(o => o.label === selections.detail);
-                  setTaggingStep(optionObj.forceRegion ? 'S_DET' : 'R_CAT');
+                  const optionObj = SYMPTOM_WIZARD[selections.group]?.[selections.symptom]?.options.find(o => o.label === selections.detail);
+                  setTaggingStep(optionObj?.forceRegion ? 'S_DET' : 'R_CAT');
                 }}
               />
             )}
-            {taggingStep === 'R_DET' && (
+            {taggingStep === 'R_DET' && selections.region && selections.subRegion &&
+              REGION_WIZARD[selections.region]?.[selections.subRegion] && (
               <WizardMenu
                 title={selections.subRegion}
                 options={REGION_WIZARD[selections.region][selections.subRegion]}
@@ -148,8 +150,8 @@ export default function TaggingView({
                   setTaggingStep('SUMMARY');
                 }}
                 onBack={() => {
-                  const optionObj = SYMPTOM_WIZARD[selections.group][selections.symptom].options.find(o => o.label === selections.detail);
-                  setTaggingStep(optionObj.forceSubRegion ? 'S_DET' : 'R_SUB');
+                  const optionObj = SYMPTOM_WIZARD[selections.group]?.[selections.symptom]?.options.find(o => o.label === selections.detail);
+                  setTaggingStep(optionObj?.forceSubRegion ? 'S_DET' : 'R_SUB');
                 }}
               />
             )}

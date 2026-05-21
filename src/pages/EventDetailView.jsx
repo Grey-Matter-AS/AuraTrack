@@ -42,21 +42,42 @@ function DangerAlert({ flags }) {
 
 export default function EventDetailView({ eventId, onEdit, onClose }) {
   const [event, setEvent] = useState(null);
+  const [notFound, setNotFound] = useState(false);
   const [dangerFlags, setDangerFlags] = useState([]);
 
   useEffect(() => {
     if (!eventId) return;
+    setNotFound(false);
+    setEvent(null);
     db.events.get(eventId).then(async ev => {
+      if (!ev) { setNotFound(true); return; }
       setEvent(ev);
-      if (!ev) return;
       // Load events within ±8 min window to assess cluster risk
       const nearby = await db.events
         .where('startTime')
         .between(ev.startTime - CLUSTER_WINDOW_MS, ev.startTime + CLUSTER_WINDOW_MS, true, true)
         .toArray();
       setDangerFlags(computeDangerFlags(ev, nearby));
+    }).catch(err => {
+      console.error('Failed to load event:', err);
+      setNotFound(true);
     });
   }, [eventId]);
+
+  if (notFound) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center gap-4">
+        <p className="text-sm font-bold" style={{ color: 'var(--text-dim)' }}>Event not found.</p>
+        <button
+          onClick={onClose}
+          className="px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all"
+          style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
+        >
+          ← Back
+        </button>
+      </div>
+    );
+  }
 
   if (!event) {
     return (

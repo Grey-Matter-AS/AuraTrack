@@ -3,12 +3,14 @@ import { db } from '../data/db';
 import { ExportCard } from '../components/ExportCard';
 import { exportToJSON, exportToCSV, exportToPDF, exportNeurologistReport, filterEventsByDateRange } from '../utils/exportHelpers';
 
-const today = new Date().toISOString().slice(0, 10);
-const thirtyDaysAgo = new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10);
-
 export default function ExportView({ onBack, settings = {} }) {
-  const [fromDate, setFromDate] = useState(thirtyDaysAgo);
-  const [toDate, setToDate]     = useState(today);
+  const [fromDate, setFromDate] = useState(
+    () => new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10)
+  );
+  const [toDate, setToDate] = useState(
+    () => new Date().toISOString().slice(0, 10)
+  );
+  const today = new Date().toISOString().slice(0, 10);
 
   const getEvents = async () => {
     const all = await db.events.orderBy('startTime').reverse().toArray();

@@ -40,22 +40,34 @@ export function useSettings() {
 
   useEffect(() => {
     const loadSettings = async () => {
-      const rows = await db.settings.toArray();
-      const merged = { ...DEFAULTS };
-      rows.forEach(row => { merged[row.key] = row.value; });
-      setSettings(merged);
+      try {
+        const rows = await db.settings.toArray();
+        const merged = { ...DEFAULTS };
+        rows.forEach(row => { merged[row.key] = row.value; });
+        setSettings(merged);
+      } catch (err) {
+        console.error('Failed to load settings, using defaults:', err);
+      }
     };
     loadSettings();
   }, []);
 
   const updateSettings = async (key, value) => {
-    await db.settings.put({ key, value });
-    setSettings(prev => ({ ...prev, [key]: value }));
+    try {
+      await db.settings.put({ key, value });
+      setSettings(prev => ({ ...prev, [key]: value }));
+    } catch (err) {
+      console.error('Failed to save setting:', err);
+    }
   };
 
   const resetSettings = async () => {
-    await db.settings.clear();
-    setSettings(DEFAULTS);
+    try {
+      await db.settings.clear();
+      setSettings(DEFAULTS);
+    } catch (err) {
+      console.error('Failed to reset settings:', err);
+    }
   };
 
   return { settings, updateSettings, resetSettings };

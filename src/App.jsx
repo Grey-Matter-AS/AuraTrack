@@ -47,6 +47,7 @@ function App() {
   const [itemToDelete, setItemToDelete] = useState(null);
   const [detailEventId, setDetailEventId] = useState(null);
   const [fullHistory, setFullHistory] = useState([]);
+  const [toastMsg, setToastMsg] = useState('');
 
   const timer = useEventTimer();
   const history = useEventHistory();
@@ -55,22 +56,29 @@ function App() {
   const pwa = usePWAInstall();
   const stoppingRef = useRef(false);
 
+  const showToast = (msg) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(''), 5000);
+  };
+
   // Sync haptic preference to the module singleton
   useEffect(() => { setHapticEnabled(settings.hapticFeedback); }, [settings.hapticFeedback]);
 
   // Crash recovery: resume timer if browser closed during recording
   useEffect(() => {
-    const saved = localStorage.getItem('aura_startTime');
-    if (localStorage.getItem('aura_status') === 'RECORDING' && saved) {
-      timer.restore(parseInt(saved));
-      setStatus('RECORDING');
-    }
+    try {
+      const saved = localStorage.getItem('aura_startTime');
+      if (localStorage.getItem('aura_status') === 'RECORDING' && saved) {
+        timer.restore(parseInt(saved, 10));
+        setStatus('RECORDING');
+      }
+    } catch { /* private browsing — crash recovery unavailable */ }
   }, []);
 
   useEffect(() => {
     if (status === 'IDLE') {
       history.load();
-      history.loadAll().then(setFullHistory);
+      history.loadAll().then(setFullHistory).catch(() => {});
     }
   }, [status]);
 
@@ -81,41 +89,76 @@ function App() {
     stoppingRef.current = true;
     try {
       const ev = timer.stopTimer();
+      if (!ev) return;
       const id = await db.events.add({ ...ev, type: 'Uncategorized', isComplete: false, editLog: [], userModeAtTime: settings.userMode });
       wizard.setActiveEvent(id);
       setStatus('TAGGING');
+    } catch (err) {
+      console.error('Failed to save event:', err);
+      showToast('Failed to save event. Please try again.');
     } finally {
       stoppingRef.current = false;
     }
   };
 
   const handleEdit = (event) => { wizard.loadForEdit(event); timer.setForEdit(event.duration, event.laps, event.startTime); setStatus('TAGGING'); };
+
   const handleSave = async () => {
     try {
       await wizard.handleFinalSave();
       await history.load();
       setStatus('IDLE');
     } catch (err) {
-      console.error('Save failed — staying on tagging screen:', err);
+      console.error('Save failed:', err);
+      showToast('Save failed. Please try again.');
     }
   };
-  const handleCancel = () => { wizard.reset(); setStatus('IDLE'); };
-  const handleDeleteConfirm = async () => { await history.deleteEvent(itemToDelete); await history.load(); setItemToDelete(null); };
+
+  const handleCancel = async () => {
+    if (wizard.activeEventId && !wizard.editingId) {
+      await db.events.delete(wizard.activeEventId).catch(() => {});
+    }
+    wizard.reset();
+    setStatus('IDLE');
+  };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      await history.deleteEvent(itemToDelete);
+      await history.load();
+    } catch (err) {
+      console.error('Delete failed:', err);
+      showToast('Delete failed. Please try again.');
+    } finally {
+      setItemToDelete(null);
+    }
+  };
 
   const handleEmergencyStop = async () => {
-    const ev = timer.stopTimer();
-    await db.events.add({
-      ...ev,
-      type: 'Uncategorized',
-      isComplete: true,
-      editLog: [],
-      userModeAtTime: settings.userMode,
-      notes: 'PATIENT UNRESPONSIVE — all timers automatically stopped at 12 minutes.',
-      isEmergencyStop: true,
-    });
-    wizard.reset();
-    await history.load();
-    setStatus('IDLE');
+    if (stoppingRef.current) return;
+    stoppingRef.current = true;
+    try {
+      const ev = timer.stopTimer();
+      if (!ev) { setStatus('IDLE'); return; }
+      await db.events.add({
+        ...ev,
+        type: 'Uncategorized',
+        isComplete: true,
+        editLog: [],
+        userModeAtTime: settings.userMode,
+        notes: 'PATIENT UNRESPONSIVE — all timers automatically stopped at 12 minutes.',
+        isEmergencyStop: true,
+      });
+      wizard.reset();
+      await history.load();
+      setStatus('IDLE');
+    } catch (err) {
+      console.error('Emergency stop save failed:', err);
+      showToast('⚠ Failed to save event. Please check History and re-enter if missing.');
+      setStatus('IDLE');
+    } finally {
+      stoppingRef.current = false;
+    }
   };
 
   const goToDetail = (id) => { setPreviousStatus(status); setDetailEventId(id); setStatus('EVENT_DETAIL'); };
@@ -146,6 +189,23 @@ function App() {
 
       {itemToDelete && <DeleteModal onConfirm={handleDeleteConfirm} onCancel={() => setItemToDelete(null)} />}
       <PWAInstallBanner isVisible={pwa.isVisible} isIOS={pwa.isIOS} install={pwa.install} dismiss={pwa.dismiss} />
+      {toastMsg && (
+        <div
+          className="fixed bottom-6 left-4 right-4 z-50 py-3 px-5 rounded-2xl text-sm font-bold text-center"
+          style={{ backgroundColor: '#dc2626', color: '#fff', boxShadow: '0 4px 24px rgba(0,0,0,0.5)' }}
+        >
+          {toastMsg}
+        </div>
+      )}
+      {pwa.needRefresh && (
+        <div
+          className="fixed top-0 left-0 right-0 z-50 py-2 px-4 flex items-center justify-between text-xs font-bold"
+          style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
+        >
+          <span>App update available</span>
+          <button onClick={() => pwa.updateServiceWorker()} className="underline">Reload</button>
+        </div>
+      )}
     </div>
   );
 }

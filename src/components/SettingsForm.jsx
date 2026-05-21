@@ -80,9 +80,12 @@ function Segments({ options, value, onChange }) {
   );
 }
 
-function Toggle({ value, onChange }) {
+function Toggle({ value, onChange, label }) {
   return (
     <button
+      role="switch"
+      aria-checked={value}
+      aria-label={label}
       onClick={() => onChange(!value)}
       className="relative w-14 h-8 rounded-full transition-all shrink-0"
       style={{ backgroundColor: value ? 'var(--accent)' : 'var(--bg-raised)' }}
@@ -133,11 +136,21 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa }) {
   const flash = (msg) => { setStatusMsg(msg); setTimeout(() => setStatusMsg(''), 4000); };
 
   const handleExportBackup = async () => {
-    const events = await db.events.toArray();
-    if (!events.length) { flash('No events to export.'); return; }
-    exportToJSON(events);
-    flash(`Exported ${events.length} event(s).`);
+    try {
+      const events = await db.events.toArray();
+      if (!events.length) { flash('No events to export.'); return; }
+      exportToJSON(events);
+      flash(`Exported ${events.length} event(s).`);
+    } catch (err) {
+      console.error('Export failed:', err);
+      flash('Export failed.');
+    }
   };
+
+  const isValidEvent = (e) =>
+    e && typeof e === 'object' &&
+    typeof e.startTime === 'number' &&
+    typeof e.duration === 'number';
 
   const handleImport = async (e) => {
     const file = e.target.files[0];
@@ -145,11 +158,17 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa }) {
     try {
       const text = await file.text();
       const parsed = JSON.parse(text);
-      const events = Array.isArray(parsed) ? parsed : (parsed.events || []);
-      if (!events.length) { flash('No events found in file.'); return; }
-      const toImport = events.map(({ id, ...rest }) => rest);
+      const raw = Array.isArray(parsed) ? parsed : (parsed.events || []);
+      if (!raw.length) { flash('No events found in file.'); return; }
+      const valid = raw.filter(isValidEvent);
+      if (!valid.length) { flash('No valid events found — file may be corrupted or wrong format.'); return; }
+      if (valid.length < raw.length) {
+        console.warn(`Skipped ${raw.length - valid.length} malformed records during import`);
+      }
+      const toImport = valid.map(({ id, ...rest }) => rest);
       await db.events.bulkAdd(toImport);
-      flash(`Imported ${toImport.length} event(s) successfully.`);
+      const skipped = raw.length - valid.length;
+      flash(`Imported ${toImport.length} event(s)${skipped > 0 ? ` (${skipped} skipped)` : ''} successfully.`);
     } catch {
       flash('Import failed — invalid or corrupted file.');
     }
@@ -157,9 +176,14 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa }) {
   };
 
   const handleClearAllData = async () => {
-    await db.events.clear();
-    setShowClearConfirm(false);
-    flash('All event data deleted.');
+    try {
+      await db.events.clear();
+      setShowClearConfirm(false);
+      flash('All event data deleted.');
+    } catch (err) {
+      console.error('Failed to clear data:', err);
+      flash('Failed to delete data. Please try again.');
+    }
   };
 
   const handleResetSettings = async () => {
@@ -299,7 +323,7 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa }) {
       {/* ── RECORDING ── */}
       <Section title="Recording">
         <Row label="Haptic Feedback" help="Vibration on button presses (device must support it)">
-          <Toggle value={settings.hapticFeedback} onChange={v => onUpdate('hapticFeedback', v)} />
+          <Toggle value={settings.hapticFeedback} onChange={v => onUpdate('hapticFeedback', v)} label="Haptic Feedback" />
         </Row>
         <div>
           <FieldLabel>Quick Note Labels</FieldLabel>
@@ -389,7 +413,7 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa }) {
         <TextField label="Institution / Hospital" value={settings.neurologistInstitution} onChange={v => onUpdate('neurologistInstitution', v)} placeholder="Clinic or hospital name" />
         <TextField label="Clinician Contact" value={settings.neurologistContact} onChange={v => onUpdate('neurologistContact', v)} placeholder="Phone, email, or referral number" />
         <Row label="Include Date of Birth" help="Whether DOB appears in printed reports">
-          <Toggle value={settings.includePatientDOB !== false} onChange={v => onUpdate('includePatientDOB', v)} />
+          <Toggle value={settings.includePatientDOB !== false} onChange={v => onUpdate('includePatientDOB', v)} label="Include Date of Birth in reports" />
         </Row>
         <div>
           <FieldLabel>Additional Notes for Reports</FieldLabel>

@@ -21,7 +21,10 @@ export const exportToCSV = (events) => {
 
 export const exportToPDF = (events) => {
   const win = window.open('', '_blank');
-  if (!win) return;
+  if (!win) {
+    alert('Pop-up blocked. Please allow pop-ups for this site, then try again.'); // eslint-disable-line no-alert
+    return;
+  }
 
   const fmtSymptomPath = (s) => {
     const path = [s.symptom, s.detail].filter(Boolean).join(' › ');
@@ -64,7 +67,10 @@ export const exportToPDF = (events) => {
 
 export const exportNeurologistReport = (events, settings = {}) => {
   const win = window.open('', '_blank');
-  if (!win) return;
+  if (!win) {
+    alert('Pop-up blocked. Please allow pop-ups for this site, then try again.'); // eslint-disable-line no-alert
+    return;
+  }
 
   const {
     personName = '', caretakerName = '', dateOfBirth = '', emergencyContact = '',
@@ -498,6 +504,8 @@ function triggerDownload(blob, filename) {
   const a = document.createElement('a');
   a.href = url;
   a.download = filename;
+  document.body.appendChild(a);
   a.click();
-  URL.revokeObjectURL(url);
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 100);
 }
