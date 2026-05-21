@@ -189,6 +189,24 @@ export default function EventDetailView({ eventId, onEdit, onClose }) {
           </div>
         )}
 
+        {/* Triggers */}
+        {event.triggers?.length > 0 && (
+          <div className="p-5 rounded-2xl" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
+            <p className="text-[10px] font-black uppercase tracking-widest mb-3" style={{ color: 'var(--text-dim)' }}>Possible Triggers</p>
+            <div className="flex flex-wrap gap-2">
+              {event.triggers.map(t => (
+                <span
+                  key={t}
+                  className="px-3 py-1.5 rounded-full text-[11px] font-black uppercase tracking-wide"
+                  style={{ backgroundColor: 'color-mix(in srgb, var(--accent) 15%, transparent)', color: 'var(--accent)', border: '1.5px solid color-mix(in srgb, var(--accent) 40%, transparent)' }}
+                >
+                  {t}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Notes */}
         {event.notes && (
           <div className="p-5 rounded-2xl" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
