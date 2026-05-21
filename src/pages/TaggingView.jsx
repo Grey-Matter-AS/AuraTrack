@@ -99,7 +99,7 @@ export default function TaggingView({
                     const bundle = {
                       symptom: selections.symptom,
                       detail: label,
-                      medical: optionObj.med,
+                      med: optionObj.med,
                       region: 'N/A',
                       specificPart: 'Internal/General'
                     };
@@ -143,6 +143,7 @@ export default function TaggingView({
                   const bundle = {
                     symptom: selections.symptom,
                     detail: selections.detail,
+                    med: selections.medical,
                     region: selections.region,
                     specificPart: v
                   };
