@@ -9,6 +9,7 @@ export default function TaggingView({
   selections, setSelections,
   tempSymptomList, setTempSymptomList,
   notes, setNotes,
+  triggers, triggerToggle,
   editingId, activeEventId,
   manualDurations, editedTimers, setManualDuration,
   elapsed, laps, startTime,
@@ -34,6 +35,8 @@ export default function TaggingView({
               setTempSymptomList={setTempSymptomList}
               notes={notes}
               setNotes={setNotes}
+              triggers={triggers}
+              onTriggerToggle={triggerToggle}
               elapsed={elapsed}
               laps={laps}
               startTime={startTime}

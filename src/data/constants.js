@@ -179,3 +179,17 @@ export const SEIZURE_TYPES = [
   'Absence',
   'Aura Only'
 ];
+
+export const TRIGGERS = [
+  'Sleep Deprivation',
+  'Missed Medication',
+  'Stress',
+  'Illness / Fever',
+  'Hormonal',
+  'Alcohol',
+  'Flashing Lights',
+  'Heat / Overheating',
+  'Exercise',
+  'Hunger / Low Blood Sugar',
+  'Unknown',
+];

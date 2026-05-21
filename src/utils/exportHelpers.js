@@ -175,10 +175,14 @@ export const exportNeurologistReport = (events, settings = {}) => {
   const detailBlocks = detailEvents.map(e => {
     const d     = phaseDurs(e);
     const total = e.manualDurations?.total ?? e.duration ?? 0;
+    const triggerBadges = (e.triggers || []).map(t =>
+      `<span style="background:#eff6ff;color:#1d4ed8;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:700">${esc(t)}</span>`
+    ).join('');
     const badges = [
       (e.duration || 0) > 300   && `<span style="background:#fee2e2;color:#991b1b;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:800">&gt;5 MIN</span>`,
       e.isEmergencyStop          && `<span style="background:#fee2e2;color:#991b1b;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:800">AUTO-STOPPED</span>`,
       e.isEdited                 && `<span style="background:#fef3c7;color:#92400e;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:800">EDITED</span>`,
+      triggerBadges,
     ].filter(Boolean).join('');
 
     const sympRows = (e.symptoms || []).map(s => {
@@ -286,6 +290,19 @@ export const exportNeurologistReport = (events, settings = {}) => {
     flags.push(`<li><strong>Edited records (${editedCount}):</strong> Phase durations or details were modified after initial recording — may differ from real-time capture.</li>`);
   }
 
+  // Aggregate trigger stats
+  const triggerCounts = {};
+  periodEvents.forEach(e => {
+    (e.triggers || []).forEach(t => { triggerCounts[t] = (triggerCounts[t] || 0) + 1; });
+  });
+  const topTriggers = Object.entries(triggerCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+  if (topTriggers.length > 0) {
+    const items = topTriggers.map(([t, n]) => `${esc(t)} (${n}×)`).join(', ');
+    flags.push(`<li><strong>Reported triggers (${periodEvents.filter(e => (e.triggers||[]).length > 0).length} events with triggers):</strong> ${items}</li>`);
+  }
+
   const flagsHtml = flags.length
     ? `<ul style="margin:0;padding-left:16px;font-size:11px;color:#111827;line-height:1.8">${flags.join('')}</ul>`
     : `<p style="color:#059669;font-size:11px;font-weight:700;margin:0">&#10003; No clinical flags detected in this reporting period.</p>`;
@@ -338,9 +355,13 @@ export const exportNeurologistReport = (events, settings = {}) => {
     .qual-num { font-size: 18px; font-weight: 900; font-family: monospace; color: #1e293b; }
     .qual-label { font-size: 8px; text-transform: uppercase; color: #9ca3af; font-weight: 700; margin-top: 2px; }
     .disclaimer { font-size: 9px; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 8px; margin-top: 14px; }
-    @media print { .section { page-break-inside: avoid; } }
+    @media print { .section { page-break-inside: avoid; } .no-print { display: none !important; } }
   </style>
   </head><body>
+  <div class="no-print" style="position:sticky;top:0;z-index:100;background:#1e293b;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+    <span style="color:#94a3b8;font-size:11px;font-weight:700;letter-spacing:0.05em">AURATRACK — NEUROLOGICAL REPORT</span>
+    <button onclick="window.print()" style="background:#dc2626;color:#fff;border:none;border-radius:6px;padding:8px 20px;font-size:12px;font-weight:900;cursor:pointer;letter-spacing:0.05em">&#128438; Print / Save as PDF</button>
+  </div>
 
   <!-- HEADER -->
   <div class="header">
@@ -488,7 +509,6 @@ export const exportNeurologistReport = (events, settings = {}) => {
     Phase durations marked as edited may differ from real-time capture.
   </div>
 
-  <script>window.onload = () => window.print();</script>
   </body></html>`);
   win.document.close();
 };

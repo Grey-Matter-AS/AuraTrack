@@ -13,6 +13,7 @@ export function useTaggingWizard() {
   const [activeEventId, setActiveEventId] = useState(null);
   const [manualDurations, setManualDurationsState] = useState({});
   const [editedTimers, setEditedTimers] = useState([]);
+  const [triggers, setTriggers] = useState([]);
 
   const setActiveEvent = (id) => {
     setActiveEventId(id);
@@ -23,11 +24,16 @@ export function useTaggingWizard() {
     setEditedTimers(prev => prev.includes(phase) ? prev : [...prev, phase]);
   };
 
+  const triggerToggle = (label) => {
+    setTriggers(prev => prev.includes(label) ? prev.filter(t => t !== label) : [...prev, label]);
+  };
+
   const loadForEdit = (event) => {
     setEditingId(event.id);
     setActiveEventId(event.id);
     setTempSymptomList(event.symptoms || []);
     setNotes(event.notes || '');
+    setTriggers(event.triggers || []);
     setManualDurationsState(event.manualDurations || {});
     setEditedTimers(event.editedTimers || []);
     setTaggingStep('SUMMARY');
@@ -47,6 +53,7 @@ export function useTaggingWizard() {
       type: type || 'Uncategorized',
       symptoms: [...tempSymptomList],
       notes,
+      triggers: [...triggers],
       isComplete: true,
       isEdited: !!editingId,
       lastModified: Date.now(),
@@ -64,6 +71,7 @@ export function useTaggingWizard() {
     setActiveEventId(null);
     setEditingId(null);
     setTempSymptomList([]);
+    setTriggers([]);
     setTaggingStep('TYPE');
     setSelections(EMPTY_SELECTIONS);
     setManualDurationsState({});
@@ -90,6 +98,7 @@ export function useTaggingWizard() {
     selections, setSelections,
     tempSymptomList, setTempSymptomList,
     notes, setNotes,
+    triggers, triggerToggle,
     editingId, activeEventId,
     manualDurations, editedTimers,
     setManualDuration,

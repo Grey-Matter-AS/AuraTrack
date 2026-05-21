@@ -7,6 +7,7 @@ import {
   SortableContext, useSortable, verticalListSortingStrategy, arrayMove,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { TRIGGERS } from '../data/constants';
 
 // ─── Drag-handle icon — ▲▼ pair signals "drag to reorder" ────
 function DragHandle(props) {
@@ -243,6 +244,8 @@ function Summary({
   setTempSymptomList,
   notes,
   setNotes,
+  triggers = [],
+  onTriggerToggle,
   elapsed,
   laps,
   startTime,
@@ -377,6 +380,31 @@ function Summary({
               </DragOverlay>
             </DndContext>
           )}
+        </div>
+
+        {/* Trigger chips */}
+        <div className="w-full">
+          <p className="text-[10px] font-black uppercase tracking-widest mb-3 ml-1" style={{ color: 'var(--text-dim)' }}>
+            POSSIBLE TRIGGERS <span className="font-normal normal-case tracking-normal" style={{ color: 'var(--text-faint)' }}>(optional)</span>
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {TRIGGERS.map(t => {
+              const selected = triggers.includes(t);
+              return (
+                <button
+                  key={t}
+                  onClick={() => onTriggerToggle?.(t)}
+                  className="px-3 py-2 rounded-full text-[11px] font-black uppercase tracking-wide transition-all active:scale-95"
+                  style={selected
+                    ? { backgroundColor: 'var(--accent)', color: '#fff', border: '1.5px solid var(--accent)' }
+                    : { backgroundColor: 'transparent', color: 'var(--text-dim)', border: '1.5px solid var(--border)' }
+                  }
+                >
+                  {t}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Notes */}
