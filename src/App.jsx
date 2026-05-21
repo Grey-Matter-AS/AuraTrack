@@ -7,6 +7,7 @@ import { setHapticEnabled } from './utils/hapticFeedback';
 import { db } from './data/db';
 import { DeleteModal } from './components/DeleteModal';
 import { usePWAInstall } from './hooks/usePWAInstall';
+import { useWakeLock } from './hooks/useWakeLock';
 import { PWAInstallBanner } from './components/PWAInstallBanner';
 import IdleView from './pages/IdleView';
 import RecordingView from './pages/RecordingView';
@@ -54,6 +55,8 @@ function App() {
   const wizard = useTaggingWizard();
   const { settings, updateSettings, resetSettings } = useSettings();
   const pwa = usePWAInstall();
+  const wakeLock = useWakeLock();
+  const [wakeLockUnsupported, setWakeLockUnsupported] = useState(false);
   const stoppingRef = useRef(false);
 
   const showToast = (msg) => {
@@ -80,6 +83,29 @@ function App() {
       history.load();
       history.loadAll().then(setFullHistory).catch(() => {});
     }
+  }, [status]);
+
+  // Wake Lock: keep screen on during recording; show banner on unsupported browsers
+  useEffect(() => {
+    if (status === 'RECORDING') {
+      wakeLock.acquire().then(ok => {
+        if (!ok && !wakeLock.supported) setWakeLockUnsupported(true);
+      });
+    } else {
+      wakeLock.release();
+      setWakeLockUnsupported(false);
+    }
+  }, [status]);
+
+  // Re-acquire wake lock when tab regains focus (OS releases it on tab switch)
+  useEffect(() => {
+    const handler = () => {
+      if (document.visibilityState === 'visible' && status === 'RECORDING') {
+        wakeLock.acquire();
+      }
+    };
+    document.addEventListener('visibilitychange', handler);
+    return () => document.removeEventListener('visibilitychange', handler);
   }, [status]);
 
   const handleStart = () => { wizard.reset(); timer.startTimer(); setStatus('RECORDING'); };
@@ -176,6 +202,13 @@ function App() {
       data-font-size={settings.fontSize}
     >
       {showHeader && <Header onHistory={() => setStatus('HISTORY')} onSettings={() => setStatus('SETTINGS')} />}
+
+      {status === 'RECORDING' && wakeLockUnsupported && (
+        <div className="shrink-0 text-xs text-center px-4 py-2"
+          style={{ background: 'var(--bg-raised)', color: 'var(--text-dim)', borderBottom: '1px solid var(--border)' }}>
+          Screen may sleep — increase screen timeout in device settings
+        </div>
+      )}
 
       <div className="flex-1 flex flex-col items-center px-6 overflow-hidden pb-8">
         {status === 'IDLE'         && <IdleView history={history.history} fullHistory={fullHistory} onStart={handleStart} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail} />}
