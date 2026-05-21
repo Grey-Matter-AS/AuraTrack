@@ -10,3 +10,10 @@ db.version(4).stores({
   events: '++id, startTime, date, type, isComplete, isEdited, notes',
   settings: 'key'
 });
+
+db.version(5).stores({
+  events: '++id, startTime, date, type, isComplete, isEdited, notes',
+  settings: 'key',
+  medications: '++id',
+  medicationLogs: '++id, medicationId, takenAt'
+});

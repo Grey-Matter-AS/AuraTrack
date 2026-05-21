@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { db } from '../data/db';
 import { exportToJSON } from '../utils/exportHelpers';
+import { useMedications } from '../hooks/useMedications';
 
 // ─── Atom components ─────────────────────────────────────────
 
@@ -111,6 +112,154 @@ function ActionBtn({ label, sub, onClick, icon, variant = 'default' }) {
       <span className="text-center leading-snug whitespace-normal">{label}</span>
       {sub && <span className="text-[9px] opacity-60 font-medium normal-case tracking-normal">{sub}</span>}
     </button>
+  );
+}
+
+const FREQ_OPTIONS = [
+  { value: 'OD',  label: 'OD — Once daily' },
+  { value: 'BD',  label: 'BD — Twice daily' },
+  { value: 'TDS', label: 'TDS — Three times daily' },
+  { value: 'QDS', label: 'QDS — Four times daily' },
+  { value: 'PRN', label: 'PRN — As needed (rescue)' },
+];
+const UNIT_OPTIONS = ['mg', 'g', 'mcg', 'ml', 'IU'];
+const FREQ_SHORT = { OD: 'Once daily', BD: 'Twice daily', TDS: 'Three times daily', QDS: 'Four times daily', PRN: 'As needed' };
+
+const EMPTY_MED = { name: '', dose: '', unit: 'mg', frequency: 'BD', isRescue: false };
+
+function MedicationSection({ flash }) {
+  const { medications, addMedication, deleteMedication } = useMedications();
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState(EMPTY_MED);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
+
+  const handleAdd = async () => {
+    if (!form.name.trim() || !form.dose) return;
+    await addMedication({
+      name: form.name.trim(),
+      dose: parseFloat(form.dose),
+      unit: form.unit,
+      frequency: form.frequency,
+      isRescue: form.frequency === 'PRN',
+    });
+    setForm(EMPTY_MED);
+    setShowForm(false);
+    flash('Medication added.');
+  };
+
+  const handleDelete = async (id) => {
+    await deleteMedication(id);
+    setDeleteConfirm(null);
+    flash('Medication removed.');
+  };
+
+  const selectStyle = { backgroundColor: 'var(--bg-input)', border: '1px solid var(--border)', color: 'var(--text-primary)' };
+
+  return (
+    <Section title="Medications">
+      <p className="text-[11px] text-[var(--text-dim)] -mt-2">Current medication regimen. Used in the neurologist report and dose-logging.</p>
+
+      {medications.length === 0 && !showForm && (
+        <p className="text-xs italic text-center py-3" style={{ color: 'var(--text-faint)' }}>No medications recorded.</p>
+      )}
+
+      <div className="space-y-2">
+        {medications.map(m => (
+          <div key={m.id}>
+            {deleteConfirm === m.id ? (
+              <div className="rounded-2xl p-3 space-y-2" style={{ backgroundColor: 'rgba(185,28,28,0.1)', border: '1px solid rgba(185,28,28,0.3)' }}>
+                <p className="text-red-400 text-xs font-bold">Remove {m.name}?</p>
+                <div className="flex gap-2">
+                  <button onClick={() => handleDelete(m.id)} className="flex-1 py-2 bg-red-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest">Remove</button>
+                  <button onClick={() => setDeleteConfirm(null)} className="flex-1 py-2 rounded-xl text-xs font-bold" style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)' }}>Cancel</button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between p-3 rounded-2xl" style={{ backgroundColor: 'var(--bg-raised)', border: '1px solid var(--border)' }}>
+                <div>
+                  <p className="text-sm font-black" style={{ color: 'var(--text-primary)' }}>{m.name}</p>
+                  <p className="text-[11px]" style={{ color: 'var(--text-dim)' }}>
+                    {m.dose}{m.unit} · {m.frequency} — {FREQ_SHORT[m.frequency] || m.frequency}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setDeleteConfirm(m.id)}
+                  className="min-w-[36px] min-h-[36px] flex items-center justify-center rounded-xl text-[11px] font-black text-red-500 active:bg-red-600 active:text-white transition-all"
+                  style={{ backgroundColor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)' }}
+                  aria-label={`Remove ${m.name}`}
+                >✕</button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {showForm ? (
+        <div className="space-y-3 p-4 rounded-2xl" style={{ backgroundColor: 'var(--bg-raised)', border: '1px solid var(--border)' }}>
+          <FieldLabel>Add Medication</FieldLabel>
+          <input
+            type="text"
+            value={form.name}
+            onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+            placeholder="Drug name (e.g. Levetiracetam)"
+            className="w-full rounded-xl px-4 py-3 text-sm outline-none"
+            style={selectStyle}
+          />
+          <div className="flex gap-2">
+            <input
+              type="number"
+              value={form.dose}
+              onChange={e => setForm(f => ({ ...f, dose: e.target.value }))}
+              placeholder="Dose"
+              className="flex-1 rounded-xl px-4 py-3 text-sm outline-none"
+              style={selectStyle}
+              min="0"
+            />
+            <select
+              value={form.unit}
+              onChange={e => setForm(f => ({ ...f, unit: e.target.value }))}
+              className="rounded-xl px-3 py-3 text-sm outline-none"
+              style={selectStyle}
+            >
+              {UNIT_OPTIONS.map(u => <option key={u} value={u}>{u}</option>)}
+            </select>
+          </div>
+          <select
+            value={form.frequency}
+            onChange={e => setForm(f => ({ ...f, frequency: e.target.value }))}
+            className="w-full rounded-xl px-4 py-3 text-sm outline-none"
+            style={selectStyle}
+          >
+            {FREQ_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+          <div className="flex gap-2 pt-1">
+            <button
+              onClick={handleAdd}
+              disabled={!form.name.trim() || !form.dose}
+              className="flex-1 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all active:scale-95 disabled:opacity-40"
+              style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
+            >
+              Save
+            </button>
+            <button
+              onClick={() => { setShowForm(false); setForm(EMPTY_MED); }}
+              className="flex-1 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all active:scale-95"
+              style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-dim)', border: '1px solid var(--border)' }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          onClick={() => setShowForm(true)}
+          className="w-full py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95"
+          style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)', border: '1px solid var(--border)' }}
+        >
+          + Add Medication
+        </button>
+      )}
+    </Section>
   );
 }
 
@@ -406,6 +555,9 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa }) {
         </div>
       </Section>
 
+      {/* ── MEDICATIONS ── */}
+      <MedicationSection flash={flash} />
+
       {/* ── REPORTS & NEUROLOGIST ── */}
       <Section title="Reports &amp; Neurologist">
         <p className="text-[11px] text-[var(--text-dim)] -mt-2">Information used to generate clinical neurologist reports.</p>
@@ -431,7 +583,7 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa }) {
       {/* ── ABOUT ── */}
       <Section title="About">
         <Row label="App Version"><p className="text-sm font-bold text-[var(--text-primary)]">AuraTrack v0.1.0</p></Row>
-        <Row label="Database Schema"><p className="text-sm font-bold text-[var(--text-primary)]">AuraTrackDB v4</p></Row>
+        <Row label="Database Schema"><p className="text-sm font-bold text-[var(--text-primary)]">AuraTrackDB v5</p></Row>
         {pwa?.canInstallManually && (
           <div>
             <ActionBtn

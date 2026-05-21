@@ -8,6 +8,7 @@ import { db } from './data/db';
 import { DeleteModal } from './components/DeleteModal';
 import { usePWAInstall } from './hooks/usePWAInstall';
 import { useWakeLock } from './hooks/useWakeLock';
+import { useMedications } from './hooks/useMedications';
 import { PWAInstallBanner } from './components/PWAInstallBanner';
 import IdleView from './pages/IdleView';
 import RecordingView from './pages/RecordingView';
@@ -57,6 +58,8 @@ function App() {
   const pwa = usePWAInstall();
   const wakeLock = useWakeLock();
   const [wakeLockUnsupported, setWakeLockUnsupported] = useState(false);
+  const meds = useMedications();
+  const [showDoseModal, setShowDoseModal] = useState(false);
   const stoppingRef = useRef(false);
 
   const showToast = (msg) => {
@@ -211,7 +214,7 @@ function App() {
       )}
 
       <div className="flex-1 flex flex-col items-center px-6 overflow-hidden pb-8">
-        {status === 'IDLE'         && <IdleView history={history.history} fullHistory={fullHistory} onStart={handleStart} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail} />}
+        {status === 'IDLE'         && <IdleView history={history.history} fullHistory={fullHistory} onStart={handleStart} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail} onLogDose={() => setShowDoseModal(true)} hasMedications={meds.medications.length > 0} />}
         {status === 'RECORDING'    && <RecordingView elapsed={timer.elapsed} startTime={timer.startTime} laps={timer.laps} onLap={timer.recordLap} onStop={handleStop} onEmergencyStop={handleEmergencyStop} onQuickNote={l => wizard.addQuickNote(l, timer.elapsed)} userMode={settings.userMode} quickNoteLabels={activeQuickNoteLabels} />}
         {status === 'TAGGING'      && <TaggingView {...wizard} elapsed={timer.elapsed} laps={timer.laps} startTime={timer.startTime} onSave={handleSave} onCancel={handleCancel} />}
         {status === 'HISTORY'      && <HistoryView onBack={() => setStatus('IDLE')} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail} onExport={() => setStatus('EXPORT')} historyPageSize={settings.historyPageSize} />}
@@ -221,6 +224,39 @@ function App() {
       </div>
 
       {itemToDelete && <DeleteModal onConfirm={handleDeleteConfirm} onCancel={() => setItemToDelete(null)} />}
+
+      {/* Log Dose modal — IDLE only, shown when medications are set up */}
+      {showDoseModal && status === 'IDLE' && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
+          <div className="w-full max-w-md rounded-[2rem] p-6 space-y-4" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
+            <p className="text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: 'var(--text-dim)' }}>Log Dose Taken</p>
+            <div className="space-y-2">
+              {meds.medications.map(m => (
+                <button
+                  key={m.id}
+                  onClick={async () => {
+                    await meds.logDose(m.id);
+                    setShowDoseModal(false);
+                    showToast(`Logged: ${m.name} ${m.dose}${m.unit}`);
+                  }}
+                  className="w-full py-4 px-5 rounded-2xl text-left transition-all active:scale-95"
+                  style={{ backgroundColor: 'var(--bg-raised)', border: '1px solid var(--border)' }}
+                >
+                  <span className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>{m.name}</span>
+                  <span className="ml-2 text-xs" style={{ color: 'var(--text-dim)' }}>{m.dose}{m.unit} · {m.frequency}</span>
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setShowDoseModal(false)}
+              className="w-full py-3 rounded-2xl font-black text-xs uppercase tracking-widest"
+              style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)', border: '1px solid var(--border)' }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
       <PWAInstallBanner isVisible={pwa.isVisible} isIOS={pwa.isIOS} install={pwa.install} dismiss={pwa.dismiss} />
       {toastMsg && (
         <div

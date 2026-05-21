@@ -65,7 +65,7 @@ export const exportToPDF = (events) => {
 
 // ─── Clinical Neurologist Report ─────────────────────────────
 
-export const exportNeurologistReport = (events, settings = {}) => {
+export const exportNeurologistReport = (events, settings = {}, medications = [], medicationLogs = []) => {
   const win = window.open('', '_blank');
   if (!win) {
     alert('Pop-up blocked. Please allow pop-ups for this site, then try again.'); // eslint-disable-line no-alert
@@ -320,6 +320,28 @@ export const exportNeurologistReport = (events, settings = {}) => {
     ? { label: 'MEDIUM', color: '#d97706', bg: '#fef3c7' }
     : { label: 'LOW',    color: '#dc2626', bg: '#fee2e2' };
 
+  // ── Medication section HTML
+  const FREQ_SHORT = { OD: 'Once daily', BD: 'Twice daily', TDS: 'Three times daily', QDS: 'Four times daily', PRN: 'As needed (rescue)' };
+  const medRows = medications.map(m =>
+    `<tr><td style="font-weight:700">${esc(m.name)}</td><td>${m.dose}${esc(m.unit)}</td><td>${esc(m.frequency)} — ${esc(FREQ_SHORT[m.frequency] || m.frequency)}</td></tr>`
+  ).join('');
+
+  // Adherence: count logs vs. expected doses (OD=1, BD=2, TDS=3, QDS=4, PRN=variable)
+  const freqPerDay = { OD: 1, BD: 2, TDS: 3, QDS: 4, PRN: 0 };
+  const expectedDoses = medications.reduce((sum, m) => sum + (freqPerDay[m.frequency] || 0) * 30, 0);
+  const medSection = medications.length > 0 ? `
+  <div class="section">
+    <h2>Current Medications</h2>
+    <table>
+      <thead><tr><th>Drug</th><th>Dose</th><th>Frequency</th></tr></thead>
+      <tbody>${medRows}</tbody>
+    </table>
+    ${medicationLogs.length > 0
+      ? `<p style="font-size:10px;color:#374151;margin-top:8px"><strong>${medicationLogs.length} dose(s) logged</strong> in reporting period${expectedDoses > 0 ? ` (expected ~${expectedDoses} for this regimen over 30 days)` : ''}.</p>`
+      : `<p style="font-size:10px;color:#9ca3af;margin-top:8px">No dose logs recorded in this period.</p>`
+    }
+  </div>` : '';
+
   // ── Write HTML ────────────────────────────────────────────────
 
   win.document.write(`<!DOCTYPE html><html><head>
@@ -403,6 +425,8 @@ export const exportNeurologistReport = (events, settings = {}) => {
     <div class="stat-card"><div class="stat-value">${daysCovered}</div><div class="stat-label">Days Affected</div></div>
     <div class="stat-card"><div class="stat-value">${Object.keys(byType).length}</div><div class="stat-label">Seizure Types</div></div>
   </div>
+
+  ${medSection}
 
   <!-- SECTION 2: RECENT EVENTS TABLE -->
   <div class="section">

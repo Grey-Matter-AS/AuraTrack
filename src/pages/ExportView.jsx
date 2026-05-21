@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { db } from '../data/db';
 import { ExportCard } from '../components/ExportCard';
 import { exportToJSON, exportToCSV, exportToPDF, exportNeurologistReport, filterEventsByDateRange } from '../utils/exportHelpers';
+import { useMedications } from '../hooks/useMedications';
 
 export default function ExportView({ onBack, settings = {} }) {
   const [fromDate, setFromDate] = useState(
@@ -11,6 +12,7 @@ export default function ExportView({ onBack, settings = {} }) {
     () => new Date().toISOString().slice(0, 10)
   );
   const today = new Date().toISOString().slice(0, 10);
+  const { medications, getLogsForPeriod } = useMedications();
 
   const getEvents = async () => {
     const all = await db.events.orderBy('startTime').reverse().toArray();
@@ -24,7 +26,10 @@ export default function ExportView({ onBack, settings = {} }) {
 
   const handleNeurologistReport = async () => {
     const events = await getEvents();
-    exportNeurologistReport(events, settings);
+    const fromMs = new Date(fromDate).setHours(0, 0, 0, 0);
+    const toMs   = new Date(toDate).setHours(23, 59, 59, 999);
+    const medLogs = await getLogsForPeriod(fromMs, toMs);
+    exportNeurologistReport(events, settings, medications, medLogs);
   };
 
   return (
