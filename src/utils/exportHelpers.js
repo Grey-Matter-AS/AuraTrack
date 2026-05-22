@@ -1,5 +1,7 @@
 import { formatCSVRow } from './formatters';
 import { freqBarChartSVG, durationLineSVG, typeBarSVG, phaseStackSVG } from './pdfCharts';
+import { esc } from './htmlEscape';
+import { phaseDurs } from './phaseCalculations';
 
 export const filterEventsByDateRange = (events, fromDateStr, toDateStr) => {
   const from = fromDateStr ? new Date(fromDateStr).setHours(0, 0, 0, 0) : 0;
@@ -135,23 +137,12 @@ export const exportNeurologistReport = (events, settings = {}, medications = [],
   const daysCovered = new Set(periodEvents.map(e => e.date || '')).size;
 
   // ── Helpers
-  const phaseDurs = (e) => {
-    const m = e.manualDurations || {};
-    return {
-      aura:     m.aura     ?? (e.laps?.aura && e.startTime ? Math.round((e.laps.aura - e.startTime) / 1000) : 0),
-      seizure:  m.seizure  ?? (e.laps?.aura && e.laps?.seizure ? Math.round((e.laps.seizure - e.laps.aura) / 1000) : 0),
-      recovery: m.recovery ?? (e.laps?.seizure && e.laps?.recovery ? Math.round((e.laps.recovery - e.laps.seizure) / 1000) : 0),
-    };
-  };
-
   const fmtDur = (s) => {
     if (!s || s <= 0) return '—';
     const m = Math.floor(s / 60);
     const sec = s % 60;
     return m > 0 ? `${m}m ${sec}s` : `${sec}s`;
   };
-
-  const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
   // ── Awareness analysis (scan symptoms for Mental & Speech > Awareness)
   const awareness = { awake: 0, confused: 0, blackout: 0 };
@@ -572,7 +563,6 @@ export const exportSeizureDiary = (allEvents, settings = {}, medications = [], m
     return;
   }
 
-  const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const patientName = settings.personName || settings.caretakerName || '';
 
   // Build a map of day-of-month → events for this month

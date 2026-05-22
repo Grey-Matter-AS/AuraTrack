@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { slotLabel } from '../utils/medicationSchedule';
+import { slotLabel, scheduledTimestampForDay } from '../utils/medicationSchedule';
 
 export function MedicationDosePanel({ medicationGroups, allActiveMedications, onSaveDoses }) {
+  const nowMs = Date.now();
   // toggledKeys: Set of "medicationId|hhMM" strings
   const [toggledKeys, setToggledKeys] = useState(new Set());
   const [saved, setSaved] = useState(false);
@@ -75,33 +76,44 @@ export function MedicationDosePanel({ medicationGroups, allActiveMedications, on
             {allDoneToday ? '✓ All doses for today are up to date' : 'No scheduled doses today. Add medications in Settings.'}
           </p>
         ) : (
-          timeSlots.map(hhMM => (
-            <div key={hhMM}>
-              <p className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--text-faint)' }}>
-                {slotLabel(hhMM)} · {hhMM}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {medicationGroups[hhMM].map(med => {
-                  const key = `${med.id}|${hhMM}`;
-                  const active = toggledKeys.has(key);
-                  return (
-                    <button
-                      key={key}
-                      onClick={() => toggle(med.id, hhMM)}
-                      className="px-4 py-2 rounded-full font-black text-xs transition-all active:scale-95"
-                      style={{
-                        backgroundColor: active ? 'var(--accent)' : 'var(--bg-raised)',
-                        color: active ? '#fff' : 'var(--text-dim)',
-                        border: active ? '1px solid transparent' : '1px solid var(--border)',
-                      }}
-                    >
-                      {med.name} {med.dose}{med.unit}
-                    </button>
-                  );
-                })}
+          timeSlots.map(hhMM => {
+            const scheduledTs = scheduledTimestampForDay(hhMM, nowMs);
+            const diffMin = (nowMs - scheduledTs) / 60000;
+            const slotIsMissed = diffMin > 90;
+            const slotIsLate = diffMin > 0 && !slotIsMissed;
+            const slotColor = slotIsMissed ? '#dc2626' : slotIsLate ? '#d97706' : 'var(--text-faint)';
+            const slotTag = slotIsMissed ? ' · MISSED' : slotIsLate ? ' · LATE' : '';
+            return (
+              <div key={hhMM}>
+                <p className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: slotColor }}>
+                  {slotLabel(hhMM)} · {hhMM}{slotTag}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {medicationGroups[hhMM].map(med => {
+                    const key = `${med.id}|${hhMM}`;
+                    const active = toggledKeys.has(key);
+                    const btnStyle = active
+                      ? { backgroundColor: 'var(--accent)', color: '#fff', border: '1px solid transparent' }
+                      : slotIsMissed
+                      ? { backgroundColor: 'rgba(220,38,38,0.12)', color: '#dc2626', border: '1px solid #dc2626' }
+                      : slotIsLate
+                      ? { backgroundColor: 'rgba(217,119,6,0.12)', color: '#d97706', border: '1px solid #d97706' }
+                      : { backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)', border: '1px solid var(--border)' };
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => toggle(med.id, hhMM)}
+                        className="px-4 py-2 rounded-full font-black text-xs transition-all active:scale-95"
+                        style={btnStyle}
+                      >
+                        {med.name} {med.dose}{med.unit}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
 
         <button

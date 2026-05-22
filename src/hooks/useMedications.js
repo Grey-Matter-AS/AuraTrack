@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { db } from '../data/db';
-import { defaultScheduledTimes, scheduledTimestampForToday, getScheduledDosesForDay, getDoseStatus } from '../utils/medicationSchedule';
+import { getScheduledDosesForDay } from '../utils/medicationSchedule';
 
 export function useMedications() {
   const [medications, setMedications] = useState([]);
@@ -26,10 +26,6 @@ export function useMedications() {
     await db.medications.delete(id);
     await db.medicationLogs.where('medicationId').equals(id).delete().catch(() => {});
     await load();
-  };
-
-  const logDose = async (medicationId) => {
-    await db.medicationLogs.add({ medicationId, takenAt: Date.now() });
   };
 
   const logDoseWithStatus = async (medicationId, scheduledHHMM, takenAt, status) => {
@@ -102,7 +98,6 @@ export function useMedications() {
     addMedication,
     updateMedication,
     deleteMedication,
-    logDose,
     logDoseWithStatus,
     getLogsForDay,
     getLogsForPeriod,
