@@ -59,24 +59,6 @@ export function getScheduledDosesForDay(medications, dateMs) {
   return doses;
 }
 
-// Group active non-PRN meds by their scheduled time slots for today → { 'HH:MM': [med, ...] }
-export function groupByScheduledTime(medications) {
-  const todayMs = Date.now();
-  const groups = {};
-  for (const med of medications) {
-    if (!med.active || med.isRescue) continue;
-    if (!isMedScheduledForDay(med, todayMs)) continue;
-    const times = med.scheduledTimes ?? defaultScheduledTimes(med.frequency);
-    for (const hhMM of times) {
-      if (!groups[hhMM]) groups[hhMM] = [];
-      groups[hhMM].push(med);
-    }
-  }
-  const sorted = {};
-  for (const key of Object.keys(groups).sort()) sorted[key] = groups[key];
-  return sorted;
-}
-
 // Returns groups for the dose panel: only upcoming slots + past slots that are unlogged (missed).
 // Taken/late doses disappear from the panel once logged.
 export function getVisibleDosesForPanel(medications, todayLogs, nowMs = Date.now()) {

@@ -1,18 +1,8 @@
 // Pure SVG chart generators for the neurologist PDF report.
 // Each function returns an SVG string — no React, no recharts needed.
 
-function phaseDurs(e) {
-  const m = e.manualDurations || {};
-  return {
-    aura:     m.aura     ?? (e.laps?.aura && e.startTime         ? Math.round((e.laps.aura - e.startTime) / 1000)         : 0),
-    seizure:  m.seizure  ?? (e.laps?.aura && e.laps?.seizure     ? Math.round((e.laps.seizure - e.laps.aura) / 1000)       : 0),
-    recovery: m.recovery ?? (e.laps?.seizure && e.laps?.recovery ? Math.round((e.laps.recovery - e.laps.seizure) / 1000)   : 0),
-  };
-}
-
-function esc(s) {
-  return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
+import { esc } from './htmlEscape';
+import { phaseDurs } from './phaseCalculations';
 
 const NO_DATA = (title) => `<svg viewBox="0 0 520 140" xmlns="http://www.w3.org/2000/svg">
   <rect width="520" height="140" fill="#f9fafb" rx="6"/>
