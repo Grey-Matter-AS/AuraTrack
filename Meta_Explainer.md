@@ -177,8 +177,6 @@ AuraTrack/
 │   ├── ErrorBoundary.jsx       ← Catches unexpected crashes and shows a friendly recovery screen.
 │   ├── App.css                 ← Legacy CSS (mostly unused).
 │   ├── index.css               ← Global styles, theme variables, touch fixes.
-│   ├── constants.js            ← Re-exports constants from data/constants.js.
-│   ├── db.js                   ← Re-exports the database from data/db.js.
 │   │
 │   ├── assets/                 ← Images and icons used in the app.
 │   │   ├── hero.png
@@ -186,7 +184,7 @@ AuraTrack/
 │   │   └── vite.svg
 │   │
 │   ├── data/                   ← Data definitions (database + medical constants).
-│   │   ├── db.js               ← Creates and configures the Dexie database (v5 schema).
+│   │   ├── db.js               ← Creates and configures the Dexie database (v6 schema).
 │   │   └── constants.js        ← Seizure types, symptom tree, body region tree, TRIGGERS list.
 │   │
 │   ├── hooks/                  ← Custom React hooks (smart logic managers).
@@ -196,13 +194,14 @@ AuraTrack/
 │   │   ├── useSettings.js      ← Loads and saves user preferences.
 │   │   ├── usePWAInstall.js    ← Handles the "Install App" prompt and update notifications.
 │   │   ├── useWakeLock.js      ← Keeps the phone screen on during recording.
-│   │   └── useMedications.js   ← Manages medications list and dose timestamps.
+│   │   ├── useNotifications.js ← Schedules browser push notifications for upcoming doses.
+│   │   └── useMedications.js   ← Manages medications list, scheduled times, and dose logs.
 │   │
 │   ├── pages/                  ← The 7 main screens of the app.
-│   │   ├── IdleView.jsx        ← Home screen: START button, recent events, Log Dose button.
+│   │   ├── IdleView.jsx        ← Home screen: START button, dose tracker panel, recent events.
 │   │   ├── RecordingView.jsx   ← Live recording screen: timer + phase buttons.
 │   │   ├── TaggingView.jsx     ← Post-seizure symptom entry wizard.
-│   │   ├── HistoryView.jsx     ← All past events: list, chart, filters.
+│   │   ├── HistoryView.jsx     ← All past events: list, chart, filters + medication history tab.
 │   │   ├── SettingsView.jsx    ← Settings screen wrapper.
 │   │   ├── ExportView.jsx      ← Export data: JSON, CSV, PDF, neurologist report, seizure diary.
 │   │   └── EventDetailView.jsx ← Full details for a single event including triggers.
@@ -215,6 +214,8 @@ AuraTrack/
 │   │   ├── SeizureTrendChart.jsx ← The zoomable bar/line trend chart.
 │   │   ├── SettingsForm.jsx    ← Settings form: identity, modes, medications, appearance, data.
 │   │   ├── ExportCard.jsx      ← A clickable card for each export format.
+│   │   ├── MedicationDosePanel.jsx ← Idle-screen dose tracker with LATE/MISSED status colours.
+│   │   ├── MedicationHistoryTab.jsx ← Scrollable grid showing every dose slot with status badges.
 │   │   └── PWAInstallBanner.jsx ← The "Install this app" banner + update-available notification.
 │   │
 │   └── utils/                  ← Pure helper functions (no React).
@@ -222,6 +223,9 @@ AuraTrack/
 │       ├── dangerFlags.js      ← Detects dangerous seizure patterns (long duration, clusters).
 │       ├── hapticFeedback.js   ← Makes the phone vibrate on button presses.
 │       ├── formatters.js       ← Formats numbers into readable text (e.g., "2m 30s").
+│       ├── medicationSchedule.js ← Scheduling calculations: slot expansion, visibility filtering, status.
+│       ├── htmlEscape.js       ← Shared HTML-escape helper used by PDF generators.
+│       ├── phaseCalculations.js ← Shared aura/seizure/recovery phase duration calculator.
 │       └── pdfCharts.js        ← Generates SVG charts for the neurologist report.
 ```
 
@@ -371,7 +375,7 @@ Only visible when NOT recording or tagging (would get in the way).
 | `fullHistory` | array | All events ever recorded (used by IdleView + danger flags) |
 | `toastMsg` | string | Temporary error message shown at the bottom of the screen |
 | `wakeLockUnsupported` | boolean | True when the browser cannot keep the screen on (e.g. Firefox) |
-| `showDoseModal` | boolean | Whether the "Log Dose Taken" bottom sheet is open |
+| `todayLogs` | array | Today's medication logs, refreshed on IDLE entry and after saving doses — feeds `getVisibleDosesForPanel()` |
 
 **Key functions:**
 
@@ -384,8 +388,9 @@ Only visible when NOT recording or tagging (would get in the way).
 | `handleCancel()` | Discards tagging. If this was a new (not editing) event, **deletes the orphan record** from the database before going to IDLE |
 | `handleDeleteConfirm()` | Deletes the event from the database, reloads history |
 | `handleEmergencyStop()` | 12-minute auto-stop: saves event with emergency note, skips tagging. Uses `stoppingRef` to prevent double-saves. |
+| `handleSaveDoses(doses)` | Logs each toggled dose with status `'taken'`, refreshes `todayLogs`, shows a toast naming the drugs logged |
 | `goToDetail(id)` | Saves current screen, navigates to EVENT_DETAIL |
-| `showToast(msg)` | Displays an error message for 5 seconds |
+| `showToast(msg)` | Displays a message for 5 seconds |
 
 **Crash recovery:**
 
@@ -454,9 +459,18 @@ useEffect(() => {
 
 When `wakeLockUnsupported` is true, a warning banner appears at the top of the recording screen telling the user to increase their screen timeout manually.
 
-**Medication dose modal:**
+**Medication dose panel:**
 
-When `showDoseModal` is true and the app is on the IDLE screen, a bottom sheet overlays the screen showing the list of active medications. Tapping one calls `meds.logDose(id)` to record the timestamp, then shows a toast confirmation (e.g. "Logged: Levetiracetam 500mg"). The modal is never shown during recording or tagging — it only makes sense at rest.
+When returning to IDLE, `App` calls three things in sequence: `meds.load()`, `meds.markMissedDoses()`, and `meds.getLogsForDay(Date.now())`. The last result is stored in `todayLogs`. Then `getVisibleDosesForPanel(activeMedications, todayLogs)` produces `medicationGroups` — a sorted object of `{ 'HH:MM': [med, ...] }` containing only the slots that still need action (upcoming slots and past unlogged slots). This is passed to `MedicationDosePanel` inside `IdleView`. Non-rescue active medications are in `activeMedications`; the full active list (including rescue) is in `allActiveMedications` for the ad-hoc dose section.
+
+**Medication derivations computed at render:**
+
+```javascript
+const activeMedications    = meds.medications.filter(m => m.active && !m.isRescue);
+const allActiveMedications = meds.medications.filter(m => m.active);
+const emergencyMedications = meds.medications.filter(m => m.active && m.showInEmergency);
+const medicationGroups     = getVisibleDosesForPanel(activeMedications, todayLogs);
+```
 
 **Toast system:**
 
@@ -516,7 +530,7 @@ Runs `@tailwindcss/postcss` and `autoprefixer`. PostCSS is the pipeline that tra
 
 **What it is:** Creates and configures the Dexie database. This is the single source of truth for how data is stored.
 
-**The current schema (version 5):**
+**The current schema (version 6):**
 
 ```javascript
 import Dexie from 'dexie';
@@ -540,6 +554,14 @@ db.version(5).stores({
   settings: 'key',
   medications: '++id',
   medicationLogs: '++id, medicationId, takenAt'
+});
+
+// Version 6: added scheduledTime index on medicationLogs for efficient per-slot querying
+db.version(6).stores({
+  events: '++id, startTime, date, type, isComplete, isEdited, notes',
+  settings: 'key',
+  medications: '++id',
+  medicationLogs: '++id, medicationId, takenAt, scheduledTime'
 });
 ```
 
@@ -606,9 +628,13 @@ db.version(5).stores({
   id: 3,
   name: 'Levetiracetam',
   dose: 500,
-  unit: 'mg',       // 'mg' | 'g' | 'mcg' | 'ml' | 'IU'
-  frequency: 'BD',  // 'OD' | 'BD' | 'TDS' | 'QDS' | 'PRN'
-  isRescue: false,  // true for emergency-only medications like Midazolam
+  unit: 'mg',                   // 'mg' | 'g' | 'mcg' | 'ml' | 'IU'
+  frequency: 'BD',              // 'OD' | 'BD' | 'TDS' | 'QDS' | 'PRN'
+  scheduledTimes: ['08:00', '20:00'],  // HH:MM strings; derived from frequency if absent
+  scheduledDays: [0,1,2,3,4,5,6],     // 0=Sun…6=Sat; absent/all-7 means daily
+  isRescue: false,              // true for emergency-only medications like Midazolam
+  reminderEnabled: true,        // whether push notifications fire for this medication
+  showInEmergency: false,       // whether to surface this med on the recording screen
   active: true
 }
 ```
@@ -619,14 +645,26 @@ db.version(5).stores({
 {
   id: 201,
   medicationId: 3,              // Links to the medication above
-  takenAt: 1716019200000        // Millisecond timestamp of when dose was taken
+  scheduledTime: '08:00',       // HH:MM of the scheduled slot (null for ad-hoc doses)
+  takenAt: 1716019200000,       // Millisecond timestamp of when the dose was recorded
+  status: 'taken',              // 'taken' | 'late' | 'missed'
+  isEdited: false,              // true if the log was manually corrected after saving
+  lastModified: 1716019500000   // ms timestamp of last manual edit (undefined if never edited)
 }
 ```
 
+**Status values explained:**
+
+| Status | Meaning |
+|--------|---------|
+| `taken` | Dose logged within 90 minutes of the scheduled time |
+| `late` | Dose logged more than 90 minutes after the scheduled time |
+| `missed` | No log found; auto-inserted by `markMissedDoses()` when returning to IDLE |
+
 **Automatic migration:**
 
-When a user who has the old version (v4) opens the updated app (v5), Dexie automatically:
-1. Creates the new `medications` and `medicationLogs` tables
+When a user who has the old version (v4 or v5) opens the updated app (v6), Dexie automatically:
+1. Creates or updates the `medications` and `medicationLogs` tables as needed
 2. Leaves all existing events completely untouched
 
 The user never needs to do anything. Their data is safe.
@@ -862,28 +900,35 @@ The previous approach stored medication information in a free-text `reportNotes`
 
 ```javascript
 const {
-  medications,      // Array of medication objects currently in the database
-  load,             // Re-fetch medications from database
-  addMedication,    // Add a new medication record
-  updateMedication, // Update an existing medication record
-  deleteMedication, // Delete a medication (and all its dose logs)
-  logDose,          // Record a dose timestamp for a specific medication
-  getLogsForPeriod, // Fetch all dose logs within a date range (used for reports)
+  medications,         // Array of medication objects currently in the database
+  load,                // Re-fetch medications from database
+  addMedication,       // Add a new medication record
+  updateMedication,    // Update an existing medication record
+  deleteMedication,    // Delete a medication (and all its dose logs)
+  logDoseWithStatus,   // Record a dose with an explicit taken/late/missed status
+  getLogsForDay,       // Fetch all dose logs for a specific day (used by the dose panel)
+  getLogsForPeriod,    // Fetch all dose logs within a date range (used for reports)
+  updateLog,           // Edit an existing log entry (sets isEdited + lastModified)
+  markMissedDoses,     // Auto-insert 'missed' records for any past-due unlogged doses
 } = useMedications();
 ```
 
-**`logDose` — how a single dose is recorded:**
+**`logDoseWithStatus` — how a dose is recorded:**
 
 ```javascript
-const logDose = async (medicationId) => {
+const logDoseWithStatus = async (medicationId, scheduledHHMM, takenAt, status) => {
   await db.medicationLogs.add({
     medicationId,
-    takenAt: Date.now()   // Current time in milliseconds
+    scheduledTime: scheduledHHMM ?? null,   // links to the time slot, null for ad-hoc
+    takenAt: takenAt ?? Date.now(),
+    status: status ?? 'taken',              // 'taken' | 'late' | 'missed'
   });
 };
 ```
 
-Just two fields. No complexity. The timestamp is everything.
+**`markMissedDoses` — auto-filling the history:**
+
+Called every time the app returns to the IDLE state. It idempotently inserts a `'missed'` log record for every scheduled dose whose time has passed today but has no existing log. This means the medication history tab always shows a complete record even when the user didn't open the app.
 
 **`getLogsForPeriod` — for reports:**
 
@@ -954,37 +999,38 @@ For example: `Levetiracetam 500mg BD`
 **What it is:** The home screen. What the user sees when no recording is happening.
 
 **What it shows:**
-- The big **START RECORDING** button
-- A **+ Log Dose Taken** button (only visible when medications have been set up)
-- A list of the most recent events (from `history` prop)
+- The big **START** button
+- The **Dose Tracker panel** (`MedicationDosePanel`) — only visible when at least one medication is configured
+- A list of the most recent 5 events (from `history` prop)
 - Danger flag badges on events that were dangerous (>5 min, cluster)
-- A stats strip (7-day event count and average duration)
-- A micro bar chart showing seizure frequency over recent days
 
-**Log Dose Taken button:**
+**Dose Tracker panel integration:**
 
 ```jsx
 {hasMedications && (
-  <button onClick={onLogDose} ...>
-    + Log Dose Taken
-  </button>
+  <MedicationDosePanel
+    medicationGroups={medicationGroups}
+    allActiveMedications={allActiveMedications ?? []}
+    onSaveDoses={onSaveDoses}
+  />
 )}
 ```
 
-This button only appears when `hasMedications` is `true` (i.e., at least one medication has been added in Settings). Tapping it opens the dose logging modal in `App.jsx`. This keeps the idle screen clean for users who don't use the medication feature.
+`hasMedications` is `true` when `medicationGroups` has any time slots OR `allActiveMedications` has any entries. The panel is hidden for users who haven't set up medications, keeping the idle screen clean.
 
 **Props:**
 
 | Prop | Purpose |
 |------|---------|
-| `history` | Recent events array |
-| `fullHistory` | All events (for trend calculations) |
+| `history` | Recent events array (last 5) |
+| `fullHistory` | All events (for danger map calculations) |
 | `onStart` | Called when START is tapped |
 | `onEdit` | Called when an event's Edit button is tapped |
 | `onDelete` | Called when an event's Delete button is tapped |
 | `onViewDetail` | Called when an event card is tapped |
-| `onLogDose` | Called when the Log Dose button is tapped |
-| `hasMedications` | Boolean — whether to show the Log Dose button |
+| `medicationGroups` | Object `{ 'HH:MM': [med, ...] }` of today's actionable dose slots |
+| `allActiveMedications` | Full list of active medications (for the ad-hoc dose section) |
+| `onSaveDoses` | Called with toggled dose array to log them as taken |
 
 ---
 
@@ -1226,8 +1272,14 @@ Rendered inline within `SettingsForm` using its own instance of `useMedications(
   - Dose number input
   - Unit dropdown: mg / g / mcg / ml / IU
   - Frequency dropdown: Once daily (OD) / Twice daily (BD) / Three times daily (TDS) / Four times daily (QDS) / As needed (PRN)
-  - "Rescue medication?" checkbox
+  - Scheduled times (auto-populated from frequency; editable HH:MM inputs)
+  - Scheduled days of the week (toggles for Mon–Sun; absent = daily)
+  - "Show in emergency screen?" toggle (surfaces the med on the RecordingView for quick reference)
+  - "Enable dose reminders?" toggle (controls browser push notifications)
   - Save / Cancel buttons
+
+*Why PRN medications are treated differently:*
+Selecting PRN frequency automatically sets `isRescue = true`. Rescue medications are excluded from the routine dose panel and `getVisibleDosesForPanel` — they appear only in the ad-hoc dose sheet.
 
 *Why the confirmation on delete:*
 Deleting a medication also deletes all its dose logs (`medicationLogs` records). This is irreversible. The confirmation step prevents accidental data loss.
@@ -1278,6 +1330,63 @@ Shows:
 - A label
 - A short description
 - A button that triggers the export
+
+---
+
+#### `src/components/MedicationDosePanel.jsx`
+
+**What it is:** The dose tracker panel shown on the idle page when medications are configured. Replaces the old single "Log Dose Taken" button with a full scheduled-dose interface.
+
+**What it shows:**
+- A "DOSE TRACKER" heading with a Save button (disabled until at least one dose is toggled)
+- One section per scheduled time slot (e.g., Morning · 08:00)
+- Each slot label gains a status suffix:
+  - `· LATE` (amber `#d97706`) if the scheduled time was 0–90 minutes ago
+  - `· MISSED` (red `#dc2626`) if the scheduled time was more than 90 minutes ago
+- One pill-shaped button per medication in that slot
+  - **Gray** → upcoming (scheduled time is in the future)
+  - **Amber-tinted, amber border** → LATE (0–90 min past due, not yet logged)
+  - **Red-tinted, red border** → MISSED (>90 min past due, not yet logged)
+  - **Accent color** → toggled (the user has tapped this dose and is about to save it)
+- A "+ Extra / On-Demand Dose" button that opens a bottom sheet for logging ad-hoc doses
+
+**Behaviour:**
+- Tapping a button toggles it — it turns accent-colored to confirm intent
+- Tapping Save calls `onSaveDoses` with all toggled doses, then shows "✓ Saved" for 2.5 seconds
+- Toggled state takes precedence over LATE/MISSED coloring — the user's intent overrides the status display
+- `nowMs = Date.now()` is computed once per render; the panel does not auto-refresh (it updates when the parent re-renders on IDLE entry)
+
+**Status color logic (per slot):**
+
+```javascript
+const scheduledTs = scheduledTimestampForDay(hhMM, nowMs);
+const diffMin = (nowMs - scheduledTs) / 60000;
+const slotIsMissed = diffMin > 90;
+const slotIsLate   = diffMin > 0 && !slotIsMissed;
+```
+
+---
+
+#### `src/components/MedicationHistoryTab.jsx`
+
+**What it is:** A scrollable calendar-style grid showing every scheduled dose slot for the current month, with a coloured status badge in each cell.
+
+**What it shows:**
+- Columns = one per day
+- Rows = one per medication × scheduled time slot
+- Each cell shows the status of that dose:
+
+| Status | Color |
+|--------|-------|
+| `taken` | Green `#16a34a` |
+| `late` | Amber `#d97706` |
+| `missed` | Red `#dc2626` |
+| `upcoming` | Gray outline |
+| `no data` | Faint outline |
+
+- Cells are tappable to correct an entry (opens an edit sheet)
+- Edited entries show a `✎` indicator
+- The component builds a fast lookup index (`logIndex`) keyed by `"dayStart|medId|hhMM"` to avoid O(n²) scanning when rendering hundreds of cells
 
 ---
 
@@ -1542,26 +1651,84 @@ export const haptic = (pattern = [10]) => {
 
 **What it is:** Converts raw numbers into human-readable strings.
 
-**Key functions:**
+**Exported functions:**
 
 ```javascript
 // Converts seconds to "2m 30s" or "45s" format
-export function formatDuration(seconds) {
-  if (seconds == null || isNaN(seconds)) return '—';   // Null-safe guard
-  const s = Math.round(seconds);
-  if (s < 60) return `${s}s`;
-  const m = Math.floor(s / 60);
-  const rem = s % 60;
-  return rem > 0 ? `${m}m ${rem}s` : `${m}m`;
-}
+export function formatDuration(seconds) { ... }
 
-// Formats a Unix timestamp as a readable date
-export function formatDate(ts) {
-  return new Date(ts).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+// Formats a comma-separated row for CSV export
+export function formatCSVRow(event) { ... }
+```
+
+The `seconds == null` guard in `formatDuration` prevents crashes when an event is partially recorded (missing laps mean some phase durations are `null` or `undefined`).
+
+---
+
+#### `src/utils/medicationSchedule.js`
+
+**What it is:** Pure utility functions for all medication scheduling logic. No React, no database calls — everything is deterministic given a list of medications and a timestamp.
+
+**Exported functions:**
+
+| Function | What it does |
+|----------|-------------|
+| `defaultScheduledTimes(frequency)` | Returns the default HH:MM array for a frequency (e.g. BD → `['08:00', '20:00']`) |
+| `scheduledTimestampForDay(hhMM, dateMs)` | Converts `'08:00'` + a day's timestamp into a precise millisecond timestamp for that day |
+| `scheduledTimestampForToday(hhMM)` | Shortcut: `scheduledTimestampForDay(hhMM, Date.now())` |
+| `getDoseStatus(scheduledHHMM, loggedAtMs, dayMs)` | Returns `'taken'` (logged ≤90 min after scheduled), `'late'` (logged >90 min after), or `'missed'` (no log) |
+| `isMedScheduledForDay(med, dayMs)` | Returns `true` if the medication should be taken on the given day (checks `scheduledDays`) |
+| `getScheduledDosesForDay(medications, dateMs)` | Expands all active non-PRN medications × their scheduled times into a flat sorted array |
+| `getVisibleDosesForPanel(medications, todayLogs, nowMs)` | Returns `{ 'HH:MM': [med, ...] }` for the dose panel — only upcoming and unlogged past slots |
+| `slotLabel(hhMM)` | Returns a human label: `'Morning'` (before 12), `'Afternoon'` (12–17), `'Evening'` (17–21), `'Night'` (21+) |
+| `scheduledDaysLabel(scheduledDays)` | Returns a short display string like `'Mon · Wed · Fri'`, or `null` for daily medications |
+
+**`getVisibleDosesForPanel` — the core panel filter:**
+
+```javascript
+// For each med × scheduled time:
+// - If the slot time is in the future → always show (upcoming)
+// - If the slot time has passed → show ONLY if it has no successful log (missed/unlogged)
+// - If it has been logged as taken or late → hide it (already done)
+if (scheduledTs <= nowMs) {
+  const logged = todayLogs.some(
+    l => l.medicationId === med.id &&
+         l.scheduledTime === hhMM &&
+         l.status !== 'missed'   // 'missed' auto-records don't count as done
+  );
+  if (logged) continue;
 }
 ```
 
-The `seconds == null` guard prevents crashes when an event is partially recorded (missing laps mean some phase durations are `null` or `undefined`).
+---
+
+#### `src/utils/htmlEscape.js`
+
+**What it is:** A single-line shared utility that sanitises strings before embedding them in HTML. Used by both `exportHelpers.js` and `pdfCharts.js` to prevent HTML injection in user-supplied data (patient names, notes, etc.).
+
+```javascript
+export const esc = (s) =>
+  String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+```
+
+---
+
+#### `src/utils/phaseCalculations.js`
+
+**What it is:** A shared utility for computing aura, seizure, and recovery phase durations from a recorded event. Previously this logic was duplicated inline in both `exportHelpers.js` and `pdfCharts.js`; extracting it here removes that duplication.
+
+```javascript
+export function phaseDurs(e) {
+  const m = e.manualDurations || {};
+  return {
+    aura:     m.aura     ?? (e.laps?.aura && e.startTime         ? Math.round((e.laps.aura - e.startTime) / 1000)         : 0),
+    seizure:  m.seizure  ?? (e.laps?.aura && e.laps?.seizure     ? Math.round((e.laps.seizure - e.laps.aura) / 1000)       : 0),
+    recovery: m.recovery ?? (e.laps?.seizure && e.laps?.recovery ? Math.round((e.laps.recovery - e.laps.seizure) / 1000)   : 0),
+  };
+}
+```
+
+Manual overrides (`manualDurations`) take precedence over lap-derived values — this matters when the user has edited the timings in the wizard SUMMARY step.
 
 ---
 
@@ -1729,17 +1896,26 @@ A thin, minimal scrollbar that blends with the dark theme.
 ### Journey 4: Logging a Medication Dose
 
 ```
-1. User is on IDLE screen
-2. The "+ Log Dose Taken" button is visible (medications have been set up in Settings)
-3. User taps the button
-4. A bottom sheet slides up showing each active medication:
-   → "Levetiracetam 500mg · BD"
-   → "Clobazam 10mg · OD"
-5. User taps the medication they just took
-6. App calls db.medicationLogs.add({ medicationId, takenAt: Date.now() })
-7. Modal closes automatically
+1. User opens the IDLE screen
+2. The Dose Tracker panel is visible (medications have been set up in Settings)
+3. Each scheduled dose slot is shown with its time and a pill-shaped button per medication:
+   → Upcoming slots: gray buttons
+   → Past-due within 90 min: amber buttons labelled "· LATE"
+   → Past-due over 90 min: red buttons labelled "· MISSED"
+4. User taps the medication button(s) they have just taken — each turns accent-colored
+5. User taps "Save"
+6. App calls logDoseWithStatus(medicationId, scheduledHHMM, now, 'taken') for each toggled dose
+7. Panel clears toggles and shows "✓ Saved" for 2.5 seconds
 8. A toast appears: "Logged: Levetiracetam 500mg"
-9. The dose is now recorded and will appear in the next neurologist report
+9. The logged doses disappear from the panel (taken slots are filtered out by getVisibleDosesForPanel)
+10. The dose is now recorded and will appear in the next neurologist report
+
+ALTERNATIVE: Ad-hoc or rescue dose
+→ User taps "+ Extra / On-Demand Dose" at the bottom of the panel
+→ A bottom sheet appears listing ALL active medications (including rescue/PRN)
+→ User optionally types a reason ("doctor advised extra dose")
+→ User taps the medication name
+→ Dose is logged with scheduledHHMM = null (marks it as unscheduled)
 ```
 
 ---
@@ -1779,10 +1955,13 @@ A thin, minimal scrollbar that blends with the dark theme.
    → Dose: 500
    → Unit: mg
    → Frequency: BD (Twice daily)
-   → Rescue medication: No
+   → Scheduled times: auto-populated as 08:00 and 20:00 (editable)
+   → Scheduled days: all 7 days (editable — e.g. Mon/Wed/Fri only)
+   → Show in emergency screen: toggle on if relevant
+   → Enable dose reminders: toggle on to receive browser push notifications
 5. Taps Save
 6. Medication appears in the list: "Levetiracetam · 500 mg · BD"
-7. Returns to IDLE — the "+ Log Dose Taken" button now appears
+7. Returns to IDLE — the Dose Tracker panel now appears showing today's scheduled slots
 8. Repeat for additional medications
 ```
 
@@ -1826,21 +2005,29 @@ A thin, minimal scrollbar that blends with the dark theme.
 ┌──────────────────────────────────────────────────────────────────┐
 │  medications                          (added in v5)              │
 │  ──────────────────────────────────────────────────────────────  │
-│  id         (PK, auto)                                           │
-│  name                    e.g. 'Levetiracetam'                   │
-│  dose                    e.g. 500                               │
-│  unit                    'mg' | 'g' | 'mcg' | 'ml' | 'IU'      │
-│  frequency               'OD' | 'BD' | 'TDS' | 'QDS' | 'PRN'  │
-│  isRescue                boolean                                 │
-│  active                  boolean                                 │
+│  id              (PK, auto)                                      │
+│  name                       e.g. 'Levetiracetam'                │
+│  dose                       e.g. 500                            │
+│  unit                       'mg' | 'g' | 'mcg' | 'ml' | 'IU'   │
+│  frequency                  'OD' | 'BD' | 'TDS' | 'QDS' | 'PRN'│
+│  scheduledTimes             array of 'HH:MM' strings            │
+│  scheduledDays              array of 0–6 (day-of-week, 0=Sun)   │
+│  isRescue                   boolean                              │
+│  reminderEnabled            boolean                              │
+│  showInEmergency            boolean                              │
+│  active                     boolean                              │
 └──────────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────────┐
-│  medicationLogs                       (added in v5)              │
+│  medicationLogs                       (added in v5, updated v6)  │
 │  ──────────────────────────────────────────────────────────────  │
-│  id            (PK, auto)                                        │
-│  medicationId  (indexed)   FK → medications.id                  │
-│  takenAt       (indexed)   ms timestamp of when dose was taken  │
+│  id             (PK, auto)                                       │
+│  medicationId   (indexed)   FK → medications.id                  │
+│  takenAt        (indexed)   ms timestamp when dose was recorded  │
+│  scheduledTime  (indexed)   'HH:MM' of the slot (null=ad-hoc)   │
+│  status                     'taken' | 'late' | 'missed'         │
+│  isEdited                   boolean (true if manually corrected) │
+│  lastModified               ms timestamp of last edit            │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
@@ -1853,11 +2040,12 @@ A thin, minimal scrollbar that blends with the dark theme.
 | v3 | Public `events` table with all indexed fields |
 | v4 | Added `settings` table for user preferences |
 | v5 | Added `medications` and `medicationLogs` tables |
+| v6 | Added `scheduledTime` index on `medicationLogs`; medications gained `scheduledTimes`, `scheduledDays`, `reminderEnabled`, `showInEmergency`; logs gained `status`, `isEdited`, `lastModified` |
 
 ### Automatic Migration
 
-When a user who has v4 data opens the v5 app, Dexie automatically:
-1. Creates the `medications` table (empty — the user adds their medications via Settings)
+When a user who has v4 or v5 data opens the v6 app, Dexie automatically:
+1. Creates or updates the `medications` table (new fields are absent on old records — treated as `undefined`, which is handled safely throughout)
 2. Creates the `medicationLogs` table (empty)
 3. Leaves every existing event completely untouched
 
@@ -2246,6 +2434,10 @@ Every technical term used in this document, explained plainly:
 **Timestamp** — A number representing a specific moment in time, measured as milliseconds since January 1, 1970. Example: `1716019200000` = "18 May 2026, 12:00:00 UTC".
 
 **Trigger** — An environmental or lifestyle factor that precedes a seizure and may have contributed to it. Common triggers include sleep deprivation, stress, missed medication, alcohol, and illness. Distinct from *symptoms* (which describe what happens *during* a seizure). In AuraTrack, triggers are selected as chips in the Summary step of the wizard.
+
+**Dose Status** — The classification of a medication log entry. `taken` = logged within 90 minutes of the scheduled time. `late` = logged more than 90 minutes after the scheduled time. `missed` = automatically inserted when no log exists for a past-due slot.
+
+**Scheduled Slot** — A specific combination of a medication and a time (e.g. Levetiracetam at 08:00). The dose panel shows one button per active scheduled slot for today.
 
 **`useEffect`** — A React hook that runs code when something changes. Like "whenever X changes, do Y."
 
