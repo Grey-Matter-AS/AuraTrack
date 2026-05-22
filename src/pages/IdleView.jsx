@@ -1,31 +1,44 @@
 import React, { useMemo } from 'react';
 import { EventCard } from '../components/EventCard';
+import { MedicationDosePanel } from '../components/MedicationDosePanel';
 import { buildDangerMap } from '../utils/dangerFlags';
+import { groupByScheduledTime } from '../utils/medicationSchedule';
 
-export default function IdleView({ history, fullHistory, onStart, onEdit, onDelete, onViewDetail, onLogDose, hasMedications }) {
+export default function IdleView({
+  history,
+  fullHistory,
+  onStart,
+  onEdit,
+  onDelete,
+  onViewDetail,
+  activeMedications,
+  allActiveMedications,
+  onSaveDoses,
+}) {
   const dangerMap = useMemo(() => buildDangerMap(fullHistory?.length ? fullHistory : history), [fullHistory, history]);
+  const medicationGroups = useMemo(() => groupByScheduledTime(activeMedications ?? []), [activeMedications]);
+  const hasMedications = (activeMedications?.length ?? 0) > 0 || (allActiveMedications?.length ?? 0) > 0;
 
   return (
     <div className="flex-1 flex flex-col items-center w-full max-w-md overflow-hidden">
-      <div className="py-10 shrink-0 flex flex-col items-center gap-4">
+      <div className="py-10 shrink-0 flex flex-col items-center">
         <button
           onClick={onStart}
           className="w-60 h-60 bg-red-600 active:scale-95 active:bg-red-500 transition-all rounded-full shadow-[0_0_60px_rgba(225,29,72,0.4)] flex items-center justify-center text-white text-4xl font-black border-[12px] border-[#1e293b] ring-4 ring-red-900/20"
         >
           START
         </button>
-        {hasMedications && (
-          <button
-            onClick={onLogDose}
-            className="px-5 py-2.5 rounded-full font-black text-[10px] uppercase tracking-widest transition-all active:scale-95"
-            style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)', border: '1px solid var(--border)' }}
-          >
-            + Log Dose Taken
-          </button>
-        )}
       </div>
 
       <div className="w-full flex-1 flex flex-col overflow-hidden">
+        {hasMedications && (
+          <MedicationDosePanel
+            medicationGroups={medicationGroups}
+            allActiveMedications={allActiveMedications ?? []}
+            onSaveDoses={onSaveDoses}
+          />
+        )}
+
         <div className="flex justify-between items-center mb-4 px-2 shrink-0">
           <h3 className="text-slate-500 text-[10px] font-black uppercase tracking-widest">Recent Events</h3>
           {history.length > 0 && (

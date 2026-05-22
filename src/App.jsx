@@ -9,6 +9,7 @@ import { DeleteModal } from './components/DeleteModal';
 import { usePWAInstall } from './hooks/usePWAInstall';
 import { useWakeLock } from './hooks/useWakeLock';
 import { useMedications } from './hooks/useMedications';
+import { useNotifications } from './hooks/useNotifications';
 import { PWAInstallBanner } from './components/PWAInstallBanner';
 import IdleView from './pages/IdleView';
 import RecordingView from './pages/RecordingView';
@@ -59,7 +60,7 @@ function App() {
   const wakeLock = useWakeLock();
   const [wakeLockUnsupported, setWakeLockUnsupported] = useState(false);
   const meds = useMedications();
-  const [showDoseModal, setShowDoseModal] = useState(false);
+  const notifications = useNotifications();
   const stoppingRef = useRef(false);
 
   const showToast = (msg) => {
@@ -85,6 +86,8 @@ function App() {
     if (status === 'IDLE') {
       history.load();
       history.loadAll().then(setFullHistory).catch(() => {});
+      meds.load();
+      meds.markMissedDoses().catch(() => {});
     }
   }, [status]);
 
@@ -101,15 +104,22 @@ function App() {
   }, [status]);
 
   // Re-acquire wake lock when tab regains focus (OS releases it on tab switch)
+  // Also re-schedule notifications on visibility change
   useEffect(() => {
     const handler = () => {
-      if (document.visibilityState === 'visible' && status === 'RECORDING') {
-        wakeLock.acquire();
+      if (document.visibilityState === 'visible') {
+        if (status === 'RECORDING') wakeLock.acquire();
+        notifications.scheduleForToday(meds.medications);
       }
     };
     document.addEventListener('visibilitychange', handler);
     return () => document.removeEventListener('visibilitychange', handler);
-  }, [status]);
+  }, [status, meds.medications]);
+
+  // Schedule notifications whenever medication list changes
+  useEffect(() => {
+    notifications.scheduleForToday(meds.medications);
+  }, [meds.medications]);
 
   const handleStart = () => { wizard.reset(); timer.startTimer(); setStatus('RECORDING'); };
 
@@ -196,6 +206,24 @@ function App() {
   // Active quick note labels (filter empties)
   const activeQuickNoteLabels = (settings.quickNoteLabels || []).filter(l => l.trim());
 
+  // Medication derivations
+  const activeMedications = meds.medications.filter(m => m.active && !m.isRescue);
+  const allActiveMedications = meds.medications.filter(m => m.active);
+  const emergencyMedications = meds.medications.filter(m => m.active && m.showInEmergency);
+
+  const handleSaveDoses = async (doses) => {
+    const now = Date.now();
+    for (const { medicationId, scheduledHHMM, note } of doses) {
+      const status = scheduledHHMM == null ? 'taken' : 'taken';
+      await meds.logDoseWithStatus(medicationId, scheduledHHMM ?? null, now, status);
+    }
+    const names = doses.map(d => {
+      const med = meds.medications.find(m => m.id === d.medicationId);
+      return med ? `${med.name}` : '';
+    }).filter(Boolean);
+    showToast(`Logged: ${names.join(', ')}`);
+  };
+
   return (
     <div
       className="flex flex-col h-screen w-full font-sans overflow-hidden select-none"
@@ -214,49 +242,17 @@ function App() {
       )}
 
       <div className="flex-1 flex flex-col items-center px-6 overflow-hidden pb-8">
-        {status === 'IDLE'         && <IdleView history={history.history} fullHistory={fullHistory} onStart={handleStart} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail} onLogDose={() => setShowDoseModal(true)} hasMedications={meds.medications.length > 0} />}
-        {status === 'RECORDING'    && <RecordingView elapsed={timer.elapsed} startTime={timer.startTime} laps={timer.laps} onLap={timer.recordLap} onStop={handleStop} onEmergencyStop={handleEmergencyStop} onQuickNote={l => wizard.addQuickNote(l, timer.elapsed)} userMode={settings.userMode} quickNoteLabels={activeQuickNoteLabels} />}
+        {status === 'IDLE'         && <IdleView history={history.history} fullHistory={fullHistory} onStart={handleStart} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail} activeMedications={activeMedications} allActiveMedications={allActiveMedications} onSaveDoses={handleSaveDoses} />}
+        {status === 'RECORDING'    && <RecordingView elapsed={timer.elapsed} startTime={timer.startTime} laps={timer.laps} onLap={timer.recordLap} onStop={handleStop} onEmergencyStop={handleEmergencyStop} onQuickNote={l => wizard.addQuickNote(l, timer.elapsed)} userMode={settings.userMode} quickNoteLabels={activeQuickNoteLabels} emergencyMedications={emergencyMedications} neurologistName={settings.neurologistName} neurologistContact={settings.neurologistContact} emergencyContact={settings.emergencyContact} />}
         {status === 'TAGGING'      && <TaggingView {...wizard} elapsed={timer.elapsed} laps={timer.laps} startTime={timer.startTime} onSave={handleSave} onCancel={handleCancel} />}
-        {status === 'HISTORY'      && <HistoryView onBack={() => setStatus('IDLE')} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail} onExport={() => setStatus('EXPORT')} historyPageSize={settings.historyPageSize} />}
-        {status === 'SETTINGS'     && <SettingsView settings={settings} onUpdate={updateSettings} onReset={resetSettings} onBack={() => setStatus('IDLE')} pwa={pwa} />}
+        {status === 'HISTORY'      && <HistoryView onBack={() => setStatus('IDLE')} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail} onExport={() => setStatus('EXPORT')} historyPageSize={settings.historyPageSize} settings={settings} />}
+        {status === 'SETTINGS'     && <SettingsView settings={settings} onUpdate={updateSettings} onReset={resetSettings} onBack={() => setStatus('IDLE')} pwa={pwa} notificationPermission={notifications.permission} onRequestNotificationPermission={async () => { const p = await notifications.requestPermission(); if (p === 'granted') notifications.scheduleForToday(meds.medications); }} />}
         {status === 'EXPORT'       && <ExportView onBack={() => setStatus('HISTORY')} settings={settings} />}
         {status === 'EVENT_DETAIL' && <EventDetailView eventId={detailEventId} onEdit={handleEdit} onClose={() => setStatus(previousStatus)} />}
       </div>
 
       {itemToDelete && <DeleteModal onConfirm={handleDeleteConfirm} onCancel={() => setItemToDelete(null)} />}
 
-      {/* Log Dose modal — IDLE only, shown when medications are set up */}
-      {showDoseModal && status === 'IDLE' && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
-          <div className="w-full max-w-md rounded-[2rem] p-6 space-y-4" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
-            <p className="text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: 'var(--text-dim)' }}>Log Dose Taken</p>
-            <div className="space-y-2">
-              {meds.medications.map(m => (
-                <button
-                  key={m.id}
-                  onClick={async () => {
-                    await meds.logDose(m.id);
-                    setShowDoseModal(false);
-                    showToast(`Logged: ${m.name} ${m.dose}${m.unit}`);
-                  }}
-                  className="w-full py-4 px-5 rounded-2xl text-left transition-all active:scale-95"
-                  style={{ backgroundColor: 'var(--bg-raised)', border: '1px solid var(--border)' }}
-                >
-                  <span className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>{m.name}</span>
-                  <span className="ml-2 text-xs" style={{ color: 'var(--text-dim)' }}>{m.dose}{m.unit} · {m.frequency}</span>
-                </button>
-              ))}
-            </div>
-            <button
-              onClick={() => setShowDoseModal(false)}
-              className="w-full py-3 rounded-2xl font-black text-xs uppercase tracking-widest"
-              style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)', border: '1px solid var(--border)' }}
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
       <PWAInstallBanner isVisible={pwa.isVisible} isIOS={pwa.isIOS} install={pwa.install} dismiss={pwa.dismiss} />
       {toastMsg && (
         <div

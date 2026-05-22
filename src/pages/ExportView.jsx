@@ -4,7 +4,7 @@ import { ExportCard } from '../components/ExportCard';
 import { exportToJSON, exportToCSV, exportToPDF, exportNeurologistReport, exportSeizureDiary, filterEventsByDateRange } from '../utils/exportHelpers';
 import { useMedications } from '../hooks/useMedications';
 
-export default function ExportView({ onBack, settings = {} }) {
+export default function ExportView({ onBack, settings = {}, isEmbedded = false }) {
   const [fromDate, setFromDate] = useState(
     () => new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10)
   );
@@ -42,21 +42,23 @@ export default function ExportView({ onBack, settings = {} }) {
   };
 
   return (
-    <div className="flex-1 flex flex-col w-full max-w-md overflow-hidden">
+    <div className={isEmbedded ? 'w-full pb-10 space-y-0' : 'flex-1 flex flex-col w-full max-w-md overflow-hidden'}>
 
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-6 shrink-0">
-        <button
-          onClick={onBack}
-          className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
-          style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
-        >
-          ← BACK
-        </button>
-        <h2 className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--text-dim)' }}>
-          Export &amp; Reports
-        </h2>
-      </div>
+      {/* Header — hidden when embedded in History tab */}
+      {!isEmbedded && (
+        <div className="flex items-center gap-4 mb-6 shrink-0">
+          <button
+            onClick={onBack}
+            className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
+            style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
+          >
+            ← BACK
+          </button>
+          <h2 className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--text-dim)' }}>
+            Export &amp; Reports
+          </h2>
+        </div>
+      )}
 
       {/* Date Range Pickers */}
       <div className="mb-6 shrink-0">
@@ -90,7 +92,7 @@ export default function ExportView({ onBack, settings = {} }) {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
+      <div className={isEmbedded ? 'space-y-3' : 'flex-1 overflow-y-auto space-y-3 pr-1 custom-scrollbar'}>
 
         {/* ── Raw Data Exports ── */}
         <p className="text-[9px] font-black uppercase tracking-[0.3em] px-1" style={{ color: 'var(--text-faint)' }}>
@@ -99,13 +101,25 @@ export default function ExportView({ onBack, settings = {} }) {
 
         <ExportCard
           label="Backup JSON"
-          description="Full data export — all fields and metadata. Use for backup or restoring on another device."
-          onExport={() => handleExport(exportToJSON)}
+          description="Full data export — all fields including medications and dose logs. Use for backup or migrating to another device."
+          onExport={async () => {
+            const events = await getEvents();
+            const fromMs = new Date(fromDate).setHours(0, 0, 0, 0);
+            const toMs   = new Date(toDate).setHours(23, 59, 59, 999);
+            const logs   = await getLogsForPeriod(fromMs, toMs);
+            exportToJSON(events, medications, logs);
+          }}
         />
         <ExportCard
           label="Spreadsheet CSV"
-          description="Date, time, seizure type, duration, and notes in comma-separated format. Opens in Excel / Sheets."
-          onExport={() => handleExport(exportToCSV)}
+          description="Events, medications, and dose logs in comma-separated format. Opens in Excel / Sheets."
+          onExport={async () => {
+            const events = await getEvents();
+            const fromMs = new Date(fromDate).setHours(0, 0, 0, 0);
+            const toMs   = new Date(toDate).setHours(23, 59, 59, 999);
+            const logs   = await getLogsForPeriod(fromMs, toMs);
+            exportToCSV(events, medications, logs);
+          }}
         />
         <ExportCard
           label="Simple Print / PDF"

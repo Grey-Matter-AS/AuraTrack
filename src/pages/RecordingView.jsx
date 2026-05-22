@@ -3,12 +3,12 @@ import React, { useState, useEffect, useRef } from 'react';
 const ALERT_THRESHOLD = 300;  // 5 minutes
 const AUTO_STOP_AT    = 720;  // 12 minutes
 
-function RedAlert({ elapsed, onClose }) {
+function RedAlert({ elapsed, onClose, emergencyMedications = [], neurologistName, neurologistContact, emergencyContact }) {
   const mins = Math.floor(elapsed / 60);
   const secs = elapsed % 60;
   return (
     <div
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center p-8 select-none"
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center p-6 select-none overflow-y-auto"
       style={{ backgroundColor: 'rgba(185,28,28,0.97)', backdropFilter: 'blur(4px)' }}
     >
       {/* Close */}
@@ -21,22 +21,58 @@ function RedAlert({ elapsed, onClose }) {
       </button>
 
       {/* Content */}
-      <p className="text-[10px] font-black tracking-[0.5em] text-red-200 uppercase mb-6">MEDICAL ALERT</p>
+      <p className="text-[10px] font-black tracking-[0.5em] text-red-200 uppercase mb-4">MEDICAL ALERT</p>
 
-      <div className="text-8xl mb-4">⚠</div>
+      <div className="text-7xl mb-3">⚠</div>
 
-      <h1 className="text-5xl font-black text-white uppercase tracking-tight text-center mb-2">
+      <h1 className="text-4xl font-black text-white uppercase tracking-tight text-center mb-1">
         UNRESPONSIVE
       </h1>
-      <p className="text-2xl font-black text-red-200 uppercase tracking-widest text-center mb-8">
+      <p className="text-xl font-black text-red-200 uppercase tracking-widest text-center mb-5">
         MEDICAL EMERGENCY
       </p>
 
-      <div className="w-full max-w-xs rounded-3xl p-6 mb-6 text-center space-y-2"
+      <div className="w-full max-w-xs rounded-3xl p-4 mb-4 text-center space-y-1"
         style={{ backgroundColor: 'rgba(0,0,0,0.3)' }}>
         <p className="text-red-100 text-sm font-bold">CALL EMERGENCY SERVICES NOW</p>
         <p className="text-red-300 text-xs">Do not leave the patient unattended</p>
       </div>
+
+      {/* Emergency medications */}
+      {emergencyMedications.length > 0 && (
+        <div className="w-full max-w-xs rounded-3xl p-4 mb-4 text-center"
+          style={{ backgroundColor: '#fff', border: '3px solid #dc2626' }}>
+          <p className="text-red-700 text-[10px] font-black uppercase tracking-widest mb-2">
+            Administer Emergency Medication
+          </p>
+          {emergencyMedications.map(med => (
+            <p key={med.id} className="text-red-800 text-lg font-black">
+              {med.name} {med.dose}{med.unit}
+            </p>
+          ))}
+        </div>
+      )}
+
+      {/* Contact info */}
+      {(neurologistName || neurologistContact || emergencyContact) && (
+        <div className="w-full max-w-xs rounded-2xl p-4 mb-4 space-y-2"
+          style={{ backgroundColor: 'rgba(0,0,0,0.35)' }}>
+          {(neurologistName || neurologistContact) && (
+            <div className="flex justify-between items-start gap-2">
+              <p className="text-red-300 text-[9px] font-black uppercase tracking-widest shrink-0">Neurologist</p>
+              <p className="text-white text-xs font-bold text-right">
+                {[neurologistName, neurologistContact].filter(Boolean).join('  ·  ')}
+              </p>
+            </div>
+          )}
+          {emergencyContact && (
+            <div className="flex justify-between items-start gap-2">
+              <p className="text-red-300 text-[9px] font-black uppercase tracking-widest shrink-0">Emergency Contact</p>
+              <p className="text-white text-xs font-bold text-right">{emergencyContact}</p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Live elapsed */}
       <p className="text-[10px] font-black uppercase tracking-[0.3em] text-red-300 mb-1">Elapsed</p>
@@ -44,7 +80,7 @@ function RedAlert({ elapsed, onClose }) {
         {String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}
       </p>
 
-      <p className="text-red-300 text-[10px] mt-4 font-bold">Timer auto-stops at 12:00</p>
+      <p className="text-red-300 text-[10px] mt-3 font-bold">Timer auto-stops at 12:00</p>
     </div>
   );
 }
@@ -58,7 +94,11 @@ function RecordingView({
   onEmergencyStop,
   onQuickNote,
   userMode,
-  quickNoteLabels = ['FELL', 'RESCUE MED', 'NOT RESPONDING', 'FULL BODY', 'LEFT SIDE', 'RIGHT SIDE']
+  quickNoteLabels = ['FELL', 'RESCUE MED', 'NOT RESPONDING', 'FULL BODY', 'LEFT SIDE', 'RIGHT SIDE'],
+  emergencyMedications = [],
+  neurologistName,
+  neurologistContact,
+  emergencyContact,
 }) {
   const [showMarkers, setShowMarkers] = useState(false);
   const [alertDismissed, setAlertDismissed] = useState(false);
@@ -98,7 +138,7 @@ function RecordingView({
   return (
     <>
       {/* RED ALERT — fullscreen overlay, stays on top of everything */}
-      {showAlert && <RedAlert elapsed={elapsed} onClose={dismissAlert} />}
+      {showAlert && <RedAlert elapsed={elapsed} onClose={dismissAlert} emergencyMedications={emergencyMedications} neurologistName={neurologistName} neurologistContact={neurologistContact} emergencyContact={emergencyContact} />}
 
       <div className="flex-1 flex flex-col items-center justify-between w-full max-w-md mx-auto px-4 py-6 h-screen max-h-screen overflow-hidden animate-in fade-in">
 

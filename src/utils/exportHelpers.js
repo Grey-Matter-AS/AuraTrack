@@ -7,15 +7,41 @@ export const filterEventsByDateRange = (events, fromDateStr, toDateStr) => {
   return events.filter(e => e.startTime >= from && e.startTime <= to);
 };
 
-export const exportToJSON = (events) => {
-  const blob = new Blob([JSON.stringify(events, null, 2)], { type: 'application/json' });
+export const exportToJSON = (events, medications = [], medicationLogs = []) => {
+  const payload = {
+    version: 6,
+    exportedAt: Date.now(),
+    events,
+    medications,
+    medicationLogs,
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
   triggerDownload(blob, `auratrack-backup-${dateStamp()}.json`);
 };
 
-export const exportToCSV = (events) => {
+export const exportToCSV = (events, medications = [], medicationLogs = []) => {
   const header = 'id,date,time,type,duration,notes';
   const rows = events.map(formatCSVRow).join('\n');
-  const blob = new Blob([`${header}\n${rows}`], { type: 'text/csv' });
+
+  let csv = `${header}\n${rows}`;
+
+  if (medications.length > 0) {
+    csv += '\n\nMEDICATIONS\nid,name,dose,unit,frequency,scheduledTimes,isRescue,reminderEnabled,showInEmergency,active\n';
+    csv += medications.map(m =>
+      [m.id, m.name, m.dose, m.unit, m.frequency,
+       (m.scheduledTimes || []).join('|'), m.isRescue ? 1 : 0,
+       m.reminderEnabled ? 1 : 0, m.showInEmergency ? 1 : 0, m.active ? 1 : 0].join(',')
+    ).join('\n');
+  }
+
+  if (medicationLogs.length > 0) {
+    csv += '\n\nMEDICATION_LOGS\nid,medicationId,takenAt,scheduledTime,status,isEdited\n';
+    csv += medicationLogs.map(l =>
+      [l.id, l.medicationId, l.takenAt, l.scheduledTime ?? '', l.status ?? '', l.isEdited ? 1 : 0].join(',')
+    ).join('\n');
+  }
+
+  const blob = new Blob([csv], { type: 'text/csv' });
   triggerDownload(blob, `auratrack-events-${dateStamp()}.csv`);
 };
 
