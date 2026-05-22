@@ -10,6 +10,7 @@ export function MedicationDosePanel({ medicationGroups, allActiveMedications, on
 
   const timeSlots = Object.keys(medicationGroups);
   if (timeSlots.length === 0 && allActiveMedications.length === 0) return null;
+  const allDoneToday = timeSlots.length === 0 && allActiveMedications.length > 0;
 
   const toggle = (medId, hhMM) => {
     const key = `${medId}|${hhMM}`;
@@ -70,8 +71,8 @@ export function MedicationDosePanel({ medicationGroups, allActiveMedications, on
         style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
       >
         {timeSlots.length === 0 ? (
-          <p className="text-xs italic text-center py-1" style={{ color: 'var(--text-faint)' }}>
-            No scheduled doses. Add medications in Settings.
+          <p className="text-xs italic text-center py-1" style={{ color: allDoneToday ? '#16a34a' : 'var(--text-faint)' }}>
+            {allDoneToday ? '✓ All doses for today are up to date' : 'No scheduled doses today. Add medications in Settings.'}
           </p>
         ) : (
           timeSlots.map(hhMM => (

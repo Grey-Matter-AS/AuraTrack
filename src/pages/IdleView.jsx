@@ -2,7 +2,6 @@ import React, { useMemo } from 'react';
 import { EventCard } from '../components/EventCard';
 import { MedicationDosePanel } from '../components/MedicationDosePanel';
 import { buildDangerMap } from '../utils/dangerFlags';
-import { groupByScheduledTime } from '../utils/medicationSchedule';
 
 export default function IdleView({
   history,
@@ -11,13 +10,12 @@ export default function IdleView({
   onEdit,
   onDelete,
   onViewDetail,
-  activeMedications,
+  medicationGroups,
   allActiveMedications,
   onSaveDoses,
 }) {
   const dangerMap = useMemo(() => buildDangerMap(fullHistory?.length ? fullHistory : history), [fullHistory, history]);
-  const medicationGroups = useMemo(() => groupByScheduledTime(activeMedications ?? []), [activeMedications]);
-  const hasMedications = (activeMedications?.length ?? 0) > 0 || (allActiveMedications?.length ?? 0) > 0;
+  const hasMedications = Object.keys(medicationGroups ?? {}).length > 0 || (allActiveMedications?.length ?? 0) > 0;
 
   return (
     <div className="flex-1 flex flex-col items-center w-full max-w-md overflow-hidden">

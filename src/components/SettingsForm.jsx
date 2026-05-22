@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { db } from '../data/db';
 import { exportToJSON } from '../utils/exportHelpers';
 import { useMedications } from '../hooks/useMedications';
-import { defaultScheduledTimes } from '../utils/medicationSchedule';
+import { defaultScheduledTimes, scheduledDaysLabel } from '../utils/medicationSchedule';
 
 // ─── Atom components ─────────────────────────────────────────
 
@@ -138,7 +138,10 @@ function getSlotLabel(index, frequency) {
   return 'Dose Time';
 }
 
-const EMPTY_MED = { name: '', dose: '', unit: 'mg', frequency: 'BD', isRescue: false, scheduledTimes: ['08:00', '20:00'], reminderEnabled: false, showInEmergency: false };
+const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6];
+const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+const EMPTY_MED = { name: '', dose: '', unit: 'mg', frequency: 'BD', isRescue: false, scheduledTimes: ['08:00', '20:00'], scheduledDays: ALL_DAYS, reminderEnabled: false, showInEmergency: false };
 
 function MedForm({ form, setForm, onSave, onCancel, saveLabel = 'Save' }) {
   const selectStyle = { backgroundColor: 'var(--bg-input)', border: '1px solid var(--border)', color: 'var(--text-primary)' };
@@ -147,6 +150,20 @@ function MedForm({ form, setForm, onSave, onCancel, saveLabel = 'Save' }) {
   const handleFreqChange = (freq) => {
     setForm(f => ({ ...f, frequency: freq, isRescue: freq === 'PRN', scheduledTimes: defaultScheduledTimes(freq) }));
   };
+
+  const scheduledDays = form.scheduledDays ?? ALL_DAYS;
+  const isDaily = scheduledDays.length === 7;
+
+  const toggleDay = (day) => {
+    setForm(f => {
+      const days = f.scheduledDays ?? ALL_DAYS;
+      const next = days.includes(day) ? days.filter(d => d !== day) : [...days, day];
+      // Require at least 1 day selected
+      return { ...f, scheduledDays: next.length > 0 ? next : days };
+    });
+  };
+
+  const setDaily = () => setForm(f => ({ ...f, scheduledDays: ALL_DAYS }));
 
   const updateTime = (i, val) => {
     setForm(f => {
@@ -216,6 +233,43 @@ function MedForm({ form, setForm, onSave, onCancel, saveLabel = 'Save' }) {
         </div>
       )}
 
+      {/* Days of week */}
+      {!isPRN && (
+        <div className="space-y-2">
+          <FieldLabel>Active Days</FieldLabel>
+          <div className="flex gap-1.5 flex-wrap">
+            <button
+              onClick={setDaily}
+              className="px-3 py-1.5 rounded-full font-black text-[10px] uppercase tracking-widest transition-all active:scale-95"
+              style={{
+                backgroundColor: isDaily ? 'var(--accent)' : 'var(--bg-raised)',
+                color: isDaily ? '#fff' : 'var(--text-dim)',
+                border: isDaily ? '1px solid transparent' : '1px solid var(--border)',
+              }}
+            >
+              Daily
+            </button>
+            {DAY_LABELS.map((label, day) => {
+              const active = scheduledDays.includes(day);
+              return (
+                <button
+                  key={day}
+                  onClick={() => toggleDay(day)}
+                  className="px-3 py-1.5 rounded-full font-black text-[10px] uppercase tracking-widest transition-all active:scale-95"
+                  style={{
+                    backgroundColor: active ? 'var(--accent)' : 'var(--bg-raised)',
+                    color: active ? '#fff' : 'var(--text-dim)',
+                    border: active ? '1px solid transparent' : '1px solid var(--border)',
+                  }}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Reminder toggle */}
       {!isPRN && (
         <div className="flex items-center justify-between pt-1">
@@ -274,6 +328,7 @@ function MedicationSection({ flash, notificationPermission, onRequestNotificatio
       frequency: form.frequency,
       isRescue: form.frequency === 'PRN',
       scheduledTimes: form.scheduledTimes ?? defaultScheduledTimes(form.frequency),
+      scheduledDays: form.frequency === 'PRN' ? ALL_DAYS : (form.scheduledDays ?? ALL_DAYS),
       reminderEnabled: form.reminderEnabled ?? false,
       showInEmergency: form.showInEmergency ?? false,
     });
@@ -291,6 +346,7 @@ function MedicationSection({ flash, notificationPermission, onRequestNotificatio
       frequency: med.frequency,
       isRescue: med.isRescue,
       scheduledTimes: med.scheduledTimes ?? defaultScheduledTimes(med.frequency),
+      scheduledDays: med.scheduledDays ?? ALL_DAYS,
       reminderEnabled: med.reminderEnabled ?? false,
       showInEmergency: med.showInEmergency ?? false,
     });
@@ -305,6 +361,7 @@ function MedicationSection({ flash, notificationPermission, onRequestNotificatio
       frequency: editForm.frequency,
       isRescue: editForm.frequency === 'PRN',
       scheduledTimes: editForm.scheduledTimes ?? defaultScheduledTimes(editForm.frequency),
+      scheduledDays: editForm.frequency === 'PRN' ? ALL_DAYS : (editForm.scheduledDays ?? ALL_DAYS),
       reminderEnabled: editForm.reminderEnabled ?? false,
       showInEmergency: editForm.showInEmergency ?? false,
     });
@@ -355,6 +412,11 @@ function MedicationSection({ flash, notificationPermission, onRequestNotificatio
                       <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-faint)' }}>
                         {m.scheduledTimes.join(' · ')}
                         {m.reminderEnabled && <span className="ml-1.5">🔔</span>}
+                      </p>
+                    )}
+                    {scheduledDaysLabel(m.scheduledDays) && (
+                      <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-faint)' }}>
+                        {scheduledDaysLabel(m.scheduledDays)}
                       </p>
                     )}
                   </div>

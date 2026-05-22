@@ -10,6 +10,7 @@ import { usePWAInstall } from './hooks/usePWAInstall';
 import { useWakeLock } from './hooks/useWakeLock';
 import { useMedications } from './hooks/useMedications';
 import { useNotifications } from './hooks/useNotifications';
+import { getVisibleDosesForPanel } from './utils/medicationSchedule';
 import { PWAInstallBanner } from './components/PWAInstallBanner';
 import IdleView from './pages/IdleView';
 import RecordingView from './pages/RecordingView';
@@ -51,6 +52,7 @@ function App() {
   const [detailEventId, setDetailEventId] = useState(null);
   const [fullHistory, setFullHistory] = useState([]);
   const [toastMsg, setToastMsg] = useState('');
+  const [todayLogs, setTodayLogs] = useState([]);
 
   const timer = useEventTimer();
   const history = useEventHistory();
@@ -88,6 +90,7 @@ function App() {
       history.loadAll().then(setFullHistory).catch(() => {});
       meds.load();
       meds.markMissedDoses().catch(() => {});
+      meds.getLogsForDay(Date.now()).then(setTodayLogs).catch(() => {});
     }
   }, [status]);
 
@@ -210,16 +213,18 @@ function App() {
   const activeMedications = meds.medications.filter(m => m.active && !m.isRescue);
   const allActiveMedications = meds.medications.filter(m => m.active);
   const emergencyMedications = meds.medications.filter(m => m.active && m.showInEmergency);
+  const medicationGroups = getVisibleDosesForPanel(activeMedications, todayLogs);
 
   const handleSaveDoses = async (doses) => {
     const now = Date.now();
-    for (const { medicationId, scheduledHHMM, note } of doses) {
-      const status = scheduledHHMM == null ? 'taken' : 'taken';
-      await meds.logDoseWithStatus(medicationId, scheduledHHMM ?? null, now, status);
+    for (const { medicationId, scheduledHHMM } of doses) {
+      await meds.logDoseWithStatus(medicationId, scheduledHHMM ?? null, now, 'taken');
     }
+    const logs = await meds.getLogsForDay(Date.now());
+    setTodayLogs(logs);
     const names = doses.map(d => {
       const med = meds.medications.find(m => m.id === d.medicationId);
-      return med ? `${med.name}` : '';
+      return med ? med.name : '';
     }).filter(Boolean);
     showToast(`Logged: ${names.join(', ')}`);
   };
@@ -242,7 +247,7 @@ function App() {
       )}
 
       <div className="flex-1 flex flex-col items-center px-6 overflow-hidden pb-8">
-        {status === 'IDLE'         && <IdleView history={history.history} fullHistory={fullHistory} onStart={handleStart} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail} activeMedications={activeMedications} allActiveMedications={allActiveMedications} onSaveDoses={handleSaveDoses} />}
+        {status === 'IDLE'         && <IdleView history={history.history} fullHistory={fullHistory} onStart={handleStart} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail} medicationGroups={medicationGroups} allActiveMedications={allActiveMedications} onSaveDoses={handleSaveDoses} />}
         {status === 'RECORDING'    && <RecordingView elapsed={timer.elapsed} startTime={timer.startTime} laps={timer.laps} onLap={timer.recordLap} onStop={handleStop} onEmergencyStop={handleEmergencyStop} onQuickNote={l => wizard.addQuickNote(l, timer.elapsed)} userMode={settings.userMode} quickNoteLabels={activeQuickNoteLabels} emergencyMedications={emergencyMedications} neurologistName={settings.neurologistName} neurologistContact={settings.neurologistContact} emergencyContact={settings.emergencyContact} />}
         {status === 'TAGGING'      && <TaggingView {...wizard} elapsed={timer.elapsed} laps={timer.laps} startTime={timer.startTime} onSave={handleSave} onCancel={handleCancel} />}
         {status === 'HISTORY'      && <HistoryView onBack={() => setStatus('IDLE')} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail} onExport={() => setStatus('EXPORT')} historyPageSize={settings.historyPageSize} settings={settings} />}

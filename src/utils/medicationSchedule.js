@@ -29,11 +29,20 @@ export function getDoseStatus(scheduledHHMM, loggedAtMs, dayMs) {
   return diffMin <= 90 ? 'taken' : 'late';
 }
 
+// Returns true if the medication is scheduled for the given day.
+// scheduledDays absent or all 7 days = daily (always true).
+export function isMedScheduledForDay(med, dayMs) {
+  const days = med.scheduledDays;
+  if (!days || days.length === 0 || days.length === 7) return true;
+  return days.includes(new Date(dayMs).getDay());
+}
+
 // Expand all active non-PRN meds × scheduled times for a given day
 export function getScheduledDosesForDay(medications, dateMs) {
   const doses = [];
   for (const med of medications) {
     if (!med.active || med.isRescue) continue;
+    if (!isMedScheduledForDay(med, dateMs)) continue;
     const times = med.scheduledTimes ?? defaultScheduledTimes(med.frequency);
     for (const hhMM of times) {
       doses.push({
@@ -50,13 +59,47 @@ export function getScheduledDosesForDay(medications, dateMs) {
   return doses;
 }
 
-// Group active non-PRN meds by their scheduled time slots → { 'HH:MM': [med, ...] }
+// Group active non-PRN meds by their scheduled time slots for today → { 'HH:MM': [med, ...] }
 export function groupByScheduledTime(medications) {
+  const todayMs = Date.now();
   const groups = {};
   for (const med of medications) {
     if (!med.active || med.isRescue) continue;
+    if (!isMedScheduledForDay(med, todayMs)) continue;
     const times = med.scheduledTimes ?? defaultScheduledTimes(med.frequency);
     for (const hhMM of times) {
+      if (!groups[hhMM]) groups[hhMM] = [];
+      groups[hhMM].push(med);
+    }
+  }
+  const sorted = {};
+  for (const key of Object.keys(groups).sort()) sorted[key] = groups[key];
+  return sorted;
+}
+
+// Returns groups for the dose panel: only upcoming slots + past slots that are unlogged (missed).
+// Taken/late doses disappear from the panel once logged.
+export function getVisibleDosesForPanel(medications, todayLogs, nowMs = Date.now()) {
+  const todayStart = new Date(nowMs);
+  todayStart.setHours(0, 0, 0, 0);
+  const todayMs = todayStart.getTime();
+
+  const groups = {};
+  for (const med of medications) {
+    if (!med.active || med.isRescue) continue;
+    if (!isMedScheduledForDay(med, todayMs)) continue;
+    const times = med.scheduledTimes ?? defaultScheduledTimes(med.frequency);
+    for (const hhMM of times) {
+      const scheduledTs = scheduledTimestampForDay(hhMM, todayMs);
+      if (scheduledTs <= nowMs) {
+        // Past slot — hide if already successfully logged
+        const logged = todayLogs.some(
+          l => l.medicationId === med.id &&
+               l.scheduledTime === hhMM &&
+               l.status !== 'missed'
+        );
+        if (logged) continue;
+      }
       if (!groups[hhMM]) groups[hhMM] = [];
       groups[hhMM].push(med);
     }
@@ -72,4 +115,13 @@ export function slotLabel(hhMM) {
   if (h < 17) return 'Afternoon';
   if (h < 21) return 'Evening';
   return 'Night';
+}
+
+const DAY_ABBR = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+// Returns a short display string for scheduledDays, e.g. "Mon · Wed · Fri"
+// Returns null when all 7 days are selected (daily — no need to display).
+export function scheduledDaysLabel(scheduledDays) {
+  if (!scheduledDays || scheduledDays.length === 0 || scheduledDays.length === 7) return null;
+  return [...scheduledDays].sort((a, b) => a - b).map(d => DAY_ABBR[d]).join(' · ');
 }
