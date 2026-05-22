@@ -90,11 +90,14 @@ function Toggle({ value, onChange, label }) {
       aria-label={label}
       onClick={() => onChange(!value)}
       className="relative w-14 h-8 rounded-full transition-all shrink-0"
-      style={{ backgroundColor: value ? 'var(--accent)' : 'var(--bg-raised)' }}
+      style={{
+        backgroundColor: value ? 'var(--accent)' : 'var(--bg-input)',
+        border: value ? '1px solid transparent' : '1px solid var(--border)',
+      }}
     >
       <span
-        className="absolute top-1 w-6 h-6 bg-white rounded-full shadow transition-all"
-        style={{ left: value ? '1.75rem' : '0.25rem' }}
+        className="absolute top-1 w-6 h-6 rounded-full shadow transition-all"
+        style={{ left: value ? '1.75rem' : '0.25rem', backgroundColor: value ? '#fff' : 'var(--text-dim)' }}
       />
     </button>
   );
@@ -254,7 +257,7 @@ function MedForm({ form, setForm, onSave, onCancel, saveLabel = 'Save' }) {
   );
 }
 
-function MedicationSection({ flash, notificationPermission, onRequestNotificationPermission }) {
+function MedicationSection({ flash, notificationPermission, onRequestNotificationPermission, settings, onUpdate }) {
   const { medications, addMedication, updateMedication, deleteMedication } = useMedications();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(EMPTY_MED);
@@ -387,6 +390,21 @@ function MedicationSection({ flash, notificationPermission, onRequestNotificatio
           + Add Medication
         </button>
       )}
+
+      {/* Medication tracking start date */}
+      <div className="border-t pt-4 mt-2 space-y-2" style={{ borderColor: 'var(--border-subtle)' }}>
+        <FieldLabel>Medication Tracking Start Date</FieldLabel>
+        <p className="text-[11px]" style={{ color: 'var(--text-dim)' }}>
+          The earliest date shown in medication history. Leave blank to auto-detect from records.
+        </p>
+        <input
+          type="date"
+          value={settings?.medicationStartDate || ''}
+          onChange={e => onUpdate?.('medicationStartDate', e.target.value)}
+          className="w-full rounded-xl px-4 py-3 text-sm outline-none"
+          style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+        />
+      </div>
 
       {/* Notification permissions */}
       <div className="border-t pt-4 mt-2 space-y-3" style={{ borderColor: 'var(--border-subtle)' }}>
@@ -737,7 +755,7 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
       </Section>}
 
       {/* ── MEDICATIONS ── */}
-      {show('medications') && <MedicationSection flash={flash} notificationPermission={notificationPermission} onRequestNotificationPermission={onRequestNotificationPermission} />}
+      {show('medications') && <MedicationSection flash={flash} notificationPermission={notificationPermission} onRequestNotificationPermission={onRequestNotificationPermission} settings={settings} onUpdate={onUpdate} />}
 
       {/* ── REPORTS & NEUROLOGIST ── */}
       {show('reports') && <Section title="Reports &amp; Neurologist">

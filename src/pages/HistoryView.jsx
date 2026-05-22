@@ -137,7 +137,7 @@ export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, on
       {/* ── MEDICATIONS TAB ── */}
       {activeTab === 'medications' && (
         <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar">
-          <MedicationHistoryTab />
+          <MedicationHistoryTab settings={settings} />
         </div>
       )}
 

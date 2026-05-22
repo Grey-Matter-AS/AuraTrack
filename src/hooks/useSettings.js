@@ -33,6 +33,9 @@ const DEFAULTS = {
 
   // Data & Backup
   autoBackupFrequency: 'never', // 'never' | 'weekly' | 'monthly'
+
+  // Medication tracking
+  medicationStartDate: '',      // ISO date string — first day to show in medication history
 };
 
 export function useSettings() {
