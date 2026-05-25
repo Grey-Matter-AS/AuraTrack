@@ -53,6 +53,12 @@ export function EventCard({ event, onEdit, onDelete, onViewDetail, dangerFlags }
                 style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)' }}
               >Edited</span>
             )}
+            {event.isManualEntry && (
+              <span
+                className="text-[9px] px-1.5 py-0.5 rounded uppercase font-bold"
+                style={{ backgroundColor: 'rgba(99,102,241,0.15)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.3)' }}
+              >Manual Entry</span>
+            )}
           </div>
           <p className="text-[11px] font-medium" style={{ color: 'var(--text-dim)' }}>
             {event.date} • {event.time}

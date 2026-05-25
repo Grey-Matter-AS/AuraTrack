@@ -14,6 +14,8 @@ export function useTaggingWizard() {
   const [manualDurations, setManualDurationsState] = useState({});
   const [editedTimers, setEditedTimers] = useState([]);
   const [triggers, setTriggers] = useState([]);
+  const [overrideDateTime, setOverrideDateTimeState] = useState(null); // { date: 'YYYY-MM-DD', time: 'HH:MM' }
+  const [isManualEntry, setIsManualEntry] = useState(false);
 
   const setActiveEvent = (id) => {
     setActiveEventId(id);
@@ -28,6 +30,10 @@ export function useTaggingWizard() {
     setTriggers(prev => prev.includes(label) ? prev.filter(t => t !== label) : [...prev, label]);
   };
 
+  const setEventDateTime = (date, time) => {
+    setOverrideDateTimeState({ date, time });
+  };
+
   const loadForEdit = (event) => {
     setEditingId(event.id);
     setActiveEventId(event.id);
@@ -36,7 +42,20 @@ export function useTaggingWizard() {
     setTriggers(event.triggers || []);
     setManualDurationsState(event.manualDurations || {});
     setEditedTimers(event.editedTimers || []);
+    setOverrideDateTimeState(null);
+    setIsManualEntry(false);
     setTaggingStep('SUMMARY');
+  };
+
+  // Called when creating a retrospective entry (Log Past Seizure flow)
+  const loadForManualEntry = (id, manualDurs, dateTime) => {
+    setActiveEventId(id);
+    setEditingId(null);
+    setManualDurationsState(manualDurs || {});
+    setEditedTimers(Object.keys(manualDurs || {}));
+    setOverrideDateTimeState(dateTime); // { date, time }
+    setIsManualEntry(true);
+    setTaggingStep('TYPE');
   };
 
   const handleFinalSave = async () => {
@@ -48,6 +67,18 @@ export function useTaggingWizard() {
       const existing = await db.events.get(editingId);
       type = existing?.type || 'Uncategorized';
     }
+
+    // If user changed the event's date/time, apply it
+    const dateTimeOverride = overrideDateTime
+      ? (() => {
+          const newStartTime = new Date(`${overrideDateTime.date}T${overrideDateTime.time}`).getTime();
+          return {
+            startTime: newStartTime,
+            date: new Date(newStartTime).toLocaleDateString(),
+            time: new Date(newStartTime).toLocaleTimeString(),
+          };
+        })()
+      : {};
 
     await db.events.update(targetId, {
       type: type || 'Uncategorized',
@@ -61,6 +92,7 @@ export function useTaggingWizard() {
       editedTimers,
       // Keep event.duration in sync with any manual total edit so every view reads the same value
       ...(manualDurations?.total != null ? { duration: manualDurations.total } : {}),
+      ...dateTimeOverride,
     });
 
     reset();
@@ -76,6 +108,8 @@ export function useTaggingWizard() {
     setSelections(EMPTY_SELECTIONS);
     setManualDurationsState({});
     setEditedTimers([]);
+    setOverrideDateTimeState(null);
+    setIsManualEntry(false);
   };
 
   const moveSymptom = (index, direction) => {
@@ -101,9 +135,12 @@ export function useTaggingWizard() {
     triggers, triggerToggle,
     editingId, activeEventId,
     manualDurations, editedTimers,
+    overrideDateTime, isManualEntry,
     setManualDuration,
     setActiveEvent,
+    setEventDateTime,
     loadForEdit,
+    loadForManualEntry,
     handleFinalSave,
     reset,
     moveSymptom,

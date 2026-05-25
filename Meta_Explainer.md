@@ -216,6 +216,7 @@ AuraTrack/
 │   │   ├── ExportCard.jsx      ← A clickable card for each export format.
 │   │   ├── MedicationDosePanel.jsx ← Idle-screen dose tracker with LATE/MISSED status colours.
 │   │   ├── MedicationHistoryTab.jsx ← Scrollable grid showing every dose slot with status badges.
+│   │   ├── ManualEntrySheet.jsx ← Bottom-sheet form for logging a past seizure (date/time/duration).
 │   │   └── PWAInstallBanner.jsx ← The "Install this app" banner + update-available notification.
 │   │
 │   └── utils/                  ← Pure helper functions (no React).
@@ -376,6 +377,7 @@ Only visible when NOT recording or tagging (would get in the way).
 | `toastMsg` | string | Temporary error message shown at the bottom of the screen |
 | `wakeLockUnsupported` | boolean | True when the browser cannot keep the screen on (e.g. Firefox) |
 | `todayLogs` | array | Today's medication logs, refreshed on IDLE entry and after saving doses — feeds `getVisibleDosesForPanel()` |
+| `showManualEntry` | boolean | Controls visibility of the `ManualEntrySheet` bottom-sheet for logging past seizures |
 
 **Key functions:**
 
@@ -388,6 +390,7 @@ Only visible when NOT recording or tagging (would get in the way).
 | `handleCancel()` | Discards tagging. If this was a new (not editing) event, **deletes the orphan record** from the database before going to IDLE |
 | `handleDeleteConfirm()` | Deletes the event from the database, reloads history |
 | `handleEmergencyStop()` | 12-minute auto-stop: saves event with emergency note, skips tagging. Uses `stoppingRef` to prevent double-saves. |
+| `handleManualCreate({ date, time, durationSec, manualDurations })` | Creates a past seizure entry in the database with `isManualEntry: true` and the user-specified date/time. Calls `wizard.loadForManualEntry()` then switches to TAGGING. |
 | `handleSaveDoses(doses)` | Logs each toggled dose with status `'taken'`, refreshes `todayLogs`, shows a toast naming the drugs logged |
 | `goToDetail(id)` | Saves current screen, navigates to EVENT_DETAIL |
 | `showToast(msg)` | Displays a message for 5 seconds |
@@ -780,15 +783,19 @@ TYPE → S_CAT → S_SYM → S_DET → R_CAT → R_SUB → R_DET → SUMMARY
 | `activeEventId` | number or null | ID of the event currently being tagged |
 | `manualDurations` | object | Phase durations manually overridden by the user |
 | `editedTimers` | array | Which phases were manually edited |
+| `overrideDateTime` | `{date, time}` or null | Replacement date (YYYY-MM-DD) and time (HH:MM) for the event. Set during the Log Past Seizure flow or when the user changes date/time in Summary while editing. Applied to `startTime`, `date`, and `time` in `handleFinalSave()`. |
+| `isManualEntry` | boolean | True when the event was created via the Log Past Seizure flow (not a live recording). Drives the date/time edit row in Summary. |
 
 **Key functions:**
 
 | Function | What it does |
 |----------|-------------|
 | `triggerToggle(label)` | Toggles a trigger on/off. If already selected, removes it; otherwise adds it |
-| `loadForEdit(event)` | Populates all wizard state from an existing event, including its triggers |
-| `handleFinalSave()` | Writes the completed event to the database, including `triggers`, `symptoms`, `notes` |
-| `reset()` | Clears all state including triggers back to empty arrays |
+| `loadForEdit(event)` | Populates all wizard state from an existing event, including its triggers. Clears `overrideDateTime` and `isManualEntry`. |
+| `loadForManualEntry(id, manualDurs, dateTime)` | Sets up wizard for a retrospective entry: sets `activeEventId`, pre-loads `manualDurations`, sets `overrideDateTime` and `isManualEntry = true`. Steps to `TYPE` so the user can classify the seizure. |
+| `setEventDateTime(date, time)` | Updates `overrideDateTime`. Called from the date/time inputs in Summary. |
+| `handleFinalSave()` | Writes the completed event to the database, including `triggers`, `symptoms`, `notes`. If `overrideDateTime` is set, also writes `startTime`, `date`, and `time` to match the user-specified moment. |
+| `reset()` | Clears all state including `overrideDateTime` and `isManualEntry` back to initial values |
 
 **`triggerToggle` implementation:**
 
@@ -999,7 +1006,7 @@ For example: `Levetiracetam 500mg BD`
 **What it is:** The home screen. What the user sees when no recording is happening.
 
 **What it shows:**
-- The big **START** button
+- The big **START** button, with a small **"+ Log Past Seizure"** text link directly below it
 - The **Dose Tracker panel** (`MedicationDosePanel`) — only visible when at least one medication is configured
 - A list of the most recent 5 events (from `history` prop)
 - Danger flag badges on events that were dangerous (>5 min, cluster)
@@ -1025,6 +1032,7 @@ For example: `Levetiracetam 500mg BD`
 | `history` | Recent events array (last 5) |
 | `fullHistory` | All events (for danger map calculations) |
 | `onStart` | Called when START is tapped |
+| `onManualEntry` | Called when "Log Past Seizure" is tapped — opens `ManualEntrySheet` |
 | `onEdit` | Called when an event's Edit button is tapped |
 | `onDelete` | Called when an event's Delete button is tapped |
 | `onViewDetail` | Called when an event card is tapped |
@@ -1213,9 +1221,10 @@ Instead of loading all events, only events within the 8-minute cluster window ar
 **What it is:** The final step of the symptom wizard where the user reviews everything before saving.
 
 **What it shows:**
+- **Event Date & Time row** — two editable inputs (date + time) shown when editing an existing event (`editingId` is set) or creating a past entry (`isManualEntry` is true). Allows backdating a live-recorded event or correcting a manual entry's date/time before save.
 - Phase timing display (aura/seizure/recovery durations with edit capability)
 - Confirmed symptoms list with drag-to-reorder
-- **POSSIBLE TRIGGERS section** (new) — a grid of pill-shaped chip buttons
+- **POSSIBLE TRIGGERS section** — a grid of pill-shaped chip buttons
 - Notes textarea for free-text clinical observations
 - A SAVE button
 
@@ -1295,7 +1304,8 @@ Deleting a medication also deletes all its dose logs (`medicationLogs` records).
 - Seizure type (with a type-specific color indicator)
 - Total duration
 - Danger flag badges: `>5 MIN` (amber) and `CLUSTER/SE RISK` (red)
-- An `EDITED` badge for manually modified records
+- An `EDITED` badge (gray) for manually modified records
+- A `MANUAL ENTRY` badge (indigo) for events logged retrospectively via the Log Past Seizure flow
 - An `EMERGENCY STOP` badge for auto-stopped events
 - Edit and Delete action buttons
 
@@ -1387,6 +1397,29 @@ const slotIsLate   = diffMin > 0 && !slotIsMissed;
 - Cells are tappable to correct an entry (opens an edit sheet)
 - Edited entries show a `✎` indicator
 - The component builds a fast lookup index (`logIndex`) keyed by `"dayStart|medId|hhMM"` to avoid O(n²) scanning when rendering hundreds of cells
+
+---
+
+#### `src/components/ManualEntrySheet.jsx`
+
+**What it is:** A bottom-sheet modal for logging a past seizure with the correct date, time, and duration. Opened from the "Log Past Seizure" link on IdleView.
+
+**Fields:**
+
+| Field | Input type | Default | Notes |
+|-------|-----------|---------|-------|
+| Date | `<input type="date">` | Today | Capped at today (`max={today}`) — cannot select future dates |
+| Time | `<input type="time">` | Current local time | |
+| Total Duration | Two number inputs (min + sec) | 0 min 0 sec | Required — must be > 0 to continue |
+| *(collapsible)* Aura | Two number inputs (min + sec) | 0 | Expand via "▸ Phase Breakdown (optional)" |
+| *(collapsible)* Seizure (Ictal) | Two number inputs (min + sec) | 0 | Same collapsible section |
+| *(collapsible)* Post-Ictal / Recovery | Two number inputs (min + sec) | 0 | Same collapsible section |
+
+**Validation:** The "Continue to Details →" button is blocked if total duration is 0. A red error message appears.
+
+**On confirm:** Calls `onConfirm({ date, time, durationSec, manualDurations })`. The parent (`App.jsx`) creates the event in the database and calls `wizard.loadForManualEntry()`, then transitions to TAGGING.
+
+**Style:** Same pattern as the ad-hoc dose sheet in `MedicationDosePanel` — dark backdrop, white card sliding up from the bottom.
 
 ---
 
@@ -1967,6 +2000,53 @@ ALTERNATIVE: Ad-hoc or rescue dose
 
 ---
 
+### Journey 7: Logging a Past Seizure
+
+For seizures that happened when the app was not open (e.g. during sleep, or when the carer's phone was unavailable).
+
+```
+1. From IdleView, tap the small "Log Past Seizure" link below the START button
+2. The ManualEntrySheet bottom-sheet appears:
+   → Date picker (today by default, capped to prevent future dates)
+   → Time picker (current time by default)
+   → Total Duration fields: minutes + seconds
+   → "Phase Breakdown" toggle expands three additional duration pairs:
+       Aura / Seizure (Ictal) / Post-Ictal Recovery
+3. User enters yesterday's date, the time the seizure occurred (e.g. 02:30),
+   and total duration (e.g. 2 minutes 30 seconds → 150 s)
+4. Optionally expands Phase Breakdown and enters phase durations
+5. Taps "Continue to Details →"
+   → Validation: duration must be > 0
+6. App creates the event in the database with:
+   → startTime = new Date("YYYY-MM-DDThh:mm").getTime() (milliseconds)
+   → date/time stored in the user's locale format (toLocaleDateString / toLocaleTimeString)
+   → duration = total seconds
+   → manualDurations = { total, aura?, seizure?, recovery? }
+   → isManualEntry = true (audit trail)
+7. App transitions to TAGGING → TYPE step (just like a normal recording)
+8. User selects seizure type, adds symptoms, triggers, notes
+9. In the SUMMARY step, a "Event Date & Time" row appears at the top
+   showing the date/time the user entered — editable if they need to correct it
+10. User taps "FINISH & SAVE LOG"
+11. Event is saved with the correct date/time — it appears in History
+    under the correct date, the calendar places it on the right day,
+    and neurologist reports include it in the proper date range
+12. EventCard shows an indigo "Manual Entry" badge as an audit trail indicator
+```
+
+**Backdating an existing event** (if an event was recorded with the wrong timestamp):
+
+```
+1. Open History → find the event
+2. Tap "View / Edit" → the TAGGING Summary step opens
+3. At the top of the Summary card, edit the "Event Date & Time" fields
+4. Change to the correct date and time
+5. Tap "FINISH & SAVE LOG"
+6. The event's startTime, date, and time are updated in the database
+```
+
+---
+
 ## 6. The Database
 
 ### Entity-Relationship Diagram (v5 Schema)
@@ -1989,6 +2069,7 @@ ALTERNATIVE: Ad-hoc or rescue dose
 │  symptoms                array of symptom objects               │
 │  triggers     (new)      array of trigger label strings         │
 │  isEmergencyStop         boolean                                │
+│  isManualEntry           boolean — true for past-seizure entries│
 │  userModeAtTime          'CARETAKER' | 'PATIENT'                │
 │  lastModified            ms timestamp                           │
 │  editLog                 array of edit records                  │
@@ -2434,6 +2515,10 @@ Every technical term used in this document, explained plainly:
 **Timestamp** — A number representing a specific moment in time, measured as milliseconds since January 1, 1970. Example: `1716019200000` = "18 May 2026, 12:00:00 UTC".
 
 **Trigger** — An environmental or lifestyle factor that precedes a seizure and may have contributed to it. Common triggers include sleep deprivation, stress, missed medication, alcohol, and illness. Distinct from *symptoms* (which describe what happens *during* a seizure). In AuraTrack, triggers are selected as chips in the Summary step of the wizard.
+
+**`isManualEntry`** — A boolean flag on an event record set to `true` when the event was created via the Log Past Seizure flow rather than a live recording. Shown as an indigo "Manual Entry" badge on `EventCard`. Included in CSV and JSON exports so clinicians can identify retrospective entries.
+
+**Manual Entry** — A seizure event logged after the fact, not during a live recording. Created via the "Log Past Seizure" button on the home screen. The user specifies the date, time, and duration manually, then completes the standard symptom/trigger/notes wizard.
 
 **Dose Status** — The classification of a medication log entry. `taken` = logged within 90 minutes of the scheduled time. `late` = logged more than 90 minutes after the scheduled time. `missed` = automatically inserted when no log exists for a past-due slot.
 

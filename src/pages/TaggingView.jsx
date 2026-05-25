@@ -12,6 +12,7 @@ export default function TaggingView({
   triggers, triggerToggle,
   editingId, activeEventId,
   manualDurations, editedTimers, setManualDuration,
+  overrideDateTime, isManualEntry, setEventDateTime,
   elapsed, laps, startTime,
   onSave, onCancel,
 }) {
@@ -47,6 +48,10 @@ export default function TaggingView({
               onSave={onSave}
               onCancel={onCancel}
               onRemoveSymptom={index => setTempSymptomList(tempSymptomList.filter((_, i) => i !== index))}
+              editingId={editingId}
+              isManualEntry={isManualEntry}
+              overrideDateTime={overrideDateTime}
+              onSetEventDateTime={setEventDateTime}
             />
           </div>
         ) : (
