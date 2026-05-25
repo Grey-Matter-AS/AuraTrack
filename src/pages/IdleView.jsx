@@ -7,6 +7,7 @@ export default function IdleView({
   history,
   fullHistory,
   onStart,
+  onManualEntry,
   onEdit,
   onDelete,
   onViewDetail,
@@ -19,13 +20,22 @@ export default function IdleView({
 
   return (
     <div className="flex-1 flex flex-col items-center w-full max-w-md overflow-hidden">
-      <div className="py-10 shrink-0 flex flex-col items-center">
+      <div className="py-10 shrink-0 flex flex-col items-center gap-4">
         <button
           onClick={onStart}
           className="w-60 h-60 bg-red-600 active:scale-95 active:bg-red-500 transition-all rounded-full shadow-[0_0_60px_rgba(225,29,72,0.4)] flex items-center justify-center text-white text-4xl font-black border-[12px] border-[#1e293b] ring-4 ring-red-900/20"
         >
           START
         </button>
+        {onManualEntry && (
+          <button
+            onClick={onManualEntry}
+            className="text-[10px] font-black uppercase tracking-widest active:opacity-50 transition-opacity"
+            style={{ color: 'var(--text-faint)' }}
+          >
+            + Log Past Seizure
+          </button>
+        )}
       </div>
 
       <div className="w-full flex-1 flex flex-col overflow-hidden">

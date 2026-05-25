@@ -238,6 +238,41 @@ function EditableTotalTimer({ calcValue, manualDurations, editedTimers, onSetMan
   );
 }
 
+// ─── Inline date/time editor for edit-mode / manual entries ──
+function DateTimeOverrideRow({ startTime, overrideDateTime, onSetEventDateTime }) {
+  const d   = new Date(startTime || Date.now());
+  const pad = n => String(n).padStart(2, '0');
+  const defDate = overrideDateTime?.date ?? `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const defTime = overrideDateTime?.time ?? `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const today   = new Date().toISOString().slice(0, 10);
+  const inputSt = { backgroundColor: 'var(--bg-input)', border: '1px solid var(--border)', color: 'var(--text-primary)' };
+
+  return (
+    <div className="mb-4 pb-4" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+      <p className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--text-faint)' }}>
+        Event Date &amp; Time
+      </p>
+      <div className="grid grid-cols-2 gap-2">
+        <input
+          type="date"
+          max={today}
+          value={defDate}
+          onChange={e => onSetEventDateTime(e.target.value, defTime)}
+          className="rounded-xl px-3 py-2 text-sm font-bold outline-none"
+          style={inputSt}
+        />
+        <input
+          type="time"
+          value={defTime}
+          onChange={e => onSetEventDateTime(defDate, e.target.value)}
+          className="rounded-xl px-3 py-2 text-sm font-bold outline-none"
+          style={inputSt}
+        />
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Summary component ───────────────────────────────────
 function Summary({
   tempSymptomList,
@@ -256,6 +291,11 @@ function Summary({
   onSave,
   onCancel,
   onRemoveSymptom,
+  // Date/time override (edit mode backdating + manual entry)
+  editingId,
+  isManualEntry,
+  overrideDateTime,
+  onSetEventDateTime,
 }) {
   const [activeId, setActiveId] = useState(null);
 
@@ -300,6 +340,16 @@ function Summary({
       {/* 1. CLINICAL DURATION BREAKDOWN */}
       <div className="p-5 rounded-[2.5rem] border mb-4 shrink-0 shadow-lg"
         style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-subtle)' }}>
+
+        {/* Date/time override row — shown when editing or logging past seizure */}
+        {(editingId || isManualEntry) && onSetEventDateTime && (
+          <DateTimeOverrideRow
+            startTime={startTime}
+            overrideDateTime={overrideDateTime}
+            onSetEventDateTime={onSetEventDateTime}
+          />
+        )}
+
         <div className="flex justify-between items-start mb-4">
           <EditableTotalTimer
             calcValue={elapsed}

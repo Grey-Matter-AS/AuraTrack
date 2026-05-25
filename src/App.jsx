@@ -12,6 +12,7 @@ import { useMedications } from './hooks/useMedications';
 import { useNotifications } from './hooks/useNotifications';
 import { getVisibleDosesForPanel } from './utils/medicationSchedule';
 import { PWAInstallBanner } from './components/PWAInstallBanner';
+import { ManualEntrySheet } from './components/ManualEntrySheet';
 import IdleView from './pages/IdleView';
 import RecordingView from './pages/RecordingView';
 import TaggingView from './pages/TaggingView';
@@ -53,6 +54,7 @@ function App() {
   const [fullHistory, setFullHistory] = useState([]);
   const [toastMsg, setToastMsg] = useState('');
   const [todayLogs, setTodayLogs] = useState([]);
+  const [showManualEntry, setShowManualEntry] = useState(false);
 
   const timer = useEventTimer();
   const history = useEventHistory();
@@ -125,6 +127,31 @@ function App() {
   }, [meds.medications]);
 
   const handleStart = () => { wizard.reset(); timer.startTimer(); setStatus('RECORDING'); };
+
+  const handleManualCreate = async ({ date, time, durationSec, manualDurations }) => {
+    try {
+      const startTime = new Date(`${date}T${time}`).getTime();
+      const id = await db.events.add({
+        startTime,
+        date: new Date(startTime).toLocaleDateString(),
+        time: new Date(startTime).toLocaleTimeString(),
+        duration: durationSec,
+        manualDurations: manualDurations ?? {},
+        laps: {},
+        type: 'Uncategorized',
+        isComplete: false,
+        editLog: [],
+        userModeAtTime: settings.userMode,
+        isManualEntry: true,
+      });
+      wizard.loadForManualEntry(id, manualDurations, { date, time });
+      setShowManualEntry(false);
+      setStatus('TAGGING');
+    } catch (err) {
+      console.error('Failed to create manual entry:', err);
+      showToast('Failed to create entry. Please try again.');
+    }
+  };
 
   const handleStop = async () => {
     if (stoppingRef.current) return;
@@ -247,7 +274,7 @@ function App() {
       )}
 
       <div className="flex-1 flex flex-col items-center px-6 overflow-hidden pb-8">
-        {status === 'IDLE'         && <IdleView history={history.history} fullHistory={fullHistory} onStart={handleStart} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail} medicationGroups={medicationGroups} allActiveMedications={allActiveMedications} onSaveDoses={handleSaveDoses} />}
+        {status === 'IDLE'         && <IdleView history={history.history} fullHistory={fullHistory} onStart={handleStart} onManualEntry={() => setShowManualEntry(true)} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail} medicationGroups={medicationGroups} allActiveMedications={allActiveMedications} onSaveDoses={handleSaveDoses} />}
         {status === 'RECORDING'    && <RecordingView elapsed={timer.elapsed} startTime={timer.startTime} laps={timer.laps} onLap={timer.recordLap} onStop={handleStop} onEmergencyStop={handleEmergencyStop} onQuickNote={l => wizard.addQuickNote(l, timer.elapsed)} userMode={settings.userMode} quickNoteLabels={activeQuickNoteLabels} emergencyMedications={emergencyMedications} neurologistName={settings.neurologistName} neurologistContact={settings.neurologistContact} emergencyContact={settings.emergencyContact} />}
         {status === 'TAGGING'      && <TaggingView {...wizard} elapsed={timer.elapsed} laps={timer.laps} startTime={timer.startTime} onSave={handleSave} onCancel={handleCancel} />}
         {status === 'HISTORY'      && <HistoryView onBack={() => setStatus('IDLE')} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail} onExport={() => setStatus('EXPORT')} historyPageSize={settings.historyPageSize} settings={settings} />}
@@ -257,6 +284,7 @@ function App() {
       </div>
 
       {itemToDelete && <DeleteModal onConfirm={handleDeleteConfirm} onCancel={() => setItemToDelete(null)} />}
+      {showManualEntry && <ManualEntrySheet onConfirm={handleManualCreate} onClose={() => setShowManualEntry(false)} />}
 
       <PWAInstallBanner isVisible={pwa.isVisible} isIOS={pwa.isIOS} install={pwa.install} dismiss={pwa.dismiss} />
       {toastMsg && (
