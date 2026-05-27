@@ -144,3 +144,24 @@ git clone https://github.com/<your-org>/AuraTrack.git
 cd AuraTrack
 npm install
 npm run dev
+```
+
+---
+
+## 📄 License
+
+AuraTrack is licensed under the **GNU General Public License v3.0** ([GPL-3.0-or-later](https://www.gnu.org/licenses/gpl-3.0.html)).
+
+This means:
+- ✅ Free to use, modify, and distribute
+- ✅ Commercial use is allowed
+- ✅ Must provide source code if you distribute modifications
+- ✅ Improvements benefit the entire community
+
+See [LICENSE.txt](LICENSE.txt) for the full license text.
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! This is a community-driven medical project—improvements and bug fixes benefit patients and caregivers worldwide.

@@ -173,14 +173,15 @@ export default MyComponent;
 
 ## Critical Rules
 
-1. **Never edit directly on Windows `C:\ ` drive.** Work only in WSL Ubuntu `/home/user01/Projects/AuraTrack`.
-2. **Medical accuracy matters.** Seizure timestamps, medication schedules, and event data must be correct.
-3. **IndexedDB data is persistent.** Don't assume cache invalidation—explicit state updates are necessary.
-4. **State-based routing, not URL-based.** Always use `setStatus()` to navigate, not React Router.
-5. **No direct DOM manipulation.** Use React state and JSX only.
-6. **Test changes in the real app.** Don't assume code correctness—verify in the browser.
-7. **Offline-first.** All data must work without network.
-8. **PWA constraints.** Respect screen wake-lock, notification permissions, and app install flows.
+1. **GPL v3 Licensed.** All derivative works must remain open-source. Improvements must be shared back with the community.
+2. **Never edit directly on Windows `C:\ ` drive.** Work only in WSL Ubuntu `/home/user01/Projects/AuraTrack`.
+3. **Medical accuracy matters.** Seizure timestamps, medication schedules, and event data must be correct.
+4. **IndexedDB data is persistent.** Don't assume cache invalidation—explicit state updates are necessary.
+5. **State-based routing, not URL-based.** Always use `setStatus()` to navigate, not React Router.
+6. **No direct DOM manipulation.** Use React state and JSX only.
+7. **Test changes in the real app.** Don't assume code correctness—verify in the browser.
+8. **Offline-first.** All data must work without network.
+9. **PWA constraints.** Respect screen wake-lock, notification permissions, and app install flows.
 
 ## Build & Run
 
