@@ -20,8 +20,10 @@ import HistoryView from './pages/HistoryView';
 import SettingsView from './pages/SettingsView';
 import ExportView from './pages/ExportView';
 import EventDetailView from './pages/EventDetailView';
+import AboutView from './pages/AboutView';
+import HelpView from './pages/HelpView';
 
-function Header({ onSettings, onHistory }) {
+function Header({ onSettings, onHistory, onHelp }) {
   return (
     <div className="pt-4 pb-2 shrink-0 flex items-center justify-between px-6">
       <button
@@ -35,13 +37,23 @@ function Header({ onSettings, onHistory }) {
         <h1 className="text-[10px] font-black tracking-[0.4em] text-[var(--text-faint)] uppercase opacity-50">AURATRACK</h1>
         <div className="h-1 w-4 bg-[var(--accent)] mx-auto mt-1 rounded-full opacity-60" />
       </div>
-      <button
-        onClick={onSettings}
-        className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
-        style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
-      >
-        ⚙ SETTINGS
-      </button>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={onSettings}
+          className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
+          style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
+        >
+          ⚙ SETTINGS
+        </button>
+        <button
+          onClick={onHelp}
+          className="w-8 h-8 rounded-xl text-[12px] font-black flex items-center justify-center active:scale-95 transition-all"
+          style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)', border: '1px solid var(--border)' }}
+          aria-label="Help"
+        >
+          ?
+        </button>
+      </div>
     </div>
   );
 }
@@ -231,6 +243,8 @@ function App() {
   };
 
   const goToDetail = (id) => { setPreviousStatus(status); setDetailEventId(id); setStatus('EVENT_DETAIL'); };
+  const goToHelp = () => { setPreviousStatus(status); setStatus('HELP'); };
+  const goToAbout = () => { setPreviousStatus(status); setStatus('ABOUT'); };
   const showHeader = !['RECORDING', 'TAGGING'].includes(status);
 
   // Active quick note labels (filter empties)
@@ -264,7 +278,7 @@ function App() {
       data-accent={settings.accentColor}
       data-font-size={settings.fontSize}
     >
-      {showHeader && <Header onHistory={() => setStatus('HISTORY')} onSettings={() => setStatus('SETTINGS')} />}
+      {showHeader && <Header onHistory={() => setStatus('HISTORY')} onSettings={() => setStatus('SETTINGS')} onHelp={goToHelp} />}
 
       {status === 'RECORDING' && wakeLockUnsupported && (
         <div className="shrink-0 text-xs text-center px-4 py-2"
@@ -281,6 +295,8 @@ function App() {
         {status === 'SETTINGS'     && <SettingsView settings={settings} onUpdate={updateSettings} onReset={resetSettings} onBack={() => setStatus('IDLE')} pwa={pwa} notificationPermission={notifications.permission} onRequestNotificationPermission={async () => { const p = await notifications.requestPermission(); if (p === 'granted') notifications.scheduleForToday(meds.medications); }} />}
         {status === 'EXPORT'       && <ExportView onBack={() => setStatus('HISTORY')} settings={settings} />}
         {status === 'EVENT_DETAIL' && <EventDetailView eventId={detailEventId} onEdit={handleEdit} onClose={() => setStatus(previousStatus)} />}
+        {status === 'HELP'         && <HelpView onBack={() => setStatus('IDLE')} onAbout={goToAbout} />}
+        {status === 'ABOUT'        && <AboutView onBack={() => setStatus(previousStatus)} />}
       </div>
 
       {itemToDelete && <DeleteModal onConfirm={handleDeleteConfirm} onCancel={() => setItemToDelete(null)} />}
