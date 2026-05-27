@@ -42,7 +42,7 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false }
   };
 
   return (
-    <div className={isEmbedded ? 'w-full pb-10 space-y-0' : 'flex-1 flex flex-col w-full max-w-md overflow-hidden'}>
+    <div className={isEmbedded ? 'w-full pb-10 space-y-0' : 'flex-1 flex flex-col w-full max-w-md sm:max-w-xl md:max-w-2xl overflow-hidden'}>
 
       {/* Header — hidden when embedded in History tab */}
       {!isEmbedded && (

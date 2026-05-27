@@ -25,7 +25,7 @@ import HelpView from './pages/HelpView';
 
 function Header({ onSettings, onHistory, onHelp }) {
   return (
-    <div className="pt-4 pb-2 shrink-0 flex items-center justify-between px-6">
+    <div className="pt-4 pb-2 shrink-0 grid grid-cols-3 items-center px-6">
       <button
         onClick={onHistory}
         className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
@@ -37,7 +37,7 @@ function Header({ onSettings, onHistory, onHelp }) {
         <h1 className="text-[10px] font-black tracking-[0.4em] text-[var(--text-faint)] uppercase opacity-50">AURATRACK</h1>
         <div className="h-1 w-4 bg-[var(--accent)] mx-auto mt-1 rounded-full opacity-60" />
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 justify-end">
         <button
           onClick={onSettings}
           className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"

@@ -2,7 +2,7 @@ import React from 'react';
 
 export function WizardMenu({ title, options, onPick, onBack }) {
   return (
-    <div className="flex flex-col h-full w-full max-w-md mx-auto animate-in fade-in zoom-in duration-300">
+    <div className="flex flex-col h-full w-full max-w-md sm:max-w-xl md:max-w-2xl mx-auto animate-in fade-in zoom-in duration-300">
       <div className="flex justify-between items-center mb-8 shrink-0">
         {onBack ? (
           <button

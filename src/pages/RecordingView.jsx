@@ -140,7 +140,7 @@ function RecordingView({
       {/* RED ALERT — fullscreen overlay, stays on top of everything */}
       {showAlert && <RedAlert elapsed={elapsed} onClose={dismissAlert} emergencyMedications={emergencyMedications} neurologistName={neurologistName} neurologistContact={neurologistContact} emergencyContact={emergencyContact} />}
 
-      <div className="flex-1 flex flex-col items-center justify-between w-full max-w-md mx-auto px-4 py-6 h-screen max-h-screen overflow-hidden animate-in fade-in">
+      <div className="flex-1 flex flex-col items-center justify-between w-full max-w-md sm:max-w-xl md:max-w-2xl mx-auto px-4 py-6 h-screen max-h-screen overflow-hidden animate-in fade-in">
 
         {/* 1. TOP: Phase Breakdown */}
         {userMode === 'CARETAKER' && (

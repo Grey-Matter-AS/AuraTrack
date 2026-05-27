@@ -62,7 +62,7 @@ export default function HelpView({ onBack, onAbout }) {
   const toggle = (id) => setExpanded(prev => prev === id ? null : id);
 
   return (
-    <div className="flex-1 flex flex-col w-full max-w-md overflow-hidden">
+    <div className="flex-1 flex flex-col w-full max-w-md sm:max-w-xl md:max-w-2xl overflow-hidden">
 
       <div className="flex items-center gap-4 mb-6 shrink-0">
         <button

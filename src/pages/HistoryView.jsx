@@ -43,7 +43,7 @@ export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, on
   const dangerMap = useMemo(() => buildDangerMap(allEvents), [allEvents]);
 
   return (
-    <div className="flex-1 flex flex-col w-full max-w-md overflow-hidden">
+    <div className="flex-1 flex flex-col w-full max-w-md sm:max-w-xl md:max-w-2xl overflow-hidden">
 
       {/* Header */}
       <div className="flex items-center gap-4 mb-4 shrink-0">

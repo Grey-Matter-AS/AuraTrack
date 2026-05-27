@@ -5,7 +5,7 @@ const GITHUB_URL = 'https://github.com/Grey-Matter-AS/AuraTrack';
 
 export default function AboutView({ onBack }) {
   return (
-    <div className="flex-1 flex flex-col w-full max-w-md overflow-hidden">
+    <div className="flex-1 flex flex-col w-full max-w-md sm:max-w-xl md:max-w-2xl overflow-hidden">
 
       <div className="flex items-center gap-4 mb-6 shrink-0">
         <button
