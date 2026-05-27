@@ -7,7 +7,8 @@ const SECTIONS = [
     title: 'Recording a Seizure',
     steps: [
       'Tap the large START button when a seizure begins.',
-      'Use LAP MARKER to timestamp notable moments — onset, clonic phase, end of convulsions, etc.',
+      'In Caretaker mode, tap the phase buttons (End Aura, End Seizure) as each phase transitions. In Self mode the interface is simplified to a single stop button.',
+      'Tap + Event Note to stamp a timestamped note mid-recording — use the shortcut buttons for common events like Fell, Rescue Med given, Not Responding, etc.',
       'Tap STOP when the seizure ends. For an unresponsive patient, EMERGENCY STOP triggers automatically at 12 minutes and saves the event immediately.',
     ],
   },
@@ -32,7 +33,7 @@ const SECTIONS = [
     id: 'medications',
     title: 'Medication Tracking',
     steps: [
-      'Add your medications in Settings → Profile.',
+      'Add your medications in Settings → Medications.',
       'The home screen shows today\'s scheduled doses — tap a dose group to mark it taken.',
       'Enable notifications in Settings to receive dose reminders.',
     ],
