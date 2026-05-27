@@ -51,7 +51,7 @@ export function MedicationDosePanel({ medicationGroups, allActiveMedications, on
       {/* Section header row */}
       <div className="flex justify-between items-center mb-3 px-1">
         <h3 className="text-slate-500 text-[10px] font-black uppercase tracking-widest">
-          Dose Tracker
+          Medication Dosage Tracker
         </h3>
         {saved ? (
           <span className="text-[10px] font-black text-green-400 uppercase tracking-widest">✓ Saved</span>
