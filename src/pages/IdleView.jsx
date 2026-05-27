@@ -19,7 +19,7 @@ export default function IdleView({
   const hasMedications = Object.keys(medicationGroups ?? {}).length > 0 || (allActiveMedications?.length ?? 0) > 0;
 
   return (
-    <div className="flex-1 flex flex-col items-center w-full max-w-md overflow-hidden">
+    <div className="flex-1 flex flex-col items-center w-full max-w-md sm:max-w-xl md:max-w-2xl overflow-hidden">
       <div className="py-10 shrink-0 flex flex-col items-center gap-4">
         <button
           onClick={onStart}

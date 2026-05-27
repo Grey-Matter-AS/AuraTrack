@@ -335,7 +335,7 @@ function Summary({
   const activeSymptom = activeId ? itemsWithId.find(s => s._id === activeId) : null;
 
   return (
-    <div className="flex flex-col h-full w-full max-w-md mx-auto animate-in fade-in slide-in-from-bottom-6 px-1 overflow-hidden">
+    <div className="flex flex-col h-full w-full max-w-md sm:max-w-xl md:max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-6 px-1 overflow-hidden">
 
       {/* 1. CLINICAL DURATION BREAKDOWN */}
       <div className="p-5 rounded-[2.5rem] border mb-4 shrink-0 shadow-lg"

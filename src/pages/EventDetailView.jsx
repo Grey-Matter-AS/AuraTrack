@@ -93,7 +93,7 @@ export default function EventDetailView({ eventId, onEdit, onClose }) {
   const recoveryDur = m.recovery ?? (event.laps?.seizure && event.laps?.recovery ? Math.floor((event.laps.recovery - event.laps.seizure) / 1000) : 0);
 
   return (
-    <div className="flex-1 flex flex-col w-full max-w-md overflow-hidden">
+    <div className="flex-1 flex flex-col w-full max-w-md sm:max-w-xl md:max-w-2xl overflow-hidden">
 
       {/* Header */}
       <div className="flex items-center gap-4 mb-4 shrink-0">
