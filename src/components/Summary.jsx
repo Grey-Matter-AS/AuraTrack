@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { ScrollFade } from './ScrollFade';
 import {
   DndContext, closestCenter, PointerSensor, TouchSensor,
   useSensor, useSensors, DragOverlay,
@@ -336,10 +335,10 @@ function Summary({
   const activeSymptom = activeId ? itemsWithId.find(s => s._id === activeId) : null;
 
   return (
-    <div className="flex flex-col h-full w-full max-w-md sm:max-w-xl md:max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-6 px-1 overflow-hidden">
+    <div className="flex flex-col w-full mx-auto px-1">
 
       {/* 1. CLINICAL DURATION BREAKDOWN */}
-      <div className="p-5 rounded-[2.5rem] border mb-4 shrink-0 shadow-lg"
+      <div className="p-5 rounded-[2.5rem] border mb-4 shadow-lg"
         style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-subtle)' }}>
 
         {/* Date/time override row — shown when editing or logging past seizure */}
@@ -374,8 +373,8 @@ function Summary({
         </div>
       </div>
 
-      {/* 2. SCROLLABLE MIDDLE AREA */}
-      <ScrollFade className="space-y-6 pb-6">
+      {/* 2. MIDDLE CONTENT */}
+      <div className="space-y-6 pb-6">
 
         {/* Symptom list with drag-to-reorder */}
         <div>
@@ -471,11 +470,11 @@ function Summary({
             placeholder="Add triggers, medication info, or post-ictal signs..."
           />
         </div>
-      </ScrollFade>
+      </div>
 
-      {/* 3. FIXED BOTTOM ACTIONS */}
-      <div className="flex flex-col gap-3 py-4 shrink-0"
-        style={{ borderTop: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-card)' }}>
+      {/* 3. BOTTOM ACTIONS */}
+      <div className="flex flex-col gap-3 py-4 mt-2"
+        style={{ borderTop: '1px solid var(--border-subtle)' }}>
         <button
           onClick={onAddAnother}
           className="w-full py-4 rounded-2xl font-black uppercase text-xs tracking-widest active:scale-95 transition-all"

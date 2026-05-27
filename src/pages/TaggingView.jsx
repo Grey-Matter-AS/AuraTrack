@@ -26,12 +26,11 @@ export default function TaggingView({
   };
 
   return (
-    <div className="flex-1 flex flex-col items-center w-full max-w-md sm:max-w-xl md:max-w-2xl h-[calc(100dvh-2rem)] overflow-hidden animate-in fade-in slide-in-from-bottom-6">
-      <div className="w-full h-full min-h-0 p-6 rounded-[2rem] shadow-2xl flex flex-col overflow-hidden" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
+    <div className={`flex-1 flex flex-col items-center w-full max-w-md sm:max-w-xl md:max-w-2xl ${taggingStep === 'SUMMARY' ? 'overflow-y-auto py-4' : 'h-[calc(100dvh-2rem)] overflow-hidden'} animate-in fade-in slide-in-from-bottom-6`}>
+      <div className={`w-full p-6 rounded-[2rem] shadow-2xl flex flex-col ${taggingStep !== 'SUMMARY' ? 'h-full min-h-0 overflow-hidden' : ''}`} style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
 
-        {/* flex-1 min-h-0 wrapper gives Summary a definite, growable height in the flex column */}
         {taggingStep === 'SUMMARY' ? (
-          <div className="flex-1 min-h-0">
+          <div className="w-full">
             <Summary
               tempSymptomList={tempSymptomList}
               setTempSymptomList={setTempSymptomList}
