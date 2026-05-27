@@ -10,7 +10,7 @@ function clearAllTimers() {
 }
 
 async function fireNotification(med, hhMM) {
-  if (Notification.permission !== 'granted') return;
+  if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
   const title = `Time to take ${med.name}`;
   const body = `${med.dose}${med.unit} — tap to confirm in AuraTrack`;
   const tag = `med-${med.id}-${hhMM}`;
@@ -40,7 +40,7 @@ export function useNotifications() {
 
   const scheduleForToday = useCallback((medications) => {
     clearAllTimers();
-    if (Notification.permission !== 'granted') return;
+    if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
 
     const now = Date.now();
     for (const med of medications) {
