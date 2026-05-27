@@ -73,7 +73,7 @@ export function MedicationDosePanel({ medicationGroups, allActiveMedications, on
       >
         {timeSlots.length === 0 ? (
           <p className="text-xs italic text-center py-1" style={{ color: allDoneToday ? '#16a34a' : 'var(--text-faint)' }}>
-            {allDoneToday ? '✓ All doses for today are up to date' : 'No scheduled doses today. Add medications in Settings.'}
+            {allDoneToday ? '✓ All doses for today are up to date' : 'No scheduled doses today. Add medications in Settings → Medications.'}
           </p>
         ) : (
           timeSlots.map(hhMM => {

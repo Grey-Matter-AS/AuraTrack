@@ -471,7 +471,7 @@ function Summary({
             onChange={e => setNotes(e.target.value)}
             className="w-full rounded-[2rem] p-5 text-base min-h-[140px] outline-none transition-all resize-none"
             style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
-            placeholder="Add triggers, medication info, or post-ictal signs..."
+            placeholder="Describe what you observed — post-ictal state, circumstances, or anything clinically relevant..."
           />
         </div>
       </div>

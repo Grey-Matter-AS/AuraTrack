@@ -145,7 +145,7 @@ export function MedicationHistoryTab({ settings = {} }) {
     return (
       <div className="py-12 text-center">
         <p className="italic text-sm" style={{ color: 'var(--text-faint)' }}>
-          No scheduled medications. Add medications in Settings.
+          No scheduled medications. Add medications in Settings → Medications.
         </p>
       </div>
     );

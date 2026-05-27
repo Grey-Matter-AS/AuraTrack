@@ -35,7 +35,7 @@ const SECTIONS = [
     steps: [
       'Add your medications in Settings → Medications.',
       'The home screen shows today\'s scheduled doses — tap each medication button to toggle it, then tap Save to log the doses.',
-      'Enable notifications in Settings to receive dose reminders.',
+      'Enable dose reminders per medication in Settings → Medications.',
     ],
   },
   {
