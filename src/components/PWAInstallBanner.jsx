@@ -1,6 +1,6 @@
 import React from 'react';
 
-export function PWAInstallBanner({ isVisible, isIOS, install, dismiss }) {
+export function PWAInstallBanner({ isVisible, isIOS, install, dismiss, showManualInstructions, dismissManual }) {
   if (!isVisible) return null;
 
   return (
@@ -19,7 +19,16 @@ export function PWAInstallBanner({ isVisible, isIOS, install, dismiss }) {
         <div className="text-xl shrink-0">📲</div>
 
         <div className="flex-1 min-w-0">
-          {isIOS ? (
+          {showManualInstructions ? (
+            <>
+              <p className="text-[11px] font-black uppercase tracking-wide" style={{ color: 'var(--text-primary)' }}>
+                Add to Home Screen
+              </p>
+              <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-dim)' }}>
+                Tap <strong style={{ color: 'var(--text-primary)' }}>⋮</strong> in your browser, then select <strong style={{ color: 'var(--text-primary)' }}>"Add to Home screen"</strong>
+              </p>
+            </>
+          ) : isIOS ? (
             <>
               <p className="text-[11px] font-black uppercase tracking-wide" style={{ color: 'var(--text-primary)' }}>
                 Add to Home Screen
@@ -40,7 +49,7 @@ export function PWAInstallBanner({ isVisible, isIOS, install, dismiss }) {
           )}
         </div>
 
-        {!isIOS && (
+        {!isIOS && !showManualInstructions && (
           <button
             onClick={install}
             className="shrink-0 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider text-white active:scale-95 transition-transform"
@@ -51,7 +60,7 @@ export function PWAInstallBanner({ isVisible, isIOS, install, dismiss }) {
         )}
 
         <button
-          onClick={dismiss}
+          onClick={showManualInstructions ? dismissManual : dismiss}
           className="shrink-0 w-7 h-7 flex items-center justify-center rounded-full text-[11px] font-black active:scale-95 transition-transform"
           style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)' }}
           aria-label="Dismiss"

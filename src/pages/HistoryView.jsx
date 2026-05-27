@@ -68,10 +68,10 @@ export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, on
 
       {/* ── SEIZURES TAB ── */}
       {activeTab === 'seizures' && (
-        <>
+        <ScrollFade wrapperClassName="flex-1">
           <SeizureTrendChart allEvents={allEvents} />
 
-          <div className="flex gap-2 mb-4 shrink-0">
+          <div className="flex gap-2 mb-4">
             <select
               value={typeFilter}
               onChange={e => { setTypeFilter(e.target.value); setPage(0); }}
@@ -90,27 +90,25 @@ export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, on
             />
           </div>
 
-          <ScrollFade className="space-y-3">
-            {paged.length === 0 ? (
-              <div className="border-2 border-dashed rounded-3xl py-8 text-center" style={{ borderColor: 'var(--border)' }}>
-                <p className="italic text-sm" style={{ color: 'var(--text-faint)' }}>No events found.</p>
-              </div>
-            ) : (
-              paged.map(event => (
-                <EventCard
-                  key={event.id}
-                  event={event}
-                  onEdit={onEdit}
-                  onDelete={onDelete}
-                  onViewDetail={onViewDetail}
-                  dangerFlags={dangerMap[event.id]}
-                />
-              ))
-            )}
-          </ScrollFade>
+          {paged.length === 0 ? (
+            <div className="border-2 border-dashed rounded-3xl py-8 text-center" style={{ borderColor: 'var(--border)' }}>
+              <p className="italic text-sm" style={{ color: 'var(--text-faint)' }}>No events found.</p>
+            </div>
+          ) : (
+            paged.map(event => (
+              <EventCard
+                key={event.id}
+                event={event}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                onViewDetail={onViewDetail}
+                dangerFlags={dangerMap[event.id]}
+              />
+            ))
+          )}
 
           {totalPages > 1 && (
-            <div className="flex justify-between items-center pt-4 shrink-0" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+            <div className="flex justify-between items-center pt-4" style={{ borderTop: '1px solid var(--border-subtle)' }}>
               <button
                 disabled={page === 0}
                 onClick={() => setPage(p => p - 1)}
@@ -132,19 +130,19 @@ export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, on
               </button>
             </div>
           )}
-        </>
+        </ScrollFade>
       )}
 
       {/* ── MEDICATIONS TAB ── */}
       {activeTab === 'medications' && (
-        <ScrollFade>
+        <ScrollFade wrapperClassName="flex-1">
           <MedicationHistoryTab settings={settings} />
         </ScrollFade>
       )}
 
       {/* ── EXPORT TAB ── */}
       {activeTab === 'export' && (
-        <ScrollFade>
+        <ScrollFade wrapperClassName="flex-1">
           <ExportView isEmbedded settings={settings} />
         </ScrollFade>
       )}

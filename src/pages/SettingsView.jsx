@@ -39,7 +39,7 @@ export default function SettingsView({ settings, onUpdate, onReset, onBack, pwa,
         <Tabs tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} />
       </div>
 
-      <ScrollFade>
+      <ScrollFade wrapperClassName="flex-1">
         <SettingsForm
           settings={settings}
           onUpdate={onUpdate}

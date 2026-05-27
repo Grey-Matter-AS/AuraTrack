@@ -21,7 +21,7 @@ export default function AboutView({ onBack }) {
         </h2>
       </div>
 
-      <ScrollFade className="space-y-4">
+      <ScrollFade className="space-y-4" wrapperClassName="flex-1">
 
         <div className="text-center py-5">
           <h1 className="text-2xl font-black tracking-[0.3em] uppercase" style={{ color: 'var(--text-primary)' }}>

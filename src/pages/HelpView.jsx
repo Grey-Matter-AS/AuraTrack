@@ -78,7 +78,7 @@ export default function HelpView({ onBack, onAbout }) {
         </h2>
       </div>
 
-      <ScrollFade className="space-y-2">
+      <ScrollFade className="space-y-2" wrapperClassName="flex-1">
 
         {SECTIONS.map(section => (
           <div

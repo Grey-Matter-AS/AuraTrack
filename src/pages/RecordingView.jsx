@@ -140,7 +140,7 @@ function RecordingView({
       {/* RED ALERT — fullscreen overlay, stays on top of everything */}
       {showAlert && <RedAlert elapsed={elapsed} onClose={dismissAlert} emergencyMedications={emergencyMedications} neurologistName={neurologistName} neurologistContact={neurologistContact} emergencyContact={emergencyContact} />}
 
-      <div className="flex-1 flex flex-col items-center justify-between w-full max-w-md sm:max-w-xl md:max-w-2xl mx-auto px-4 py-6 h-screen max-h-screen overflow-hidden animate-in fade-in">
+      <div className="flex-1 min-h-0 flex flex-col items-center justify-between w-full max-w-md sm:max-w-xl md:max-w-2xl mx-auto px-4 py-6 animate-in fade-in">
 
         {/* 1. TOP: Phase Breakdown */}
         {userMode === 'CARETAKER' && (
@@ -181,7 +181,7 @@ function RecordingView({
         </div>
 
         {/* 3. DYNAMIC ACTION AREA */}
-        <div className="w-full flex gap-4 min-h-[35vh] items-stretch transition-all duration-500 mb-6">
+        <div className="w-full flex gap-4 min-h-[25vh] items-stretch transition-all duration-500 mb-6">
 
           {/* LEFT COLUMN: Phase Buttons */}
           <div className={`flex flex-col gap-4 transition-all duration-500 ${showMarkers ? 'w-[48%]' : 'w-full'}`}>
@@ -245,7 +245,7 @@ function RecordingView({
         <div className="w-full shrink-0">
           <button
             onClick={onStop}
-            className="w-full py-10 text-5xl font-black rounded-[3rem] active:scale-95 transition-transform uppercase"
+            className="w-full py-[clamp(1rem,4vh,2.5rem)] text-5xl font-black rounded-[3rem] active:scale-95 transition-transform uppercase"
             style={{ backgroundColor: 'var(--text-primary)', color: 'var(--bg-base)', border: '10px solid var(--bg-base)', boxShadow: '0 0 60px rgba(255,255,255,0.1)' }}
           >
             STOP

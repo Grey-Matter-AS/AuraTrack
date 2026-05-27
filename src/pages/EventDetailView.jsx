@@ -114,7 +114,7 @@ export default function EventDetailView({ eventId, onEdit, onClose }) {
         </button>
       </div>
 
-      <ScrollFade className="space-y-4">
+      <ScrollFade className="space-y-4" wrapperClassName="flex-1">
 
         {/* Danger alerts — shown above the duration card */}
         <DangerAlert flags={dangerFlags} />

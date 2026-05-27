@@ -272,7 +272,7 @@ function App() {
 
   return (
     <div
-      className="flex flex-col h-screen w-full font-sans overflow-hidden select-none"
+      className="flex flex-col h-dvh w-full font-sans overflow-hidden select-none"
       style={{ backgroundColor: 'var(--bg-base)', color: 'var(--text-primary)', paddingTop: 'env(safe-area-inset-top)' }}
       data-theme={settings.theme}
       data-accent={settings.accentColor}
@@ -302,7 +302,7 @@ function App() {
       {itemToDelete && <DeleteModal onConfirm={handleDeleteConfirm} onCancel={() => setItemToDelete(null)} />}
       {showManualEntry && <ManualEntrySheet onConfirm={handleManualCreate} onClose={() => setShowManualEntry(false)} />}
 
-      <PWAInstallBanner isVisible={pwa.isVisible} isIOS={pwa.isIOS} install={pwa.install} dismiss={pwa.dismiss} />
+      <PWAInstallBanner isVisible={pwa.isVisible} isIOS={pwa.isIOS} install={pwa.install} dismiss={pwa.dismiss} showManualInstructions={pwa.showManualInstructions} dismissManual={pwa.dismissManual} />
       {toastMsg && (
         <div
           className="fixed bottom-6 left-4 right-4 z-50 py-3 px-5 rounded-2xl text-sm font-bold text-center"

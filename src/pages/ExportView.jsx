@@ -43,6 +43,9 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false }
   };
 
   const ContentWrapper = isEmbedded ? 'div' : ScrollFade;
+  const contentWrapperProps = isEmbedded
+    ? { className: 'space-y-3' }
+    : { className: 'space-y-3', wrapperClassName: 'flex-1' };
 
   return (
     <div className={isEmbedded ? 'w-full pb-10 space-y-0' : 'flex-1 flex flex-col w-full max-w-md sm:max-w-xl md:max-w-2xl overflow-hidden'}>
@@ -95,7 +98,7 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false }
         </div>
       </div>
 
-      <ContentWrapper className="space-y-3">
+      <ContentWrapper {...contentWrapperProps}>
 
         {/* ── Raw Data Exports ── */}
         <p className="text-[9px] font-black uppercase tracking-[0.3em] px-1" style={{ color: 'var(--text-faint)' }}>

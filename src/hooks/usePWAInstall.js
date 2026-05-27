@@ -11,8 +11,9 @@ const isIOSDevice = () =>
   /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
 export function usePWAInstall() {
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
-  const [isVisible, setIsVisible]           = useState(false);
+  const [deferredPrompt, setDeferredPrompt]               = useState(null);
+  const [isVisible, setIsVisible]                         = useState(false);
+  const [showManualInstructions, setShowManualInstructions] = useState(false);
 
   const {
     needRefresh: [needRefresh],
@@ -61,7 +62,20 @@ export function usePWAInstall() {
 
   const resetDismissal = () => {
     localStorage.removeItem(DISMISSED_KEY);
-    if (!isInstalled() && (deferredPrompt || ios)) setIsVisible(true);
+    if (isInstalled()) return;
+    if (deferredPrompt || ios) {
+      setIsVisible(true);
+    } else {
+      // Browser hasn't offered the install prompt (already dismissed, or eligibility not met).
+      // Show manual instructions instead.
+      setShowManualInstructions(true);
+      setIsVisible(true);
+    }
+  };
+
+  const dismissManual = () => {
+    setShowManualInstructions(false);
+    setIsVisible(false);
   };
 
   // Show the Settings re-prompt button whenever the app isn't installed, regardless of
@@ -77,5 +91,7 @@ export function usePWAInstall() {
     canInstallManually,
     needRefresh,
     updateServiceWorker,
+    showManualInstructions,
+    dismissManual,
   };
 }
