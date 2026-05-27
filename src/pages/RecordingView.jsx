@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { formatDuration } from '../utils/formatters';
 
 const ALERT_THRESHOLD = 300;  // 5 minutes
 const AUTO_STOP_AT    = 720;  // 12 minutes
@@ -99,7 +100,9 @@ function RecordingView({
   neurologistName,
   neurologistContact,
   emergencyContact,
+  durationFormat = 'seconds',
 }) {
+  const fmtDur = (s) => durationFormat === 'human' ? formatDuration(s) : `${s}s`;
   const [showMarkers, setShowMarkers] = useState(false);
   const [alertDismissed, setAlertDismissed] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
@@ -147,18 +150,18 @@ function RecordingView({
           <div className="grid grid-cols-3 gap-3 w-full mb-2 shrink-0">
             <div className="py-3 rounded-2xl text-center" style={{ backgroundColor: 'var(--bg-raised)', border: '1px solid var(--border)' }}>
               <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-1">Aura</p>
-              <p className="text-2xl font-mono font-bold leading-none" style={{ color: 'var(--text-primary)' }}>{auraDuration}s</p>
+              <p className="text-2xl font-mono font-bold leading-none" style={{ color: 'var(--text-primary)' }}>{fmtDur(auraDuration)}</p>
             </div>
             <div className="py-3 rounded-2xl text-center" style={{ backgroundColor: 'var(--bg-raised)', border: '1px solid var(--border)' }}>
               <p className="text-[10px] font-black text-red-500 uppercase tracking-widest mb-1">Seizure</p>
               <p className="text-2xl font-mono font-bold leading-none"
                 style={{ color: laps.aura && !laps.seizure && seizureDuration >= 240 ? '#ef4444' : 'var(--text-primary)' }}>
-                {seizureDuration}s
+                {fmtDur(seizureDuration)}
               </p>
             </div>
             <div className="py-3 rounded-2xl text-center" style={{ backgroundColor: 'var(--bg-raised)', border: '1px solid var(--border)' }}>
               <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1">Recovery</p>
-              <p className="text-2xl font-mono font-bold leading-none" style={{ color: 'var(--text-primary)' }}>{recoveryDuration}s</p>
+              <p className="text-2xl font-mono font-bold leading-none" style={{ color: 'var(--text-primary)' }}>{fmtDur(recoveryDuration)}</p>
             </div>
           </div>
         )}
@@ -170,7 +173,7 @@ function RecordingView({
             className="text-[11vh] font-mono font-black tracking-tighter tabular-nums leading-none"
             style={{ color: elapsed >= 240 && userMode !== 'CARETAKER' ? '#ef4444' : 'var(--text-primary)' }}
           >
-            {elapsed}<span className="text-[4vh] ml-2 font-sans font-bold" style={{ color: 'var(--text-faint)' }}>S</span>
+            {fmtDur(elapsed)}
           </div>
           {/* Warning ring at 4 min (1 min before alert) */}
           {elapsed >= 240 && elapsed < ALERT_THRESHOLD && (

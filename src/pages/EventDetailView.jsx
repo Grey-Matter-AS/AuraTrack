@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../data/db';
+import { formatDuration } from '../utils/formatters';
 import { ScrollFade } from '../components/ScrollFade';
 import { computeDangerFlags } from '../utils/dangerFlags';
 
@@ -41,7 +42,8 @@ function DangerAlert({ flags }) {
   );
 }
 
-export default function EventDetailView({ eventId, onEdit, onClose }) {
+export default function EventDetailView({ eventId, onEdit, onClose, durationFormat = 'seconds' }) {
+  const fmtDur = (s) => durationFormat === 'human' ? formatDuration(s) : `${s}s`;
   const [event, setEvent] = useState(null);
   const [notFound, setNotFound] = useState(false);
   const [dangerFlags, setDangerFlags] = useState([]);
@@ -132,7 +134,7 @@ export default function EventDetailView({ eventId, onEdit, onClose }) {
               <p className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: 'var(--text-dim)' }}>TOTAL DURATION</p>
               <p className="text-4xl font-mono font-black leading-none"
                 style={{ color: dangerFlags.includes('long_duration') ? '#f59e0b' : 'var(--text-primary)' }}>
-                {event.duration}<span className="text-lg ml-1 font-sans" style={{ color: 'var(--text-dim)' }}>S</span>
+                {fmtDur(event.duration)}
               </p>
             </div>
             <div className="text-right">
@@ -143,15 +145,15 @@ export default function EventDetailView({ eventId, onEdit, onClose }) {
           <div className="grid grid-cols-3 gap-3 pt-4" style={{ borderTop: '1px solid var(--border-subtle)' }}>
             <div className="text-center">
               <p className="text-[9px] text-amber-500 font-black uppercase mb-1">AURA</p>
-              <p className="text-lg font-mono font-black" style={{ color: 'var(--text-primary)' }}>{auraDur}s</p>
+              <p className="text-lg font-mono font-black" style={{ color: 'var(--text-primary)' }}>{fmtDur(auraDur)}</p>
             </div>
             <div className="text-center">
               <p className="text-[9px] text-red-500 font-black uppercase mb-1">SEIZURE</p>
-              <p className="text-lg font-mono font-black" style={{ color: 'var(--text-primary)' }}>{seizureDur}s</p>
+              <p className="text-lg font-mono font-black" style={{ color: 'var(--text-primary)' }}>{fmtDur(seizureDur)}</p>
             </div>
             <div className="text-center">
               <p className="text-[9px] text-blue-400 font-black uppercase mb-1">RECOVERY</p>
-              <p className="text-lg font-mono font-black" style={{ color: 'var(--text-primary)' }}>{recoveryDur}s</p>
+              <p className="text-lg font-mono font-black" style={{ color: 'var(--text-primary)' }}>{fmtDur(recoveryDur)}</p>
             </div>
           </div>
         </div>

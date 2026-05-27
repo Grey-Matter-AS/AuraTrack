@@ -130,8 +130,6 @@ const FREQ_OPTIONS = [
 const UNIT_OPTIONS = ['mg', 'g', 'mcg', 'ml', 'IU'];
 const FREQ_SHORT = { OD: 'Once daily', BD: 'Twice daily', TDS: 'Three times daily', QDS: 'Four times daily', PRN: 'As needed' };
 
-const SLOT_LABELS = ['Morning', 'Mid-morning', 'Afternoon', 'Evening', 'Night', 'Bedtime', 'Dose 1', 'Dose 2', 'Dose 3', 'Dose 4'];
-
 function getSlotLabel(index, frequency) {
   if (frequency === 'BD') return index === 0 ? 'Morning Dose' : 'Evening Dose';
   if (frequency === 'TDS') return ['Morning Dose', 'Afternoon Dose', 'Evening Dose'][index] || `Dose ${index + 1}`;

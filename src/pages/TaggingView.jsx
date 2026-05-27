@@ -16,6 +16,7 @@ export default function TaggingView({
   overrideDateTime, isManualEntry, setEventDateTime,
   elapsed, laps, startTime,
   onSave, onCancel,
+  durationFormat = 'seconds',
 }) {
   const handleTypeSelect = async (val) => {
     const targetId = editingId || activeEventId;
@@ -52,6 +53,7 @@ export default function TaggingView({
               isManualEntry={isManualEntry}
               overrideDateTime={overrideDateTime}
               onSetEventDateTime={setEventDateTime}
+              durationFormat={durationFormat}
             />
           </div>
         ) : (

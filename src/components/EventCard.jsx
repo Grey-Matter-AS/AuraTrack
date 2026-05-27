@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatDuration } from '../utils/formatters';
 
 function DangerBadge({ flags }) {
   if (!flags?.length) return null;
@@ -29,7 +30,8 @@ function DangerBadge({ flags }) {
   );
 }
 
-export function EventCard({ event, onEdit, onDelete, onViewDetail, dangerFlags }) {
+export function EventCard({ event, onEdit, onDelete, onViewDetail, dangerFlags, durationFormat = 'seconds' }) {
+  const fmtDur = (s) => durationFormat === 'human' ? formatDuration(s) : `${s}s`;
   const handleView = () => onViewDetail ? onViewDetail(event.id) : onEdit(event);
 
   return (
@@ -75,7 +77,7 @@ export function EventCard({ event, onEdit, onDelete, onViewDetail, dangerFlags }
               className="font-mono font-black text-lg"
               style={{ color: dangerFlags?.includes('long_duration') ? '#f59e0b' : '#ef4444' }}
             >
-              {event.duration}s
+              {fmtDur(event.duration)}
             </span>
           </div>
         </div>

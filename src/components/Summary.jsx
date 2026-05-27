@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { formatDuration } from '../utils/formatters';
 import {
   DndContext, closestCenter, PointerSensor, TouchSensor,
   useSensor, useSensors, DragOverlay,
@@ -151,7 +152,8 @@ function EditableTimer({ phase, label, color, calcValue, manualDurations, edited
 }
 
 // ─── Editable total duration (larger display) ─────────────────
-function EditableTotalTimer({ calcValue, manualDurations, editedTimers, onSetManualDuration }) {
+function EditableTotalTimer({ calcValue, manualDurations, editedTimers, onSetManualDuration, durationFormat = 'seconds' }) {
+  const fmtDur = (s) => durationFormat === 'human' ? formatDuration(s) : `${s}s`;
   const [stage, setStage] = useState('idle');
   const [inputVal, setInputVal] = useState('');
 
@@ -175,7 +177,7 @@ function EditableTotalTimer({ calcValue, manualDurations, editedTimers, onSetMan
       {stage === 'idle' && (
         <div className="flex items-center gap-2 flex-wrap">
           <p className="text-4xl font-mono font-black leading-none" style={{ color: 'var(--text-primary)' }}>
-            {displayValue}<span className="text-lg font-sans ml-1" style={{ color: 'var(--text-dim)' }}>S</span>
+            {fmtDur(displayValue)}
           </p>
           {isEdited && (
             <span className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded"
@@ -296,6 +298,7 @@ function Summary({
   isManualEntry,
   overrideDateTime,
   onSetEventDateTime,
+  durationFormat = 'seconds',
 }) {
   const [activeId, setActiveId] = useState(null);
 
@@ -356,6 +359,7 @@ function Summary({
             manualDurations={manualDurations}
             editedTimers={editedTimers}
             onSetManualDuration={onSetManualDuration}
+            durationFormat={durationFormat}
           />
           <div className="text-right shrink-0">
             <p className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: 'var(--text-dim)' }}>LOG STATUS</p>
