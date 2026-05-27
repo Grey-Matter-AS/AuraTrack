@@ -9,7 +9,7 @@ const SECTIONS = [
       'Tap the large START button when a seizure begins.',
       'In Caretaker mode, tap the phase buttons (End Aura, End Seizure) as each phase transitions. In Self mode the interface is simplified to a single stop button.',
       'Tap + Event Note to stamp a timestamped note mid-recording — use the shortcut buttons for common events like Fell, Rescue Med given, Not Responding, etc.',
-      'Tap STOP when the seizure ends. For an unresponsive patient, EMERGENCY STOP triggers automatically at 12 minutes and saves the event immediately.',
+      'Tap STOP when the seizure ends. If the timer is still running at 12 minutes, the recording stops automatically and the event is saved.',
     ],
   },
   {
@@ -25,7 +25,7 @@ const SECTIONS = [
     id: 'manual',
     title: 'Manual Entry',
     steps: [
-      'Tap LOG PAST EVENT on the home screen to enter a seizure you did not record in real time.',
+      'Tap + Log Past Seizure on the home screen to enter a seizure you did not record in real time.',
       'Set the date, time, and duration, then complete the tagging wizard as usual.',
     ],
   },
@@ -34,7 +34,7 @@ const SECTIONS = [
     title: 'Medication Tracking',
     steps: [
       'Add your medications in Settings → Medications.',
-      'The home screen shows today\'s scheduled doses — tap a dose group to mark it taken.',
+      'The home screen shows today\'s scheduled doses — tap each medication button to toggle it, then tap Save to log the doses.',
       'Enable notifications in Settings to receive dose reminders.',
     ],
   },
