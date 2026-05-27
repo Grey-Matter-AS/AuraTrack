@@ -7,6 +7,7 @@ import { buildDangerMap } from '../utils/dangerFlags';
 import { Tabs } from '../components/Tabs';
 import { MedicationHistoryTab } from '../components/MedicationHistoryTab';
 import ExportView from './ExportView';
+import { ScrollFade } from '../components/ScrollFade';
 
 const HISTORY_TABS = [
   { id: 'seizures',    label: 'Seizures'    },
@@ -89,7 +90,7 @@ export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, on
             />
           </div>
 
-          <div className="flex-1 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
+          <ScrollFade className="space-y-3">
             {paged.length === 0 ? (
               <div className="border-2 border-dashed rounded-3xl py-8 text-center" style={{ borderColor: 'var(--border)' }}>
                 <p className="italic text-sm" style={{ color: 'var(--text-faint)' }}>No events found.</p>
@@ -106,7 +107,7 @@ export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, on
                 />
               ))
             )}
-          </div>
+          </ScrollFade>
 
           {totalPages > 1 && (
             <div className="flex justify-between items-center pt-4 shrink-0" style={{ borderTop: '1px solid var(--border-subtle)' }}>
@@ -136,16 +137,16 @@ export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, on
 
       {/* ── MEDICATIONS TAB ── */}
       {activeTab === 'medications' && (
-        <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar">
+        <ScrollFade>
           <MedicationHistoryTab settings={settings} />
-        </div>
+        </ScrollFade>
       )}
 
       {/* ── EXPORT TAB ── */}
       {activeTab === 'export' && (
-        <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar">
+        <ScrollFade>
           <ExportView isEmbedded settings={settings} />
-        </div>
+        </ScrollFade>
       )}
 
     </div>

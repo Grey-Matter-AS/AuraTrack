@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ScrollFade } from './ScrollFade';
 import {
   DndContext, closestCenter, PointerSensor, TouchSensor,
   useSensor, useSensors, DragOverlay,
@@ -374,7 +375,7 @@ function Summary({
       </div>
 
       {/* 2. SCROLLABLE MIDDLE AREA */}
-      <div className="flex-1 overflow-y-auto space-y-6 pr-1 custom-scrollbar pb-6">
+      <ScrollFade className="space-y-6 pb-6">
 
         {/* Symptom list with drag-to-reorder */}
         <div>
@@ -470,7 +471,7 @@ function Summary({
             placeholder="Add triggers, medication info, or post-ictal signs..."
           />
         </div>
-      </div>
+      </ScrollFade>
 
       {/* 3. FIXED BOTTOM ACTIONS */}
       <div className="flex flex-col gap-3 py-4 shrink-0"

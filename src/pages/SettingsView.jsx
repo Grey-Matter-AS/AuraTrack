@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { SettingsForm } from '../components/SettingsForm';
 import { Tabs } from '../components/Tabs';
+import { ScrollFade } from '../components/ScrollFade';
 
 const TABS = [
   { id: 'profile',     label: 'Profile'      },
@@ -38,7 +39,7 @@ export default function SettingsView({ settings, onUpdate, onReset, onBack, pwa,
         <Tabs tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} />
       </div>
 
-      <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar">
+      <ScrollFade>
         <SettingsForm
           settings={settings}
           onUpdate={onUpdate}
@@ -48,7 +49,7 @@ export default function SettingsView({ settings, onUpdate, onReset, onBack, pwa,
           notificationPermission={notificationPermission}
           onRequestNotificationPermission={onRequestNotificationPermission}
         />
-      </div>
+      </ScrollFade>
 
     </div>
   );

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ScrollFade } from '../components/ScrollFade';
 
 const SECTIONS = [
   {
@@ -77,7 +78,7 @@ export default function HelpView({ onBack, onAbout }) {
         </h2>
       </div>
 
-      <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar space-y-2">
+      <ScrollFade className="space-y-2">
 
         {SECTIONS.map(section => (
           <div
@@ -124,7 +125,7 @@ export default function HelpView({ onBack, onAbout }) {
         </button>
 
         <div className="pb-4" />
-      </div>
+      </ScrollFade>
     </div>
   );
 }

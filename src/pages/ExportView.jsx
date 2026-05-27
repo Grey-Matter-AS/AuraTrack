@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { db } from '../data/db';
+import { ScrollFade } from '../components/ScrollFade';
 import { ExportCard } from '../components/ExportCard';
 import { exportToJSON, exportToCSV, exportToPDF, exportNeurologistReport, exportSeizureDiary, filterEventsByDateRange } from '../utils/exportHelpers';
 import { useMedications } from '../hooks/useMedications';
@@ -40,6 +41,8 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false }
     const medLogs = await getLogsForPeriod(fromMs, toMs);
     exportNeurologistReport(events, settings, medications, medLogs);
   };
+
+  const ContentWrapper = isEmbedded ? 'div' : ScrollFade;
 
   return (
     <div className={isEmbedded ? 'w-full pb-10 space-y-0' : 'flex-1 flex flex-col w-full max-w-md sm:max-w-xl md:max-w-2xl overflow-hidden'}>
@@ -92,7 +95,7 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false }
         </div>
       </div>
 
-      <div className={isEmbedded ? 'space-y-3' : 'flex-1 overflow-y-auto space-y-3 pr-1 custom-scrollbar'}>
+      <ContentWrapper className="space-y-3">
 
         {/* ── Raw Data Exports ── */}
         <p className="text-[9px] font-black uppercase tracking-[0.3em] px-1" style={{ color: 'var(--text-faint)' }}>
@@ -214,7 +217,7 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false }
           </div>
         </div>
 
-      </div>
+      </ContentWrapper>
     </div>
   );
 }

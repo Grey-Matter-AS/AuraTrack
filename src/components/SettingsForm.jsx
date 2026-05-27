@@ -3,6 +3,7 @@ import { db } from '../data/db';
 import { exportToJSON } from '../utils/exportHelpers';
 import { useMedications } from '../hooks/useMedications';
 import { defaultScheduledTimes, scheduledDaysLabel } from '../utils/medicationSchedule';
+import pkg from '../../package.json';
 
 // ─── Atom components ─────────────────────────────────────────
 
@@ -843,7 +844,7 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
 
       {/* ── ABOUT (shown in Data tab) ── */}
       {show('data') && <Section title="About">
-        <Row label="App Version"><p className="text-sm font-bold text-[var(--text-primary)]">AuraTrack v0.1.0</p></Row>
+        <Row label="App Version"><p className="text-sm font-bold text-[var(--text-primary)]">AuraTrack v{pkg.version}</p></Row>
         <Row label="Database Schema"><p className="text-sm font-bold text-[var(--text-primary)]">AuraTrackDB v6</p></Row>
         {pwa?.canInstallManually && (
           <div>

@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { EventCard } from '../components/EventCard';
 import { MedicationDosePanel } from '../components/MedicationDosePanel';
 import { buildDangerMap } from '../utils/dangerFlags';
+import { ScrollFade } from '../components/ScrollFade';
 
 export default function IdleView({
   history,
@@ -54,7 +55,7 @@ export default function IdleView({
           )}
         </div>
 
-        <div className="space-y-3 overflow-y-auto pr-1 custom-scrollbar">
+        <ScrollFade className="space-y-3" wrapperClassName="">
           {history.length === 0 ? (
             <div className="border-2 border-dashed border-slate-800 rounded-3xl py-8 text-center">
               <p className="text-slate-600 italic text-sm">No events recorded yet.</p>
@@ -71,7 +72,7 @@ export default function IdleView({
               />
             ))
           )}
-        </div>
+        </ScrollFade>
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import React from 'react';
 import { WizardMenu } from '../components/WizardMenu';
+import { ScrollFade } from '../components/ScrollFade';
 import Summary from '../components/Summary';
 import { SYMPTOM_WIZARD, REGION_WIZARD, SEIZURE_TYPES } from '../data/constants';
 import { db } from '../data/db';
@@ -55,7 +56,7 @@ export default function TaggingView({
             />
           </div>
         ) : (
-          <div className="flex-1 overflow-y-auto custom-scrollbar">
+          <ScrollFade>
 
             {/* Step 1: Seizure Type */}
             {taggingStep === 'TYPE' && (
@@ -165,7 +166,7 @@ export default function TaggingView({
               />
             )}
 
-          </div>
+          </ScrollFade>
         )}
 
       </div>

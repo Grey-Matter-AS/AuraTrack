@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../data/db';
+import { ScrollFade } from '../components/ScrollFade';
 import { computeDangerFlags } from '../utils/dangerFlags';
 
 const CLUSTER_WINDOW_MS = 8 * 60 * 1000;
@@ -113,7 +114,7 @@ export default function EventDetailView({ eventId, onEdit, onClose }) {
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto space-y-4 pr-1 custom-scrollbar">
+      <ScrollFade className="space-y-4">
 
         {/* Danger alerts — shown above the duration card */}
         <DangerAlert flags={dangerFlags} />
@@ -215,7 +216,7 @@ export default function EventDetailView({ eventId, onEdit, onClose }) {
           </div>
         )}
 
-      </div>
+      </ScrollFade>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import React from 'react';
+import { ScrollFade } from './ScrollFade';
 
 export function WizardMenu({ title, options, onPick, onBack }) {
   return (
@@ -17,7 +18,7 @@ export function WizardMenu({ title, options, onPick, onBack }) {
         <div className="w-10" />
       </div>
 
-      <div className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar pb-10">
+      <ScrollFade className="space-y-4 pr-2 pb-10">
         {options.map(opt => (
           <button
             key={opt}
@@ -28,7 +29,7 @@ export function WizardMenu({ title, options, onPick, onBack }) {
             {opt}
           </button>
         ))}
-      </div>
+      </ScrollFade>
     </div>
   );
 }

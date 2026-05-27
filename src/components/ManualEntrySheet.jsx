@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ScrollFade } from './ScrollFade';
 
 // ─── Min/sec duration input pair ─────────────────────────────
 function DurField({ label, value, onChange }) {
@@ -91,11 +92,11 @@ export function ManualEntrySheet({ onConfirm, onClose }) {
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
-        className="w-full max-w-md rounded-t-[2rem] p-6 space-y-5 overflow-y-auto max-h-[90dvh]"
+        className="w-full max-w-md rounded-t-[2rem] flex flex-col overflow-hidden max-h-[90dvh]"
         style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between px-6 pt-6 shrink-0">
           <p className="text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: 'var(--text-dim)' }}>
             Log Past Seizure
           </p>
@@ -108,79 +109,85 @@ export function ManualEntrySheet({ onConfirm, onClose }) {
           </button>
         </div>
 
-        <p className="text-xs" style={{ color: 'var(--text-faint)' }}>
-          Enter the date, time, and duration of the seizure. You can then add the seizure type, symptoms, triggers, and notes.
-        </p>
+        <ScrollFade className="px-6 pt-4 pb-2 space-y-5" bgVar="--bg-card">
 
-        {/* Date + Time row */}
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <p className="text-[9px] font-black uppercase tracking-widest mb-1.5" style={{ color: 'var(--text-dim)' }}>
-              Date
-            </p>
-            <input
-              type="date"
-              max={today}
-              value={date}
-              onChange={e => setDate(e.target.value)}
-              className="w-full rounded-xl px-3 py-2.5 text-sm font-bold outline-none"
-              style={inputStyle}
-            />
+          <p className="text-xs" style={{ color: 'var(--text-faint)' }}>
+            Enter the date, time, and duration of the seizure. You can then add the seizure type, symptoms, triggers, and notes.
+          </p>
+
+          {/* Date + Time row */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-widest mb-1.5" style={{ color: 'var(--text-dim)' }}>
+                Date
+              </p>
+              <input
+                type="date"
+                max={today}
+                value={date}
+                onChange={e => setDate(e.target.value)}
+                className="w-full rounded-xl px-3 py-2.5 text-sm font-bold outline-none"
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-widest mb-1.5" style={{ color: 'var(--text-dim)' }}>
+                Time
+              </p>
+              <input
+                type="time"
+                value={time}
+                onChange={e => setTime(e.target.value)}
+                className="w-full rounded-xl px-3 py-2.5 text-sm font-bold outline-none"
+                style={inputStyle}
+              />
+            </div>
           </div>
-          <div>
-            <p className="text-[9px] font-black uppercase tracking-widest mb-1.5" style={{ color: 'var(--text-dim)' }}>
-              Time
-            </p>
-            <input
-              type="time"
-              value={time}
-              onChange={e => setTime(e.target.value)}
-              className="w-full rounded-xl px-3 py-2.5 text-sm font-bold outline-none"
-              style={inputStyle}
-            />
-          </div>
-        </div>
 
-        {/* Total duration */}
-        <DurField label="Total Duration" value={totalSec} onChange={setTotalSec} />
+          {/* Total duration */}
+          <DurField label="Total Duration" value={totalSec} onChange={setTotalSec} />
 
-        {/* Phase breakdown toggle */}
-        <button
-          onClick={() => setShowPhases(p => !p)}
-          className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest active:opacity-60 transition-opacity"
-          style={{ color: 'var(--text-faint)' }}
-        >
-          <span>{showPhases ? '▾' : '▸'}</span>
-          <span>Phase Breakdown (optional)</span>
-        </button>
+          {/* Phase breakdown toggle */}
+          <button
+            onClick={() => setShowPhases(p => !p)}
+            className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest active:opacity-60 transition-opacity"
+            style={{ color: 'var(--text-faint)' }}
+          >
+            <span>{showPhases ? '▾' : '▸'}</span>
+            <span>Phase Breakdown (optional)</span>
+          </button>
 
-        {showPhases && (
-          <div className="space-y-4 pl-3 border-l-2" style={{ borderColor: 'var(--border)' }}>
-            <DurField label="Aura" value={auraSec} onChange={setAuraSec} />
-            <DurField label="Seizure (Ictal)" value={seizureSec} onChange={setSeizureSec} />
-            <DurField label="Post-Ictal / Recovery" value={recoverySec} onChange={setRecoverySec} />
-          </div>
-        )}
+          {showPhases && (
+            <div className="space-y-4 pl-3 border-l-2" style={{ borderColor: 'var(--border)' }}>
+              <DurField label="Aura" value={auraSec} onChange={setAuraSec} />
+              <DurField label="Seizure (Ictal)" value={seizureSec} onChange={setSeizureSec} />
+              <DurField label="Post-Ictal / Recovery" value={recoverySec} onChange={setRecoverySec} />
+            </div>
+          )}
 
-        {error && (
-          <p className="text-xs font-bold text-red-500">{error}</p>
-        )}
+          {error && (
+            <p className="text-xs font-bold text-red-500">{error}</p>
+          )}
+
+        </ScrollFade>
 
         {/* Actions */}
-        <button
-          onClick={handleContinue}
-          className="w-full py-4 rounded-2xl font-black text-sm uppercase tracking-widest active:scale-95 transition-all shadow-lg"
-          style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
-        >
-          Continue to Details →
-        </button>
-        <button
-          onClick={onClose}
-          className="w-full py-3 rounded-2xl font-black text-xs uppercase tracking-widest"
-          style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)', border: '1px solid var(--border)' }}
-        >
-          Cancel
-        </button>
+        <div className="px-6 pb-6 pt-2 space-y-3 shrink-0">
+          <button
+            onClick={handleContinue}
+            className="w-full py-4 rounded-2xl font-black text-sm uppercase tracking-widest active:scale-95 transition-all shadow-lg"
+            style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
+          >
+            Continue to Details →
+          </button>
+          <button
+            onClick={onClose}
+            className="w-full py-3 rounded-2xl font-black text-xs uppercase tracking-widest"
+            style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)', border: '1px solid var(--border)' }}
+          >
+            Cancel
+          </button>
+        </div>
       </div>
     </div>
   );

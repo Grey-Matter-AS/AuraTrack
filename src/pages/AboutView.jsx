@@ -1,5 +1,6 @@
 import React from 'react';
 import pkg from '../../package.json';
+import { ScrollFade } from '../components/ScrollFade';
 
 const GITHUB_URL = 'https://github.com/Grey-Matter-AS/AuraTrack';
 
@@ -20,7 +21,7 @@ export default function AboutView({ onBack }) {
         </h2>
       </div>
 
-      <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar space-y-4">
+      <ScrollFade className="space-y-4">
 
         <div className="text-center py-5">
           <h1 className="text-2xl font-black tracking-[0.3em] uppercase" style={{ color: 'var(--text-primary)' }}>
@@ -100,7 +101,7 @@ export default function AboutView({ onBack }) {
         </Section>
 
         <div className="pb-4" />
-      </div>
+      </ScrollFade>
     </div>
   );
 }
