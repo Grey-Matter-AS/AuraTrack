@@ -252,20 +252,20 @@ function DateTimeOverrideRow({ startTime, overrideDateTime, onSetEventDateTime }
       <p className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--text-faint)' }}>
         Event Date &amp; Time
       </p>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="flex gap-2">
         <input
           type="date"
           max={today}
           value={defDate}
           onChange={e => onSetEventDateTime(e.target.value, defTime)}
-          className="rounded-xl px-3 py-2 text-sm font-bold outline-none"
+          className="flex-1 min-w-0 rounded-xl px-3 py-2 text-sm font-bold outline-none"
           style={inputSt}
         />
         <input
           type="time"
           value={defTime}
           onChange={e => onSetEventDateTime(defDate, e.target.value)}
-          className="rounded-xl px-3 py-2 text-sm font-bold outline-none"
+          className="flex-1 min-w-0 rounded-xl px-3 py-2 text-sm font-bold outline-none"
           style={inputSt}
         />
       </div>
