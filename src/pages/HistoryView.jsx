@@ -16,7 +16,7 @@ const HISTORY_TABS = [
 ];
 
 export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, onExport, historyPageSize = 10, settings = {} }) {
-  const { durationFormat = 'seconds' } = settings;
+  const { durationFormat = 'seconds', dateFormat = 'locale', timeFormat = '12h' } = settings;
   const [activeTab, setActiveTab] = useState('seizures');
   const [allEvents, setAllEvents] = useState([]);
   const [page, setPage] = useState(0);
@@ -105,6 +105,8 @@ export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, on
                 onViewDetail={onViewDetail}
                 dangerFlags={dangerMap[event.id]}
                 durationFormat={durationFormat}
+                dateFormat={dateFormat}
+                timeFormat={timeFormat}
               />
             ))
           )}

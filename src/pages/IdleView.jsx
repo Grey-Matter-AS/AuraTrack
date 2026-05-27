@@ -16,6 +16,8 @@ export default function IdleView({
   allActiveMedications,
   onSaveDoses,
   durationFormat = 'seconds',
+  dateFormat = 'locale',
+  timeFormat = '12h',
 }) {
   const dangerMap = useMemo(() => buildDangerMap(fullHistory?.length ? fullHistory : history), [fullHistory, history]);
   const hasMedications = Object.keys(medicationGroups ?? {}).length > 0 || (allActiveMedications?.length ?? 0) > 0;
@@ -82,6 +84,8 @@ export default function IdleView({
                 onViewDetail={onViewDetail}
                 dangerFlags={dangerMap[event.id]}
                 durationFormat={durationFormat}
+                dateFormat={dateFormat}
+                timeFormat={timeFormat}
               />
             ))
           )}

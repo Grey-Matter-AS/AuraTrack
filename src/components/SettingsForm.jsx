@@ -771,13 +771,57 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
           <FieldLabel>Auto-Backup</FieldLabel>
           <Segments
             options={[
-              { value: 'never',   label: 'Never'   },
-              { value: 'weekly',  label: 'Weekly'  },
-              { value: 'monthly', label: 'Monthly' },
+              { value: 'never',  label: 'Never'  },
+              { value: 'weekly', label: 'Weekly' },
             ]}
             value={settings.autoBackupFrequency}
-            onChange={v => onUpdate('autoBackupFrequency', v)}
+            onChange={v => {
+              onUpdate('autoBackupFrequency', v);
+              if (v === 'never') onUpdate('autoBackupDays', []);
+            }}
           />
+
+          {settings.autoBackupFrequency === 'weekly' && (() => {
+            const DAY_LABELS = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+            const selected = Array.isArray(settings.autoBackupDays) ? settings.autoBackupDays : [];
+            const toggle = (idx) => {
+              const next = selected.includes(idx)
+                ? selected.filter(d => d !== idx)
+                : [...selected, idx];
+              onUpdate('autoBackupDays', next);
+            };
+            const statusLabel = selected.length
+              ? 'Scheduled backup every ' + [...selected].sort((a,b)=>a-b).map(i => DAY_LABELS[i]).join(' · ')
+              : null;
+            return (
+              <div className="mt-3 space-y-2">
+                <div className="flex gap-1.5 flex-wrap">
+                  {DAY_LABELS.map((label, idx) => {
+                    const active = selected.includes(idx);
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => toggle(idx)}
+                        className="py-1.5 px-2.5 rounded-lg font-black text-[10px] uppercase tracking-widest transition-all active:scale-95"
+                        style={{
+                          backgroundColor: active ? 'var(--accent)' : 'var(--bg-raised)',
+                          color: 'var(--text-on-raised)',
+                          border: active ? '2px solid transparent' : '2px solid var(--border)',
+                          opacity: active ? 1 : 0.7,
+                        }}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+                {statusLabel && (
+                  <p className="text-[11px] font-bold" style={{ color: 'var(--accent)' }}>{statusLabel}</p>
+                )}
+              </div>
+            );
+          })()}
+
           <p className="text-[11px] text-[var(--text-dim)] mt-2">Manual trigger is always available via the Export screen.</p>
         </div>
 

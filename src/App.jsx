@@ -10,6 +10,7 @@ import { usePWAInstall } from './hooks/usePWAInstall';
 import { useWakeLock } from './hooks/useWakeLock';
 import { useMedications } from './hooks/useMedications';
 import { useNotifications } from './hooks/useNotifications';
+import { useAutoBackup } from './hooks/useAutoBackup';
 import { getVisibleDosesForPanel } from './utils/medicationSchedule';
 import { PWAInstallBanner } from './components/PWAInstallBanner';
 import { ManualEntrySheet } from './components/ManualEntrySheet';
@@ -66,6 +67,7 @@ function App() {
   const [fullHistory, setFullHistory] = useState([]);
   const [toastMsg, setToastMsg] = useState('');
   const [todayLogs, setTodayLogs] = useState([]);
+  const [allMedLogs, setAllMedLogs] = useState([]);
   const [showManualEntry, setShowManualEntry] = useState(false);
 
   const timer = useEventTimer();
@@ -83,6 +85,16 @@ function App() {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(''), 5000);
   };
+
+  useAutoBackup({
+    settings,
+    updateSettings,
+    status,
+    events: fullHistory,
+    medications: meds.medications,
+    medicationLogs: allMedLogs,
+    onBackupComplete: () => showToast('Auto-backup saved to Downloads'),
+  });
 
   // Sync haptic preference to the module singleton
   useEffect(() => { setHapticEnabled(settings.hapticFeedback); }, [settings.hapticFeedback]);
@@ -105,6 +117,7 @@ function App() {
       meds.load();
       meds.markMissedDoses().catch(() => {});
       meds.getLogsForDay(Date.now()).then(setTodayLogs).catch(() => {});
+      db.medicationLogs.toArray().then(setAllMedLogs).catch(() => {});
     }
   }, [status]);
 
@@ -288,13 +301,13 @@ function App() {
       )}
 
       <div className="flex-1 flex flex-col items-center px-3 overflow-hidden pb-8">
-        {status === 'IDLE'         && <IdleView history={history.history} fullHistory={fullHistory} onStart={handleStart} onManualEntry={() => setShowManualEntry(true)} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail} medicationGroups={medicationGroups} allActiveMedications={allActiveMedications} onSaveDoses={handleSaveDoses} durationFormat={settings.durationFormat} />}
+        {status === 'IDLE'         && <IdleView history={history.history} fullHistory={fullHistory} onStart={handleStart} onManualEntry={() => setShowManualEntry(true)} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail} medicationGroups={medicationGroups} allActiveMedications={allActiveMedications} onSaveDoses={handleSaveDoses} durationFormat={settings.durationFormat} dateFormat={settings.dateFormat} timeFormat={settings.timeFormat} />}
         {status === 'RECORDING'    && <RecordingView elapsed={timer.elapsed} startTime={timer.startTime} laps={timer.laps} onLap={timer.recordLap} onStop={handleStop} onEmergencyStop={handleEmergencyStop} onQuickNote={l => wizard.addQuickNote(l, timer.elapsed)} userMode={settings.userMode} quickNoteLabels={activeQuickNoteLabels} emergencyMedications={emergencyMedications} neurologistName={settings.neurologistName} neurologistContact={settings.neurologistContact} emergencyContact={settings.emergencyContact} durationFormat={settings.durationFormat} />}
         {status === 'TAGGING'      && <TaggingView {...wizard} elapsed={timer.elapsed} laps={timer.laps} startTime={timer.startTime} onSave={handleSave} onCancel={handleCancel} durationFormat={settings.durationFormat} />}
         {status === 'HISTORY'      && <HistoryView onBack={() => setStatus('IDLE')} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail} onExport={() => setStatus('EXPORT')} historyPageSize={settings.historyPageSize} settings={settings} />}
         {status === 'SETTINGS'     && <SettingsView settings={settings} onUpdate={updateSettings} onReset={resetSettings} onBack={() => setStatus('IDLE')} pwa={pwa} notificationPermission={notifications.permission} onRequestNotificationPermission={async () => { const p = await notifications.requestPermission(); if (p === 'granted') notifications.scheduleForToday(meds.medications); }} />}
         {status === 'EXPORT'       && <ExportView onBack={() => setStatus('HISTORY')} settings={settings} />}
-        {status === 'EVENT_DETAIL' && <EventDetailView eventId={detailEventId} onEdit={handleEdit} onClose={() => setStatus(previousStatus)} durationFormat={settings.durationFormat} />}
+        {status === 'EVENT_DETAIL' && <EventDetailView eventId={detailEventId} onEdit={handleEdit} onClose={() => setStatus(previousStatus)} durationFormat={settings.durationFormat} dateFormat={settings.dateFormat} timeFormat={settings.timeFormat} />}
         {status === 'HELP'         && <HelpView onBack={() => setStatus('IDLE')} onAbout={goToAbout} />}
         {status === 'ABOUT'        && <AboutView onBack={() => setStatus(previousStatus)} />}
       </div>

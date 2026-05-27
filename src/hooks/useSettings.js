@@ -32,7 +32,9 @@ const DEFAULTS = {
   quickNoteLabels: ['FELL', 'RESCUE MED', 'NOT RESPONDING', 'FULL BODY', 'LEFT SIDE', 'RIGHT SIDE'],
 
   // Data & Backup
-  autoBackupFrequency: 'never', // 'never' | 'weekly' | 'monthly'
+  autoBackupFrequency: 'never', // 'never' | 'weekly'
+  autoBackupDays: [],           // number[] — day indices 0–6 (Date.getDay())
+  lastAutoBackupAt: 0,          // Unix timestamp of last successful auto-backup
 
   // Medication tracking
   medicationStartDate: '',      // ISO date string — first day to show in medication history

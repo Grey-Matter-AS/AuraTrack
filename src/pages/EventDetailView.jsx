@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../data/db';
-import { formatDuration } from '../utils/formatters';
+import { formatDuration, formatEventDate, formatEventTime } from '../utils/formatters';
 import { ScrollFade } from '../components/ScrollFade';
 import { computeDangerFlags } from '../utils/dangerFlags';
 
 const CLUSTER_WINDOW_MS = 8 * 60 * 1000;
 
-function DangerAlert({ flags }) {
+function DangerAlert({ dangerFlags }) {
+  const flags = dangerFlags?.flags;
   if (!flags?.length) return null;
   return (
     <div className="space-y-2 mb-2">
@@ -31,9 +32,9 @@ function DangerAlert({ flags }) {
         >
           <span className="text-red-500 text-xl shrink-0">⚠</span>
           <div>
-            <p className="text-red-500 font-black text-xs uppercase tracking-widest">Cluster / Status Epilepticus Risk</p>
+            <p className="text-red-500 font-black text-xs uppercase tracking-widest">Cluster ×{dangerFlags.clusterCount} / Status Epilepticus Risk</p>
             <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-secondary)' }}>
-              3 or more seizures occurred within 8 minutes without confirmed recovery between them. Consult a neurologist immediately.
+              {dangerFlags.clusterCount} seizures occurred within 8 minutes. Consult a neurologist immediately.
             </p>
           </div>
         </div>
@@ -42,11 +43,11 @@ function DangerAlert({ flags }) {
   );
 }
 
-export default function EventDetailView({ eventId, onEdit, onClose, durationFormat = 'seconds' }) {
+export default function EventDetailView({ eventId, onEdit, onClose, durationFormat = 'seconds', dateFormat = 'locale', timeFormat = '12h' }) {
   const fmtDur = (s) => durationFormat === 'human' ? formatDuration(s) : `${s}s`;
   const [event, setEvent] = useState(null);
   const [notFound, setNotFound] = useState(false);
-  const [dangerFlags, setDangerFlags] = useState([]);
+  const [dangerFlags, setDangerFlags] = useState({ flags: [], clusterCount: 0 });
 
   useEffect(() => {
     if (!eventId) return;
@@ -119,21 +120,21 @@ export default function EventDetailView({ eventId, onEdit, onClose, durationForm
       <ScrollFade className="space-y-4" wrapperClassName="flex-1">
 
         {/* Danger alerts — shown above the duration card */}
-        <DangerAlert flags={dangerFlags} />
+        <DangerAlert dangerFlags={dangerFlags} />
 
         {/* Duration Summary */}
         <div
           className="p-6 rounded-[2.5rem] shadow-lg"
           style={{
             backgroundColor: 'var(--bg-card)',
-            border: dangerFlags.length ? '1px solid rgba(239,68,68,0.35)' : '1px solid var(--border-subtle)',
+            border: dangerFlags.flags.length ? '1px solid rgba(239,68,68,0.35)' : '1px solid var(--border-subtle)',
           }}
         >
           <div className="flex justify-between items-end mb-4">
             <div>
               <p className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: 'var(--text-dim)' }}>TOTAL DURATION</p>
               <p className="text-4xl font-mono font-black leading-none"
-                style={{ color: dangerFlags.includes('long_duration') ? '#f59e0b' : 'var(--text-primary)' }}>
+                style={{ color: dangerFlags.flags.includes('long_duration') ? '#f59e0b' : 'var(--text-primary)' }}>
                 {fmtDur(event.duration)}
               </p>
             </div>
@@ -162,7 +163,7 @@ export default function EventDetailView({ eventId, onEdit, onClose, durationForm
         <div className="p-5 rounded-2xl" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
           <p className="text-[10px] font-black uppercase tracking-widest mb-3" style={{ color: 'var(--text-dim)' }}>Details</p>
           <div className="space-y-2 text-sm">
-            {[['Date', event.date], ['Time', event.time]].map(([k, v]) => (
+            {[['Date', formatEventDate(event.startTime, dateFormat)], ['Time', formatEventTime(event.startTime, timeFormat)]].map(([k, v]) => (
               <div key={k} className="flex justify-between">
                 <span style={{ color: 'var(--text-dim)' }}>{k}</span>
                 <span className="font-medium" style={{ color: 'var(--text-primary)' }}>{v}</span>

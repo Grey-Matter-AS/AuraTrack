@@ -1,7 +1,8 @@
 import React from 'react';
-import { formatDuration } from '../utils/formatters';
+import { formatDuration, formatEventDate, formatEventTime } from '../utils/formatters';
 
-function DangerBadge({ flags }) {
+function DangerBadge({ dangerFlags }) {
+  const flags = dangerFlags?.flags;
   if (!flags?.length) return null;
   const isCluster = flags.includes('cluster');
   const isLong    = flags.includes('long_duration');
@@ -21,25 +22,26 @@ function DangerBadge({ flags }) {
         <span
           className="inline-flex items-center gap-1 text-[9px] font-black uppercase px-1.5 py-0.5 rounded"
           style={{ backgroundColor: 'rgba(239,68,68,0.15)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.4)' }}
-          title="Cluster seizures / Status Epilepticus risk — 3+ events within 8 minutes without confirmed recovery"
+          title={`Cluster seizures / Status Epilepticus risk — ${dangerFlags.clusterCount} events within 8 minutes`}
         >
-          ⚠ CLUSTER / SE RISK
+          ⚠ CLUSTER ×{dangerFlags.clusterCount}
         </span>
       )}
     </div>
   );
 }
 
-export function EventCard({ event, onEdit, onDelete, onViewDetail, dangerFlags, durationFormat = 'seconds' }) {
+export function EventCard({ event, onEdit, onDelete, onViewDetail, dangerFlags, durationFormat = 'seconds', dateFormat = 'locale', timeFormat = '12h' }) {
   const fmtDur = (s) => durationFormat === 'human' ? formatDuration(s) : `${s}s`;
   const handleView = () => onViewDetail ? onViewDetail(event.id) : onEdit(event);
+  const flags = dangerFlags?.flags;
 
   return (
     <div
       className="p-4 rounded-2xl shadow-lg"
       style={{
         backgroundColor: 'var(--bg-card)',
-        border: dangerFlags?.length
+        border: flags?.length
           ? '1px solid rgba(239,68,68,0.4)'
           : '1px solid var(--border-subtle)',
       }}
@@ -63,9 +65,9 @@ export function EventCard({ event, onEdit, onDelete, onViewDetail, dangerFlags, 
             )}
           </div>
           <p className="text-[11px] font-medium" style={{ color: 'var(--text-dim)' }}>
-            {event.date} • {event.time}
+            {formatEventDate(event.startTime, dateFormat)} • {formatEventTime(event.startTime, timeFormat)}
           </p>
-          <DangerBadge flags={dangerFlags} />
+          <DangerBadge dangerFlags={dangerFlags} />
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
@@ -75,7 +77,7 @@ export function EventCard({ event, onEdit, onDelete, onViewDetail, dangerFlags, 
           >
             <span
               className="font-mono font-black text-lg"
-              style={{ color: dangerFlags?.includes('long_duration') ? '#f59e0b' : '#ef4444' }}
+              style={{ color: flags?.includes('long_duration') ? '#f59e0b' : '#ef4444' }}
             >
               {fmtDur(event.duration)}
             </span>

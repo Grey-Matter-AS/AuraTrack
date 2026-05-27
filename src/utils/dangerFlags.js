@@ -1,12 +1,12 @@
 // Thresholds
-const LONG_DURATION_S  = 300;   // 5 minutes
-const CLUSTER_WINDOW_MS = 8 * 60 * 1000; // 8 minutes
-const CLUSTER_MIN      = 3;     // 3+ events = cluster
+const LONG_DURATION_S   = 300;              // 5 minutes
+const CLUSTER_WINDOW_MS = 8 * 60 * 1000;   // 8 minutes
+const CLUSTER_MIN       = 3;               // 3+ events = cluster
 
 /**
- * Returns an array of flag strings for a single event, given the full list.
- *   'long_duration' — total recorded duration > 5 minutes
- *   'cluster'       — 3+ events within 8 min window, none with confirmed recovery
+ * Returns { flags: string[], clusterCount: number } for a single event.
+ *   flags may include: 'long_duration', 'cluster'
+ *   clusterCount is the total events found in the ±8-min window (0 when no cluster)
  */
 export function computeDangerFlags(event, allEvents = []) {
   const flags = [];
@@ -15,22 +15,20 @@ export function computeDangerFlags(event, allEvents = []) {
     flags.push('long_duration');
   }
 
-  // Cluster: count events (including this one) within ±8 min with no confirmed recovery
   const nearby = allEvents.filter(e =>
-    Math.abs((e.startTime || 0) - (event.startTime || 0)) <= CLUSTER_WINDOW_MS &&
-    !e.laps?.recovery
+    Math.abs((e.startTime || 0) - (event.startTime || 0)) <= CLUSTER_WINDOW_MS
   );
-  if (nearby.length >= CLUSTER_MIN) {
+  const clusterCount = nearby.length;
+  if (clusterCount >= CLUSTER_MIN) {
     flags.push('cluster');
   }
 
-  return flags;
+  return { flags, clusterCount };
 }
 
 /**
- * Build a dangerFlags map (id → flags[]) for an entire list efficiently.
- * Uses a sorted array with early termination — O(n·k) where k is the average
- * number of events in any 16-minute window (typically very small).
+ * Build a { id → { flags, clusterCount } } map for an entire list efficiently.
+ * Sorted with early-termination sliding window — O(n·k).
  */
 export function buildDangerMap(allEvents) {
   const map = {};
@@ -45,16 +43,16 @@ export function buildDangerMap(allEvents) {
     if ((event.duration || 0) > LONG_DURATION_S) flags.push('long_duration');
 
     const t = event.startTime || 0;
-    let clusterCount = event.laps?.recovery ? 0 : 1; // count self if no confirmed recovery
+    let clusterCount = 1;
     for (let j = i - 1; j >= 0 && t - (sorted[j].startTime || 0) <= CLUSTER_WINDOW_MS; j--) {
-      if (!sorted[j].laps?.recovery) clusterCount++;
+      clusterCount++;
     }
     for (let j = i + 1; j < sorted.length && (sorted[j].startTime || 0) - t <= CLUSTER_WINDOW_MS; j++) {
-      if (!sorted[j].laps?.recovery) clusterCount++;
+      clusterCount++;
     }
     if (clusterCount >= CLUSTER_MIN) flags.push('cluster');
 
-    map[event.id] = flags;
+    map[event.id] = { flags, clusterCount };
   }
   return map;
 }
