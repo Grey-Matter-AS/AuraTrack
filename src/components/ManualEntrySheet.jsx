@@ -116,7 +116,7 @@ export function ManualEntrySheet({ onConfirm, onClose }) {
           </p>
 
           {/* Date + Time row */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 date-time-row">
             <div>
               <p className="text-[9px] font-black uppercase tracking-widest mb-1.5" style={{ color: 'var(--text-dim)' }}>
                 Date

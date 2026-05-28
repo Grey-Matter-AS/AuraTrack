@@ -113,3 +113,24 @@ input, select, textarea {
 /* ─── Utility: hide scrollbar but keep scroll behaviour ─────── */
 .custom-scrollbar { scrollbar-width: none; }
 .custom-scrollbar::-webkit-scrollbar { display: none; }
+
+/* ─── iOS Safari: date/time input fixes ─────────────────────── */
+/*
+  On iOS, font-size: max(16px, 1em) above forces date inputs to render
+  at 16px with full month names ("May 28, 2026"), making them too wide
+  for side-by-side layouts. Stack pairs vertically on iOS only.
+  @supports (-webkit-touch-callout) targets iOS Safari exclusively —
+  Android Chrome and desktop browsers ignore this block entirely.
+*/
+@supports (-webkit-touch-callout: none) {
+  .date-time-row {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  input[type="date"],
+  input[type="time"],
+  input[type="month"] {
+    min-width: 0;
+  }
+}

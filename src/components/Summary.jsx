@@ -254,7 +254,7 @@ function DateTimeOverrideRow({ startTime, overrideDateTime, onSetEventDateTime }
       <p className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--text-faint)' }}>
         Event Date &amp; Time
       </p>
-      <div className="flex gap-2">
+      <div className="flex gap-2 date-time-row">
         <input
           type="date"
           max={today}

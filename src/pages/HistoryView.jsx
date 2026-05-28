@@ -72,7 +72,7 @@ export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, on
         <ScrollFade wrapperClassName="flex-1">
           <SeizureTrendChart allEvents={allEvents} />
 
-          <div className="flex gap-2 mb-4">
+          <div className="flex gap-2 mb-4 date-time-row">
             <select
               value={typeFilter}
               onChange={e => { setTypeFilter(e.target.value); setPage(0); }}

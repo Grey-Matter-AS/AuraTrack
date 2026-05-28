@@ -71,7 +71,7 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false }
         <p className="text-[10px] font-black uppercase tracking-widest mb-3" style={{ color: 'var(--text-dim)' }}>
           Date Range
         </p>
-        <div className="flex gap-3">
+        <div className="flex gap-3 date-time-row">
           <div className="flex-1">
             <p className="text-[9px] font-black uppercase tracking-widest mb-1" style={{ color: 'var(--text-faint)' }}>From</p>
             <input
