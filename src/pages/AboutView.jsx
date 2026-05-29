@@ -1,10 +1,12 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import pkg from '../../package.json';
 import { ScrollFade } from '../components/ScrollFade';
 
 const GITHUB_URL = 'https://github.com/Grey-Matter-AS/AuraTrack';
 
 export default function AboutView({ onBack }) {
+  const { t } = useTranslation();
   return (
     <div className="flex-1 flex flex-col w-full max-w-md sm:max-w-xl md:max-w-2xl overflow-hidden">
 
@@ -14,10 +16,10 @@ export default function AboutView({ onBack }) {
           className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
           style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
         >
-          ← BACK
+          {t('nav.back')}
         </button>
         <h2 className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--text-dim)' }}>
-          About
+          {t('about.title')}
         </h2>
       </div>
 
@@ -36,15 +38,13 @@ export default function AboutView({ onBack }) {
           </span>
         </div>
 
-        <Section title="About">
+        <Section title={t('about.section_about')}>
           <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-            AuraTrack is a privacy-first seizure tracking app for people with epilepsy and their caregivers.
-            Record seizures in real time, annotate events with clinical detail, track medications, and generate
-            structured reports for your neurologist — all stored locally on your device.
+            {t('about.about_text')}
           </p>
         </Section>
 
-        <Section title="Developer">
+        <Section title={t('about.section_developer')}>
           <div className="flex items-center justify-between">
             <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Grey Matter AS</span>
             <a
@@ -54,29 +54,26 @@ export default function AboutView({ onBack }) {
               className="text-[11px] font-bold px-3 py-1.5 rounded-xl active:scale-95 transition-all"
               style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--accent)', border: '1px solid var(--border)' }}
             >
-              GitHub ↗
+              {t('about.github')}
             </a>
           </div>
         </Section>
 
-        <Section title="Privacy">
+        <Section title={t('about.section_privacy')}>
           <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-            All data is stored exclusively on your device using IndexedDB. Nothing is transmitted to any external
-            server. Your health data never leaves your device.
+            {t('about.privacy_text')}
           </p>
         </Section>
 
-        <Section title="Medical Disclaimer">
+        <Section title={t('about.section_disclaimer')}>
           <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-            AuraTrack is a personal logging tool and is <strong style={{ color: 'var(--text-primary)' }}>not a medical device</strong>.
-            It is not intended to diagnose, treat, or replace professional medical advice. Always consult a qualified
-            healthcare provider regarding your condition and treatment.
+            {t('about.disclaimer_text')}
           </p>
         </Section>
 
-        <Section title="Open Source & Feedback">
+        <Section title={t('about.section_opensource')}>
           <p className="text-sm leading-relaxed mb-4" style={{ color: 'var(--text-secondary)' }}>
-            AuraTrack is open source. Report bugs or suggest features on GitHub Issues.
+            {t('about.opensource_text')}
           </p>
           <div className="flex gap-3">
             <a
@@ -86,7 +83,7 @@ export default function AboutView({ onBack }) {
               className="flex-1 text-center text-[11px] font-bold py-2.5 rounded-xl active:scale-95 transition-all"
               style={{ backgroundColor: 'var(--bg-base)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
             >
-              License
+              {t('about.license')}
             </a>
             <a
               href={`${GITHUB_URL}/issues`}
@@ -95,7 +92,7 @@ export default function AboutView({ onBack }) {
               className="flex-1 text-center text-[11px] font-bold py-2.5 rounded-xl active:scale-95 transition-all"
               style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
             >
-              Report an Issue
+              {t('about.report_issue')}
             </a>
           </div>
         </Section>

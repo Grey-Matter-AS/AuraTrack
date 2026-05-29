@@ -1,0 +1,395 @@
+{
+  "nav": {
+    "history": "HISTORY",
+    "settings": "⚙ SETTINGS",
+    "back": "← BACK",
+    "help_label": "Help"
+  },
+
+  "idle": {
+    "start": "START",
+    "log_past": "+ Log Past Seizure",
+    "recent_events": "Recent Events",
+    "last_5": "LAST 5",
+    "no_events": "No events recorded yet."
+  },
+
+  "recording": {
+    "total_elapsed": "Total Elapsed",
+    "aura": "Aura",
+    "seizure": "Seizure",
+    "recovery": "Recovery",
+    "end_aura": "END AURA",
+    "aura_ended": "AURA ENDED ✓",
+    "end_seizure": "END SEIZURE",
+    "seizure_ended": "SEIZURE ENDED ✓",
+    "event_note": "+ EVENT NOTE",
+    "close_notes": "CLOSE NOTES",
+    "stop": "STOP",
+    "self_mode": "Self Mode Enabled",
+    "long_seizure_warning": "LONG SEIZURE — MONITOR CLOSELY",
+    "approaching_threshold": "APPROACHING ALERT THRESHOLD",
+    "auto_stop_notice": "Timer auto-stops at 12:00"
+  },
+
+  "alert": {
+    "medical_alert": "MEDICAL ALERT",
+    "unresponsive": "UNRESPONSIVE",
+    "medical_emergency": "MEDICAL EMERGENCY",
+    "call_services": "CALL EMERGENCY SERVICES NOW",
+    "dont_leave": "Do not leave the patient unattended",
+    "administer_med": "Administer Emergency Medication",
+    "neurologist": "Neurologist",
+    "emergency_contact": "Emergency Contact",
+    "elapsed": "Elapsed"
+  },
+
+  "tagging": {
+    "step1_title": "Step 1: Seizure Type",
+    "feeling_title": "What kind of feeling?",
+    "region_title": "Where did it happen?"
+  },
+
+  "history": {
+    "title": "History",
+    "events_count": "{{count}} EVENTS",
+    "all_types": "All Types",
+    "no_events": "No events found.",
+    "prev": "← Prev",
+    "next": "Next →",
+    "page_of": "{{page}} / {{total}}",
+    "clear": "Clear",
+    "tab_seizures": "Seizures",
+    "tab_medications": "Medications",
+    "tab_export": "Export"
+  },
+
+  "export": {
+    "title": "Export & Reports",
+    "date_range": "Date Range",
+    "from": "From",
+    "to": "To",
+    "raw_data": "Raw Data",
+    "backup_json_label": "Backup JSON",
+    "backup_json_desc": "Full data export — all fields including medications and dose logs. Use for backup or migrating to another device.",
+    "csv_label": "Spreadsheet CSV",
+    "csv_desc": "Events, medications, and dose logs in comma-separated format. Opens in Excel / Sheets.",
+    "pdf_label": "Simple Print / PDF",
+    "pdf_desc": "Quick printable event table — opens in a new tab and triggers the print dialog.",
+    "clinical_report": "Clinical Report",
+    "neuro_report_label": "Neurologist Report",
+    "neuro_report_desc": "Purpose-built clinical PDF — patient info, phase timings, symptom breakdown, and full event log. Formatted for presenting to a neurologist or specialist.",
+    "neuro_report_warning": "⚠ Add patient name in Settings → Identity for a complete report.",
+    "generate_print": "Generate & Print Report",
+    "diary_title": "Seizure Diary",
+    "diary_label": "Monthly Calendar",
+    "diary_desc": "One-page calendar grid showing which days had events, colour-coded by type. The quick-reference sheet to bring to every appointment.",
+    "month": "Month",
+    "generate": "Generate"
+  },
+
+  "event_detail": {
+    "title": "Event Detail",
+    "edit": "Edit",
+    "not_found": "Event not found.",
+    "loading": "Loading...",
+    "total_duration": "TOTAL DURATION",
+    "type": "TYPE",
+    "aura": "AURA",
+    "seizure": "SEIZURE",
+    "recovery": "RECOVERY",
+    "details": "Details",
+    "date": "Date",
+    "time": "Time",
+    "status": "Status",
+    "edited": "Edited",
+    "symptoms": "Symptoms",
+    "triggers": "Possible Triggers",
+    "notes": "Clinical Observations",
+    "danger_prolonged_title": "Prolonged Seizure",
+    "danger_prolonged_desc": "This event lasted more than 5 minutes. Seek medical review if not already done.",
+    "danger_cluster_title": "Cluster ×{{count}} / Status Epilepticus Risk",
+    "danger_cluster_desc": "{{count}} seizures occurred within 8 minutes. Consult a neurologist immediately."
+  },
+
+  "help": {
+    "title": "Help",
+    "about_btn": "About AuraTrack",
+    "sections": {
+      "recording": {
+        "title": "Recording a Seizure",
+        "steps": [
+          "Tap the large START button when a seizure begins.",
+          "In Caretaker mode, tap the phase buttons (End Aura, End Seizure) as each phase transitions. In Self mode the interface is simplified to a single stop button.",
+          "Tap + Event Note to stamp a timestamped note mid-recording — use the shortcut buttons for common events like Fell, Rescue Med given, Not Responding, etc.",
+          "Tap STOP when the seizure ends. If the timer is still running at 12 minutes, the recording stops automatically and the event is saved."
+        ]
+      },
+      "tagging": {
+        "title": "Tagging Events",
+        "steps": [
+          "After stopping, a tagging wizard opens automatically.",
+          "Select the seizure type, affected body regions, and any symptoms observed.",
+          "Add free-text notes, then tap SAVE. You can edit any event later from History."
+        ]
+      },
+      "manual": {
+        "title": "Manual Entry",
+        "steps": [
+          "Tap + Log Past Seizure on the home screen to enter a seizure you did not record in real time.",
+          "Set the date, time, and duration, then complete the tagging wizard as usual."
+        ]
+      },
+      "medications": {
+        "title": "Medication Tracking",
+        "steps": [
+          "Add your medications in Settings → Medications.",
+          "The home screen shows today's scheduled doses — tap each medication button to toggle it, then tap Save to log the doses.",
+          "Enable dose reminders per medication in Settings → Medications."
+        ]
+      },
+      "history": {
+        "title": "History & Export",
+        "steps": [
+          "Open HISTORY to browse, search, and filter all recorded events.",
+          "Tap any event to view full detail or edit it.",
+          "Use EXPORT (from History) to generate a PDF neurologist report, CSV, or JSON backup."
+        ]
+      },
+      "settings": {
+        "title": "Settings & Accessibility",
+        "steps": [
+          "Switch between Self and Caretaker mode in Settings to adjust the interface.",
+          "Change theme, font size, and accent colour to suit your preferences.",
+          "Add your neurologist's name and emergency contacts for quick access during a seizure."
+        ]
+      }
+    }
+  },
+
+  "about": {
+    "title": "About",
+    "section_about": "About",
+    "section_developer": "Developer",
+    "section_privacy": "Privacy",
+    "section_disclaimer": "Medical Disclaimer",
+    "section_opensource": "Open Source & Feedback",
+    "about_text": "AuraTrack is a privacy-first seizure tracking app for people with epilepsy and their caregivers. Record seizures in real time, annotate events with clinical detail, track medications, and generate structured reports for your neurologist — all stored locally on your device.",
+    "privacy_text": "All data is stored exclusively on your device using IndexedDB. Nothing is transmitted to any external server. Your health data never leaves your device.",
+    "disclaimer_text": "AuraTrack is a personal logging tool and is not a medical device. It is not intended to diagnose, treat, or replace professional medical advice. Always consult a qualified healthcare provider regarding your condition and treatment.",
+    "disclaimer_not_medical": "not a medical device",
+    "opensource_text": "AuraTrack is open source. Report bugs or suggest features on GitHub Issues.",
+    "github": "GitHub ↗",
+    "license": "License",
+    "report_issue": "Report an Issue"
+  },
+
+  "settings": {
+    "title": "Settings",
+    "badge_caretaker": "CARETAKER",
+    "badge_self": "SELF",
+    "tabs": {
+      "profile": "Profile",
+      "medications": "Medications",
+      "display": "Display",
+      "recording": "Recording",
+      "reports": "Reports",
+      "data": "Data"
+    },
+    "identity": {
+      "section": "Identity",
+      "mode": "Mode",
+      "mode_caretaker": "Caretaker",
+      "mode_self": "Self",
+      "mode_desc_caretaker": "Recording for another person. Full phase timing controls visible during recording.",
+      "mode_desc_self": "Recording your own events. Simplified one-button interface.",
+      "patient_name": "Person / Patient Name",
+      "your_name": "Your Name",
+      "name_placeholder": "Full name (used in reports)",
+      "caretaker_name": "Caretaker Name",
+      "caretaker_placeholder": "Your name",
+      "dob": "Date of Birth",
+      "emergency_contact": "Emergency Contact",
+      "emergency_placeholder": "Phone number or name"
+    },
+    "appearance": {
+      "section": "Appearance",
+      "theme": "Theme",
+      "theme_dark": "Dark",
+      "theme_light": "Light",
+      "theme_system": "System",
+      "accent": "Accent Colour",
+      "accent_red": "Red",
+      "accent_blue": "Blue",
+      "accent_green": "Green",
+      "accent_purple": "Purple",
+      "accent_amber": "Amber",
+      "text_size": "Text Size",
+      "language": "Language"
+    },
+    "display": {
+      "section": "Display",
+      "page_size": "History Page Size",
+      "date_format": "Date Format",
+      "date_system": "System Default",
+      "duration_display": "Duration Display",
+      "time_format": "Time Format"
+    },
+    "recording": {
+      "section": "Recording",
+      "haptic": "Haptic Feedback",
+      "haptic_help": "Vibration on button presses (device must support it)",
+      "quick_labels": "Quick Note Labels",
+      "quick_labels_help": "Customise the shortcut buttons shown during recording. Leave blank to hide a button.",
+      "button_n": "Button {{n}}"
+    },
+    "medications": {
+      "section": "Medications",
+      "section_desc": "Current medication regimen. Used in reports and dose-logging.",
+      "none_recorded": "No medications recorded.",
+      "add_btn": "+ Add Medication",
+      "add_form_title": "Add Medication",
+      "edit_form_title": "Edit Medication",
+      "name_placeholder": "Drug name (e.g. Levetiracetam)",
+      "dose_placeholder": "Dose",
+      "scheduled_times": "Scheduled Times",
+      "active_days": "Active Days",
+      "daily": "Daily",
+      "dose_reminders": "Dose Reminders",
+      "dose_reminders_help": "Push notification at each scheduled time",
+      "show_emergency": "Show on Emergency Screen",
+      "show_emergency_help": "Display during prolonged seizure alert",
+      "save": "Save",
+      "add": "Add",
+      "update": "Update",
+      "cancel": "Cancel",
+      "remove": "Remove",
+      "remove_confirm": "Remove {{name}}?",
+      "start_date": "Medication Tracking Start Date",
+      "start_date_help": "The earliest date shown in medication history. Leave blank to auto-detect from records.",
+      "reminder_granted": "🔔 Notifications enabled",
+      "reminder_denied": "🔕 Notifications blocked",
+      "reminder_off": "🔕 Notifications off",
+      "reminder_granted_help": "Reminders will fire while app is open or suspended.",
+      "reminder_denied_help": "Blocked in browser settings — reset site permissions to re-enable.",
+      "reminder_off_help": "Enable to receive dose reminder notifications.",
+      "reminder_enable": "Enable",
+      "reminder_section": "Dose Reminder Notifications",
+      "ios_reminder_note": "On iOS, the app must be installed to your home screen for notifications to work. Notifications require the app to be running or suspended — they cannot be delivered when the app is fully closed.",
+      "emergency_badge": "🚨 Emergency",
+      "slot_morning": "Morning Dose",
+      "slot_afternoon": "Afternoon Dose",
+      "slot_midday": "Midday Dose",
+      "slot_evening": "Evening Dose",
+      "slot_dose_n": "Dose {{n}}",
+      "slot_dose_time": "Dose Time",
+      "added": "Medication added.",
+      "updated": "Medication updated.",
+      "removed": "Medication removed."
+    },
+    "reports": {
+      "section": "Reports & Neurologist",
+      "section_desc": "Information used to generate clinical neurologist reports.",
+      "neuro_name": "Neurologist / Clinician Name",
+      "neuro_name_placeholder": "Dr. Name",
+      "institution": "Institution / Hospital",
+      "institution_placeholder": "Clinic or hospital name",
+      "contact": "Clinician Contact",
+      "contact_placeholder": "Phone, email, or referral number",
+      "include_dob": "Include Date of Birth",
+      "include_dob_help": "Whether DOB appears in printed reports",
+      "additional_notes": "Additional Notes for Reports",
+      "notes_placeholder": "Medications, known triggers, clinician instructions, or anything else to include at the end of reports..."
+    },
+    "data": {
+      "section": "Data & Backup",
+      "storage_used": "Storage Used",
+      "storage_help": "Approximate browser IndexedDB usage",
+      "storage_value": "{{kb}} KB",
+      "storage_quota": " / {{mb}} MB",
+      "auto_backup": "Auto-Backup",
+      "auto_backup_never": "Never",
+      "auto_backup_weekly": "Weekly",
+      "auto_backup_help": "Manual trigger is always available via the Export screen.",
+      "scheduled_backup": "Scheduled backup every {{days}}",
+      "export_backup": "Export Backup",
+      "export_sub": "JSON download",
+      "import_data": "Import Data",
+      "import_sub": "JSON file",
+      "danger_zone": "Danger Zone",
+      "clear_confirm": "This permanently deletes all recorded events. Cannot be undone.",
+      "clear_yes": "Yes, Delete All",
+      "clear_btn": "Clear All Event Data",
+      "reset_confirm": "Reset all preferences to factory defaults?",
+      "reset_yes": "Yes, Reset",
+      "reset_btn": "Reset Settings to Defaults",
+      "cancel": "Cancel",
+      "no_data": "No data to export.",
+      "exported": "Exported {{events}} event(s) and {{meds}} medication(s).",
+      "export_failed": "Export failed.",
+      "all_deleted": "All event data deleted.",
+      "delete_failed": "Failed to delete data. Please try again.",
+      "settings_reset": "Settings reset to defaults.",
+      "no_data_in_file": "No data found in file.",
+      "imported": "Imported {{summary}} successfully.",
+      "imported_nothing": "nothing",
+      "import_failed": "Import failed — invalid or corrupted file."
+    },
+    "about_section": {
+      "section": "About",
+      "version": "App Version",
+      "schema": "Database Schema",
+      "reinstall": "Re-show Install Prompt",
+      "reinstall_sub": "Tap if you dismissed the install banner by mistake"
+    }
+  },
+
+  "delete_modal": {
+    "title": "DELETE RECORD?",
+    "body": "This medical entry will be permanently removed. This action cannot be undone.",
+    "confirm": "YES, DELETE PERMANENTLY",
+    "cancel": "CANCEL"
+  },
+
+  "manual_entry": {
+    "title": "Log Past Seizure",
+    "intro": "Enter the date, time, and duration of the seizure. You can then add the seizure type, symptoms, triggers, and notes.",
+    "date": "Date",
+    "time": "Time",
+    "total_duration": "Total Duration",
+    "phase_breakdown": "Phase Breakdown (optional)",
+    "aura": "Aura",
+    "ictal": "Seizure (Ictal)",
+    "recovery": "Post-Ictal / Recovery",
+    "min": "min",
+    "sec": "sec",
+    "continue": "Continue to Details →",
+    "cancel": "Cancel",
+    "error_duration": "Total duration must be greater than 0."
+  },
+
+  "event_card": {
+    "edited": "Edited",
+    "manual_entry": "Manual Entry",
+    "view_edit": "View / Edit",
+    "delete": "Delete"
+  },
+
+  "summary": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "add_another": "+ Add Another Symptom",
+    "notes_placeholder": "Clinical observations, post-ictal notes, medication given...",
+    "notes_label": "Notes",
+    "triggers_label": "Possible Triggers",
+    "symptoms_label": "Symptoms",
+    "date_time_label": "Date & Time",
+    "duration_label": "Duration",
+    "aura": "Aura",
+    "seizure": "Seizure",
+    "recovery": "Recovery",
+    "total": "Total",
+    "manual_durations": "Adjust durations manually",
+    "remove_symptom": "Remove"
+  }
+}

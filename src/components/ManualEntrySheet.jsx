@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ScrollFade } from './ScrollFade';
 
 // ─── Min/sec duration input pair ─────────────────────────────
 function DurField({ label, value, onChange }) {
+  const { t } = useTranslation();
   const minutes = Math.floor(value / 60);
   const seconds = value % 60;
 
@@ -31,7 +33,7 @@ function DurField({ label, value, onChange }) {
           className="w-16 text-center rounded-xl px-2 py-2 font-mono font-black text-lg outline-none"
           style={{ backgroundColor: 'var(--bg-raised)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
         />
-        <span className="font-black text-xs" style={{ color: 'var(--text-dim)' }}>min</span>
+        <span className="font-black text-xs" style={{ color: 'var(--text-dim)' }}>{t('manual_entry.min')}</span>
         <input
           type="number"
           inputMode="numeric"
@@ -42,7 +44,7 @@ function DurField({ label, value, onChange }) {
           className="w-16 text-center rounded-xl px-2 py-2 font-mono font-black text-lg outline-none"
           style={{ backgroundColor: 'var(--bg-raised)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
         />
-        <span className="font-black text-xs" style={{ color: 'var(--text-dim)' }}>sec</span>
+        <span className="font-black text-xs" style={{ color: 'var(--text-dim)' }}>{t('manual_entry.sec')}</span>
       </div>
     </div>
   );
@@ -50,6 +52,7 @@ function DurField({ label, value, onChange }) {
 
 // ─── Bottom-sheet modal ───────────────────────────────────────
 export function ManualEntrySheet({ onConfirm, onClose }) {
+  const { t } = useTranslation();
   const today    = new Date().toISOString().slice(0, 10);
   const nowTime  = new Date().toTimeString().slice(0, 5);
 
@@ -70,7 +73,7 @@ export function ManualEntrySheet({ onConfirm, onClose }) {
 
   const handleContinue = () => {
     if (totalSec <= 0) {
-      setError('Total duration must be greater than 0.');
+      setError(t('manual_entry.error_duration'));
       return;
     }
     setError('');
@@ -98,7 +101,7 @@ export function ManualEntrySheet({ onConfirm, onClose }) {
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-6 shrink-0">
           <p className="text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: 'var(--text-dim)' }}>
-            Log Past Seizure
+            {t('manual_entry.title')}
           </p>
           <button
             onClick={onClose}
@@ -112,14 +115,14 @@ export function ManualEntrySheet({ onConfirm, onClose }) {
         <ScrollFade className="px-6 pt-4 pb-2 space-y-5" bgVar="--bg-card">
 
           <p className="text-xs" style={{ color: 'var(--text-faint)' }}>
-            Enter the date, time, and duration of the seizure. You can then add the seizure type, symptoms, triggers, and notes.
+            {t('manual_entry.intro')}
           </p>
 
           {/* Date + Time row */}
           <div className="grid grid-cols-2 gap-3 date-time-row">
             <div>
               <p className="text-[9px] font-black uppercase tracking-widest mb-1.5" style={{ color: 'var(--text-dim)' }}>
-                Date
+                {t('manual_entry.date')}
               </p>
               <input
                 type="date"
@@ -132,7 +135,7 @@ export function ManualEntrySheet({ onConfirm, onClose }) {
             </div>
             <div>
               <p className="text-[9px] font-black uppercase tracking-widest mb-1.5" style={{ color: 'var(--text-dim)' }}>
-                Time
+                {t('manual_entry.time')}
               </p>
               <input
                 type="time"
@@ -145,7 +148,7 @@ export function ManualEntrySheet({ onConfirm, onClose }) {
           </div>
 
           {/* Total duration */}
-          <DurField label="Total Duration" value={totalSec} onChange={setTotalSec} />
+          <DurField label={t('manual_entry.total_duration')} value={totalSec} onChange={setTotalSec} />
 
           {/* Phase breakdown toggle */}
           <button
@@ -154,14 +157,14 @@ export function ManualEntrySheet({ onConfirm, onClose }) {
             style={{ color: 'var(--text-faint)' }}
           >
             <span>{showPhases ? '▾' : '▸'}</span>
-            <span>Phase Breakdown (optional)</span>
+            <span>{t('manual_entry.phase_breakdown')}</span>
           </button>
 
           {showPhases && (
             <div className="space-y-4 pl-3 border-l-2" style={{ borderColor: 'var(--border)' }}>
-              <DurField label="Aura" value={auraSec} onChange={setAuraSec} />
-              <DurField label="Seizure (Ictal)" value={seizureSec} onChange={setSeizureSec} />
-              <DurField label="Post-Ictal / Recovery" value={recoverySec} onChange={setRecoverySec} />
+              <DurField label={t('manual_entry.aura')} value={auraSec} onChange={setAuraSec} />
+              <DurField label={t('manual_entry.ictal')} value={seizureSec} onChange={setSeizureSec} />
+              <DurField label={t('manual_entry.recovery')} value={recoverySec} onChange={setRecoverySec} />
             </div>
           )}
 
@@ -178,14 +181,14 @@ export function ManualEntrySheet({ onConfirm, onClose }) {
             className="w-full py-4 rounded-2xl font-black text-sm uppercase tracking-widest active:scale-95 transition-all shadow-lg"
             style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
           >
-            Continue to Details →
+            {t('manual_entry.continue')}
           </button>
           <button
             onClick={onClose}
             className="w-full py-3 rounded-2xl font-black text-xs uppercase tracking-widest"
             style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)', border: '1px solid var(--border)' }}
           >
-            Cancel
+            {t('manual_entry.cancel')}
           </button>
         </div>
       </div>

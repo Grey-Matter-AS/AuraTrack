@@ -1,19 +1,21 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { SettingsForm } from '../components/SettingsForm';
 import { Tabs } from '../components/Tabs';
 import { ScrollFade } from '../components/ScrollFade';
 
-const TABS = [
-  { id: 'profile',     label: 'Profile'      },
-  { id: 'medications', label: 'Medications'  },
-  { id: 'display',     label: 'Display'      },
-  { id: 'recording',   label: 'Recording'    },
-  { id: 'reports',     label: 'Reports'      },
-  { id: 'data',        label: 'Data'         },
-];
-
 export default function SettingsView({ settings, onUpdate, onReset, onBack, pwa, notificationPermission, onRequestNotificationPermission }) {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('profile');
+
+  const TABS = [
+    { id: 'profile',     label: t('settings.tabs.profile')     },
+    { id: 'medications', label: t('settings.tabs.medications') },
+    { id: 'display',     label: t('settings.tabs.display')     },
+    { id: 'recording',   label: t('settings.tabs.recording')   },
+    { id: 'reports',     label: t('settings.tabs.reports')     },
+    { id: 'data',        label: t('settings.tabs.data')        },
+  ];
 
   return (
     <div className="flex-1 flex flex-col w-full max-w-md sm:max-w-xl md:max-w-2xl overflow-hidden">
@@ -25,13 +27,13 @@ export default function SettingsView({ settings, onUpdate, onReset, onBack, pwa,
           className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
           style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
         >
-          ← BACK
+          {t('nav.back')}
         </button>
         <h2 className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--text-dim)' }}>
-          Settings
+          {t('settings.title')}
         </h2>
         <span className="ml-auto text-[9px] font-bold px-2 py-1 rounded" style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)' }}>
-          {settings.userMode === 'CARETAKER' ? 'CARETAKER' : 'SELF'}
+          {settings.userMode === 'CARETAKER' ? t('settings.badge_caretaker') : t('settings.badge_self')}
         </span>
       </div>
 

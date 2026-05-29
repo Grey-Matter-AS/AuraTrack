@@ -18,9 +18,11 @@
     "@tailwindcss/vite": "^4.3.0",
     "autoprefixer": "^10.5.0",
     "dexie": "^4.4.2",
+    "i18next": "^26.3.0",
     "postcss": "^8.5.14",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
+    "react-i18next": "^17.0.8",
     "recharts": "^3.8.1",
     "tailwindcss": "^4.2.4"
   },

@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { formatDuration } from '../utils/formatters';
 
 const ALERT_THRESHOLD = 300;  // 5 minutes
 const AUTO_STOP_AT    = 720;  // 12 minutes
 
 function RedAlert({ elapsed, onClose, emergencyMedications = [], neurologistName, neurologistContact, emergencyContact }) {
+  const { t } = useTranslation();
   const mins = Math.floor(elapsed / 60);
   const secs = elapsed % 60;
   return (
@@ -22,21 +24,21 @@ function RedAlert({ elapsed, onClose, emergencyMedications = [], neurologistName
       </button>
 
       {/* Content */}
-      <p className="text-[10px] font-black tracking-[0.5em] text-red-200 uppercase mb-4">MEDICAL ALERT</p>
+      <p className="text-[10px] font-black tracking-[0.5em] text-red-200 uppercase mb-4">{t('alert.medical_alert')}</p>
 
       <div className="text-7xl mb-3">⚠</div>
 
       <h1 className="text-4xl font-black text-white uppercase tracking-tight text-center mb-1">
-        UNRESPONSIVE
+        {t('alert.unresponsive')}
       </h1>
       <p className="text-xl font-black text-red-200 uppercase tracking-widest text-center mb-5">
-        MEDICAL EMERGENCY
+        {t('alert.medical_emergency')}
       </p>
 
       <div className="w-full max-w-xs rounded-3xl p-4 mb-4 text-center space-y-1"
         style={{ backgroundColor: 'rgba(0,0,0,0.3)' }}>
-        <p className="text-red-100 text-sm font-bold">CALL EMERGENCY SERVICES NOW</p>
-        <p className="text-red-300 text-xs">Do not leave the patient unattended</p>
+        <p className="text-red-100 text-sm font-bold">{t('alert.call_services')}</p>
+        <p className="text-red-300 text-xs">{t('alert.dont_leave')}</p>
       </div>
 
       {/* Emergency medications */}
@@ -44,7 +46,7 @@ function RedAlert({ elapsed, onClose, emergencyMedications = [], neurologistName
         <div className="w-full max-w-xs rounded-3xl p-4 mb-4 text-center"
           style={{ backgroundColor: '#fff', border: '3px solid #dc2626' }}>
           <p className="text-red-700 text-[10px] font-black uppercase tracking-widest mb-2">
-            Administer Emergency Medication
+            {t('alert.administer_med')}
           </p>
           {emergencyMedications.map(med => (
             <p key={med.id} className="text-red-800 text-lg font-black">
@@ -60,7 +62,7 @@ function RedAlert({ elapsed, onClose, emergencyMedications = [], neurologistName
           style={{ backgroundColor: 'rgba(0,0,0,0.35)' }}>
           {(neurologistName || neurologistContact) && (
             <div className="flex justify-between items-start gap-2">
-              <p className="text-red-300 text-[9px] font-black uppercase tracking-widest shrink-0">Neurologist</p>
+              <p className="text-red-300 text-[9px] font-black uppercase tracking-widest shrink-0">{t('alert.neurologist')}</p>
               <p className="text-white text-xs font-bold text-right">
                 {[neurologistName, neurologistContact].filter(Boolean).join('  ·  ')}
               </p>
@@ -68,7 +70,7 @@ function RedAlert({ elapsed, onClose, emergencyMedications = [], neurologistName
           )}
           {emergencyContact && (
             <div className="flex justify-between items-start gap-2">
-              <p className="text-red-300 text-[9px] font-black uppercase tracking-widest shrink-0">Emergency Contact</p>
+              <p className="text-red-300 text-[9px] font-black uppercase tracking-widest shrink-0">{t('alert.emergency_contact')}</p>
               <p className="text-white text-xs font-bold text-right">{emergencyContact}</p>
             </div>
           )}
@@ -76,12 +78,12 @@ function RedAlert({ elapsed, onClose, emergencyMedications = [], neurologistName
       )}
 
       {/* Live elapsed */}
-      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-red-300 mb-1">Elapsed</p>
+      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-red-300 mb-1">{t('alert.elapsed')}</p>
       <p className="text-6xl font-mono font-black text-white tabular-nums">
         {String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}
       </p>
 
-      <p className="text-red-300 text-[10px] mt-3 font-bold">Timer auto-stops at 12:00</p>
+      <p className="text-red-300 text-[10px] mt-3 font-bold">{t('recording.auto_stop_notice')}</p>
     </div>
   );
 }
@@ -102,6 +104,7 @@ function RecordingView({
   emergencyContact,
   durationFormat = 'seconds',
 }) {
+  const { t } = useTranslation();
   const fmtDur = (s) => durationFormat === 'human' ? formatDuration(s) : `${s}s`;
   const [showMarkers, setShowMarkers] = useState(false);
   const [alertDismissed, setAlertDismissed] = useState(false);
@@ -149,18 +152,18 @@ function RecordingView({
         {userMode === 'CARETAKER' && (
           <div className="grid grid-cols-3 gap-3 w-full mb-2 shrink-0">
             <div className="py-3 rounded-2xl text-center" style={{ backgroundColor: 'var(--bg-raised)', border: '1px solid var(--border)' }}>
-              <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-1">Aura</p>
+              <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-1">{t('recording.aura')}</p>
               <p className="text-2xl font-mono font-bold leading-none" style={{ color: 'var(--text-primary)' }}>{fmtDur(auraDuration)}</p>
             </div>
             <div className="py-3 rounded-2xl text-center" style={{ backgroundColor: 'var(--bg-raised)', border: '1px solid var(--border)' }}>
-              <p className="text-[10px] font-black text-red-500 uppercase tracking-widest mb-1">Seizure</p>
+              <p className="text-[10px] font-black text-red-500 uppercase tracking-widest mb-1">{t('recording.seizure')}</p>
               <p className="text-2xl font-mono font-bold leading-none"
                 style={{ color: laps.aura && !laps.seizure && seizureDuration >= 240 ? '#ef4444' : 'var(--text-primary)' }}>
                 {fmtDur(seizureDuration)}
               </p>
             </div>
             <div className="py-3 rounded-2xl text-center" style={{ backgroundColor: 'var(--bg-raised)', border: '1px solid var(--border)' }}>
-              <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1">Recovery</p>
+              <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1">{t('recording.recovery')}</p>
               <p className="text-2xl font-mono font-bold leading-none" style={{ color: 'var(--text-primary)' }}>{fmtDur(recoveryDuration)}</p>
             </div>
           </div>
@@ -168,7 +171,7 @@ function RecordingView({
 
         {/* 2. MAIN TIMER */}
         <div className="flex-1 flex flex-col justify-center text-center py-4">
-          <p className="text-xs font-black uppercase tracking-[0.4em] mb-2" style={{ color: 'var(--text-dim)' }}>Total Elapsed</p>
+          <p className="text-xs font-black uppercase tracking-[0.4em] mb-2" style={{ color: 'var(--text-dim)' }}>{t('recording.total_elapsed')}</p>
           <div
             className="text-[11vh] font-mono font-black tracking-tighter tabular-nums leading-none"
             style={{ color: elapsed >= 240 && userMode !== 'CARETAKER' ? '#ef4444' : 'var(--text-primary)' }}
@@ -178,7 +181,7 @@ function RecordingView({
           {/* Warning ring at 4 min (1 min before alert) */}
           {elapsed >= 240 && elapsed < ALERT_THRESHOLD && (
             <p className="text-red-500 text-[10px] font-black uppercase tracking-widest mt-2 animate-pulse">
-              {userMode === 'CARETAKER' ? 'LONG SEIZURE — MONITOR CLOSELY' : 'APPROACHING ALERT THRESHOLD'}
+              {userMode === 'CARETAKER' ? t('recording.long_seizure_warning') : t('recording.approaching_threshold')}
             </p>
           )}
         </div>
@@ -199,7 +202,7 @@ function RecordingView({
                       : 'bg-amber-600 border-amber-400 text-white shadow-xl shadow-amber-900/40 active:scale-95'
                   }`}
                 >
-                  {laps.aura ? 'AURA ENDED ✓' : 'END AURA'}
+                  {laps.aura ? t('recording.aura_ended') : t('recording.end_aura')}
                 </button>
 
                 <button
@@ -211,7 +214,7 @@ function RecordingView({
                       : (!laps.aura ? 'opacity-20 border-slate-800' : 'bg-red-600 border-red-400 text-white shadow-xl shadow-red-900/40 active:scale-95')
                   }`}
                 >
-                  {laps.seizure ? 'SEIZURE ENDED ✓' : 'END SEIZURE'}
+                  {laps.seizure ? t('recording.seizure_ended') : t('recording.end_seizure')}
                 </button>
               </>
             )}
@@ -223,7 +226,7 @@ function RecordingView({
                 ? { backgroundColor: 'var(--accent)', borderColor: 'var(--accent)', color: '#fff' }
                 : { backgroundColor: 'var(--bg-raised)', borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
             >
-              {showMarkers ? 'CLOSE NOTES' : '+ EVENT NOTE'}
+              {showMarkers ? t('recording.close_notes') : t('recording.event_note')}
             </button>
           </div>
 
@@ -251,11 +254,11 @@ function RecordingView({
             className="w-full py-[clamp(1rem,4vh,2.5rem)] text-5xl font-black rounded-[3rem] active:scale-95 transition-transform uppercase"
             style={{ backgroundColor: 'var(--text-primary)', color: 'var(--bg-base)', border: '10px solid var(--bg-base)', boxShadow: '0 0 60px rgba(255,255,255,0.1)' }}
           >
-            STOP
+            {t('recording.stop')}
           </button>
           {userMode === 'PATIENT' && (
             <p className="text-center text-xs mt-4 uppercase font-black tracking-[0.2em]" style={{ color: 'var(--text-dim)' }}>
-              Self Mode Enabled
+              {t('recording.self_mode')}
             </p>
           )}
         </div>

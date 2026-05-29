@@ -132,5 +132,7 @@ input, select, textarea {
   input[type="time"],
   input[type="month"] {
     min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
   }
 }

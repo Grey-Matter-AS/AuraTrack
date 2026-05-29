@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { db } from '../data/db';
 import { ScrollFade } from '../components/ScrollFade';
 import { ExportCard } from '../components/ExportCard';
@@ -6,6 +7,7 @@ import { exportToJSON, exportToCSV, exportToPDF, exportNeurologistReport, export
 import { useMedications } from '../hooks/useMedications';
 
 export default function ExportView({ onBack, settings = {}, isEmbedded = false }) {
+  const { t } = useTranslation();
   const [fromDate, setFromDate] = useState(
     () => new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10)
   );
@@ -58,10 +60,10 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false }
             className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
             style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
           >
-            ← BACK
+            {t('nav.back')}
           </button>
           <h2 className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--text-dim)' }}>
-            Export &amp; Reports
+            {t('export.title')}
           </h2>
         </div>
       )}
@@ -69,11 +71,11 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false }
       {/* Date Range Pickers */}
       <div className="mb-6 shrink-0">
         <p className="text-[10px] font-black uppercase tracking-widest mb-3" style={{ color: 'var(--text-dim)' }}>
-          Date Range
+          {t('export.date_range')}
         </p>
         <div className="flex gap-3 date-time-row">
           <div className="flex-1">
-            <p className="text-[9px] font-black uppercase tracking-widest mb-1" style={{ color: 'var(--text-faint)' }}>From</p>
+            <p className="text-[9px] font-black uppercase tracking-widest mb-1" style={{ color: 'var(--text-faint)' }}>{t('export.from')}</p>
             <input
               type="date"
               value={fromDate}
@@ -84,7 +86,7 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false }
             />
           </div>
           <div className="flex-1">
-            <p className="text-[9px] font-black uppercase tracking-widest mb-1" style={{ color: 'var(--text-faint)' }}>To</p>
+            <p className="text-[9px] font-black uppercase tracking-widest mb-1" style={{ color: 'var(--text-faint)' }}>{t('export.to')}</p>
             <input
               type="date"
               value={toDate}
@@ -102,12 +104,12 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false }
 
         {/* ── Raw Data Exports ── */}
         <p className="text-[9px] font-black uppercase tracking-[0.3em] px-1" style={{ color: 'var(--text-faint)' }}>
-          Raw Data
+          {t('export.raw_data')}
         </p>
 
         <ExportCard
-          label="Backup JSON"
-          description="Full data export — all fields including medications and dose logs. Use for backup or migrating to another device."
+          label={t('export.backup_json_label')}
+          description={t('export.backup_json_desc')}
           onExport={async () => {
             const events = await getEvents();
             const fromMs = new Date(fromDate).setHours(0, 0, 0, 0);
@@ -117,8 +119,8 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false }
           }}
         />
         <ExportCard
-          label="Spreadsheet CSV"
-          description="Events, medications, and dose logs in comma-separated format. Opens in Excel / Sheets."
+          label={t('export.csv_label')}
+          description={t('export.csv_desc')}
           onExport={async () => {
             const events = await getEvents();
             const fromMs = new Date(fromDate).setHours(0, 0, 0, 0);
@@ -128,14 +130,14 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false }
           }}
         />
         <ExportCard
-          label="Simple Print / PDF"
-          description="Quick printable event table — opens in a new tab and triggers the print dialog."
+          label={t('export.pdf_label')}
+          description={t('export.pdf_desc')}
           onExport={() => handleExport(exportToPDF)}
         />
 
         {/* ── Clinical Report ── */}
         <p className="text-[9px] font-black uppercase tracking-[0.3em] px-1 pt-3" style={{ color: 'var(--text-faint)' }}>
-          Clinical Report
+          {t('export.clinical_report')}
         </p>
 
         <div
@@ -152,15 +154,14 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false }
             </div>
             <div className="flex-1">
               <p className="font-black uppercase tracking-widest text-sm" style={{ color: 'var(--text-primary)' }}>
-                Neurologist Report
+                {t('export.neuro_report_label')}
               </p>
               <p className="text-xs mt-1" style={{ color: 'var(--text-dim)' }}>
-                Purpose-built clinical PDF — patient info, phase timings, symptom breakdown, and full event log.
-                Formatted for presenting to a neurologist or specialist.
+                {t('export.neuro_report_desc')}
               </p>
               {!settings.personName && (
                 <p className="text-[10px] mt-2 font-bold" style={{ color: 'var(--accent)' }}>
-                  ⚠ Add patient name in Settings → Identity for a complete report.
+                  {t('export.neuro_report_warning')}
                 </p>
               )}
             </div>
@@ -169,13 +170,13 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false }
             className="w-full py-3 rounded-xl font-black uppercase text-[10px] tracking-widest text-center"
             style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
           >
-            Generate &amp; Print Report
+            {t('export.generate_print')}
           </div>
         </div>
 
         {/* ── Seizure Diary ── */}
         <p className="text-[9px] font-black uppercase tracking-[0.3em] px-1 pt-3" style={{ color: 'var(--text-faint)' }}>
-          Seizure Diary
+          {t('export.diary_title')}
         </p>
 
         <div
@@ -191,16 +192,16 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false }
             </div>
             <div className="flex-1">
               <p className="font-black uppercase tracking-widest text-sm" style={{ color: 'var(--text-primary)' }}>
-                Monthly Calendar
+                {t('export.diary_label')}
               </p>
               <p className="text-xs mt-1" style={{ color: 'var(--text-dim)' }}>
-                One-page calendar grid showing which days had events, colour-coded by type. The quick-reference sheet to bring to every appointment.
+                {t('export.diary_desc')}
               </p>
             </div>
           </div>
           <div className="flex gap-3 items-center">
             <div className="flex-1">
-              <p className="text-[9px] font-black uppercase tracking-widest mb-1" style={{ color: 'var(--text-faint)' }}>Month</p>
+              <p className="text-[9px] font-black uppercase tracking-widest mb-1" style={{ color: 'var(--text-faint)' }}>{t('export.month')}</p>
               <input
                 type="month"
                 value={diaryMonth}
@@ -215,7 +216,7 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false }
               className="mt-5 px-5 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all active:scale-95"
               style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
             >
-              Generate
+              {t('export.generate')}
             </button>
           </div>
         </div>

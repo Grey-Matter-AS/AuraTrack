@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useEventTimer } from './hooks/useEventTimer';
 import { useEventHistory } from './hooks/useEventHistory';
 import { useTaggingWizard } from './hooks/useTaggingWizard';
@@ -25,6 +26,7 @@ import AboutView from './pages/AboutView';
 import HelpView from './pages/HelpView';
 
 function Header({ onSettings, onHistory, onHelp }) {
+  const { t } = useTranslation();
   return (
     <div className="pt-4 pb-2 shrink-0 grid grid-cols-3 items-center px-6">
       <button
@@ -32,7 +34,7 @@ function Header({ onSettings, onHistory, onHelp }) {
         className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
         style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
       >
-        HISTORY
+        {t('nav.history')}
       </button>
       <div className="text-center">
         <h1 className="text-[10px] font-black tracking-[0.4em] text-[var(--text-faint)] uppercase opacity-50">AURATRACK</h1>
@@ -44,13 +46,13 @@ function Header({ onSettings, onHistory, onHelp }) {
           className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
           style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
         >
-          ⚙ SETTINGS
+          {t('nav.settings')}
         </button>
         <button
           onClick={onHelp}
           className="w-8 h-8 rounded-xl text-[12px] font-black flex items-center justify-center active:scale-95 transition-all"
           style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)', border: '1px solid var(--border)' }}
-          aria-label="Help"
+          aria-label={t('nav.help_label')}
         >
           ?
         </button>

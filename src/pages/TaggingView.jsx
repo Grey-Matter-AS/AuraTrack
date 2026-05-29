@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { WizardMenu } from '../components/WizardMenu';
 import { ScrollFade } from '../components/ScrollFade';
 import Summary from '../components/Summary';
@@ -18,6 +19,8 @@ export default function TaggingView({
   onSave, onCancel,
   durationFormat = 'seconds',
 }) {
+  const { t } = useTranslation();
+
   const handleTypeSelect = async (val) => {
     const targetId = editingId || activeEventId;
     if (!targetId) { console.error('No active event found'); return; }
@@ -62,7 +65,7 @@ export default function TaggingView({
             {/* Step 1: Seizure Type */}
             {taggingStep === 'TYPE' && (
               <WizardMenu
-                title="Step 1: Seizure Type"
+                title={t('tagging.step1_title')}
                 options={SEIZURE_TYPES}
                 onPick={handleTypeSelect}
               />
@@ -71,7 +74,7 @@ export default function TaggingView({
             {/* Step 2-4: Symptom Drill-Down */}
             {taggingStep === 'S_CAT' && (
               <WizardMenu
-                title="What kind of feeling?"
+                title={t('tagging.feeling_title')}
                 options={Object.keys(SYMPTOM_WIZARD)}
                 onPick={v => { setSelections({ ...selections, group: v }); setTaggingStep('S_SYM'); }}
               />
@@ -128,7 +131,7 @@ export default function TaggingView({
             {/* Step 3-5: Region Drill-Down */}
             {taggingStep === 'R_CAT' && (
               <WizardMenu
-                title="Where did it happen?"
+                title={t('tagging.region_title')}
                 options={Object.keys(REGION_WIZARD)}
                 onPick={v => { setSelections({ ...selections, region: v }); setTaggingStep('R_SUB'); }}
               />

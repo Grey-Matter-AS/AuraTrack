@@ -1,9 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { db } from '../data/db';
 import { exportToJSON } from '../utils/exportHelpers';
 import { useMedications } from '../hooks/useMedications';
 import { defaultScheduledTimes, scheduledDaysLabel } from '../utils/medicationSchedule';
 import pkg from '../../package.json';
+import i18n from '../i18n';
+
+const LANGUAGES = [
+  { code: 'en', label: 'English' },
+  { code: 'nb', label: 'Norsk Bokmål' },
+];
 
 // ─── Atom components ─────────────────────────────────────────
 
@@ -130,11 +137,11 @@ const FREQ_OPTIONS = [
 const UNIT_OPTIONS = ['mg', 'g', 'mcg', 'ml', 'IU'];
 const FREQ_SHORT = { OD: 'Once daily', BD: 'Twice daily', TDS: 'Three times daily', QDS: 'Four times daily', PRN: 'As needed' };
 
-function getSlotLabel(index, frequency) {
-  if (frequency === 'BD') return index === 0 ? 'Morning Dose' : 'Evening Dose';
-  if (frequency === 'TDS') return ['Morning Dose', 'Afternoon Dose', 'Evening Dose'][index] || `Dose ${index + 1}`;
-  if (frequency === 'QDS') return ['Morning Dose', 'Midday Dose', 'Afternoon Dose', 'Evening Dose'][index] || `Dose ${index + 1}`;
-  return 'Dose Time';
+function getSlotLabel(index, frequency, t) {
+  if (frequency === 'BD') return index === 0 ? t('settings.medications.slot_morning') : t('settings.medications.slot_evening');
+  if (frequency === 'TDS') return [t('settings.medications.slot_morning'), t('settings.medications.slot_afternoon'), t('settings.medications.slot_evening')][index] || t('settings.medications.slot_dose_n', { n: index + 1 });
+  if (frequency === 'QDS') return [t('settings.medications.slot_morning'), t('settings.medications.slot_midday'), t('settings.medications.slot_afternoon'), t('settings.medications.slot_evening')][index] || t('settings.medications.slot_dose_n', { n: index + 1 });
+  return t('settings.medications.slot_dose_time');
 }
 
 const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6];
@@ -143,6 +150,7 @@ const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const EMPTY_MED = { name: '', dose: '', unit: 'mg', frequency: 'BD', isRescue: false, scheduledTimes: ['08:00', '20:00'], scheduledDays: ALL_DAYS, reminderEnabled: false, showInEmergency: false };
 
 function MedForm({ form, setForm, onSave, onCancel, saveLabel = 'Save' }) {
+  const { t } = useTranslation();
   const selectStyle = { backgroundColor: 'var(--bg-input)', border: '1px solid var(--border)', color: 'var(--text-primary)' };
   const isPRN = form.frequency === 'PRN';
 
@@ -157,7 +165,6 @@ function MedForm({ form, setForm, onSave, onCancel, saveLabel = 'Save' }) {
     setForm(f => {
       const days = f.scheduledDays ?? ALL_DAYS;
       const next = days.includes(day) ? days.filter(d => d !== day) : [...days, day];
-      // Require at least 1 day selected
       return { ...f, scheduledDays: next.length > 0 ? next : days };
     });
   };
@@ -176,12 +183,12 @@ function MedForm({ form, setForm, onSave, onCancel, saveLabel = 'Save' }) {
 
   return (
     <div className="space-y-3 p-4 rounded-2xl" style={{ backgroundColor: 'var(--bg-raised)', border: '1px solid var(--border)' }}>
-      <FieldLabel>{saveLabel === 'Save' ? 'Add Medication' : 'Edit Medication'}</FieldLabel>
+      <FieldLabel>{saveLabel === 'Save' ? t('settings.medications.add_form_title') : t('settings.medications.edit_form_title')}</FieldLabel>
       <input
         type="text"
         value={form.name}
         onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-        placeholder="Drug name (e.g. Levetiracetam)"
+        placeholder={t('settings.medications.name_placeholder')}
         className="w-full rounded-xl px-4 py-3 text-sm outline-none"
         style={selectStyle}
       />
@@ -190,7 +197,7 @@ function MedForm({ form, setForm, onSave, onCancel, saveLabel = 'Save' }) {
           type="number"
           value={form.dose}
           onChange={e => setForm(f => ({ ...f, dose: e.target.value }))}
-          placeholder="Dose"
+          placeholder={t('settings.medications.dose_placeholder')}
           className="flex-1 rounded-xl px-4 py-3 text-sm outline-none"
           style={selectStyle}
           min="0"
@@ -216,13 +223,13 @@ function MedForm({ form, setForm, onSave, onCancel, saveLabel = 'Save' }) {
       {/* Scheduled times — one per dose slot */}
       {!isPRN && times.length > 0 && (
         <div className="space-y-2">
-          <FieldLabel>Scheduled Times</FieldLabel>
-          {times.map((t, i) => (
+          <FieldLabel>{t('settings.medications.scheduled_times')}</FieldLabel>
+          {times.map((time, i) => (
             <div key={i} className="flex items-center gap-3">
-              <p className="text-xs font-bold w-32 shrink-0" style={{ color: 'var(--text-dim)' }}>{getSlotLabel(i, form.frequency)}</p>
+              <p className="text-xs font-bold w-32 shrink-0" style={{ color: 'var(--text-dim)' }}>{getSlotLabel(i, form.frequency, t)}</p>
               <input
                 type="time"
-                value={t}
+                value={time}
                 onChange={e => updateTime(i, e.target.value)}
                 className="flex-1 rounded-xl px-3 py-2.5 text-sm outline-none"
                 style={selectStyle}
@@ -235,7 +242,7 @@ function MedForm({ form, setForm, onSave, onCancel, saveLabel = 'Save' }) {
       {/* Days of week */}
       {!isPRN && (
         <div className="space-y-2">
-          <FieldLabel>Active Days</FieldLabel>
+          <FieldLabel>{t('settings.medications.active_days')}</FieldLabel>
           <div className="flex gap-1.5 flex-wrap">
             <button
               onClick={setDaily}
@@ -246,7 +253,7 @@ function MedForm({ form, setForm, onSave, onCancel, saveLabel = 'Save' }) {
                 border: isDaily ? '1px solid transparent' : '1px solid var(--border)',
               }}
             >
-              Daily
+              {t('settings.medications.daily')}
             </button>
             {DAY_LABELS.map((label, day) => {
               const active = scheduledDays.includes(day);
@@ -273,20 +280,20 @@ function MedForm({ form, setForm, onSave, onCancel, saveLabel = 'Save' }) {
       {!isPRN && (
         <div className="flex items-center justify-between pt-1">
           <div>
-            <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Dose Reminders</p>
-            <p className="text-[11px]" style={{ color: 'var(--text-dim)' }}>Push notification at each scheduled time</p>
+            <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{t('settings.medications.dose_reminders')}</p>
+            <p className="text-[11px]" style={{ color: 'var(--text-dim)' }}>{t('settings.medications.dose_reminders_help')}</p>
           </div>
-          <Toggle value={form.reminderEnabled ?? false} onChange={v => setForm(f => ({ ...f, reminderEnabled: v }))} label="Dose Reminders" />
+          <Toggle value={form.reminderEnabled ?? false} onChange={v => setForm(f => ({ ...f, reminderEnabled: v }))} label={t('settings.medications.dose_reminders')} />
         </div>
       )}
 
       {/* Show in emergency toggle */}
       <div className="flex items-center justify-between pt-1">
         <div>
-          <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Show on Emergency Screen</p>
-          <p className="text-[11px]" style={{ color: 'var(--text-dim)' }}>Display during prolonged seizure alert</p>
+          <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{t('settings.medications.show_emergency')}</p>
+          <p className="text-[11px]" style={{ color: 'var(--text-dim)' }}>{t('settings.medications.show_emergency_help')}</p>
         </div>
-        <Toggle value={form.showInEmergency ?? false} onChange={v => setForm(f => ({ ...f, showInEmergency: v }))} label="Show on Emergency Screen" />
+        <Toggle value={form.showInEmergency ?? false} onChange={v => setForm(f => ({ ...f, showInEmergency: v }))} label={t('settings.medications.show_emergency')} />
       </div>
 
       <div className="flex gap-2 pt-1">
@@ -303,7 +310,7 @@ function MedForm({ form, setForm, onSave, onCancel, saveLabel = 'Save' }) {
           className="flex-1 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all active:scale-95"
           style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-dim)', border: '1px solid var(--border)' }}
         >
-          Cancel
+          {t('settings.medications.cancel')}
         </button>
       </div>
     </div>
@@ -311,6 +318,7 @@ function MedForm({ form, setForm, onSave, onCancel, saveLabel = 'Save' }) {
 }
 
 function MedicationSection({ flash, notificationPermission, onRequestNotificationPermission, settings, onUpdate }) {
+  const { t } = useTranslation();
   const { medications, addMedication, updateMedication, deleteMedication } = useMedications();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(EMPTY_MED);
@@ -333,7 +341,7 @@ function MedicationSection({ flash, notificationPermission, onRequestNotificatio
     });
     setForm(EMPTY_MED);
     setShowForm(false);
-    flash('Medication added.');
+    flash(t('settings.medications.added'));
   };
 
   const startEdit = (med) => {
@@ -366,34 +374,34 @@ function MedicationSection({ flash, notificationPermission, onRequestNotificatio
     });
     setEditingId(null);
     setEditForm(null);
-    flash('Medication updated.');
+    flash(t('settings.medications.updated'));
   };
 
   const handleDelete = async (id) => {
     await deleteMedication(id);
     setDeleteConfirm(null);
-    flash('Medication removed.');
+    flash(t('settings.medications.removed'));
   };
 
   return (
-    <Section title="Medications">
-      <p className="text-[11px] text-[var(--text-dim)] -mt-2">Current medication regimen. Used in reports and dose-logging.</p>
+    <Section title={t('settings.medications.section')}>
+      <p className="text-[11px] text-[var(--text-dim)] -mt-2">{t('settings.medications.section_desc')}</p>
 
       {medications.length === 0 && !showForm && (
-        <p className="text-xs italic text-center py-3" style={{ color: 'var(--text-faint)' }}>No medications recorded.</p>
+        <p className="text-xs italic text-center py-3" style={{ color: 'var(--text-faint)' }}>{t('settings.medications.none_recorded')}</p>
       )}
 
       <div className="space-y-2">
         {medications.map(m => (
           <div key={m.id}>
             {editingId === m.id ? (
-              <MedForm form={editForm} setForm={setEditForm} onSave={handleUpdate} onCancel={() => { setEditingId(null); setEditForm(null); }} saveLabel="Update" />
+              <MedForm form={editForm} setForm={setEditForm} onSave={handleUpdate} onCancel={() => { setEditingId(null); setEditForm(null); }} saveLabel={t('settings.medications.update')} />
             ) : deleteConfirm === m.id ? (
               <div className="rounded-2xl p-3 space-y-2" style={{ backgroundColor: 'rgba(185,28,28,0.1)', border: '1px solid rgba(185,28,28,0.3)' }}>
-                <p className="text-red-400 text-xs font-bold">Remove {m.name}?</p>
+                <p className="text-red-400 text-xs font-bold">{t('settings.medications.remove_confirm', { name: m.name })}</p>
                 <div className="flex gap-2">
-                  <button onClick={() => handleDelete(m.id)} className="flex-1 py-2 bg-red-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest">Remove</button>
-                  <button onClick={() => setDeleteConfirm(null)} className="flex-1 py-2 rounded-xl text-xs font-bold" style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)' }}>Cancel</button>
+                  <button onClick={() => handleDelete(m.id)} className="flex-1 py-2 bg-red-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest">{t('settings.medications.remove')}</button>
+                  <button onClick={() => setDeleteConfirm(null)} className="flex-1 py-2 rounded-xl text-xs font-bold" style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)' }}>{t('settings.medications.cancel')}</button>
                 </div>
               </div>
             ) : (
@@ -402,7 +410,7 @@ function MedicationSection({ flash, notificationPermission, onRequestNotificatio
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-black" style={{ color: 'var(--text-primary)' }}>
                       {m.name}
-                      {m.showInEmergency && <span className="ml-2 text-[9px] font-black text-red-500 uppercase">🚨 Emergency</span>}
+                      {m.showInEmergency && <span className="ml-2 text-[9px] font-black text-red-500 uppercase">{t('settings.medications.emergency_badge')}</span>}
                     </p>
                     <p className="text-[11px]" style={{ color: 'var(--text-dim)' }}>
                       {m.dose}{m.unit} · {m.frequency} — {FREQ_SHORT[m.frequency] || m.frequency}
@@ -441,22 +449,22 @@ function MedicationSection({ flash, notificationPermission, onRequestNotificatio
       </div>
 
       {showForm ? (
-        <MedForm form={form} setForm={setForm} onSave={handleAdd} onCancel={() => { setShowForm(false); setForm(EMPTY_MED); }} saveLabel="Add" />
+        <MedForm form={form} setForm={setForm} onSave={handleAdd} onCancel={() => { setShowForm(false); setForm(EMPTY_MED); }} saveLabel={t('settings.medications.add')} />
       ) : (
         <button
           onClick={() => setShowForm(true)}
           className="w-full py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95"
           style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
         >
-          + Add Medication
+          {t('settings.medications.add_btn')}
         </button>
       )}
 
       {/* Medication tracking start date */}
       <div className="border-t pt-4 mt-2 space-y-2" style={{ borderColor: 'var(--border-subtle)' }}>
-        <FieldLabel>Medication Tracking Start Date</FieldLabel>
+        <FieldLabel>{t('settings.medications.start_date')}</FieldLabel>
         <p className="text-[11px]" style={{ color: 'var(--text-dim)' }}>
-          The earliest date shown in medication history. Leave blank to auto-detect from records.
+          {t('settings.medications.start_date_help')}
         </p>
         <input
           type="date"
@@ -469,18 +477,18 @@ function MedicationSection({ flash, notificationPermission, onRequestNotificatio
 
       {/* Notification permissions */}
       <div className="border-t pt-4 mt-2 space-y-3" style={{ borderColor: 'var(--border-subtle)' }}>
-        <FieldLabel>Dose Reminder Notifications</FieldLabel>
+        <FieldLabel>{t('settings.medications.reminder_section')}</FieldLabel>
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
-              {notificationPermission === 'granted' ? '🔔 Notifications enabled' :
-               notificationPermission === 'denied'  ? '🔕 Notifications blocked' :
-               '🔕 Notifications off'}
+              {notificationPermission === 'granted' ? t('settings.medications.reminder_granted') :
+               notificationPermission === 'denied'  ? t('settings.medications.reminder_denied') :
+               t('settings.medications.reminder_off')}
             </p>
             <p className="text-[11px]" style={{ color: 'var(--text-dim)' }}>
-              {notificationPermission === 'granted' ? 'Reminders will fire while app is open or suspended.' :
-               notificationPermission === 'denied'  ? 'Blocked in browser settings — reset site permissions to re-enable.' :
-               'Enable to receive dose reminder notifications.'}
+              {notificationPermission === 'granted' ? t('settings.medications.reminder_granted_help') :
+               notificationPermission === 'denied'  ? t('settings.medications.reminder_denied_help') :
+               t('settings.medications.reminder_off_help')}
             </p>
           </div>
           {notificationPermission !== 'granted' && notificationPermission !== 'denied' && (
@@ -489,13 +497,12 @@ function MedicationSection({ flash, notificationPermission, onRequestNotificatio
               className="ml-3 px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 shrink-0"
               style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
             >
-              Enable
+              {t('settings.medications.reminder_enable')}
             </button>
           )}
         </div>
         <p className="text-[10px]" style={{ color: 'var(--text-faint)' }}>
-          On iOS, the app must be installed to your home screen for notifications to work.
-          Notifications require the app to be running or suspended — they cannot be delivered when the app is fully closed.
+          {t('settings.medications.ios_reminder_note')}
         </p>
       </div>
     </Section>
@@ -505,6 +512,7 @@ function MedicationSection({ flash, notificationPermission, onRequestNotificatio
 // ─── Main component ───────────────────────────────────────────
 
 export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, notificationPermission, onRequestNotificationPermission }) {
+  const { t } = useTranslation();
   const fileInputRef = useRef();
   const [storageInfo, setStorageInfo] = useState(null);
   const [statusMsg, setStatusMsg] = useState('');
@@ -528,12 +536,12 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
       const events = await db.events.toArray();
       const medications = await db.medications.toArray().catch(() => []);
       const medicationLogs = await db.medicationLogs.toArray().catch(() => []);
-      if (!events.length && !medications.length) { flash('No data to export.'); return; }
+      if (!events.length && !medications.length) { flash(t('settings.data.no_data')); return; }
       exportToJSON(events, medications, medicationLogs);
-      flash(`Exported ${events.length} event(s) and ${medications.length} medication(s).`);
+      flash(t('settings.data.exported', { events: events.length, meds: medications.length }));
     } catch (err) {
       console.error('Export failed:', err);
-      flash('Export failed.');
+      flash(t('settings.data.export_failed'));
     }
   };
 
@@ -549,7 +557,7 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
       const text = await file.text();
       const parsed = JSON.parse(text);
       const raw = Array.isArray(parsed) ? parsed : (parsed.events || []);
-      if (!raw.length && !parsed.medications?.length) { flash('No data found in file.'); return; }
+      if (!raw.length && !parsed.medications?.length) { flash(t('settings.data.no_data_in_file')); return; }
       let eventsImported = 0, medsImported = 0, logsImported = 0;
       if (raw.length) {
         const valid = raw.filter(isValidEvent);
@@ -576,9 +584,9 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
       if (eventsImported) parts.push(`${eventsImported} event(s)`);
       if (medsImported) parts.push(`${medsImported} medication(s)`);
       if (logsImported) parts.push(`${logsImported} dose log(s)`);
-      flash(`Imported ${parts.join(', ') || 'nothing'} successfully.`);
+      flash(t('settings.data.imported', { summary: parts.join(', ') || t('settings.data.imported_nothing') }));
     } catch {
-      flash('Import failed — invalid or corrupted file.');
+      flash(t('settings.data.import_failed'));
     }
     e.target.value = '';
   };
@@ -587,75 +595,75 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
     try {
       await db.events.clear();
       setShowClearConfirm(false);
-      flash('All event data deleted.');
+      flash(t('settings.data.all_deleted'));
     } catch (err) {
       console.error('Failed to clear data:', err);
-      flash('Failed to delete data. Please try again.');
+      flash(t('settings.data.delete_failed'));
     }
   };
 
   const handleResetSettings = async () => {
     await onReset?.();
     setShowResetConfirm(false);
-    flash('Settings reset to defaults.');
+    flash(t('settings.data.settings_reset'));
   };
 
-  const noteLabel = settings.userMode === 'CARETAKER' ? 'Person / Patient Name' : 'Your Name';
-  const tab = activeTab || 'profile'; // fall back to showing all if no tab (standalone use)
+  const noteLabel = settings.userMode === 'CARETAKER' ? t('settings.identity.patient_name') : t('settings.identity.your_name');
+  const tab = activeTab || 'profile';
   const show = (id) => !activeTab || tab === id;
 
   return (
     <div className="space-y-4 w-full pb-10">
 
       {/* ── IDENTITY / PROFILE ── */}
-      {show('profile') && <Section title="Identity">
+      {show('profile') && <Section title={t('settings.identity.section')}>
         <div>
-          <FieldLabel>Mode</FieldLabel>
+          <FieldLabel>{t('settings.identity.mode')}</FieldLabel>
           <Segments
             options={[
-              { value: 'CARETAKER', label: 'Caretaker' },
-              { value: 'PATIENT',   label: 'Self' }
+              { value: 'CARETAKER', label: t('settings.identity.mode_caretaker') },
+              { value: 'PATIENT',   label: t('settings.identity.mode_self') }
             ]}
             value={settings.userMode}
             onChange={v => onUpdate('userMode', v)}
           />
           <p className="text-[11px] text-[var(--text-dim)] mt-2">
             {settings.userMode === 'CARETAKER'
-              ? 'Recording for another person. Full phase timing controls visible during recording.'
-              : 'Recording your own events. Simplified one-button interface.'}
+              ? t('settings.identity.mode_desc_caretaker')
+              : t('settings.identity.mode_desc_self')}
           </p>
         </div>
-        <TextField label={noteLabel} value={settings.personName} onChange={v => onUpdate('personName', v)} placeholder="Full name (used in reports)" />
+        <TextField label={noteLabel} value={settings.personName} onChange={v => onUpdate('personName', v)} placeholder={t('settings.identity.name_placeholder')} />
         {settings.userMode === 'CARETAKER' && (
-          <TextField label="Caretaker Name" value={settings.caretakerName} onChange={v => onUpdate('caretakerName', v)} placeholder="Your name" />
+          <TextField label={t('settings.identity.caretaker_name')} value={settings.caretakerName} onChange={v => onUpdate('caretakerName', v)} placeholder={t('settings.identity.caretaker_placeholder')} />
         )}
-        <TextField label="Date of Birth" value={settings.dateOfBirth} onChange={v => onUpdate('dateOfBirth', v)} type="date" />
-        <TextField label="Emergency Contact" value={settings.emergencyContact} onChange={v => onUpdate('emergencyContact', v)} placeholder="Phone number or name" />
+        <TextField label={t('settings.identity.dob')} value={settings.dateOfBirth} onChange={v => onUpdate('dateOfBirth', v)} type="date" />
+        <TextField label={t('settings.identity.emergency_contact')} value={settings.emergencyContact} onChange={v => onUpdate('emergencyContact', v)} placeholder={t('settings.identity.emergency_placeholder')} />
       </Section>}
 
       {/* ── APPEARANCE + DISPLAY ── */}
-      {show('display') && <Section title="Appearance">
+      {show('display') && <Section title={t('settings.appearance.section')}>
         <div>
-          <FieldLabel>Theme</FieldLabel>
+          <FieldLabel>{t('settings.appearance.theme')}</FieldLabel>
           <Segments
             options={[
-              { value: 'dark',   label: 'Dark' },
-              { value: 'light',  label: 'Light' },
-              { value: 'system', label: 'System' }
+              { value: 'dark',   label: t('settings.appearance.theme_dark') },
+              { value: 'light',  label: t('settings.appearance.theme_light') },
+              { value: 'system', label: t('settings.appearance.theme_system') }
             ]}
             value={settings.theme}
             onChange={v => onUpdate('theme', v)}
           />
         </div>
         <div>
-          <FieldLabel>Accent Colour</FieldLabel>
+          <FieldLabel>{t('settings.appearance.accent')}</FieldLabel>
           <div className="flex gap-4 flex-wrap pt-1">
             {[
-              { key: 'red',    hex: '#dc2626', label: 'Red'    },
-              { key: 'blue',   hex: '#3b82f6', label: 'Blue'   },
-              { key: 'green',  hex: '#16a34a', label: 'Green'  },
-              { key: 'purple', hex: '#9333ea', label: 'Purple' },
-              { key: 'amber',  hex: '#d97706', label: 'Amber'  },
+              { key: 'red',    hex: '#dc2626', label: t('settings.appearance.accent_red')    },
+              { key: 'blue',   hex: '#3b82f6', label: t('settings.appearance.accent_blue')   },
+              { key: 'green',  hex: '#16a34a', label: t('settings.appearance.accent_green')  },
+              { key: 'purple', hex: '#9333ea', label: t('settings.appearance.accent_purple') },
+              { key: 'amber',  hex: '#d97706', label: t('settings.appearance.accent_amber')  },
             ].map(({ key, hex, label }) => (
               <div key={key} className="flex flex-col items-center gap-1.5">
                 <button
@@ -674,7 +682,7 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
           </div>
         </div>
         <div>
-          <FieldLabel>Text Size</FieldLabel>
+          <FieldLabel>{t('settings.appearance.text_size')}</FieldLabel>
           <Segments
             options={[
               { value: 'small',  label: 'S'      },
@@ -686,11 +694,25 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
             onChange={v => onUpdate('fontSize', v)}
           />
         </div>
+        <div>
+          <FieldLabel>{t('settings.appearance.language')}</FieldLabel>
+          <select
+            value={settings.language || 'en'}
+            onChange={e => {
+              i18n.changeLanguage(e.target.value);
+              onUpdate('language', e.target.value);
+            }}
+            className="w-full rounded-xl px-4 py-3 text-sm outline-none"
+            style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+          >
+            {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.label}</option>)}
+          </select>
+        </div>
       </Section>}
 
-      {show('display') && <Section title="Display">
+      {show('display') && <Section title={t('settings.display.section')}>
         <div>
-          <FieldLabel>History Page Size</FieldLabel>
+          <FieldLabel>{t('settings.display.page_size')}</FieldLabel>
           <Segments
             options={[5, 10, 25, 50].map(n => ({ value: n, label: String(n) }))}
             value={settings.historyPageSize}
@@ -698,21 +720,21 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
           />
         </div>
         <div>
-          <FieldLabel>Date Format</FieldLabel>
+          <FieldLabel>{t('settings.display.date_format')}</FieldLabel>
           <select
             value={settings.dateFormat}
             onChange={e => onUpdate('dateFormat', e.target.value)}
             className="w-full rounded-xl px-4 py-3 text-sm outline-none"
             style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
           >
-            <option value="locale">System Default</option>
+            <option value="locale">{t('settings.display.date_system')}</option>
             <option value="ISO">ISO  — 2025-05-14</option>
             <option value="US">US   — 05/14/2025</option>
             <option value="EU">EU   — 14/05/2025</option>
           </select>
         </div>
         <div>
-          <FieldLabel>Duration Display</FieldLabel>
+          <FieldLabel>{t('settings.display.duration_display')}</FieldLabel>
           <Segments
             options={[{ value: 'seconds', label: '123s' }, { value: 'human', label: '2m 3s' }]}
             value={settings.durationFormat}
@@ -720,7 +742,7 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
           />
         </div>
         <div>
-          <FieldLabel>Time Format</FieldLabel>
+          <FieldLabel>{t('settings.display.time_format')}</FieldLabel>
           <Segments
             options={[{ value: '12h', label: '12h' }, { value: '24h', label: '24h' }]}
             value={settings.timeFormat}
@@ -730,13 +752,13 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
       </Section>}
 
       {/* ── RECORDING ── */}
-      {show('recording') && <Section title="Recording">
-        <Row label="Haptic Feedback" help="Vibration on button presses (device must support it)">
-          <Toggle value={settings.hapticFeedback} onChange={v => onUpdate('hapticFeedback', v)} label="Haptic Feedback" />
+      {show('recording') && <Section title={t('settings.recording.section')}>
+        <Row label={t('settings.recording.haptic')} help={t('settings.recording.haptic_help')}>
+          <Toggle value={settings.hapticFeedback} onChange={v => onUpdate('hapticFeedback', v)} label={t('settings.recording.haptic')} />
         </Row>
         <div>
-          <FieldLabel>Quick Note Labels</FieldLabel>
-          <p className="text-[11px] text-[var(--text-dim)] mb-3">Customise the shortcut buttons shown during recording. Leave blank to hide a button.</p>
+          <FieldLabel>{t('settings.recording.quick_labels')}</FieldLabel>
+          <p className="text-[11px] text-[var(--text-dim)] mb-3">{t('settings.recording.quick_labels_help')}</p>
           <div className="grid grid-cols-2 gap-2">
             {(settings.quickNoteLabels || []).map((label, i) => (
               <input
@@ -747,7 +769,7 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
                   updated[i] = e.target.value;
                   onUpdate('quickNoteLabels', updated);
                 }}
-                placeholder={`Button ${i + 1}`}
+                placeholder={t('settings.recording.button_n', { n: i + 1 })}
                 className="rounded-xl px-3 py-2.5 text-xs font-bold text-center outline-none transition-all"
                 style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
               />
@@ -757,22 +779,22 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
       </Section>}
 
       {/* ── DATA & BACKUP ── */}
-      {show('data') && <Section title="Data &amp; Backup">
+      {show('data') && <Section title={t('settings.data.section')}>
         {storageInfo && (
-          <Row label="Storage Used" help="Approximate browser IndexedDB usage">
+          <Row label={t('settings.data.storage_used')} help={t('settings.data.storage_help')}>
             <p className="text-sm font-bold text-[var(--text-primary)]">
-              {storageInfo.usedKB} KB
-              <span className="text-[var(--text-dim)] font-normal"> / {storageInfo.quotaMB} MB</span>
+              {t('settings.data.storage_value', { kb: storageInfo.usedKB })}
+              <span className="text-[var(--text-dim)] font-normal">{t('settings.data.storage_quota', { mb: storageInfo.quotaMB })}</span>
             </p>
           </Row>
         )}
 
         <div>
-          <FieldLabel>Auto-Backup</FieldLabel>
+          <FieldLabel>{t('settings.data.auto_backup')}</FieldLabel>
           <Segments
             options={[
-              { value: 'never',  label: 'Never'  },
-              { value: 'weekly', label: 'Weekly' },
+              { value: 'never',  label: t('settings.data.auto_backup_never')  },
+              { value: 'weekly', label: t('settings.data.auto_backup_weekly') },
             ]}
             value={settings.autoBackupFrequency}
             onChange={v => {
@@ -791,7 +813,7 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
               onUpdate('autoBackupDays', next);
             };
             const statusLabel = selected.length
-              ? 'Scheduled backup every ' + [...selected].sort((a,b)=>a-b).map(i => DAY_LABELS[i]).join(' · ')
+              ? t('settings.data.scheduled_backup', { days: [...selected].sort((a,b)=>a-b).map(i => DAY_LABELS[i]).join(' · ') })
               : null;
             return (
               <div className="mt-3 space-y-2">
@@ -822,39 +844,39 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
             );
           })()}
 
-          <p className="text-[11px] text-[var(--text-dim)] mt-2">Manual trigger is always available via the Export screen.</p>
+          <p className="text-[11px] text-[var(--text-dim)] mt-2">{t('settings.data.auto_backup_help')}</p>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <ActionBtn label="Export Backup" sub="JSON download" icon="⬇" onClick={handleExportBackup} />
-          <ActionBtn label="Import Data"   sub="JSON file"    icon="⬆" onClick={() => fileInputRef.current?.click()} />
+          <ActionBtn label={t('settings.data.export_backup')} sub={t('settings.data.export_sub')} icon="⬇" onClick={handleExportBackup} />
+          <ActionBtn label={t('settings.data.import_data')}   sub={t('settings.data.import_sub')}    icon="⬆" onClick={() => fileInputRef.current?.click()} />
         </div>
         <input ref={fileInputRef} type="file" accept=".json" className="hidden" onChange={handleImport} />
 
         {statusMsg && (
-          <p className="text-center text-xs py-2 font-bold" style={{ color: statusMsg.includes('fail') || statusMsg.includes('No') ? '#ef4444' : '#4ade80' }}>
+          <p className="text-center text-xs py-2 font-bold" style={{ color: statusMsg.includes('fail') || statusMsg.includes('No') || statusMsg.includes('mislyk') || statusMsg.includes('Ingen') ? '#ef4444' : '#4ade80' }}>
             {statusMsg}
           </p>
         )}
 
         {/* Danger Zone */}
         <div className="border-t mt-2 pt-5 space-y-3" style={{ borderColor: 'rgba(185,28,28,0.3)' }}>
-          <p className="text-[10px] font-black uppercase tracking-widest text-red-500">Danger Zone</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-red-500">{t('settings.data.danger_zone')}</p>
 
           {showClearConfirm ? (
             <div className="rounded-2xl p-4 space-y-3" style={{ backgroundColor: 'rgba(185,28,28,0.1)', border: '1px solid rgba(185,28,28,0.3)' }}>
-              <p className="text-red-400 text-sm font-bold">This permanently deletes all recorded events. Cannot be undone.</p>
+              <p className="text-red-400 text-sm font-bold">{t('settings.data.clear_confirm')}</p>
               <div className="flex gap-3">
                 <button onClick={handleClearAllData} className="flex-1 py-3 bg-red-600 text-white rounded-xl font-black uppercase text-[10px] tracking-widest">
-                  Yes, Delete All
+                  {t('settings.data.clear_yes')}
                 </button>
                 <button onClick={() => setShowClearConfirm(false)} className="flex-1 py-3 rounded-xl font-bold text-xs" style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)' }}>
-                  Cancel
+                  {t('settings.data.cancel')}
                 </button>
               </div>
             </div>
           ) : (
-            <ActionBtn label="Clear All Event Data" variant="danger" onClick={() => setShowClearConfirm(true)} />
+            <ActionBtn label={t('settings.data.clear_btn')} variant="danger" onClick={() => setShowClearConfirm(true)} />
           )}
         </div>
       </Section>}
@@ -863,20 +885,20 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
       {show('medications') && <MedicationSection flash={flash} notificationPermission={notificationPermission} onRequestNotificationPermission={onRequestNotificationPermission} settings={settings} onUpdate={onUpdate} />}
 
       {/* ── REPORTS & NEUROLOGIST ── */}
-      {show('reports') && <Section title="Reports &amp; Neurologist">
-        <p className="text-[11px] text-[var(--text-dim)] -mt-2">Information used to generate clinical neurologist reports.</p>
-        <TextField label="Neurologist / Clinician Name" value={settings.neurologistName} onChange={v => onUpdate('neurologistName', v)} placeholder="Dr. Name" />
-        <TextField label="Institution / Hospital" value={settings.neurologistInstitution} onChange={v => onUpdate('neurologistInstitution', v)} placeholder="Clinic or hospital name" />
-        <TextField label="Clinician Contact" value={settings.neurologistContact} onChange={v => onUpdate('neurologistContact', v)} placeholder="Phone, email, or referral number" />
-        <Row label="Include Date of Birth" help="Whether DOB appears in printed reports">
-          <Toggle value={settings.includePatientDOB !== false} onChange={v => onUpdate('includePatientDOB', v)} label="Include Date of Birth in reports" />
+      {show('reports') && <Section title={t('settings.reports.section')}>
+        <p className="text-[11px] text-[var(--text-dim)] -mt-2">{t('settings.reports.section_desc')}</p>
+        <TextField label={t('settings.reports.neuro_name')} value={settings.neurologistName} onChange={v => onUpdate('neurologistName', v)} placeholder={t('settings.reports.neuro_name_placeholder')} />
+        <TextField label={t('settings.reports.institution')} value={settings.neurologistInstitution} onChange={v => onUpdate('neurologistInstitution', v)} placeholder={t('settings.reports.institution_placeholder')} />
+        <TextField label={t('settings.reports.contact')} value={settings.neurologistContact} onChange={v => onUpdate('neurologistContact', v)} placeholder={t('settings.reports.contact_placeholder')} />
+        <Row label={t('settings.reports.include_dob')} help={t('settings.reports.include_dob_help')}>
+          <Toggle value={settings.includePatientDOB !== false} onChange={v => onUpdate('includePatientDOB', v)} label={t('settings.reports.include_dob')} />
         </Row>
         <div>
-          <FieldLabel>Additional Notes for Reports</FieldLabel>
+          <FieldLabel>{t('settings.reports.additional_notes')}</FieldLabel>
           <textarea
             value={settings.reportNotes || ''}
             onChange={e => onUpdate('reportNotes', e.target.value)}
-            placeholder="Medications, known triggers, clinician instructions, or anything else to include at the end of reports..."
+            placeholder={t('settings.reports.notes_placeholder')}
             rows={4}
             className="w-full rounded-[1.5rem] px-5 py-4 text-sm outline-none resize-none transition-all"
             style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
@@ -885,14 +907,14 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
       </Section>}
 
       {/* ── ABOUT (shown in Data tab) ── */}
-      {show('data') && <Section title="About">
-        <Row label="App Version"><p className="text-sm font-bold text-[var(--text-primary)]">AuraTrack v{pkg.version}</p></Row>
-        <Row label="Database Schema"><p className="text-sm font-bold text-[var(--text-primary)]">AuraTrackDB v6</p></Row>
+      {show('data') && <Section title={t('settings.about_section.section')}>
+        <Row label={t('settings.about_section.version')}><p className="text-sm font-bold text-[var(--text-primary)]">AuraTrack v{pkg.version}</p></Row>
+        <Row label={t('settings.about_section.schema')}><p className="text-sm font-bold text-[var(--text-primary)]">AuraTrackDB v6</p></Row>
         {pwa?.canInstallManually && (
           <div>
             <ActionBtn
-              label="Re-show Install Prompt"
-              sub="Tap if you dismissed the install banner by mistake"
+              label={t('settings.about_section.reinstall')}
+              sub={t('settings.about_section.reinstall_sub')}
               icon="📲"
               onClick={pwa.resetDismissal}
             />
@@ -901,18 +923,18 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
         <div className="pt-1">
           {showResetConfirm ? (
             <div className="rounded-2xl p-4 space-y-3" style={{ backgroundColor: 'rgba(185,28,28,0.1)', border: '1px solid rgba(185,28,28,0.3)' }}>
-              <p className="text-red-400 text-sm font-bold">Reset all preferences to factory defaults?</p>
+              <p className="text-red-400 text-sm font-bold">{t('settings.data.reset_confirm')}</p>
               <div className="flex gap-3">
                 <button onClick={handleResetSettings} className="flex-1 py-3 bg-red-600 text-white rounded-xl font-black uppercase text-[10px] tracking-widest">
-                  Yes, Reset
+                  {t('settings.data.reset_yes')}
                 </button>
                 <button onClick={() => setShowResetConfirm(false)} className="flex-1 py-3 rounded-xl font-bold text-xs" style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)' }}>
-                  Cancel
+                  {t('settings.data.cancel')}
                 </button>
               </div>
             </div>
           ) : (
-            <ActionBtn label="Reset Settings to Defaults" variant="danger" onClick={() => setShowResetConfirm(true)} />
+            <ActionBtn label={t('settings.data.reset_btn')} variant="danger" onClick={() => setShowResetConfirm(true)} />
           )}
         </div>
       </Section>}

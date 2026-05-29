@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { EventCard } from '../components/EventCard';
 import { MedicationDosePanel } from '../components/MedicationDosePanel';
 import { buildDangerMap } from '../utils/dangerFlags';
@@ -19,6 +20,7 @@ export default function IdleView({
   dateFormat = 'locale',
   timeFormat = '12h',
 }) {
+  const { t } = useTranslation();
   const dangerMap = useMemo(() => buildDangerMap(fullHistory?.length ? fullHistory : history), [fullHistory, history]);
   const hasMedications = Object.keys(medicationGroups ?? {}).length > 0 || (allActiveMedications?.length ?? 0) > 0;
 
@@ -39,7 +41,7 @@ export default function IdleView({
             borderColor: '#1e293b',
           }}
         >
-          START
+          {t('idle.start')}
         </button>
         {onManualEntry && (
           <button
@@ -47,7 +49,7 @@ export default function IdleView({
             className="text-[10px] font-black uppercase tracking-widest active:opacity-50 transition-opacity"
             style={{ color: 'var(--text-faint)' }}
           >
-            + Log Past Seizure
+            {t('idle.log_past')}
           </button>
         )}
       </div>
@@ -64,15 +66,15 @@ export default function IdleView({
           )}
 
           <div className="flex justify-between items-center mb-1 px-2">
-            <h3 className="text-slate-500 text-[10px] font-black uppercase tracking-widest">Recent Events</h3>
+            <h3 className="text-slate-500 text-[10px] font-black uppercase tracking-widest">{t('idle.recent_events')}</h3>
             {history.length > 0 && (
-              <span className="text-[9px] text-slate-600 font-bold bg-slate-900 px-2 py-1 rounded">LAST 5</span>
+              <span className="text-[9px] text-slate-600 font-bold bg-slate-900 px-2 py-1 rounded">{t('idle.last_5')}</span>
             )}
           </div>
 
           {history.length === 0 ? (
             <div className="border-2 border-dashed border-slate-800 rounded-3xl py-8 text-center">
-              <p className="text-slate-600 italic text-sm">No events recorded yet.</p>
+              <p className="text-slate-600 italic text-sm">{t('idle.no_events')}</p>
             </div>
           ) : (
             history.map(event => (

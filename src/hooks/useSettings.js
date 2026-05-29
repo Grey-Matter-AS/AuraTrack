@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { db } from '../data/db';
+import i18n from '../i18n';
 
 const DEFAULTS = {
   // Identity & Mode
@@ -38,6 +39,9 @@ const DEFAULTS = {
 
   // Medication tracking
   medicationStartDate: '',      // ISO date string — first day to show in medication history
+
+  // Localisation
+  language: 'en',               // ISO 639-1 language code
 };
 
 export function useSettings() {
@@ -49,6 +53,9 @@ export function useSettings() {
         const rows = await db.settings.toArray();
         const merged = { ...DEFAULTS };
         rows.forEach(row => { merged[row.key] = row.value; });
+        if (merged.language && merged.language !== i18n.language) {
+          i18n.changeLanguage(merged.language);
+        }
         setSettings(merged);
       } catch (err) {
         console.error('Failed to load settings, using defaults:', err);

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { db } from '../data/db';
 import { EventCard } from '../components/EventCard';
 import { SEIZURE_TYPES } from '../data/constants';
@@ -9,19 +10,21 @@ import { MedicationHistoryTab } from '../components/MedicationHistoryTab';
 import ExportView from './ExportView';
 import { ScrollFade } from '../components/ScrollFade';
 
-const HISTORY_TABS = [
-  { id: 'seizures',    label: 'Seizures'    },
-  { id: 'medications', label: 'Medications' },
-  { id: 'export',      label: 'Export'      },
-];
-
 export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, onExport, historyPageSize = 10, settings = {} }) {
+  const { t } = useTranslation();
   const { durationFormat = 'seconds', dateFormat = 'locale', timeFormat = '12h' } = settings;
   const [activeTab, setActiveTab] = useState('seizures');
   const [allEvents, setAllEvents] = useState([]);
   const [page, setPage] = useState(0);
   const [typeFilter, setTypeFilter] = useState('');
-  const [dateFilter, setDateFilter] = useState('');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+
+  const HISTORY_TABS = [
+    { id: 'seizures',    label: t('history.tab_seizures')    },
+    { id: 'medications', label: t('history.tab_medications') },
+    { id: 'export',      label: t('history.tab_export')      },
+  ];
 
   useEffect(() => {
     db.events.orderBy('startTime').reverse().toArray()
@@ -31,10 +34,10 @@ export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, on
 
   const filtered = allEvents.filter(e => {
     if (typeFilter && e.type !== typeFilter) return false;
-    if (dateFilter) {
-      const filterDay = new Date(dateFilter).setHours(0, 0, 0, 0);
-      const eventDay  = e.startTime ? new Date(e.startTime).setHours(0, 0, 0, 0) : NaN;
-      if (eventDay !== filterDay) return false;
+    if (fromDate || toDate) {
+      const eventTs = e.startTime ?? NaN;
+      if (fromDate && eventTs < new Date(fromDate).setHours(0, 0, 0, 0)) return false;
+      if (toDate   && eventTs > new Date(toDate).setHours(23, 59, 59, 999)) return false;
     }
     return true;
   });
@@ -54,11 +57,13 @@ export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, on
           className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
           style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
         >
-          ← BACK
+          {t('nav.back')}
         </button>
-        <h2 className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--text-dim)' }}>History</h2>
+        <h2 className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--text-dim)' }}>{t('history.title')}</h2>
         {activeTab === 'seizures' && (
-          <span className="ml-auto text-[9px] font-bold px-2 py-1 rounded" style={{ color: 'var(--text-faint)', backgroundColor: 'var(--bg-card)' }}>{filtered.length} EVENTS</span>
+          <span className="ml-auto text-[9px] font-bold px-2 py-1 rounded" style={{ color: 'var(--text-faint)', backgroundColor: 'var(--bg-card)' }}>
+            {t('history.events_count', { count: filtered.length })}
+          </span>
         )}
       </div>
 
@@ -72,28 +77,50 @@ export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, on
         <ScrollFade wrapperClassName="flex-1">
           <SeizureTrendChart allEvents={allEvents} />
 
-          <div className="flex gap-2 mb-4 date-time-row">
-            <select
-              value={typeFilter}
-              onChange={e => { setTypeFilter(e.target.value); setPage(0); }}
-              className="flex-1 rounded-xl px-3 py-2 text-xs outline-none"
-              style={{ backgroundColor: 'var(--bg-raised)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}
-            >
-              <option value="">All Types</option>
-              {SEIZURE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
-            <input
-              type="date"
-              value={dateFilter}
-              onChange={e => { setDateFilter(e.target.value); setPage(0); }}
-              className="flex-1 rounded-xl px-3 py-2 text-xs outline-none"
-              style={{ backgroundColor: 'var(--bg-raised)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}
-            />
+          <div className="mb-4 flex flex-col gap-2">
+            <div className="flex gap-2 items-center">
+              <select
+                value={typeFilter}
+                onChange={e => { setTypeFilter(e.target.value); setPage(0); }}
+                className="flex-1 rounded-xl px-3 py-2 text-xs outline-none"
+                style={{ backgroundColor: 'var(--bg-raised)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}
+              >
+                <option value="">{t('history.all_types')}</option>
+                {SEIZURE_TYPES.map(type => <option key={type} value={type}>{type}</option>)}
+              </select>
+              {(fromDate || toDate) && (
+                <button
+                  onClick={() => { setFromDate(''); setToDate(''); setPage(0); }}
+                  className="px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all shrink-0"
+                  style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+                >
+                  {t('history.clear')}
+                </button>
+              )}
+            </div>
+            <div className="flex gap-2 date-time-row">
+              <input
+                type="date"
+                value={fromDate}
+                max={toDate || undefined}
+                onChange={e => { setFromDate(e.target.value); setPage(0); }}
+                className="flex-1 rounded-xl px-3 py-2 text-xs outline-none"
+                style={{ backgroundColor: 'var(--bg-raised)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}
+              />
+              <input
+                type="date"
+                value={toDate}
+                min={fromDate || undefined}
+                onChange={e => { setToDate(e.target.value); setPage(0); }}
+                className="flex-1 rounded-xl px-3 py-2 text-xs outline-none"
+                style={{ backgroundColor: 'var(--bg-raised)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}
+              />
+            </div>
           </div>
 
           {paged.length === 0 ? (
             <div className="border-2 border-dashed rounded-3xl py-8 text-center" style={{ borderColor: 'var(--border)' }}>
-              <p className="italic text-sm" style={{ color: 'var(--text-faint)' }}>No events found.</p>
+              <p className="italic text-sm" style={{ color: 'var(--text-faint)' }}>{t('history.no_events')}</p>
             </div>
           ) : (
             paged.map(event => (
@@ -119,10 +146,10 @@ export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, on
                 className="px-4 py-2 rounded-xl text-xs font-black uppercase disabled:opacity-30 transition-all"
                 style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-secondary)' }}
               >
-                ← Prev
+                {t('history.prev')}
               </button>
               <span className="text-[10px] font-black uppercase" style={{ color: 'var(--text-faint)' }}>
-                {page + 1} / {totalPages}
+                {t('history.page_of', { page: page + 1, total: totalPages })}
               </span>
               <button
                 disabled={page >= totalPages - 1}
@@ -130,7 +157,7 @@ export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, on
                 className="px-4 py-2 rounded-xl text-xs font-black uppercase disabled:opacity-30 transition-all"
                 style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-secondary)' }}
               >
-                Next →
+                {t('history.next')}
               </button>
             </div>
           )}
