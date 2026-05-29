@@ -1,0 +1,395 @@
+{
+  "nav": {
+    "history": "HISTORIK",
+    "settings": "⚙ INSTÄLLNINGAR",
+    "back": "← TILLBAKA",
+    "help_label": "Hjälp"
+  },
+
+  "idle": {
+    "start": "STARTA",
+    "log_past": "+ Registrera tidigare anfall",
+    "recent_events": "Senaste händelser",
+    "last_5": "SENASTE 5",
+    "no_events": "Inga händelser registrerade än."
+  },
+
+  "recording": {
+    "total_elapsed": "Total tid",
+    "aura": "Aura",
+    "seizure": "Anfall",
+    "recovery": "Återhämtning",
+    "end_aura": "AVSLUTA AURA",
+    "aura_ended": "AURA AVSLUTAD ✓",
+    "end_seizure": "AVSLUTA ANFALL",
+    "seizure_ended": "ANFALL AVSLUTAT ✓",
+    "event_note": "+ HÄNDELSENOTERING",
+    "close_notes": "STÄNG NOTERINGAR",
+    "stop": "STOPP",
+    "self_mode": "Självläge aktiverat",
+    "long_seizure_warning": "LÅNGT ANFALL — BEVAKA NOGA",
+    "approaching_threshold": "NÄRMAR SIG VARNINGSGRÄNSEN",
+    "auto_stop_notice": "Timern stannar automatiskt vid 12:00"
+  },
+
+  "alert": {
+    "medical_alert": "MEDICINSK VARNING",
+    "unresponsive": "INTE RESPONSIV",
+    "medical_emergency": "MEDICINSK NÖDSITUATION",
+    "call_services": "RING NÖDNUMRET NU",
+    "dont_leave": "Lämna inte patienten utan tillsyn",
+    "administer_med": "Ge akutmedicinering",
+    "neurologist": "Neurolog",
+    "emergency_contact": "Nödkontakt",
+    "elapsed": "Tid"
+  },
+
+  "tagging": {
+    "step1_title": "Steg 1: Anfallstyp",
+    "feeling_title": "Vilken typ av känsla?",
+    "region_title": "Var hände det?"
+  },
+
+  "history": {
+    "title": "Historik",
+    "events_count": "{{count}} HÄNDELSER",
+    "all_types": "Alla typer",
+    "no_events": "Inga händelser hittades.",
+    "prev": "← Föregående",
+    "next": "Nästa →",
+    "page_of": "{{page}} / {{total}}",
+    "clear": "Rensa",
+    "tab_seizures": "Anfall",
+    "tab_medications": "Mediciner",
+    "tab_export": "Exportera"
+  },
+
+  "export": {
+    "title": "Export & Rapporter",
+    "date_range": "Datumintervall",
+    "from": "Från",
+    "to": "Till",
+    "raw_data": "Rådata",
+    "backup_json_label": "Säkerhetskopiering JSON",
+    "backup_json_desc": "Fullständig dataexport — alla fält inklusive mediciner och doslogg. Använd för säkerhetskopiering eller migrering till en annan enhet.",
+    "csv_label": "Kalkylblad CSV",
+    "csv_desc": "Händelser, mediciner och doslogg i kommaseparerat format. Öppnas i Excel / Kalkylark.",
+    "pdf_label": "Enkel utskrift / PDF",
+    "pdf_desc": "Snabb utskriftsvänlig händelsetabell — öppnas i en ny flik och startar utskriftsdialogen.",
+    "clinical_report": "Klinisk rapport",
+    "neuro_report_label": "Neurolograpport",
+    "neuro_report_desc": "Ändamålsbyggd klinisk PDF — patientinfo, fasvaraktigheter, symtomanalys och fullständig händelselogg. Formaterad för presentation till neurolog eller specialist.",
+    "neuro_report_warning": "⚠ Lägg till patientnamn i Inställningar → Identitet för en komplett rapport.",
+    "generate_print": "Generera & skriv ut rapport",
+    "diary_title": "Anfallsdagbok",
+    "diary_label": "Månadskalender",
+    "diary_desc": "Ensidigt kalenderrutnät som visar vilka dagar det förekom händelser, färgkodat efter typ. Det snabba referensbladet att ta med till varje besök.",
+    "month": "Månad",
+    "generate": "Generera"
+  },
+
+  "event_detail": {
+    "title": "Händelsedetaljer",
+    "edit": "Redigera",
+    "not_found": "Händelsen hittades inte.",
+    "loading": "Laddar...",
+    "total_duration": "TOTAL VARAKTIGHET",
+    "type": "TYP",
+    "aura": "AURA",
+    "seizure": "ANFALL",
+    "recovery": "ÅTERHÄMTNING",
+    "details": "Detaljer",
+    "date": "Datum",
+    "time": "Tid",
+    "status": "Status",
+    "edited": "Redigerad",
+    "symptoms": "Symtom",
+    "triggers": "Möjliga utlösare",
+    "notes": "Kliniska observationer",
+    "danger_prolonged_title": "Långvarigt anfall",
+    "danger_prolonged_desc": "Den här händelsen varade mer än 5 minuter. Sök medicinsk bedömning om det inte redan skett.",
+    "danger_cluster_title": "Kluster ×{{count}} / Risk för status epilepticus",
+    "danger_cluster_desc": "{{count}} anfall inträffade inom 8 minuter. Kontakta neurolog omedelbart."
+  },
+
+  "help": {
+    "title": "Hjälp",
+    "about_btn": "Om AuraTrack",
+    "sections": {
+      "recording": {
+        "title": "Registrera ett anfall",
+        "steps": [
+          "Tryck på den stora STARTA-knappen när ett anfall börjar.",
+          "I vårdgivarläge trycker du på fasenknapparna (Avsluta aura, Avsluta anfall) när varje fas övergår. I självläge är gränssnittet förenklat till en enda stoppknapp.",
+          "Tryck på + Händelsenotering för att stämpla en tidsstämplad notering under registreringen — använd snabbknapparna för vanliga händelser som Föll, Akutmedicin given, Inte responsiv osv.",
+          "Tryck STOPP när anfallet är slut. Om timern fortfarande körs vid 12 minuter stoppar registreringen automatiskt och händelsen sparas."
+        ]
+      },
+      "tagging": {
+        "title": "Märka händelser",
+        "steps": [
+          "Efter stopp öppnas en märkningsguide automatiskt.",
+          "Välj anfallstyp, drabbade kroppsregioner och eventuella observerade symtom.",
+          "Lägg till fritext-anteckningar och tryck sedan på SPARA. Du kan redigera vilken händelse som helst senare från Historik."
+        ]
+      },
+      "manual": {
+        "title": "Manuell registrering",
+        "steps": [
+          "Tryck på + Registrera tidigare anfall på startskärmen för att ange ett anfall du inte registrerade i realtid.",
+          "Ange datum, tid och varaktighet och slutför sedan märkningsguiden som vanligt."
+        ]
+      },
+      "medications": {
+        "title": "Medicinövervakning",
+        "steps": [
+          "Lägg till dina mediciner i Inställningar → Mediciner.",
+          "Startskärmen visar dagens schemalagda doser — tryck på varje medicinknapp för att växla den, tryck sedan på Spara för att logga doserna.",
+          "Aktivera dospåminnelser per medicin i Inställningar → Mediciner."
+        ]
+      },
+      "history": {
+        "title": "Historik & Export",
+        "steps": [
+          "Öppna HISTORIK för att bläddra, söka och filtrera alla registrerade händelser.",
+          "Tryck på en händelse för att visa fullständig detalj eller redigera den.",
+          "Använd EXPORTERA (från Historik) för att generera en PDF-neurolograpport, CSV eller JSON-säkerhetskopia."
+        ]
+      },
+      "settings": {
+        "title": "Inställningar & Tillgänglighet",
+        "steps": [
+          "Växla mellan Självläge och Vårdgivarläge i Inställningar för att anpassa gränssnittet.",
+          "Ändra tema, teckenstorlek och accentfärg efter dina önskemål.",
+          "Lägg till din neurologs namn och nödkontakter för snabb åtkomst under ett anfall."
+        ]
+      }
+    }
+  },
+
+  "about": {
+    "title": "Om",
+    "section_about": "Om",
+    "section_developer": "Utvecklare",
+    "section_privacy": "Integritet",
+    "section_disclaimer": "Medicinsk friskrivning",
+    "section_opensource": "Öppen källkod & Feedback",
+    "about_text": "AuraTrack är en integritetsfokuserad app för anfallsövervakning för personer med epilepsi och deras vårdgivare. Registrera anfall i realtid, annotera händelser med klinisk detalj, spåra mediciner och generera strukturerade rapporter för din neurolog — allt lagrat lokalt på din enhet.",
+    "privacy_text": "All data lagras uteslutande på din enhet med IndexedDB. Ingenting överförs till någon extern server. Din hälsodata lämnar aldrig din enhet.",
+    "disclaimer_text": "AuraTrack är ett personligt loggningsverktyg och är inte en medicinsk enhet. Det är inte avsett att diagnostisera, behandla eller ersätta professionell medicinsk rådgivning. Rådgör alltid med en kvalificerad sjukvårdspersonal om ditt tillstånd och din behandling.",
+    "disclaimer_not_medical": "inte en medicinsk enhet",
+    "opensource_text": "AuraTrack är öppen källkod. Rapportera buggar eller föreslå funktioner på GitHub Issues.",
+    "github": "GitHub ↗",
+    "license": "Licens",
+    "report_issue": "Rapportera ett problem"
+  },
+
+  "settings": {
+    "title": "Inställningar",
+    "badge_caretaker": "VÅRDGIVARE",
+    "badge_self": "SJÄLV",
+    "tabs": {
+      "profile": "Profil",
+      "medications": "Mediciner",
+      "display": "Visning",
+      "recording": "Registrering",
+      "reports": "Rapporter",
+      "data": "Data"
+    },
+    "identity": {
+      "section": "Identitet",
+      "mode": "Läge",
+      "mode_caretaker": "Vårdgivare",
+      "mode_self": "Själv",
+      "mode_desc_caretaker": "Registrering för en annan person. Fullständiga faskontroller synliga under registrering.",
+      "mode_desc_self": "Registrering av egna händelser. Förenklat ettknappsgränssnitt.",
+      "patient_name": "Person / Patientnamn",
+      "your_name": "Ditt namn",
+      "name_placeholder": "Fullständigt namn (används i rapporter)",
+      "caretaker_name": "Vårdgivarens namn",
+      "caretaker_placeholder": "Ditt namn",
+      "dob": "Födelsedatum",
+      "emergency_contact": "Nödkontakt",
+      "emergency_placeholder": "Telefonnummer eller namn"
+    },
+    "appearance": {
+      "section": "Utseende",
+      "theme": "Tema",
+      "theme_dark": "Mörkt",
+      "theme_light": "Ljust",
+      "theme_system": "System",
+      "accent": "Accentfärg",
+      "accent_red": "Röd",
+      "accent_blue": "Blå",
+      "accent_green": "Grön",
+      "accent_purple": "Lila",
+      "accent_amber": "Bärnstensgul",
+      "text_size": "Textstorlek",
+      "language": "Språk"
+    },
+    "display": {
+      "section": "Visning",
+      "page_size": "Historiksidesidestorlek",
+      "date_format": "Datumformat",
+      "date_system": "Systemstandard",
+      "duration_display": "Varaktighetsvisning",
+      "time_format": "Tidsformat"
+    },
+    "recording": {
+      "section": "Registrering",
+      "haptic": "Haptisk återkoppling",
+      "haptic_help": "Vibration vid knapptryckning (enheten måste stödja det)",
+      "quick_labels": "Snabbanteckningsetiketter",
+      "quick_labels_help": "Anpassa snabbknapparna som visas under registrering. Lämna tomt för att dölja en knapp.",
+      "button_n": "Knapp {{n}}"
+    },
+    "medications": {
+      "section": "Mediciner",
+      "section_desc": "Aktuellt medicinregim. Används i rapporter och doslogg.",
+      "none_recorded": "Inga mediciner registrerade.",
+      "add_btn": "+ Lägg till medicin",
+      "add_form_title": "Lägg till medicin",
+      "edit_form_title": "Redigera medicin",
+      "name_placeholder": "Läkemedelsnamn (t.ex. Levetiracetam)",
+      "dose_placeholder": "Dos",
+      "scheduled_times": "Schemalagda tider",
+      "active_days": "Aktiva dagar",
+      "daily": "Dagligen",
+      "dose_reminders": "Dospåminnelser",
+      "dose_reminders_help": "Push-avisering vid varje schemalagd tid",
+      "show_emergency": "Visa på nödskärm",
+      "show_emergency_help": "Visas vid lång anfallsvarning",
+      "save": "Spara",
+      "add": "Lägg till",
+      "update": "Uppdatera",
+      "cancel": "Avbryt",
+      "remove": "Ta bort",
+      "remove_confirm": "Ta bort {{name}}?",
+      "start_date": "Startdatum för medicinövervakning",
+      "start_date_help": "Det tidigaste datumet som visas i medicinhistoriken. Lämna tomt för automatisk identifiering från poster.",
+      "reminder_granted": "🔔 Aviseringar aktiverade",
+      "reminder_denied": "🔕 Aviseringar blockerade",
+      "reminder_off": "🔕 Aviseringar av",
+      "reminder_granted_help": "Påminnelser utlöses medan appen är öppen eller pausad.",
+      "reminder_denied_help": "Blockerad i webbläsarinställningar — återställ webbplatsbehörigheter för att återaktivera.",
+      "reminder_off_help": "Aktivera för att ta emot dospåminnelseaviseringar.",
+      "reminder_enable": "Aktivera",
+      "reminder_section": "Dospåminnelseaviseringar",
+      "ios_reminder_note": "På iOS måste appen vara installerad på din startskärm för att aviseringar ska fungera. Aviseringar kräver att appen körs eller är pausad — de kan inte levereras när appen är helt stängd.",
+      "emergency_badge": "🚨 Nödsituation",
+      "slot_morning": "Morgondos",
+      "slot_afternoon": "Eftermiddagsdos",
+      "slot_midday": "Middagsdos",
+      "slot_evening": "Kvällsdos",
+      "slot_dose_n": "Dos {{n}}",
+      "slot_dose_time": "Dostid",
+      "added": "Medicin tillagd.",
+      "updated": "Medicin uppdaterad.",
+      "removed": "Medicin borttagen."
+    },
+    "reports": {
+      "section": "Rapporter & Neurologi",
+      "section_desc": "Information som används för att generera kliniska neurolograpporter.",
+      "neuro_name": "Neurolog / Kliniker-namn",
+      "neuro_name_placeholder": "Dr. Namn",
+      "institution": "Institution / Sjukhus",
+      "institution_placeholder": "Klinik- eller sjukhusnamn",
+      "contact": "Klinikerkontakt",
+      "contact_placeholder": "Telefon, e-post eller remissnummer",
+      "include_dob": "Inkludera födelsedatum",
+      "include_dob_help": "Om födelsedatum visas i tryckta rapporter",
+      "additional_notes": "Ytterligare anteckningar för rapporter",
+      "notes_placeholder": "Mediciner, kända utlösare, klinikerinstruktioner eller annat att inkludera i slutet av rapporter..."
+    },
+    "data": {
+      "section": "Data & Säkerhetskopiering",
+      "storage_used": "Använt lagringsutrymme",
+      "storage_help": "Ungefärlig webbläsar-IndexedDB-användning",
+      "storage_value": "{{kb}} KB",
+      "storage_quota": " / {{mb}} MB",
+      "auto_backup": "Automatisk säkerhetskopiering",
+      "auto_backup_never": "Aldrig",
+      "auto_backup_weekly": "Veckovis",
+      "auto_backup_help": "Manuell utlösare är alltid tillgänglig via exportskärmen.",
+      "scheduled_backup": "Schemalagd säkerhetskopiering varje {{days}}",
+      "export_backup": "Exportera säkerhetskopia",
+      "export_sub": "JSON-nedladdning",
+      "import_data": "Importera data",
+      "import_sub": "JSON-fil",
+      "danger_zone": "Farlig zon",
+      "clear_confirm": "Detta tar permanent bort alla registrerade händelser. Kan inte ångras.",
+      "clear_yes": "Ja, ta bort allt",
+      "clear_btn": "Rensa alla händelsedata",
+      "reset_confirm": "Återställa alla inställningar till fabriksinställningar?",
+      "reset_yes": "Ja, återställ",
+      "reset_btn": "Återställ inställningar till standard",
+      "cancel": "Avbryt",
+      "no_data": "Inga data att exportera.",
+      "exported": "{{events}} händelse(r) och {{meds}} medicin(er) exporterade.",
+      "export_failed": "Export misslyckades.",
+      "all_deleted": "Alla händelsedata raderade.",
+      "delete_failed": "Det gick inte att radera data. Försök igen.",
+      "settings_reset": "Inställningar återställda till standard.",
+      "no_data_in_file": "Inga data hittades i filen.",
+      "imported": "{{summary}} importerade framgångsrikt.",
+      "imported_nothing": "ingenting",
+      "import_failed": "Import misslyckades — ogiltig eller skadad fil."
+    },
+    "about_section": {
+      "section": "Om",
+      "version": "App-version",
+      "schema": "Databasschema",
+      "reinstall": "Visa installationsprompt igen",
+      "reinstall_sub": "Tryck om du av misstag avvisade installationsbannern"
+    }
+  },
+
+  "delete_modal": {
+    "title": "RADERA POST?",
+    "body": "Den här medicinska posten kommer att tas bort permanent. Åtgärden kan inte ångras.",
+    "confirm": "JA, RADERA PERMANENT",
+    "cancel": "AVBRYT"
+  },
+
+  "manual_entry": {
+    "title": "Registrera tidigare anfall",
+    "intro": "Ange datum, tid och varaktighet för anfallet. Du kan sedan lägga till anfallstyp, symtom, utlösare och anteckningar.",
+    "date": "Datum",
+    "time": "Tid",
+    "total_duration": "Total varaktighet",
+    "phase_breakdown": "Fasuppdelning (valfritt)",
+    "aura": "Aura",
+    "ictal": "Anfall (Iktalt)",
+    "recovery": "Post-iktalt / Återhämtning",
+    "min": "min",
+    "sec": "sek",
+    "continue": "Fortsätt till detaljer →",
+    "cancel": "Avbryt",
+    "error_duration": "Total varaktighet måste vara större än 0."
+  },
+
+  "event_card": {
+    "edited": "Redigerad",
+    "manual_entry": "Manuell registrering",
+    "view_edit": "Visa / Redigera",
+    "delete": "Radera"
+  },
+
+  "summary": {
+    "save": "Spara",
+    "cancel": "Avbryt",
+    "add_another": "+ Lägg till ytterligare symtom",
+    "notes_placeholder": "Kliniska observationer, post-iktala anteckningar, given medicin...",
+    "notes_label": "Anteckningar",
+    "triggers_label": "Möjliga utlösare",
+    "symptoms_label": "Symtom",
+    "date_time_label": "Datum & Tid",
+    "duration_label": "Varaktighet",
+    "aura": "Aura",
+    "seizure": "Anfall",
+    "recovery": "Återhämtning",
+    "total": "Totalt",
+    "manual_durations": "Justera varaktigheter manuellt",
+    "remove_symptom": "Ta bort"
+  }
+}

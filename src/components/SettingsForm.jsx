@@ -10,6 +10,12 @@ import i18n from '../i18n';
 const LANGUAGES = [
   { code: 'en', label: 'English' },
   { code: 'nb', label: 'Norsk Bokmål' },
+  { code: 'nn', label: 'Nynorsk' },
+  { code: 'de', label: 'Deutsch' },
+  { code: 'fr', label: 'Français' },
+  { code: 'es', label: 'Español' },
+  { code: 'sv', label: 'Svenska' },
+  { code: 'fi', label: 'Suomi' },
 ];
 
 // ─── Atom components ─────────────────────────────────────────

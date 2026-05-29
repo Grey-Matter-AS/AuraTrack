@@ -1,0 +1,395 @@
+{
+  "nav": {
+    "history": "HISTORIAL",
+    "settings": "⚙ AJUSTES",
+    "back": "← VOLVER",
+    "help_label": "Ayuda"
+  },
+
+  "idle": {
+    "start": "INICIAR",
+    "log_past": "+ Registrar crisis pasada",
+    "recent_events": "Eventos recientes",
+    "last_5": "ÚLTIMAS 5",
+    "no_events": "No se han registrado eventos aún."
+  },
+
+  "recording": {
+    "total_elapsed": "Tiempo total",
+    "aura": "Aura",
+    "seizure": "Crisis",
+    "recovery": "Recuperación",
+    "end_aura": "FIN AURA",
+    "aura_ended": "AURA FINALIZADA ✓",
+    "end_seizure": "FIN CRISIS",
+    "seizure_ended": "CRISIS FINALIZADA ✓",
+    "event_note": "+ NOTA DE EVENTO",
+    "close_notes": "CERRAR NOTAS",
+    "stop": "PARAR",
+    "self_mode": "Modo personal activado",
+    "long_seizure_warning": "CRISIS PROLONGADA — VIGILAR DE CERCA",
+    "approaching_threshold": "ACERCÁNDOSE AL UMBRAL DE ALERTA",
+    "auto_stop_notice": "El temporizador se detiene automáticamente a los 12:00"
+  },
+
+  "alert": {
+    "medical_alert": "ALERTA MÉDICA",
+    "unresponsive": "SIN RESPUESTA",
+    "medical_emergency": "EMERGENCIA MÉDICA",
+    "call_services": "LLAMAR A EMERGENCIAS AHORA",
+    "dont_leave": "No dejar al paciente desatendido",
+    "administer_med": "Administrar medicación de emergencia",
+    "neurologist": "Neurólogo",
+    "emergency_contact": "Contacto de emergencia",
+    "elapsed": "Transcurrido"
+  },
+
+  "tagging": {
+    "step1_title": "Paso 1: Tipo de crisis",
+    "feeling_title": "¿Qué tipo de sensación?",
+    "region_title": "¿Dónde ocurrió?"
+  },
+
+  "history": {
+    "title": "Historial",
+    "events_count": "{{count}} EVENTOS",
+    "all_types": "Todos los tipos",
+    "no_events": "No se encontraron eventos.",
+    "prev": "← Anterior",
+    "next": "Siguiente →",
+    "page_of": "{{page}} / {{total}}",
+    "clear": "Limpiar",
+    "tab_seizures": "Crisis",
+    "tab_medications": "Medicamentos",
+    "tab_export": "Exportar"
+  },
+
+  "export": {
+    "title": "Exportar e informes",
+    "date_range": "Rango de fechas",
+    "from": "Desde",
+    "to": "Hasta",
+    "raw_data": "Datos sin procesar",
+    "backup_json_label": "Copia de seguridad JSON",
+    "backup_json_desc": "Exportación completa de datos — todos los campos incluyendo medicamentos y registros de dosis. Usar para copia de seguridad o migrar a otro dispositivo.",
+    "csv_label": "Hoja de cálculo CSV",
+    "csv_desc": "Eventos, medicamentos y registros de dosis en formato separado por comas. Se abre en Excel / Hojas de cálculo.",
+    "pdf_label": "Impresión simple / PDF",
+    "pdf_desc": "Tabla de eventos imprimable rápida — se abre en una nueva pestaña y activa el diálogo de impresión.",
+    "clinical_report": "Informe clínico",
+    "neuro_report_label": "Informe neurológico",
+    "neuro_report_desc": "PDF clínico especializado — información del paciente, tiempos de fase, desglose de síntomas y registro completo de eventos. Formateado para presentar a un neurólogo o especialista.",
+    "neuro_report_warning": "⚠ Agregue el nombre del paciente en Ajustes → Identidad para un informe completo.",
+    "generate_print": "Generar e imprimir informe",
+    "diary_title": "Diario de crisis",
+    "diary_label": "Calendario mensual",
+    "diary_desc": "Cuadrícula de calendario de una página que muestra los días con eventos, codificados por color según el tipo. La hoja de referencia rápida para llevar a cada cita.",
+    "month": "Mes",
+    "generate": "Generar"
+  },
+
+  "event_detail": {
+    "title": "Detalle del evento",
+    "edit": "Editar",
+    "not_found": "Evento no encontrado.",
+    "loading": "Cargando...",
+    "total_duration": "DURACIÓN TOTAL",
+    "type": "TIPO",
+    "aura": "AURA",
+    "seizure": "CRISIS",
+    "recovery": "RECUPERACIÓN",
+    "details": "Detalles",
+    "date": "Fecha",
+    "time": "Hora",
+    "status": "Estado",
+    "edited": "Editado",
+    "symptoms": "Síntomas",
+    "triggers": "Posibles desencadenantes",
+    "notes": "Observaciones clínicas",
+    "danger_prolonged_title": "Crisis prolongada",
+    "danger_prolonged_desc": "Este evento duró más de 5 minutos. Busque atención médica si aún no lo ha hecho.",
+    "danger_cluster_title": "Cluster ×{{count}} / Riesgo de estado epiléptico",
+    "danger_cluster_desc": "{{count}} crisis en 8 minutos. Consulte a un neurólogo de inmediato."
+  },
+
+  "help": {
+    "title": "Ayuda",
+    "about_btn": "Acerca de AuraTrack",
+    "sections": {
+      "recording": {
+        "title": "Registrar una crisis",
+        "steps": [
+          "Toque el botón grande INICIAR cuando comienza una crisis.",
+          "En modo cuidador, toque los botones de fase (Fin aura, Fin crisis) a medida que cada fase ocurre. En modo personal, la interfaz se simplifica a un único botón de parada.",
+          "Toque + Nota de evento para estampar una nota con marca de tiempo durante el registro — use los botones de acceso rápido para eventos comunes como Caída, Medicamento de rescate administrado, Sin respuesta, etc.",
+          "Toque PARAR cuando termine la crisis. Si el temporizador aún está en marcha a los 12 minutos, el registro se detiene automáticamente y el evento se guarda."
+        ]
+      },
+      "tagging": {
+        "title": "Etiquetar eventos",
+        "steps": [
+          "Después de detener, se abre automáticamente un asistente de etiquetado.",
+          "Seleccione el tipo de crisis, las regiones corporales afectadas y los síntomas observados.",
+          "Añada notas de texto libre y toque GUARDAR. Puede editar cualquier evento posteriormente desde el Historial."
+        ]
+      },
+      "manual": {
+        "title": "Entrada manual",
+        "steps": [
+          "Toque + Registrar crisis pasada en la pantalla de inicio para introducir una crisis que no registró en tiempo real.",
+          "Establezca la fecha, hora y duración, luego complete el asistente de etiquetado como de costumbre."
+        ]
+      },
+      "medications": {
+        "title": "Seguimiento de medicamentos",
+        "steps": [
+          "Añada sus medicamentos en Ajustes → Medicamentos.",
+          "La pantalla de inicio muestra las dosis programadas para hoy — toque cada botón de medicamento para alternarlo, luego toque Guardar para registrar las dosis.",
+          "Active los recordatorios de dosis por medicamento en Ajustes → Medicamentos."
+        ]
+      },
+      "history": {
+        "title": "Historial & Exportar",
+        "steps": [
+          "Abra HISTORIAL para buscar, filtrar y ver todos los eventos registrados.",
+          "Toque cualquier evento para ver los detalles completos o editarlo.",
+          "Use EXPORTAR (desde el Historial) para generar un informe neurológico en PDF, CSV o copia de seguridad JSON."
+        ]
+      },
+      "settings": {
+        "title": "Ajustes & Accesibilidad",
+        "steps": [
+          "Cambie entre el modo personal y cuidador en Ajustes para adaptar la interfaz.",
+          "Cambie el tema, el tamaño de fuente y el color de acento según sus preferencias.",
+          "Añada el nombre de su neurólogo y contactos de emergencia para acceso rápido durante una crisis."
+        ]
+      }
+    }
+  },
+
+  "about": {
+    "title": "Acerca de",
+    "section_about": "Acerca de",
+    "section_developer": "Desarrollador",
+    "section_privacy": "Privacidad",
+    "section_disclaimer": "Aviso médico",
+    "section_opensource": "Código abierto & Comentarios",
+    "about_text": "AuraTrack es una aplicación de seguimiento de crisis centrada en la privacidad para personas con epilepsia y sus cuidadores. Registre crisis en tiempo real, anote eventos con detalle clínico, realice seguimiento de medicamentos y genere informes estructurados para su neurólogo — todo almacenado localmente en su dispositivo.",
+    "privacy_text": "Todos los datos se almacenan exclusivamente en su dispositivo mediante IndexedDB. Nada se transmite a ningún servidor externo. Sus datos de salud nunca abandonan su dispositivo.",
+    "disclaimer_text": "AuraTrack es una herramienta de registro personal y no es un dispositivo médico. No está destinada a diagnosticar, tratar ni reemplazar el asesoramiento médico profesional. Consulte siempre a un profesional de la salud cualificado sobre su condición y tratamiento.",
+    "disclaimer_not_medical": "no es un dispositivo médico",
+    "opensource_text": "AuraTrack es código abierto. Informe de errores o sugiera funciones en GitHub Issues.",
+    "github": "GitHub ↗",
+    "license": "Licencia",
+    "report_issue": "Informar un problema"
+  },
+
+  "settings": {
+    "title": "Ajustes",
+    "badge_caretaker": "CUIDADOR",
+    "badge_self": "PERSONAL",
+    "tabs": {
+      "profile": "Perfil",
+      "medications": "Medicamentos",
+      "display": "Pantalla",
+      "recording": "Grabación",
+      "reports": "Informes",
+      "data": "Datos"
+    },
+    "identity": {
+      "section": "Identidad",
+      "mode": "Modo",
+      "mode_caretaker": "Cuidador",
+      "mode_self": "Personal",
+      "mode_desc_caretaker": "Grabación para otra persona. Controles completos de tiempo de fase visibles durante la grabación.",
+      "mode_desc_self": "Grabación de sus propios eventos. Interfaz simplificada de un solo botón.",
+      "patient_name": "Nombre de la persona / paciente",
+      "your_name": "Su nombre",
+      "name_placeholder": "Nombre completo (usado en informes)",
+      "caretaker_name": "Nombre del cuidador",
+      "caretaker_placeholder": "Su nombre",
+      "dob": "Fecha de nacimiento",
+      "emergency_contact": "Contacto de emergencia",
+      "emergency_placeholder": "Número de teléfono o nombre"
+    },
+    "appearance": {
+      "section": "Apariencia",
+      "theme": "Tema",
+      "theme_dark": "Oscuro",
+      "theme_light": "Claro",
+      "theme_system": "Sistema",
+      "accent": "Color de acento",
+      "accent_red": "Rojo",
+      "accent_blue": "Azul",
+      "accent_green": "Verde",
+      "accent_purple": "Morado",
+      "accent_amber": "Ámbar",
+      "text_size": "Tamaño de texto",
+      "language": "Idioma"
+    },
+    "display": {
+      "section": "Pantalla",
+      "page_size": "Tamaño de página del historial",
+      "date_format": "Formato de fecha",
+      "date_system": "Predeterminado del sistema",
+      "duration_display": "Visualización de duración",
+      "time_format": "Formato de hora"
+    },
+    "recording": {
+      "section": "Grabación",
+      "haptic": "Retroalimentación háptica",
+      "haptic_help": "Vibración al pulsar botones (el dispositivo debe admitirlo)",
+      "quick_labels": "Etiquetas de notas rápidas",
+      "quick_labels_help": "Personalice los botones de acceso rápido mostrados durante la grabación. Déjelo en blanco para ocultar un botón.",
+      "button_n": "Botón {{n}}"
+    },
+    "medications": {
+      "section": "Medicamentos",
+      "section_desc": "Régimen de medicación actual. Usado en informes y registro de dosis.",
+      "none_recorded": "No se han registrado medicamentos.",
+      "add_btn": "+ Añadir medicamento",
+      "add_form_title": "Añadir medicamento",
+      "edit_form_title": "Editar medicamento",
+      "name_placeholder": "Nombre del medicamento (ej. Levetiracetam)",
+      "dose_placeholder": "Dosis",
+      "scheduled_times": "Horarios programados",
+      "active_days": "Días activos",
+      "daily": "Diario",
+      "dose_reminders": "Recordatorios de dosis",
+      "dose_reminders_help": "Notificación push en cada horario programado",
+      "show_emergency": "Mostrar en pantalla de emergencia",
+      "show_emergency_help": "Se muestra durante alerta de crisis prolongada",
+      "save": "Guardar",
+      "add": "Añadir",
+      "update": "Actualizar",
+      "cancel": "Cancelar",
+      "remove": "Eliminar",
+      "remove_confirm": "¿Eliminar {{name}}?",
+      "start_date": "Fecha de inicio del seguimiento de medicamentos",
+      "start_date_help": "La fecha más antigua mostrada en el historial de medicamentos. Déjelo en blanco para detección automática desde los registros.",
+      "reminder_granted": "🔔 Notificaciones activadas",
+      "reminder_denied": "🔕 Notificaciones bloqueadas",
+      "reminder_off": "🔕 Notificaciones desactivadas",
+      "reminder_granted_help": "Los recordatorios se activarán mientras la app esté abierta o suspendida.",
+      "reminder_denied_help": "Bloqueado en la configuración del navegador — restablezca los permisos del sitio para volver a activarlos.",
+      "reminder_off_help": "Active para recibir notificaciones de recordatorio de dosis.",
+      "reminder_enable": "Activar",
+      "reminder_section": "Notificaciones de recordatorio de dosis",
+      "ios_reminder_note": "En iOS, la app debe estar instalada en su pantalla de inicio para que funcionen las notificaciones. Las notificaciones requieren que la app esté en ejecución o suspendida — no se pueden entregar cuando la app está completamente cerrada.",
+      "emergency_badge": "🚨 Emergencia",
+      "slot_morning": "Dosis de mañana",
+      "slot_afternoon": "Dosis de tarde",
+      "slot_midday": "Dosis de mediodía",
+      "slot_evening": "Dosis de noche",
+      "slot_dose_n": "Dosis {{n}}",
+      "slot_dose_time": "Hora de dosis",
+      "added": "Medicamento añadido.",
+      "updated": "Medicamento actualizado.",
+      "removed": "Medicamento eliminado."
+    },
+    "reports": {
+      "section": "Informes & Neurología",
+      "section_desc": "Información utilizada para generar informes neurológicos clínicos.",
+      "neuro_name": "Nombre del neurólogo / clínico",
+      "neuro_name_placeholder": "Dr. Nombre",
+      "institution": "Institución / Hospital",
+      "institution_placeholder": "Nombre de la clínica u hospital",
+      "contact": "Contacto del clínico",
+      "contact_placeholder": "Teléfono, correo electrónico o número de derivación",
+      "include_dob": "Incluir fecha de nacimiento",
+      "include_dob_help": "Si la fecha de nacimiento aparece en los informes impresos",
+      "additional_notes": "Notas adicionales para informes",
+      "notes_placeholder": "Medicamentos, desencadenantes conocidos, instrucciones del clínico o cualquier otra cosa a incluir al final de los informes..."
+    },
+    "data": {
+      "section": "Datos & Copia de seguridad",
+      "storage_used": "Almacenamiento usado",
+      "storage_help": "Uso aproximado de IndexedDB del navegador",
+      "storage_value": "{{kb}} KB",
+      "storage_quota": " / {{mb}} MB",
+      "auto_backup": "Copia de seguridad automática",
+      "auto_backup_never": "Nunca",
+      "auto_backup_weekly": "Semanal",
+      "auto_backup_help": "El activador manual siempre está disponible a través de la pantalla de exportación.",
+      "scheduled_backup": "Copia de seguridad programada cada {{days}}",
+      "export_backup": "Exportar copia de seguridad",
+      "export_sub": "Descarga JSON",
+      "import_data": "Importar datos",
+      "import_sub": "Archivo JSON",
+      "danger_zone": "Zona de peligro",
+      "clear_confirm": "Esto elimina permanentemente todos los eventos registrados. No se puede deshacer.",
+      "clear_yes": "Sí, eliminar todo",
+      "clear_btn": "Borrar todos los datos de eventos",
+      "reset_confirm": "¿Restablecer todas las preferencias a los valores de fábrica?",
+      "reset_yes": "Sí, restablecer",
+      "reset_btn": "Restablecer ajustes a valores predeterminados",
+      "cancel": "Cancelar",
+      "no_data": "No hay datos para exportar.",
+      "exported": "{{events}} evento(s) y {{meds}} medicamento(s) exportados.",
+      "export_failed": "Error al exportar.",
+      "all_deleted": "Todos los datos de eventos eliminados.",
+      "delete_failed": "No se pudieron eliminar los datos. Por favor, inténtelo de nuevo.",
+      "settings_reset": "Ajustes restablecidos a los valores predeterminados.",
+      "no_data_in_file": "No se encontraron datos en el archivo.",
+      "imported": "{{summary}} importado(s) correctamente.",
+      "imported_nothing": "nada",
+      "import_failed": "Error al importar — archivo inválido o dañado."
+    },
+    "about_section": {
+      "section": "Acerca de",
+      "version": "Versión de la app",
+      "schema": "Esquema de base de datos",
+      "reinstall": "Volver a mostrar indicación de instalación",
+      "reinstall_sub": "Toque si descartó el banner de instalación por error"
+    }
+  },
+
+  "delete_modal": {
+    "title": "¿ELIMINAR REGISTRO?",
+    "body": "Esta entrada médica se eliminará permanentemente. Esta acción no se puede deshacer.",
+    "confirm": "SÍ, ELIMINAR PERMANENTEMENTE",
+    "cancel": "CANCELAR"
+  },
+
+  "manual_entry": {
+    "title": "Registrar crisis pasada",
+    "intro": "Introduzca la fecha, hora y duración de la crisis. Luego puede añadir el tipo de crisis, síntomas, desencadenantes y notas.",
+    "date": "Fecha",
+    "time": "Hora",
+    "total_duration": "Duración total",
+    "phase_breakdown": "Desglose de fases (opcional)",
+    "aura": "Aura",
+    "ictal": "Crisis (Ictal)",
+    "recovery": "Post-ictal / Recuperación",
+    "min": "min",
+    "sec": "seg",
+    "continue": "Continuar a detalles →",
+    "cancel": "Cancelar",
+    "error_duration": "La duración total debe ser mayor que 0."
+  },
+
+  "event_card": {
+    "edited": "Editado",
+    "manual_entry": "Entrada manual",
+    "view_edit": "Ver / Editar",
+    "delete": "Eliminar"
+  },
+
+  "summary": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "add_another": "+ Añadir otro síntoma",
+    "notes_placeholder": "Observaciones clínicas, notas post-ictales, medicamento administrado...",
+    "notes_label": "Notas",
+    "triggers_label": "Posibles desencadenantes",
+    "symptoms_label": "Síntomas",
+    "date_time_label": "Fecha & Hora",
+    "duration_label": "Duración",
+    "aura": "Aura",
+    "seizure": "Crisis",
+    "recovery": "Recuperación",
+    "total": "Total",
+    "manual_durations": "Ajustar duraciones manualmente",
+    "remove_symptom": "Eliminar"
+  }
+}

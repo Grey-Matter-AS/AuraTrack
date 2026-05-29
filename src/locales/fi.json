@@ -1,0 +1,395 @@
+{
+  "nav": {
+    "history": "HISTORIA",
+    "settings": "⚙ ASETUKSET",
+    "back": "← TAKAISIN",
+    "help_label": "Ohje"
+  },
+
+  "idle": {
+    "start": "ALOITA",
+    "log_past": "+ Kirjaa mennyt kohtaus",
+    "recent_events": "Viimeisimmät tapahtumat",
+    "last_5": "VIIMEISET 5",
+    "no_events": "Ei vielä kirjattuja tapahtumia."
+  },
+
+  "recording": {
+    "total_elapsed": "Kulunut aika",
+    "aura": "Aura",
+    "seizure": "Kohtaus",
+    "recovery": "Toipuminen",
+    "end_aura": "LOPETA AURA",
+    "aura_ended": "AURA PÄÄTTYI ✓",
+    "end_seizure": "LOPETA KOHTAUS",
+    "seizure_ended": "KOHTAUS PÄÄTTYI ✓",
+    "event_note": "+ TAPAHTUMAMUISTIINPANO",
+    "close_notes": "SULJE MUISTIINPANOT",
+    "stop": "LOPETA",
+    "self_mode": "Omatila käytössä",
+    "long_seizure_warning": "PITKÄ KOHTAUS — TARKKAILE TIIVIISTI",
+    "approaching_threshold": "LÄHESTYMÄSSÄ HÄLYTYSRAJAA",
+    "auto_stop_notice": "Ajastin pysähtyy automaattisesti kello 12:00"
+  },
+
+  "alert": {
+    "medical_alert": "LÄÄKETIETEELLINEN HÄLYTYS",
+    "unresponsive": "EI REAGOI",
+    "medical_emergency": "LÄÄKETIETEELLINEN HÄTÄTILANNE",
+    "call_services": "SOITA HÄTÄNUMEROON NYT",
+    "dont_leave": "Älä jätä potilasta ilman valvontaa",
+    "administer_med": "Anna hätälääkitys",
+    "neurologist": "Neurologi",
+    "emergency_contact": "Hätäyhteyshenkilö",
+    "elapsed": "Kulunut"
+  },
+
+  "tagging": {
+    "step1_title": "Vaihe 1: Kohtaustyyppi",
+    "feeling_title": "Minkälainen tunne?",
+    "region_title": "Missä se tapahtui?"
+  },
+
+  "history": {
+    "title": "Historia",
+    "events_count": "{{count}} TAPAHTUMAA",
+    "all_types": "Kaikki tyypit",
+    "no_events": "Tapahtumia ei löydy.",
+    "prev": "← Edellinen",
+    "next": "Seuraava →",
+    "page_of": "{{page}} / {{total}}",
+    "clear": "Tyhjennä",
+    "tab_seizures": "Kohtaukset",
+    "tab_medications": "Lääkkeet",
+    "tab_export": "Vie"
+  },
+
+  "export": {
+    "title": "Vienti & Raportit",
+    "date_range": "Päivämääräväli",
+    "from": "Alkaen",
+    "to": "Päättyen",
+    "raw_data": "Raakadata",
+    "backup_json_label": "Varmuuskopio JSON",
+    "backup_json_desc": "Täydellinen datavienti — kaikki kentät mukaan lukien lääkkeet ja annoslokit. Käytä varmuuskopiointiin tai siirtämiseen toiselle laitteelle.",
+    "csv_label": "Laskentataulukko CSV",
+    "csv_desc": "Tapahtumat, lääkkeet ja annoslokit pilkulla erotettussa muodossa. Avautuu Excelissä / Taulukoissa.",
+    "pdf_label": "Yksinkertainen tulostus / PDF",
+    "pdf_desc": "Nopea tulostettava tapahtumataulukko — avautuu uudessa välilehdessä ja käynnistää tulostusvalintaikkunan.",
+    "clinical_report": "Kliininen raportti",
+    "neuro_report_label": "Neurologiraportti",
+    "neuro_report_desc": "Tarkoitukseen rakennettu kliininen PDF — potilastiedot, vaiheen kestot, oireiden erittely ja täydellinen tapahtumaloki. Muotoiltu neurologille tai erikoislääkärille esittämistä varten.",
+    "neuro_report_warning": "⚠ Lisää potilaan nimi kohdassa Asetukset → Henkilötiedot täydellistä raporttia varten.",
+    "generate_print": "Luo & tulosta raportti",
+    "diary_title": "Kohtauspäiväkirja",
+    "diary_label": "Kuukausikalenteri",
+    "diary_desc": "Yksisivuinen kalenteriruudukko, joka näyttää mitkä päivät sisälsivät tapahtumia, värikoodattuna tyypin mukaan. Nopea viitelehti jokaiseen vastaanottokäyntiin.",
+    "month": "Kuukausi",
+    "generate": "Luo"
+  },
+
+  "event_detail": {
+    "title": "Tapahtuman tiedot",
+    "edit": "Muokkaa",
+    "not_found": "Tapahtumaa ei löydy.",
+    "loading": "Ladataan...",
+    "total_duration": "KOKONAISKESTO",
+    "type": "TYYPPI",
+    "aura": "AURA",
+    "seizure": "KOHTAUS",
+    "recovery": "TOIPUMINEN",
+    "details": "Tiedot",
+    "date": "Päivämäärä",
+    "time": "Aika",
+    "status": "Tila",
+    "edited": "Muokattu",
+    "symptoms": "Oireet",
+    "triggers": "Mahdolliset laukaisijat",
+    "notes": "Kliiniset havainnot",
+    "danger_prolonged_title": "Pitkittynyt kohtaus",
+    "danger_prolonged_desc": "Tämä tapahtuma kesti yli 5 minuuttia. Hakeudu lääkärin arvioon, jos sitä ei ole vielä tehty.",
+    "danger_cluster_title": "Ryväs ×{{count}} / Status epilepticuksen riski",
+    "danger_cluster_desc": "{{count}} kohtausta 8 minuutin sisällä. Ota välittömästi yhteyttä neurologiin."
+  },
+
+  "help": {
+    "title": "Ohje",
+    "about_btn": "Tietoja AuraTrackistä",
+    "sections": {
+      "recording": {
+        "title": "Kohtauksen kirjaaminen",
+        "steps": [
+          "Napauta suurta ALOITA-painiketta kun kohtaus alkaa.",
+          "Hoitajatilassa napauta vaihepainikkeita (Lopeta aura, Lopeta kohtaus) kunkin vaiheen siirtyessä. Omatilassa käyttöliittymä on yksinkertaistettu yhteen stopp-painikkeeseen.",
+          "Napauta + Tapahtumamuistiinpano tallentaaksesi aikaleimalla varustetun muistiinpanon kirjauksen aikana — käytä pikakuvakepainikkeita yleisille tapahtumille kuten Kaatui, Pelastuslääke annettu, Ei reagoi jne.",
+          "Napauta LOPETA kun kohtaus päättyy. Jos ajastin on vielä käynnissä 12 minuutin kohdalla, kirjaus pysähtyy automaattisesti ja tapahtuma tallennetaan."
+        ]
+      },
+      "tagging": {
+        "title": "Tapahtumien merkitseminen",
+        "steps": [
+          "Pysähdyksen jälkeen merkitsemisopas avautuu automaattisesti.",
+          "Valitse kohtaustyyppi, vaikuttuneet kehonosat ja havaitut oireet.",
+          "Lisää vapaamuotoisia muistiinpanoja ja napauta sitten TALLENNA. Voit muokata mitä tahansa tapahtumaa myöhemmin Historiasta."
+        ]
+      },
+      "manual": {
+        "title": "Manuaalinen kirjaus",
+        "steps": [
+          "Napauta + Kirjaa mennyt kohtaus aloitusnäytöllä syöttääksesi kohtauksen, jota et kirjannut reaaliajassa.",
+          "Aseta päivämäärä, aika ja kesto, ja suorita sitten merkitsemisopas tavalliseen tapaan."
+        ]
+      },
+      "medications": {
+        "title": "Lääkeseuranta",
+        "steps": [
+          "Lisää lääkkeesi kohdassa Asetukset → Lääkkeet.",
+          "Aloitusnäyttö näyttää tänään aikataulutetut annokset — napauta kutakin lääkepainiketta vaihtaaksesi sen tilan, napauta sitten Tallenna kirjataksesi annokset.",
+          "Ota käyttöön annospäivitykset lääkekohtaisesti kohdassa Asetukset → Lääkkeet."
+        ]
+      },
+      "history": {
+        "title": "Historia & Vienti",
+        "steps": [
+          "Avaa HISTORIA selataksesi, etsiäksesi ja suodattaaksesi kaikki kirjatut tapahtumat.",
+          "Napauta mitä tahansa tapahtumaa nähdäksesi täydet tiedot tai muokataksesi sitä.",
+          "Käytä VIENTIÄ (Historiasta) luodaksesi PDF-neurologiraportin, CSV:n tai JSON-varmuuskopion."
+        ]
+      },
+      "settings": {
+        "title": "Asetukset & Saavutettavuus",
+        "steps": [
+          "Vaihda oma- ja hoitajatilan välillä Asetuksissa mukauttaaksesi käyttöliittymän.",
+          "Muuta teemaa, fonttikokoa ja korostusväriä mieltymystesi mukaan.",
+          "Lisää neurologisi nimi ja hätäyhteyshenkilöt nopeaa pääsyä varten kohtauksen aikana."
+        ]
+      }
+    }
+  },
+
+  "about": {
+    "title": "Tietoja",
+    "section_about": "Tietoja",
+    "section_developer": "Kehittäjä",
+    "section_privacy": "Yksityisyys",
+    "section_disclaimer": "Lääketieteellinen vastuuvapauslauseke",
+    "section_opensource": "Avoin lähdekoodi & Palaute",
+    "about_text": "AuraTrack on yksityisyyteen keskittyvä kohtausseurantasovellus epilepsiaa sairastaville henkilöille ja heidän hoitajilleen. Kirjaa kohtaukset reaaliajassa, annotoi tapahtumat kliinisellä yksityiskohtaisuudella, seuraa lääkitystä ja luo jäsenneltyjä raportteja neurologillesi — kaikki tallennettuna paikallisesti laitteellesi.",
+    "privacy_text": "Kaikki tiedot tallennetaan yksinomaan laitteellesi IndexedDB:n avulla. Mitään ei lähetetä ulkoisille palvelimille. Terveystietosi eivät koskaan poistu laitteeltasi.",
+    "disclaimer_text": "AuraTrack on henkilökohtainen kirjaamistyökalu eikä ole lääkinnällinen laite. Sitä ei ole tarkoitettu diagnosoimaan, hoitamaan tai korvaamaan ammatillista lääketieteellistä neuvontaa. Kuulemme aina pätevää terveydenhuollon ammattilaista tilasi ja hoitosi suhteen.",
+    "disclaimer_not_medical": "ei lääkinnällinen laite",
+    "opensource_text": "AuraTrack on avoimen lähdekoodin ohjelma. Raportoi bugeja tai ehdota ominaisuuksia GitHub Issuesissa.",
+    "github": "GitHub ↗",
+    "license": "Lisenssi",
+    "report_issue": "Ilmoita ongelmasta"
+  },
+
+  "settings": {
+    "title": "Asetukset",
+    "badge_caretaker": "HOITAJA",
+    "badge_self": "OMA",
+    "tabs": {
+      "profile": "Profiili",
+      "medications": "Lääkkeet",
+      "display": "Näyttö",
+      "recording": "Kirjaus",
+      "reports": "Raportit",
+      "data": "Data"
+    },
+    "identity": {
+      "section": "Henkilötiedot",
+      "mode": "Tila",
+      "mode_caretaker": "Hoitaja",
+      "mode_self": "Oma",
+      "mode_desc_caretaker": "Kirjaus toiselle henkilölle. Täydet vaiheen ajoituksen ohjaimet näkyvissä kirjauksen aikana.",
+      "mode_desc_self": "Omien tapahtumien kirjaus. Yksinkertaistettu yhden painikkeen käyttöliittymä.",
+      "patient_name": "Henkilö / Potilaan nimi",
+      "your_name": "Sinun nimesi",
+      "name_placeholder": "Koko nimi (käytetään raporteissa)",
+      "caretaker_name": "Hoitajan nimi",
+      "caretaker_placeholder": "Sinun nimesi",
+      "dob": "Syntymäaika",
+      "emergency_contact": "Hätäyhteyshenkilö",
+      "emergency_placeholder": "Puhelinnumero tai nimi"
+    },
+    "appearance": {
+      "section": "Ulkoasu",
+      "theme": "Teema",
+      "theme_dark": "Tumma",
+      "theme_light": "Vaalea",
+      "theme_system": "Järjestelmä",
+      "accent": "Korostusväri",
+      "accent_red": "Punainen",
+      "accent_blue": "Sininen",
+      "accent_green": "Vihreä",
+      "accent_purple": "Violetti",
+      "accent_amber": "Meripihka",
+      "text_size": "Tekstikoko",
+      "language": "Kieli"
+    },
+    "display": {
+      "section": "Näyttö",
+      "page_size": "Historian sivukoko",
+      "date_format": "Päivämäärämuoto",
+      "date_system": "Järjestelmän oletus",
+      "duration_display": "Keston näyttö",
+      "time_format": "Aikamuoto"
+    },
+    "recording": {
+      "section": "Kirjaus",
+      "haptic": "Haptinen palaute",
+      "haptic_help": "Värinä painikkeita painettaessa (laitteen on tuettava sitä)",
+      "quick_labels": "Pikanäppäinten nimet",
+      "quick_labels_help": "Mukauta kirjauksen aikana näytettäviä pikavalintapainikkeita. Jätä tyhjäksi piilottaaksesi painikkeen.",
+      "button_n": "Painike {{n}}"
+    },
+    "medications": {
+      "section": "Lääkkeet",
+      "section_desc": "Nykyinen lääkitysohjelma. Käytetään raporteissa ja annoslokissa.",
+      "none_recorded": "Ei kirjattuja lääkkeitä.",
+      "add_btn": "+ Lisää lääke",
+      "add_form_title": "Lisää lääke",
+      "edit_form_title": "Muokkaa lääkettä",
+      "name_placeholder": "Lääkkeen nimi (esim. Levetirasetaami)",
+      "dose_placeholder": "Annos",
+      "scheduled_times": "Aikataulutetut ajat",
+      "active_days": "Aktiiviset päivät",
+      "daily": "Päivittäin",
+      "dose_reminders": "Annosten muistutukset",
+      "dose_reminders_help": "Push-ilmoitus jokaisena aikataulutettuna aikana",
+      "show_emergency": "Näytä hätänäytöllä",
+      "show_emergency_help": "Näytetään pitkittyneen kohtauksen hälytyksen aikana",
+      "save": "Tallenna",
+      "add": "Lisää",
+      "update": "Päivitä",
+      "cancel": "Peruuta",
+      "remove": "Poista",
+      "remove_confirm": "Poistetaanko {{name}}?",
+      "start_date": "Lääkeseurannan aloituspäivä",
+      "start_date_help": "Vanhin päivämäärä, joka näytetään lääkitysehistoriassa. Jätä tyhjäksi automaattiseen tunnistamiseen lokitiedoista.",
+      "reminder_granted": "🔔 Ilmoitukset käytössä",
+      "reminder_denied": "🔕 Ilmoitukset estetty",
+      "reminder_off": "🔕 Ilmoitukset pois päältä",
+      "reminder_granted_help": "Muistutukset laukeavat kun sovellus on auki tai taustalla.",
+      "reminder_denied_help": "Estetty selaimen asetuksissa — nollaa sivuston luvat ottaaksesi uudelleen käyttöön.",
+      "reminder_off_help": "Ota käyttöön saadaksesi annosten muistutuksia.",
+      "reminder_enable": "Ota käyttöön",
+      "reminder_section": "Annosten muistutusilmoitukset",
+      "ios_reminder_note": "iOS:ssä sovellus on asennettava aloitusnäytölle ilmoitusten toimivuutta varten. Ilmoitukset vaativat sovelluksen olevan käynnissä tai taustalla — niitä ei voi toimittaa kun sovellus on kokonaan suljettu.",
+      "emergency_badge": "🚨 Hätätilanne",
+      "slot_morning": "Aamuannos",
+      "slot_afternoon": "Iltapäiväannos",
+      "slot_midday": "Keskipäiväannos",
+      "slot_evening": "Ilta-annos",
+      "slot_dose_n": "Annos {{n}}",
+      "slot_dose_time": "Annosaika",
+      "added": "Lääke lisätty.",
+      "updated": "Lääke päivitetty.",
+      "removed": "Lääke poistettu."
+    },
+    "reports": {
+      "section": "Raportit & Neurologia",
+      "section_desc": "Tiedot kliinisten neurologiraporttien luomiseen.",
+      "neuro_name": "Neurologin / lääkärin nimi",
+      "neuro_name_placeholder": "Dr. Nimi",
+      "institution": "Laitos / Sairaala",
+      "institution_placeholder": "Klinikan tai sairaalan nimi",
+      "contact": "Lääkärin yhteystieto",
+      "contact_placeholder": "Puhelin, sähköposti tai lähetenumero",
+      "include_dob": "Sisällytä syntymäaika",
+      "include_dob_help": "Näytetäänkö syntymäaika tulostetuissa raporteissa",
+      "additional_notes": "Lisämuistiinpanoja raportteihin",
+      "notes_placeholder": "Lääkitys, tunnetut laukaisijat, lääkärin ohjeet tai muu raportin loppuun sisällytettävä..."
+    },
+    "data": {
+      "section": "Data & Varmuuskopiointi",
+      "storage_used": "Käytetty tallennustila",
+      "storage_help": "Arvioitu selaimen IndexedDB-käyttö",
+      "storage_value": "{{kb}} kt",
+      "storage_quota": " / {{mb}} Mt",
+      "auto_backup": "Automaattinen varmuuskopiointi",
+      "auto_backup_never": "Ei koskaan",
+      "auto_backup_weekly": "Viikoittain",
+      "auto_backup_help": "Manuaalinen käynnistys on aina saatavilla Vienti-näytön kautta.",
+      "scheduled_backup": "Ajoitettu varmuuskopiointi joka {{days}}",
+      "export_backup": "Vie varmuuskopio",
+      "export_sub": "JSON-lataus",
+      "import_data": "Tuo tietoja",
+      "import_sub": "JSON-tiedosto",
+      "danger_zone": "Vaaravyöhyke",
+      "clear_confirm": "Tämä poistaa pysyvästi kaikki kirjatut tapahtumat. Toimintoa ei voi peruuttaa.",
+      "clear_yes": "Kyllä, poista kaikki",
+      "clear_btn": "Tyhjennä kaikki tapahtumatiedot",
+      "reset_confirm": "Nollatako kaikki asetukset tehdasasetuksiin?",
+      "reset_yes": "Kyllä, nollaa",
+      "reset_btn": "Palauta asetukset oletuksiin",
+      "cancel": "Peruuta",
+      "no_data": "Ei vietäviä tietoja.",
+      "exported": "{{events}} tapahtuma(a) ja {{meds}} lääke(ttä) viety.",
+      "export_failed": "Vienti epäonnistui.",
+      "all_deleted": "Kaikki tapahtumatiedot poistettu.",
+      "delete_failed": "Tietojen poistaminen epäonnistui. Yritä uudelleen.",
+      "settings_reset": "Asetukset palautettu oletuksiin.",
+      "no_data_in_file": "Tiedostosta ei löydy tietoja.",
+      "imported": "{{summary}} tuotu onnistuneesti.",
+      "imported_nothing": "ei mitään",
+      "import_failed": "Tuonti epäonnistui — virheellinen tai vioittunut tiedosto."
+    },
+    "about_section": {
+      "section": "Tietoja",
+      "version": "Sovelluksen versio",
+      "schema": "Tietokannan rakenne",
+      "reinstall": "Näytä asennuskehotus uudelleen",
+      "reinstall_sub": "Napauta jos hylkäsit asennusbannerin vahingossa"
+    }
+  },
+
+  "delete_modal": {
+    "title": "POISTA TIETUE?",
+    "body": "Tämä lääketieteellinen merkintä poistetaan pysyvästi. Toimintoa ei voi peruuttaa.",
+    "confirm": "KYLLÄ, POISTA PYSYVÄSTI",
+    "cancel": "PERUUTA"
+  },
+
+  "manual_entry": {
+    "title": "Kirjaa mennyt kohtaus",
+    "intro": "Syötä kohtauksen päivämäärä, aika ja kesto. Voit sitten lisätä kohtauksen tyypin, oireet, laukaisijat ja muistiinpanot.",
+    "date": "Päivämäärä",
+    "time": "Aika",
+    "total_duration": "Kokonaiskesto",
+    "phase_breakdown": "Vaiheiden erittely (valinnainen)",
+    "aura": "Aura",
+    "ictal": "Kohtaus (Iktaali)",
+    "recovery": "Post-iktaali / Toipuminen",
+    "min": "min",
+    "sec": "sek",
+    "continue": "Jatka tietoihin →",
+    "cancel": "Peruuta",
+    "error_duration": "Kokonaiskeston on oltava suurempi kuin 0."
+  },
+
+  "event_card": {
+    "edited": "Muokattu",
+    "manual_entry": "Manuaalinen kirjaus",
+    "view_edit": "Näytä / Muokkaa",
+    "delete": "Poista"
+  },
+
+  "summary": {
+    "save": "Tallenna",
+    "cancel": "Peruuta",
+    "add_another": "+ Lisää toinen oire",
+    "notes_placeholder": "Kliiniset havainnot, post-iktaalit muistiinpanot, annettu lääkitys...",
+    "notes_label": "Muistiinpanot",
+    "triggers_label": "Mahdolliset laukaisijat",
+    "symptoms_label": "Oireet",
+    "date_time_label": "Päivämäärä & Aika",
+    "duration_label": "Kesto",
+    "aura": "Aura",
+    "seizure": "Kohtaus",
+    "recovery": "Toipuminen",
+    "total": "Yhteensä",
+    "manual_durations": "Säädä kestoja manuaalisesti",
+    "remove_symptom": "Poista"
+  }
+}

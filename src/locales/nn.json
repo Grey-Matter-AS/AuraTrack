@@ -1,0 +1,395 @@
+{
+  "nav": {
+    "history": "HISTORIKK",
+    "settings": "⚙ INNSTILLINGAR",
+    "back": "← TILBAKE",
+    "help_label": "Hjelp"
+  },
+
+  "idle": {
+    "start": "START",
+    "log_past": "+ Registrer tidlegare anfall",
+    "recent_events": "Siste hendingar",
+    "last_5": "SISTE 5",
+    "no_events": "Ingen hendingar registrerte enno."
+  },
+
+  "recording": {
+    "total_elapsed": "Total tid",
+    "aura": "Aura",
+    "seizure": "Anfall",
+    "recovery": "Etterverknad",
+    "end_aura": "AURA SLUTT",
+    "aura_ended": "AURA AVSLUTTA ✓",
+    "end_seizure": "ANFALL SLUTT",
+    "seizure_ended": "ANFALL AVSLUTTA ✓",
+    "event_note": "+ HENDINGSNOTAT",
+    "close_notes": "LUKK NOTAT",
+    "stop": "STOPP",
+    "self_mode": "Sjølvmodus aktivert",
+    "long_seizure_warning": "LANGVARIG ANFALL — FØLG NØYE MED",
+    "approaching_threshold": "NÆRMAR SEG VARSELGRENSA",
+    "auto_stop_notice": "Tidtakaren stoppar automatisk ved 12:00"
+  },
+
+  "alert": {
+    "medical_alert": "MEDISINSK VARSEL",
+    "unresponsive": "IKKJE RESPONSIV",
+    "medical_emergency": "MEDISINSK NAUDSITUASJON",
+    "call_services": "RING NAUDETATANE NÅ",
+    "dont_leave": "Ikkje forlat pasienten",
+    "administer_med": "Gje naudmedisinering",
+    "neurologist": "Nevrolog",
+    "emergency_contact": "Naudkontakt",
+    "elapsed": "Tid"
+  },
+
+  "tagging": {
+    "step1_title": "Steg 1: Anfallstype",
+    "feeling_title": "Kva slags kjensle?",
+    "region_title": "Kor skjedde det?"
+  },
+
+  "history": {
+    "title": "Historikk",
+    "events_count": "{{count}} HENDINGAR",
+    "all_types": "Alle typar",
+    "no_events": "Ingen hendingar funne.",
+    "prev": "← Førre",
+    "next": "Neste →",
+    "page_of": "{{page}} / {{total}}",
+    "clear": "Tilbakestill",
+    "tab_seizures": "Anfall",
+    "tab_medications": "Medisinar",
+    "tab_export": "Eksporter"
+  },
+
+  "export": {
+    "title": "Eksporter & rapportar",
+    "date_range": "Datoperiode",
+    "from": "Frå",
+    "to": "Til",
+    "raw_data": "Rådata",
+    "backup_json_label": "Tryggleikskopiering JSON",
+    "backup_json_desc": "Full dataeksport — alle felt inkludert medisinar og doseringslogg. Bruk til tryggingskopi eller overføring til ny eining.",
+    "csv_label": "Rekneark CSV",
+    "csv_desc": "Hendingar, medisinar og doseringslogg i kommaseparert format. Opnar i Excel / Rekneark.",
+    "pdf_label": "Enkel utskrift / PDF",
+    "pdf_desc": "Rask utskriftsvennleg hendingstabelle — opnar i ny fane og startar utskriftsdialogen.",
+    "clinical_report": "Klinisk rapport",
+    "neuro_report_label": "Nevrolograpport",
+    "neuro_report_desc": "Klinisk PDF tilpassa lege — pasientinfo, faseutrekning, symptomanalyse og full hendingslogg. Formatert for presentasjon til nevrolog eller spesialist.",
+    "neuro_report_warning": "⚠ Legg til pasientnamn i Innstillingar → Identitet for ein fullstendig rapport.",
+    "generate_print": "Generer & skriv ut rapport",
+    "diary_title": "Anfallsdagbok",
+    "diary_label": "Månadleg kalender",
+    "diary_desc": "Einsidig kalenderrutenett som viser kva dagar det var hendingar, fargekoda etter type. Det raske referansearket å ta med til kvart legeavtale.",
+    "month": "Månad",
+    "generate": "Generer"
+  },
+
+  "event_detail": {
+    "title": "Hendingsdetaljar",
+    "edit": "Rediger",
+    "not_found": "Hending ikkje funne.",
+    "loading": "Lastar...",
+    "total_duration": "TOTAL VARIGHEIT",
+    "type": "TYPE",
+    "aura": "AURA",
+    "seizure": "ANFALL",
+    "recovery": "ETTERVERKNAD",
+    "details": "Detaljar",
+    "date": "Dato",
+    "time": "Tid",
+    "status": "Status",
+    "edited": "Redigert",
+    "symptoms": "Symptom",
+    "triggers": "Moglege utløysarar",
+    "notes": "Kliniske observasjonar",
+    "danger_prolonged_title": "Langvarig anfall",
+    "danger_prolonged_desc": "Denne hendinga varte meir enn 5 minutt. Søk medisinsk vurdering om dette ikkje allereie er gjort.",
+    "danger_cluster_title": "Klyngje ×{{count}} / Risiko for status epilepticus",
+    "danger_cluster_desc": "{{count}} anfall innanfor 8 minutt. Kontakt nevrolog omgåande."
+  },
+
+  "help": {
+    "title": "Hjelp",
+    "about_btn": "Om AuraTrack",
+    "sections": {
+      "recording": {
+        "title": "Registrere eit anfall",
+        "steps": [
+          "Trykk på den store START-knappen når eit anfall byrjar.",
+          "I omsorgsmodus trykker du på faseknapane (Aura slutt, Anfall slutt) etter kvart som fasane skiftar. I sjølvmodus er grensesnittet forenkla til ein enkelt stoppknapp.",
+          "Trykk + Hendingsnotat for å stemple eit tidsstempla notat under registreringa — bruk snarvegsknappane for vanlege hendingar som Fall, Naudmedisin gjeve, Ikkje responsiv osv.",
+          "Trykk STOPP når anfallet er over. Viss tidtakaren framleis går etter 12 minutt, stoppar registreringa automatisk og hendinga lagrast."
+        ]
+      },
+      "tagging": {
+        "title": "Merke hendingar",
+        "steps": [
+          "Etter stopp opnar ein merkevrettleiar seg automatisk.",
+          "Vel anfallstype, råka kroppsregionar og eventuelle observerte symptom.",
+          "Legg til fritekstnotat, og trykk deretter LAGRE. Du kan redigere ei kvar hending seinare frå Historikk."
+        ]
+      },
+      "manual": {
+        "title": "Manuell registrering",
+        "steps": [
+          "Trykk + Registrer tidlegare anfall på startskjermen for å leggje inn eit anfall du ikkje registrerte i sanntid.",
+          "Angi dato, tid og varigheit, og fullfør deretter merkevrettleiaren som vanleg."
+        ]
+      },
+      "medications": {
+        "title": "Medisinsporing",
+        "steps": [
+          "Legg til medisinane dine i Innstillingar → Medisinar.",
+          "Startskjermen viser dagens planlagde dosar — trykk på kvar medisinknapp for å veksle han, og trykk deretter Lagre for å logge dosane.",
+          "Aktiver dosepåminning per medisin i Innstillingar → Medisinar."
+        ]
+      },
+      "history": {
+        "title": "Historikk og eksport",
+        "steps": [
+          "Opne HISTORIKK for å bla, søkje og filtrere alle registrerte hendingar.",
+          "Trykk på ei hending for å sjå full detalj eller redigere henne.",
+          "Bruk EKSPORTER (frå Historikk) for å generere ein PDF-nevrolograpport, CSV eller JSON-tryggleikskopi."
+        ]
+      },
+      "settings": {
+        "title": "Innstillingar og tilgjengelegheit",
+        "steps": [
+          "Byt mellom sjølv- og omsorgsmodus i Innstillingar for å justere grensesnittet.",
+          "Endre tema, skriftstorleik og aksenfarge etter dine preferansar.",
+          "Legg til nevrologens namn og naudkontaktar for rask tilgang under eit anfall."
+        ]
+      }
+    }
+  },
+
+  "about": {
+    "title": "Om",
+    "section_about": "Om",
+    "section_developer": "Utviklar",
+    "section_privacy": "Personvern",
+    "section_disclaimer": "Medisinsk ansvarsfraskriving",
+    "section_opensource": "Open kjeldekode og tilbakemelding",
+    "about_text": "AuraTrack er ei personvernfokusert app for anfallssporing for personar med epilepsi og deira omsorgspersonar. Registrer anfall i sanntid, annotter hendingar med klinisk detalj, spor medisinar og generer strukturerte rapportar til nevrologen din — alt lagra lokalt på eininga di.",
+    "privacy_text": "Alle data lagrast utelukkande på eininga di med IndexedDB. Ingenting overførast til nokon ekstern tenar. Helsedataene dine forlet aldri eininga di.",
+    "disclaimer_text": "AuraTrack er eit personleg loggingsverktøy og er ikkje eit medisinsk utstyr. Det er ikkje meint å diagnostisere, behandle eller erstatte profesjonell medisinsk rådgjeving. Rådfør deg alltid med ein kvalifisert helseperson om din tilstand og handsaming.",
+    "disclaimer_not_medical": "ikkje eit medisinsk utstyr",
+    "opensource_text": "AuraTrack er open kjeldekode. Rapporter feil eller føreslå funksjonar på GitHub Issues.",
+    "github": "GitHub ↗",
+    "license": "Lisens",
+    "report_issue": "Rapporter eit problem"
+  },
+
+  "settings": {
+    "title": "Innstillingar",
+    "badge_caretaker": "OMSORGSPERSON",
+    "badge_self": "SJØLV",
+    "tabs": {
+      "profile": "Profil",
+      "medications": "Medisinar",
+      "display": "Visning",
+      "recording": "Opptak",
+      "reports": "Rapportar",
+      "data": "Data"
+    },
+    "identity": {
+      "section": "Identitet",
+      "mode": "Modus",
+      "mode_caretaker": "Omsorgsperson",
+      "mode_self": "Sjølv",
+      "mode_desc_caretaker": "Registrerer for ein annan person. Fullstendige fasekontrollar synlege under opptak.",
+      "mode_desc_self": "Registrerer eigne hendingar. Forenkla grensesnitt med éin knapp.",
+      "patient_name": "Persons / pasientnamn",
+      "your_name": "Ditt namn",
+      "name_placeholder": "Fullt namn (brukast i rapportar)",
+      "caretaker_name": "Omsorgspersonens namn",
+      "caretaker_placeholder": "Ditt namn",
+      "dob": "Fødselsdato",
+      "emergency_contact": "Naudkontakt",
+      "emergency_placeholder": "Telefonnummer eller namn"
+    },
+    "appearance": {
+      "section": "Utsjånad",
+      "theme": "Tema",
+      "theme_dark": "Mørk",
+      "theme_light": "Lys",
+      "theme_system": "System",
+      "accent": "Aksenfarge",
+      "accent_red": "Raud",
+      "accent_blue": "Blå",
+      "accent_green": "Grøn",
+      "accent_purple": "Lilla",
+      "accent_amber": "Rav",
+      "text_size": "Tekststorleik",
+      "language": "Språk"
+    },
+    "display": {
+      "section": "Visning",
+      "page_size": "Historikksidestorleik",
+      "date_format": "Datoformat",
+      "date_system": "Systemstandard",
+      "duration_display": "Varighetsvisning",
+      "time_format": "Tidsformat"
+    },
+    "recording": {
+      "section": "Opptak",
+      "haptic": "Haptisk tilbakemelding",
+      "haptic_help": "Vibrasjon ved knappetrykk (eininga må støtte det)",
+      "quick_labels": "Hurtignotat-etiketter",
+      "quick_labels_help": "Tilpass snarvegsknappane som visast under opptak. La stå tomt for å skjule ein knapp.",
+      "button_n": "Knapp {{n}}"
+    },
+    "medications": {
+      "section": "Medisinar",
+      "section_desc": "Gjeldande medikamentregime. Brukast i rapportar og dosering.",
+      "none_recorded": "Ingen medisinar registrerte.",
+      "add_btn": "+ Legg til medisin",
+      "add_form_title": "Legg til medisin",
+      "edit_form_title": "Rediger medisin",
+      "name_placeholder": "Medikamentnamn (t.d. Levetiracetam)",
+      "dose_placeholder": "Dose",
+      "scheduled_times": "Planlagde tider",
+      "active_days": "Aktive dagar",
+      "daily": "Dagleg",
+      "dose_reminders": "Dosepåminningar",
+      "dose_reminders_help": "Push-varsling til kvar planlagd tid",
+      "show_emergency": "Vis på naudskjermen",
+      "show_emergency_help": "Visast under langvarig anfallsvarsel",
+      "save": "Lagre",
+      "add": "Legg til",
+      "update": "Oppdater",
+      "cancel": "Avbryt",
+      "remove": "Fjern",
+      "remove_confirm": "Fjerne {{name}}?",
+      "start_date": "Startdato for medisinsporing",
+      "start_date_help": "Den tidlegaste datoen vist i medisinhistorikken. La stå tom for å auto-registrere frå loggar.",
+      "reminder_granted": "🔔 Varsel aktiverte",
+      "reminder_denied": "🔕 Varsel blokkerte",
+      "reminder_off": "🔕 Varsel av",
+      "reminder_granted_help": "Påminningar visast medan appen er open eller i bakgrunnen.",
+      "reminder_denied_help": "Blokkert i nettlesarinnstillingar — tilbakestill nettstadens løyver for å aktivere på nytt.",
+      "reminder_off_help": "Aktiver for å motta dosepåminningsvarsel.",
+      "reminder_enable": "Aktiver",
+      "reminder_section": "Dosepåminningsvarsel",
+      "ios_reminder_note": "På iOS må appen installerast på startskjermen for at varsel skal fungere. Varsel krev at appen køyrer eller er i bakgrunnen — dei kan ikkje leverast når appen er heilt lukka.",
+      "emergency_badge": "🚨 Naudsituasjon",
+      "slot_morning": "Morgondose",
+      "slot_afternoon": "Ettermiddagsdose",
+      "slot_midday": "Middagsdose",
+      "slot_evening": "Kveldsdose",
+      "slot_dose_n": "Dose {{n}}",
+      "slot_dose_time": "Dosetid",
+      "added": "Medisin lagd til.",
+      "updated": "Medisin oppdatert.",
+      "removed": "Medisin fjerna."
+    },
+    "reports": {
+      "section": "Rapportar og nevrolog",
+      "section_desc": "Informasjon brukt til å generere kliniske nevrolograpportar.",
+      "neuro_name": "Nevrolog / klinikarnamn",
+      "neuro_name_placeholder": "Dr. Namn",
+      "institution": "Institusjon / sjukehus",
+      "institution_placeholder": "Klinikk- eller sjukehusnamn",
+      "contact": "Klinikarens kontakt",
+      "contact_placeholder": "Telefon, e-post eller tilvisiingsnummer",
+      "include_dob": "Inkluder fødselsdato",
+      "include_dob_help": "Om fødselsdato visast i trykte rapportar",
+      "additional_notes": "Tilleggsnotat for rapportar",
+      "notes_placeholder": "Medisinar, kjende utløysarar, klinikarinstruksjonar, eller anna å inkludere på slutten av rapportar..."
+    },
+    "data": {
+      "section": "Data og tryggingskopi",
+      "storage_used": "Lagring brukt",
+      "storage_help": "Omtrentleg nettlesar IndexedDB-bruk",
+      "storage_value": "{{kb}} KB",
+      "storage_quota": " / {{mb}} MB",
+      "auto_backup": "Automatisk tryggingskopi",
+      "auto_backup_never": "Aldri",
+      "auto_backup_weekly": "Kvar veke",
+      "auto_backup_help": "Manuell utløysar er alltid tilgjengeleg via eksportskjermen.",
+      "scheduled_backup": "Planlagd tryggingskopi kvar {{days}}",
+      "export_backup": "Eksporter tryggingskopi",
+      "export_sub": "JSON-nedlasting",
+      "import_data": "Importer data",
+      "import_sub": "JSON-fil",
+      "danger_zone": "Faresone",
+      "clear_confirm": "Dette slettar permanent alle registrerte hendingar. Kan ikkje angrast.",
+      "clear_yes": "Ja, slett alt",
+      "clear_btn": "Slett alle hendingsdata",
+      "reset_confirm": "Tilbakestille alle preferansar til fabrikkstandard?",
+      "reset_yes": "Ja, tilbakestill",
+      "reset_btn": "Tilbakestill innstillingar til standard",
+      "cancel": "Avbryt",
+      "no_data": "Ingen data å eksportere.",
+      "exported": "Eksporterte {{events}} hending(ar) og {{meds}} medisin(ar).",
+      "export_failed": "Eksport mislykkast.",
+      "all_deleted": "Alle hendingsdata sletta.",
+      "delete_failed": "Klarte ikkje å slette data. Prøv igjen.",
+      "settings_reset": "Innstillingar tilbakestilte til standard.",
+      "no_data_in_file": "Ingen data funne i fila.",
+      "imported": "Importerte {{summary}} vellykka.",
+      "imported_nothing": "ingenting",
+      "import_failed": "Import mislykkast — ugyldig eller øydelagd fil."
+    },
+    "about_section": {
+      "section": "Om",
+      "version": "App-versjon",
+      "schema": "Databaseskjema",
+      "reinstall": "Vis installasjonsmelding på nytt",
+      "reinstall_sub": "Trykk viss du ved eit uhell avviste installasjonsbanneret"
+    }
+  },
+
+  "delete_modal": {
+    "title": "SLETTE POST?",
+    "body": "Denne medisinske posten vil bli permanent fjerna. Denne handlinga kan ikkje angrast.",
+    "confirm": "JA, SLETT PERMANENT",
+    "cancel": "AVBRYT"
+  },
+
+  "manual_entry": {
+    "title": "Registrer tidlegare anfall",
+    "intro": "Angi dato, tid og varigheit for anfallet. Du kan deretter leggje til anfallstype, symptom, utløysarar og notat.",
+    "date": "Dato",
+    "time": "Tid",
+    "total_duration": "Total varigheit",
+    "phase_breakdown": "Faseoversikt (valfritt)",
+    "aura": "Aura",
+    "ictal": "Anfall (Iktalt)",
+    "recovery": "Postiktalt / Etterverknad",
+    "min": "min",
+    "sec": "sek",
+    "continue": "Hald fram til detaljar →",
+    "cancel": "Avbryt",
+    "error_duration": "Total varigheit må vere større enn 0."
+  },
+
+  "event_card": {
+    "edited": "Redigert",
+    "manual_entry": "Manuell registrering",
+    "view_edit": "Vis / Rediger",
+    "delete": "Slett"
+  },
+
+  "summary": {
+    "save": "Lagre",
+    "cancel": "Avbryt",
+    "add_another": "+ Legg til eit anna symptom",
+    "notes_placeholder": "Kliniske observasjonar, postiktale notat, medisin gjeve...",
+    "notes_label": "Notat",
+    "triggers_label": "Moglege utløysarar",
+    "symptoms_label": "Symptom",
+    "date_time_label": "Dato og tid",
+    "duration_label": "Varigheit",
+    "aura": "Aura",
+    "seizure": "Anfall",
+    "recovery": "Etterverknad",
+    "total": "Totalt",
+    "manual_durations": "Juster varigheiter manuelt",
+    "remove_symptom": "Fjern"
+  }
+}
