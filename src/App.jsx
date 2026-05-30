@@ -20,7 +20,6 @@ import RecordingView from './pages/RecordingView';
 import TaggingView from './pages/TaggingView';
 import HistoryView from './pages/HistoryView';
 import SettingsView from './pages/SettingsView';
-import ExportView from './pages/ExportView';
 import EventDetailView from './pages/EventDetailView';
 import AboutView from './pages/AboutView';
 import HelpView from './pages/HelpView';
@@ -331,9 +330,8 @@ function App() {
         {status === 'IDLE'         && <IdleView history={history.history} fullHistory={fullHistory} onStart={handleStart} onManualEntry={() => setShowManualEntry(true)} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail} medicationGroups={medicationGroups} allActiveMedications={allActiveMedications} onSaveDoses={handleSaveDoses} durationFormat={settings.durationFormat} dateFormat={settings.dateFormat} timeFormat={settings.timeFormat} />}
         {status === 'RECORDING'    && <RecordingView elapsed={timer.elapsed} startTime={timer.startTime} laps={timer.laps} onLap={timer.recordLap} onStop={handleStop} onEmergencyStop={handleEmergencyStop} onQuickNote={l => wizard.addQuickNote(l, timer.elapsed)} userMode={settings.userMode} quickNoteLabels={activeQuickNoteLabels} emergencyMedications={emergencyMedications} neurologistName={settings.neurologistName} neurologistContact={settings.neurologistContact} emergencyContact={settings.emergencyContact} durationFormat={settings.durationFormat} />}
         {status === 'TAGGING'      && <TaggingView {...wizard} elapsed={timer.elapsed} laps={timer.laps} startTime={timer.startTime} onSave={handleSave} onCancel={handleCancel} durationFormat={settings.durationFormat} />}
-        {status === 'HISTORY'      && <HistoryView onBack={() => setStatus('IDLE')} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail} onExport={() => setStatus('EXPORT')} historyPageSize={settings.historyPageSize} settings={settings} />}
+        {status === 'HISTORY'      && <HistoryView onBack={() => setStatus('IDLE')} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail} historyPageSize={settings.historyPageSize} settings={settings} />}
         {status === 'SETTINGS'     && <SettingsView settings={settings} onUpdate={updateSettings} onReset={resetSettings} onBack={() => setStatus('IDLE')} pwa={pwa} notificationPermission={notifications.permission} onRequestNotificationPermission={async () => { const p = await notifications.requestPermission(); if (p === 'granted') notifications.scheduleForToday(meds.medications); }} onSync={() => setSyncModal({ open: true, connectToken: null, offerSDP: null })} />}
-        {status === 'EXPORT'       && <ExportView onBack={() => setStatus('HISTORY')} settings={settings} />}
         {status === 'EVENT_DETAIL' && <EventDetailView eventId={detailEventId} onEdit={handleEdit} onClose={() => setStatus(previousStatus)} durationFormat={settings.durationFormat} dateFormat={settings.dateFormat} timeFormat={settings.timeFormat} />}
         {status === 'HELP'         && <HelpView onBack={() => setStatus('IDLE')} onAbout={goToAbout} />}
         {status === 'ABOUT'        && <AboutView onBack={() => setStatus(previousStatus)} />}

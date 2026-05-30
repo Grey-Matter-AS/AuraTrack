@@ -77,7 +77,8 @@ export const exportToPDF = (events) => {
       <tbody>
         ${events.map(e => {
           const syms = e.symptoms || [];
-          const eventRow = `<tr><td>${e.date||''}</td><td>${e.time||''}</td><td>${e.type||''}</td><td>${e.duration||0}s</td><td>${(e.notes||'').replace(/\n/g,'<br>')}</td></tr>`;
+          const escapedNotes = esc(e.notes || '').replace(/\n/g, '<br>');
+          const eventRow = `<tr><td>${esc(e.date||'')}</td><td>${esc(e.time||'')}</td><td>${esc(e.type||'')}</td><td>${e.duration||0}s</td><td>${escapedNotes}</td></tr>`;
           const sympRow = syms.length
             ? `<tr class="symp-row"><td colspan="5">${syms.map(fmtSymptomPath).join('&nbsp;&nbsp;|&nbsp;&nbsp;')}</td></tr>`
             : '';
@@ -157,6 +158,13 @@ export const exportNeurologistReport = (events, settings = {}, medications = [],
   const awarenessTotal = awareness.awake + awareness.confused + awareness.blackout;
 
   // ── SECTION 2: Recent Events Table
+  const recByTag = (mode) => {
+    if (!mode) return '';
+    return mode === 'CARETAKER'
+      ? `<span style="background:#dbeafe;color:#1d4ed8;padding:1px 4px;border-radius:3px;font-size:8px;font-weight:800">CT</span>`
+      : `<span style="background:#d1fae5;color:#065f46;padding:1px 4px;border-radius:3px;font-size:8px;font-weight:800">SE</span>`;
+  };
+
   const recentRows = recentEvents.map((e, i) => {
     const d       = phaseDurs(e);
     const total   = e.manualDurations?.total ?? e.duration ?? 0;
@@ -172,6 +180,7 @@ export const exportNeurologistReport = (events, settings = {}, medications = [],
       <td style="text-align:right;color:#3b82f6">${fmtDur(d.recovery)}</td>
       <td style="text-align:center">${hasNote ? '✓' : ''}</td>
       <td style="text-align:center">${e.isEdited ? '✎' : ''}</td>
+      <td style="text-align:center">${recByTag(e.userModeAtTime)}</td>
     </tr>`;
   }).join('');
 
@@ -219,6 +228,7 @@ export const exportNeurologistReport = (events, settings = {}, medications = [],
         <div>
           <span style="font-weight:900;font-size:12px">${esc(e.date || '—')} at ${esc(e.time || '—')}</span>
           <span style="margin-left:8px;font-size:11px;color:#374151;font-weight:700">${esc(e.type || 'Uncategorized')}</span>
+          ${e.userModeAtTime ? `<span style="margin-left:6px">${recByTag(e.userModeAtTime)}</span>` : ''}
         </div>
         <div style="display:flex;gap:4px;flex-wrap:wrap">${badges}</div>
       </div>
@@ -457,6 +467,7 @@ export const exportNeurologistReport = (events, settings = {}, medications = [],
         <th style="text-align:right">Recovery</th>
         <th style="text-align:center">Notes</th>
         <th style="text-align:center">Edited</th>
+        <th style="text-align:center">Rec. by</th>
       </tr></thead>
       <tbody>${recentRows || '<tr><td colspan="10" style="color:#9ca3af">No events recorded</td></tr>'}</tbody>
     </table>

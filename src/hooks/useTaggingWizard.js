@@ -62,9 +62,9 @@ export function useTaggingWizard() {
     const targetId = editingId || activeEventId;
     if (!targetId) throw new Error('No active event to save');
 
+    const existing = await db.events.get(targetId);
     let type = selections.type;
     if (!type && editingId) {
-      const existing = await db.events.get(editingId);
       type = existing?.type || 'Uncategorized';
     }
 
@@ -80,6 +80,20 @@ export function useTaggingWizard() {
         })()
       : {};
 
+    // Build edit log entry when editing an existing record
+    const newEditLog = existing?.editLog ? [...existing.editLog] : [];
+    if (editingId && existing) {
+      const resolvedType = type || 'Uncategorized';
+      const changedFields = [];
+      if (resolvedType !== (existing.type || 'Uncategorized')) changedFields.push('type');
+      if (notes !== (existing.notes || '')) changedFields.push('notes');
+      if (JSON.stringify(triggers) !== JSON.stringify(existing.triggers || [])) changedFields.push('triggers');
+      if (JSON.stringify(tempSymptomList) !== JSON.stringify(existing.symptoms || [])) changedFields.push('symptoms');
+      if (JSON.stringify(manualDurations) !== JSON.stringify(existing.manualDurations || {})) changedFields.push('durations');
+      if (overrideDateTime) changedFields.push('date/time');
+      newEditLog.push({ editedAt: Date.now(), changedFields });
+    }
+
     await db.events.update(targetId, {
       type: type || 'Uncategorized',
       symptoms: [...tempSymptomList],
@@ -90,6 +104,7 @@ export function useTaggingWizard() {
       lastModified: Date.now(),
       manualDurations,
       editedTimers,
+      editLog: newEditLog,
       // Keep event.duration in sync with any manual total edit so every view reads the same value
       ...(manualDurations?.total != null ? { duration: manualDurations.total } : {}),
       ...dateTimeOverride,

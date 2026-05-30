@@ -10,7 +10,7 @@ import { MedicationHistoryTab } from '../components/MedicationHistoryTab';
 import ExportView from './ExportView';
 import { ScrollFade } from '../components/ScrollFade';
 
-export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, onExport, historyPageSize = 10, settings = {} }) {
+export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, historyPageSize = 10, settings = {} }) {
   const { t } = useTranslation();
   const { durationFormat = 'seconds', dateFormat = 'locale', timeFormat = '12h' } = settings;
   const [activeTab, setActiveTab] = useState('seizures');

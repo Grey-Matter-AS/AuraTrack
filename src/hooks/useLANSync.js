@@ -81,10 +81,12 @@ export function useLANSync() {
     if (data.type === 'pin') { setRemotePin(data.pin); go('pin_confirm'); return; }
     if (data.type === 'pin_ok') { go('transferring'); await sendLocalData(); return; }
     if (data.type === 'meta') {
+      if (typeof data.total !== 'number' || data.total < 1 || data.total > 2000) return;
       rxRef.current = { chunks: new Array(data.total), expected: data.total };
       return;
     }
     if (data.type === 'chunk') {
+      if (phaseRef.current !== 'transferring' && phaseRef.current !== 'merging') return;
       rxRef.current.chunks[data.index] = data.data;
       const filled = rxRef.current.chunks.filter(c => c !== undefined).length;
       if (filled === rxRef.current.expected) {

@@ -179,6 +179,27 @@ export default function EventDetailView({ eventId, onEdit, onClose, durationForm
           </div>
         </div>
 
+        {/* Edit History */}
+        {event.editLog?.length > 0 && (
+          <div className="p-5 rounded-2xl" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
+            <p className="text-[10px] font-black uppercase tracking-widest mb-3" style={{ color: 'var(--text-dim)' }}>{t('event_detail.edit_history', 'Edit History')}</p>
+            <div className="space-y-2">
+              {event.editLog.map((entry, i) => (
+                <div key={i} className="flex justify-between items-start text-xs gap-3">
+                  <span style={{ color: 'var(--text-secondary)' }}>
+                    {new Date(entry.editedAt).toLocaleString()}
+                  </span>
+                  <span className="text-right font-medium" style={{ color: 'var(--text-faint)' }}>
+                    {entry.changedFields?.length
+                      ? entry.changedFields.join(', ')
+                      : t('event_detail.edit_history_general', 'general update')}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Symptoms */}
         {event.symptoms?.length > 0 && (
           <div className="p-5 rounded-2xl" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>

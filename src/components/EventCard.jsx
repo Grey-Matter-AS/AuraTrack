@@ -66,6 +66,12 @@ export function EventCard({ event, onEdit, onDelete, onViewDetail, dangerFlags, 
                 style={{ backgroundColor: 'rgba(99,102,241,0.15)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.3)' }}
               >{t('event_card.manual_entry')}</span>
             )}
+            {!event.isComplete && (
+              <span
+                className="text-[9px] px-1.5 py-0.5 rounded uppercase font-bold"
+                style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-faint)', border: '1px solid var(--border)' }}
+              >{t('event_card.untagged', 'Untagged')}</span>
+            )}
           </div>
           <p className="text-[11px] font-medium" style={{ color: 'var(--text-dim)' }}>
             {formatEventDate(event.startTime, dateFormat)} • {formatEventTime(event.startTime, timeFormat)}

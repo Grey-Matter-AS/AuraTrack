@@ -22,7 +22,11 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/favicon.svg">
 
-    <!-- 6. Safety: Zero White Flash CSS -->
+    <!-- 6. Content Security Policy -->
+    <meta http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline' https://0.peerjs.com; connect-src 'self' https://0.peerjs.com wss://0.peerjs.com; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline';">
+
+    <!-- 7. Safety: Zero White Flash CSS -->
     <style>
       html, body {
         background-color: #0f172a;
