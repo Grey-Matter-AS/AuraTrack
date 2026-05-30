@@ -44,10 +44,10 @@ export default function HelpView({ onBack, onAbout }) {
               onClick={() => toggle(section.id)}
               className="w-full flex items-center justify-between px-4 py-3 active:opacity-70 transition-opacity"
             >
-              <span className="text-[11px] font-black uppercase tracking-widest text-left" style={{ color: 'var(--text-primary)' }}>
+              <span className="text-[11px] font-black uppercase tracking-widest text-left" style={{ color: 'var(--text-on-raised)' }}>
                 {section.title}
               </span>
-              <span className="text-[var(--text-dim)] text-xs ml-2 shrink-0">
+              <span className="text-xs ml-2 shrink-0" style={{ color: 'var(--text-on-raised-muted)' }}>
                 {expanded === section.id ? '▲' : '▼'}
               </span>
             </button>
@@ -62,7 +62,7 @@ export default function HelpView({ onBack, onAbout }) {
                     >
                       {i + 1}
                     </span>
-                    <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{step}</p>
+                    <p className="text-sm leading-relaxed" style={{ color: 'var(--text-on-raised-muted)' }}>{step}</p>
                   </div>
                 ))}
               </div>
@@ -73,7 +73,7 @@ export default function HelpView({ onBack, onAbout }) {
         <button
           onClick={onAbout}
           className="w-full mt-2 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest active:scale-95 transition-all"
-          style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)', border: '1px solid var(--border)' }}
+          style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised-muted)', border: '1px solid var(--border)' }}
         >
           {t('help.about_btn')}
         </button>

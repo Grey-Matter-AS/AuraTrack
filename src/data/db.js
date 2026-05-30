@@ -24,3 +24,10 @@ db.version(6).stores({
   medications: '++id',
   medicationLogs: '++id, medicationId, takenAt, scheduledTime'
 });
+
+db.version(7).stores({
+  events: '++id, uuid, startTime, date, type, isComplete, isEdited, notes',
+  settings: 'key',
+  medications: '++id',
+  medicationLogs: '++id, medicationId, takenAt, scheduledTime'
+});

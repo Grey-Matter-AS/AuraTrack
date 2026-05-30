@@ -24,6 +24,7 @@ import ExportView from './pages/ExportView';
 import EventDetailView from './pages/EventDetailView';
 import AboutView from './pages/AboutView';
 import HelpView from './pages/HelpView';
+import SyncModal from './components/SyncModal';
 
 function Header({ onSettings, onHistory, onHelp }) {
   const { t } = useTranslation();
@@ -51,7 +52,7 @@ function Header({ onSettings, onHistory, onHelp }) {
         <button
           onClick={onHelp}
           className="w-8 h-8 rounded-xl text-[12px] font-black flex items-center justify-center active:scale-95 transition-all"
-          style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)', border: '1px solid var(--border)' }}
+          style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
           aria-label={t('nav.help_label')}
         >
           ?
@@ -71,6 +72,7 @@ function App() {
   const [todayLogs, setTodayLogs] = useState([]);
   const [allMedLogs, setAllMedLogs] = useState([]);
   const [showManualEntry, setShowManualEntry] = useState(false);
+  const [syncModal, setSyncModal] = useState({ open: false, connectToken: null, offerSDP: null });
 
   const timer = useEventTimer();
   const history = useEventHistory();
@@ -100,6 +102,27 @@ function App() {
 
   // Sync haptic preference to the module singleton
   useEffect(() => { setHapticEnabled(settings.hapticFeedback); }, [settings.hapticFeedback]);
+
+  // Detect URL hash for QR-based sync (opened by scanning a QR code on another device)
+  useEffect(() => {
+    const parseHash = () => {
+      const hash = window.location.hash;
+      const syncMatch = hash.match(/^#sync=(.+)/);
+      const offerMatch = hash.match(/^#sdp=(.+)/);
+      const answerMatch = hash.match(/^#sdp-answer=(.+)/);
+      if (syncMatch || offerMatch || answerMatch) {
+        window.history.replaceState(null, '', window.location.pathname);
+        setSyncModal({
+          open: true,
+          connectToken: syncMatch?.[1] ?? null,
+          offerSDP: offerMatch?.[1] ?? null,
+        });
+      }
+    };
+    parseHash();
+    window.addEventListener('hashchange', parseHash);
+    return () => window.removeEventListener('hashchange', parseHash);
+  }, []);
 
   // Crash recovery: resume timer if browser closed during recording
   useEffect(() => {
@@ -159,6 +182,7 @@ function App() {
     try {
       const startTime = new Date(`${date}T${time}`).getTime();
       const id = await db.events.add({
+        uuid: crypto.randomUUID(),
         startTime,
         date: new Date(startTime).toLocaleDateString(),
         time: new Date(startTime).toLocaleTimeString(),
@@ -186,7 +210,7 @@ function App() {
     try {
       const ev = timer.stopTimer();
       if (!ev) return;
-      const id = await db.events.add({ ...ev, type: 'Uncategorized', isComplete: false, editLog: [], userModeAtTime: settings.userMode });
+      const id = await db.events.add({ uuid: crypto.randomUUID(), ...ev, type: 'Uncategorized', isComplete: false, editLog: [], userModeAtTime: settings.userMode });
       wizard.setActiveEvent(id);
       setStatus('TAGGING');
     } catch (err) {
@@ -237,6 +261,7 @@ function App() {
       const ev = timer.stopTimer();
       if (!ev) { setStatus('IDLE'); return; }
       await db.events.add({
+        uuid: crypto.randomUUID(),
         ...ev,
         type: 'Uncategorized',
         isComplete: true,
@@ -297,7 +322,7 @@ function App() {
 
       {status === 'RECORDING' && wakeLockUnsupported && (
         <div className="shrink-0 text-xs text-center px-4 py-2"
-          style={{ background: 'var(--bg-raised)', color: 'var(--text-dim)', borderBottom: '1px solid var(--border)' }}>
+          style={{ background: 'var(--bg-raised)', color: 'var(--text-on-raised-muted)', borderBottom: '1px solid var(--border)' }}>
           Screen may sleep — increase screen timeout in device settings
         </div>
       )}
@@ -307,7 +332,7 @@ function App() {
         {status === 'RECORDING'    && <RecordingView elapsed={timer.elapsed} startTime={timer.startTime} laps={timer.laps} onLap={timer.recordLap} onStop={handleStop} onEmergencyStop={handleEmergencyStop} onQuickNote={l => wizard.addQuickNote(l, timer.elapsed)} userMode={settings.userMode} quickNoteLabels={activeQuickNoteLabels} emergencyMedications={emergencyMedications} neurologistName={settings.neurologistName} neurologistContact={settings.neurologistContact} emergencyContact={settings.emergencyContact} durationFormat={settings.durationFormat} />}
         {status === 'TAGGING'      && <TaggingView {...wizard} elapsed={timer.elapsed} laps={timer.laps} startTime={timer.startTime} onSave={handleSave} onCancel={handleCancel} durationFormat={settings.durationFormat} />}
         {status === 'HISTORY'      && <HistoryView onBack={() => setStatus('IDLE')} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail} onExport={() => setStatus('EXPORT')} historyPageSize={settings.historyPageSize} settings={settings} />}
-        {status === 'SETTINGS'     && <SettingsView settings={settings} onUpdate={updateSettings} onReset={resetSettings} onBack={() => setStatus('IDLE')} pwa={pwa} notificationPermission={notifications.permission} onRequestNotificationPermission={async () => { const p = await notifications.requestPermission(); if (p === 'granted') notifications.scheduleForToday(meds.medications); }} />}
+        {status === 'SETTINGS'     && <SettingsView settings={settings} onUpdate={updateSettings} onReset={resetSettings} onBack={() => setStatus('IDLE')} pwa={pwa} notificationPermission={notifications.permission} onRequestNotificationPermission={async () => { const p = await notifications.requestPermission(); if (p === 'granted') notifications.scheduleForToday(meds.medications); }} onSync={() => setSyncModal({ open: true, connectToken: null, offerSDP: null })} />}
         {status === 'EXPORT'       && <ExportView onBack={() => setStatus('HISTORY')} settings={settings} />}
         {status === 'EVENT_DETAIL' && <EventDetailView eventId={detailEventId} onEdit={handleEdit} onClose={() => setStatus(previousStatus)} durationFormat={settings.durationFormat} dateFormat={settings.dateFormat} timeFormat={settings.timeFormat} />}
         {status === 'HELP'         && <HelpView onBack={() => setStatus('IDLE')} onAbout={goToAbout} />}
@@ -316,6 +341,12 @@ function App() {
 
       {itemToDelete && <DeleteModal onConfirm={handleDeleteConfirm} onCancel={() => setItemToDelete(null)} />}
       {showManualEntry && <ManualEntrySheet onConfirm={handleManualCreate} onClose={() => setShowManualEntry(false)} />}
+      <SyncModal
+        isOpen={syncModal.open}
+        onClose={() => setSyncModal({ open: false, connectToken: null, offerSDP: null })}
+        connectToken={syncModal.connectToken}
+        offerSDP={syncModal.offerSDP}
+      />
 
       <PWAInstallBanner isVisible={pwa.isVisible} isIOS={pwa.isIOS} install={pwa.install} dismiss={pwa.dismiss} showManualInstructions={pwa.showManualInstructions} dismissManual={pwa.dismissManual} />
       {toastMsg && (

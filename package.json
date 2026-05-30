@@ -1,7 +1,7 @@
 {
   "name": "app",
   "private": true,
-  "version": "3.0.1",
+  "version": "4.0.0",
   "license": "GPL-3.0-or-later",
   "type": "module",
   "scripts": {
@@ -19,7 +19,10 @@
     "autoprefixer": "^10.5.0",
     "dexie": "^4.4.2",
     "i18next": "^26.3.0",
+    "jsqr": "^1.4.0",
+    "peerjs": "^1.5.5",
     "postcss": "^8.5.14",
+    "qrcode": "^1.5.4",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-i18next": "^17.0.8",

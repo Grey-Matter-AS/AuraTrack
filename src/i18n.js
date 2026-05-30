@@ -8,6 +8,7 @@ import es from './locales/es.json';
 import sv from './locales/sv.json';
 import fi from './locales/fi.json';
 import nn from './locales/nn.json';
+import da from './locales/da.json';
 
 i18n.use(initReactI18next).init({
   resources: {
@@ -19,6 +20,7 @@ i18n.use(initReactI18next).init({
     sv: { translation: sv },
     fi: { translation: fi },
     nn: { translation: nn },
+    da: { translation: da },
   },
   lng: 'en',
   fallbackLng: 'en',

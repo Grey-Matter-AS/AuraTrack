@@ -22,6 +22,17 @@
 
   /* Accent (overridden by data-accent attribute) */
   --accent: #dc2626;
+
+  /* Medication status — dark mode */
+  --status-missed-bg:     rgba(220,38,38,0.20);
+  --status-missed-text:   #fca5a5;
+  --status-missed-border: rgba(220,38,38,0.45);
+  --status-late-bg:       rgba(217,119,6,0.20);
+  --status-late-text:     #fcd34d;
+  --status-late-border:   rgba(217,119,6,0.45);
+
+  /* Text on --bg-raised containers (stays dark in both themes) */
+  --text-on-raised-muted: rgba(255,255,255,0.75);
 }
 
 /* Light theme overrides */
@@ -36,8 +47,17 @@
   --text-dim:       #64748b;
   --text-faint:     #94a3b8;
   --text-on-raised: #ffffff;
+  --text-on-raised-muted: rgba(255,255,255,0.80);
   --border:        #e2e8f0;
   --border-subtle: rgba(226, 232, 240, 0.7);
+
+  /* Medication status — light mode */
+  --status-missed-bg:     #fee2e2;
+  --status-missed-text:   #991b1b;
+  --status-missed-border: #fca5a5;
+  --status-late-bg:       #fef3c7;
+  --status-late-text:     #92400e;
+  --status-late-border:   #fcd34d;
 }
 
 /* System theme — follow OS preference */
@@ -53,8 +73,17 @@
     --text-dim:       #64748b;
     --text-faint:     #94a3b8;
     --text-on-raised: #ffffff;
+    --text-on-raised-muted: rgba(255,255,255,0.80);
     --border:        #e2e8f0;
     --border-subtle: rgba(226, 232, 240, 0.7);
+
+    /* Medication status — light mode */
+    --status-missed-bg:     #fee2e2;
+    --status-missed-text:   #991b1b;
+    --status-missed-border: #fca5a5;
+    --status-late-bg:       #fef3c7;
+    --status-late-text:     #92400e;
+    --status-late-border:   #fcd34d;
   }
 }
 

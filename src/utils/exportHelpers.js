@@ -9,7 +9,7 @@ export const filterEventsByDateRange = (events, fromDateStr, toDateStr) => {
   return events.filter(e => e.startTime >= from && e.startTime <= to);
 };
 
-export const exportToJSON = (events, medications = [], medicationLogs = []) => {
+export const exportToJSON = async (events, medications = [], medicationLogs = []) => {
   const payload = {
     version: 6,
     exportedAt: Date.now(),
@@ -18,10 +18,10 @@ export const exportToJSON = (events, medications = [], medicationLogs = []) => {
     medicationLogs,
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-  triggerDownload(blob, `auratrack-backup-${dateStamp()}.json`);
+  await saveFileNative(blob, `auratrack-backup-${dateStamp()}.json`, 'AuraTrack Backup', ['.json']);
 };
 
-export const exportToCSV = (events, medications = [], medicationLogs = []) => {
+export const exportToCSV = async (events, medications = [], medicationLogs = []) => {
   const header = 'id,date,time,type,duration,notes';
   const rows = events.map(formatCSVRow).join('\n');
 
@@ -44,7 +44,7 @@ export const exportToCSV = (events, medications = [], medicationLogs = []) => {
   }
 
   const blob = new Blob([csv], { type: 'text/csv' });
-  triggerDownload(blob, `auratrack-events-${dateStamp()}.csv`);
+  await saveFileNative(blob, `auratrack-events-${dateStamp()}.csv`, 'AuraTrack CSV Export', ['.csv']);
 };
 
 export const exportToPDF = (events) => {
@@ -732,4 +732,23 @@ function triggerDownload(blob, filename) {
   a.click();
   document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 100);
+}
+
+async function saveFileNative(blob, suggestedName, description, extensions) {
+  if ('showSaveFilePicker' in window) {
+    try {
+      const handle = await window.showSaveFilePicker({
+        suggestedName,
+        types: [{ description, accept: { [blob.type]: extensions } }],
+      });
+      const writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      return;
+    } catch (e) {
+      if (e.name === 'AbortError') return;
+      // Fall through to legacy download on unexpected errors
+    }
+  }
+  triggerDownload(blob, suggestedName);
 }

@@ -9,6 +9,7 @@ import i18n from '../i18n';
 
 const LANGUAGES = [
   { code: 'en', label: 'English' },
+  { code: 'da', label: 'Dansk' },
   { code: 'nb', label: 'Norsk Bokmål' },
   { code: 'nn', label: 'Nynorsk' },
   { code: 'de', label: 'Deutsch' },
@@ -517,7 +518,7 @@ function MedicationSection({ flash, notificationPermission, onRequestNotificatio
 
 // ─── Main component ───────────────────────────────────────────
 
-export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, notificationPermission, onRequestNotificationPermission }) {
+export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, notificationPermission, onRequestNotificationPermission, onSync }) {
   const { t } = useTranslation();
   const fileInputRef = useRef();
   const [storageInfo, setStorageInfo] = useState(null);
@@ -556,36 +557,54 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
     typeof e.startTime === 'number' &&
     typeof e.duration === 'number';
 
-  const handleImport = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  const processImport = async (file) => {
     try {
       const text = await file.text();
       const parsed = JSON.parse(text);
       const raw = Array.isArray(parsed) ? parsed : (parsed.events || []);
       if (!raw.length && !parsed.medications?.length) { flash(t('settings.data.no_data_in_file')); return; }
+
       let eventsImported = 0, medsImported = 0, logsImported = 0;
+
       if (raw.length) {
         const valid = raw.filter(isValidEvent);
         if (valid.length < raw.length) {
           console.warn(`Skipped ${raw.length - valid.length} malformed records during import`);
         }
         if (valid.length) {
-          const toImport = valid.map(({ id, ...rest }) => rest);
-          await db.events.bulkAdd(toImport);
-          eventsImported = toImport.length;
+          const existing = await db.events.toArray();
+          const existingUUIDs = new Set(existing.map(e => e.uuid).filter(Boolean));
+          const existingTimes = new Set(existing.map(e => e.startTime));
+          const toInsert = valid.filter(e =>
+            e.uuid ? !existingUUIDs.has(e.uuid) : !existingTimes.has(e.startTime)
+          ).map(({ id, ...rest }) => rest);
+          if (toInsert.length) await db.events.bulkAdd(toInsert);
+          eventsImported = toInsert.length;
         }
       }
+
       if (Array.isArray(parsed.medications) && parsed.medications.length) {
-        const toImport = parsed.medications.map(({ id, ...rest }) => rest);
-        await db.medications.bulkAdd(toImport).catch(() => {});
-        medsImported = toImport.length;
+        const existingMeds = await db.medications.toArray().catch(() => []);
+        const existingMedKeys = new Set(existingMeds.map(m => `${m.name}|${m.frequency}`));
+        const toInsert = parsed.medications
+          .filter(m => !existingMedKeys.has(`${m.name}|${m.frequency}`))
+          .map(({ id, ...rest }) => rest);
+        if (toInsert.length) await db.medications.bulkAdd(toInsert).catch(() => {});
+        medsImported = toInsert.length;
       }
+
       if (Array.isArray(parsed.medicationLogs) && parsed.medicationLogs.length) {
-        const toImport = parsed.medicationLogs.map(({ id, ...rest }) => rest);
-        await db.medicationLogs.bulkAdd(toImport).catch(() => {});
-        logsImported = toImport.length;
+        const existingLogs = await db.medicationLogs.toArray().catch(() => []);
+        const existingLogKeys = new Set(
+          existingLogs.map(l => `${l.medicationId}|${l.scheduledTime ?? ''}|${l.takenAt}`)
+        );
+        const toInsert = parsed.medicationLogs
+          .filter(l => !existingLogKeys.has(`${l.medicationId}|${l.scheduledTime ?? ''}|${l.takenAt}`))
+          .map(({ id, ...rest }) => rest);
+        if (toInsert.length) await db.medicationLogs.bulkAdd(toInsert).catch(() => {});
+        logsImported = toInsert.length;
       }
+
       const parts = [];
       if (eventsImported) parts.push(`${eventsImported} event(s)`);
       if (medsImported) parts.push(`${medsImported} medication(s)`);
@@ -594,7 +613,30 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
     } catch {
       flash(t('settings.data.import_failed'));
     }
+  };
+
+  const handleImport = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    await processImport(file);
     e.target.value = '';
+  };
+
+  const handleImportClick = async () => {
+    if ('showOpenFilePicker' in window) {
+      try {
+        const [handle] = await window.showOpenFilePicker({
+          types: [{ description: 'AuraTrack Backup', accept: { 'application/json': ['.json'] } }],
+          multiple: false,
+        });
+        const file = await handle.getFile();
+        await processImport(file);
+        return;
+      } catch (e) {
+        if (e.name === 'AbortError') return;
+      }
+    }
+    fileInputRef.current?.click();
   };
 
   const handleClearAllData = async () => {
@@ -855,8 +897,11 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
 
         <div className="grid grid-cols-2 gap-3">
           <ActionBtn label={t('settings.data.export_backup')} sub={t('settings.data.export_sub')} icon="⬇" onClick={handleExportBackup} />
-          <ActionBtn label={t('settings.data.import_data')}   sub={t('settings.data.import_sub')}    icon="⬆" onClick={() => fileInputRef.current?.click()} />
+          <ActionBtn label={t('settings.data.import_data')}   sub={t('settings.data.import_sub')}    icon="⬆" onClick={handleImportClick} />
         </div>
+        {onSync && (
+          <ActionBtn label="Sync to Another Device" sub="QR · WiFi · File" icon="⇄" onClick={onSync} />
+        )}
         <input ref={fileInputRef} type="file" accept=".json" className="hidden" onChange={handleImport} />
 
         {statusMsg && (

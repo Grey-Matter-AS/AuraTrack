@@ -81,7 +81,7 @@ export function MedicationDosePanel({ medicationGroups, allActiveMedications, on
             const diffMin = (nowMs - scheduledTs) / 60000;
             const slotIsMissed = diffMin > 90;
             const slotIsLate = diffMin > 0 && !slotIsMissed;
-            const slotColor = slotIsMissed ? '#dc2626' : slotIsLate ? '#d97706' : 'var(--text-faint)';
+            const slotColor = slotIsMissed ? 'var(--status-missed-text)' : slotIsLate ? 'var(--status-late-text)' : 'var(--text-faint)';
             const slotTag = slotIsMissed ? ' · MISSED' : slotIsLate ? ' · LATE' : '';
             return (
               <div key={hhMM}>
@@ -95,9 +95,9 @@ export function MedicationDosePanel({ medicationGroups, allActiveMedications, on
                     const btnStyle = active
                       ? { backgroundColor: 'var(--accent)', color: '#fff', border: '1px solid transparent' }
                       : slotIsMissed
-                      ? { backgroundColor: 'rgba(220,38,38,0.12)', color: '#dc2626', border: '1px solid #dc2626' }
+                      ? { backgroundColor: 'var(--status-missed-bg)', color: 'var(--status-missed-text)', border: '1px solid var(--status-missed-border)' }
                       : slotIsLate
-                      ? { backgroundColor: 'rgba(217,119,6,0.12)', color: '#d97706', border: '1px solid #d97706' }
+                      ? { backgroundColor: 'var(--status-late-bg)', color: 'var(--status-late-text)', border: '1px solid var(--status-late-border)' }
                       : { backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)', border: '1px solid var(--border)' };
                     return (
                       <button

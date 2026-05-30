@@ -4,7 +4,7 @@ import { SettingsForm } from '../components/SettingsForm';
 import { Tabs } from '../components/Tabs';
 import { ScrollFade } from '../components/ScrollFade';
 
-export default function SettingsView({ settings, onUpdate, onReset, onBack, pwa, notificationPermission, onRequestNotificationPermission }) {
+export default function SettingsView({ settings, onUpdate, onReset, onBack, pwa, notificationPermission, onRequestNotificationPermission, onSync }) {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('profile');
 
@@ -50,6 +50,7 @@ export default function SettingsView({ settings, onUpdate, onReset, onBack, pwa,
           activeTab={activeTab}
           notificationPermission={notificationPermission}
           onRequestNotificationPermission={onRequestNotificationPermission}
+          onSync={onSync}
         />
       </ScrollFade>
 
