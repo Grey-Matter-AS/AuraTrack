@@ -960,7 +960,7 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
       {/* ── ABOUT (shown in Data tab) ── */}
       {show('data') && <Section title={t('settings.about_section.section')}>
         <Row label={t('settings.about_section.version')}><p className="text-sm font-bold text-[var(--text-primary)]">AuraTrack v{pkg.version}</p></Row>
-        <Row label={t('settings.about_section.schema')}><p className="text-sm font-bold text-[var(--text-primary)]">AuraTrackDB v6</p></Row>
+        <Row label={t('settings.about_section.schema')}><p className="text-sm font-bold text-[var(--text-primary)]">{db.name} v{db.verno}</p></Row>
         {pwa?.canInstallManually && (
           <div>
             <ActionBtn
