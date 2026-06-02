@@ -35,8 +35,10 @@ export function useTaggingWizard() {
   };
 
   const loadForEdit = (event) => {
+    const eventType = event.type && event.type !== 'Uncategorized' ? event.type : '';
     setEditingId(event.id);
     setActiveEventId(event.id);
+    setSelections({ ...EMPTY_SELECTIONS, type: eventType });
     setTempSymptomList(event.symptoms || []);
     setNotes(event.notes || '');
     setTriggers(event.triggers || []);
@@ -44,7 +46,7 @@ export function useTaggingWizard() {
     setEditedTimers(event.editedTimers || []);
     setOverrideDateTimeState(null);
     setIsManualEntry(false);
-    setTaggingStep('SUMMARY');
+    setTaggingStep(!event.isComplete && !eventType ? 'TYPE' : 'SUMMARY');
   };
 
   // Called when creating a retrospective entry (Log Past Seizure flow)
@@ -91,7 +93,7 @@ export function useTaggingWizard() {
       if (JSON.stringify(tempSymptomList) !== JSON.stringify(existing.symptoms || [])) changedFields.push('symptoms');
       if (JSON.stringify(manualDurations) !== JSON.stringify(existing.manualDurations || {})) changedFields.push('durations');
       if (overrideDateTime) changedFields.push('date/time');
-      newEditLog.push({ editedAt: Date.now(), changedFields });
+      newEditLog.push({ editedAt: new Date().getTime(), changedFields });
     }
 
     await db.events.update(targetId, {
@@ -101,11 +103,61 @@ export function useTaggingWizard() {
       triggers: [...triggers],
       isComplete: true,
       isEdited: !!editingId,
-      lastModified: Date.now(),
+      lastModified: new Date().getTime(),
       manualDurations,
       editedTimers,
       editLog: newEditLog,
       // Keep event.duration in sync with any manual total edit so every view reads the same value
+      ...(manualDurations?.total != null ? { duration: manualDurations.total } : {}),
+      ...dateTimeOverride,
+    });
+
+    reset();
+  };
+
+  const handleDeferredSave = async () => {
+    const targetId = editingId || activeEventId;
+    if (!targetId) throw new Error('No active event to save');
+
+    const existing = await db.events.get(targetId);
+    const type = selections.type || existing?.type || 'Uncategorized';
+    const modifiedAt = new Date().getTime();
+
+    const dateTimeOverride = overrideDateTime
+      ? (() => {
+          const newStartTime = new Date(`${overrideDateTime.date}T${overrideDateTime.time}`).getTime();
+          return {
+            startTime: newStartTime,
+            date: new Date(newStartTime).toLocaleDateString(),
+            time: new Date(newStartTime).toLocaleTimeString(),
+          };
+        })()
+      : {};
+
+    const newEditLog = existing?.editLog ? [...existing.editLog] : [];
+    if (editingId && existing) {
+      const changedFields = [];
+      if ((type || 'Uncategorized') !== (existing.type || 'Uncategorized')) changedFields.push('type');
+      if (notes !== (existing.notes || '')) changedFields.push('notes');
+      if (JSON.stringify(triggers) !== JSON.stringify(existing.triggers || [])) changedFields.push('triggers');
+      if (JSON.stringify(tempSymptomList) !== JSON.stringify(existing.symptoms || [])) changedFields.push('symptoms');
+      if (JSON.stringify(manualDurations) !== JSON.stringify(existing.manualDurations || {})) changedFields.push('durations');
+      if (overrideDateTime) changedFields.push('date/time');
+      if (changedFields.length) newEditLog.push({ editedAt: modifiedAt, changedFields });
+    }
+    const didEdit = newEditLog.length > (existing?.editLog?.length || 0);
+
+    await db.events.update(targetId, {
+      type: type || 'Uncategorized',
+      symptoms: [...tempSymptomList],
+      notes,
+      triggers: [...triggers],
+      isComplete: existing?.isComplete ?? false,
+      isEdited: existing?.isEdited || didEdit,
+      lastModified: modifiedAt,
+      manualDurations,
+      editedTimers,
+      editLog: newEditLog,
       ...(manualDurations?.total != null ? { duration: manualDurations.total } : {}),
       ...dateTimeOverride,
     });
@@ -157,6 +209,7 @@ export function useTaggingWizard() {
     loadForEdit,
     loadForManualEntry,
     handleFinalSave,
+    handleDeferredSave,
     reset,
     moveSymptom,
     addQuickNote

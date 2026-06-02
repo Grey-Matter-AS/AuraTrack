@@ -1,7 +1,8 @@
-import { formatCSVRow } from './formatters';
+import { formatCSVField, formatCSVRow } from './formatters';
 import { freqBarChartSVG, durationLineSVG, typeBarSVG, phaseStackSVG } from './pdfCharts';
 import { esc } from './htmlEscape';
 import { phaseDurs } from './phaseCalculations';
+import pkg from '../../package.json';
 
 export const filterEventsByDateRange = (events, fromDateStr, toDateStr) => {
   const from = fromDateStr ? new Date(fromDateStr).setHours(0, 0, 0, 0) : 0;
@@ -18,7 +19,7 @@ export const exportToJSON = async (events, medications = [], medicationLogs = []
     medicationLogs,
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-  await saveFileNative(blob, `auratrack-backup-${dateStamp()}.json`, 'AuraTrack Backup', ['.json']);
+  return saveFileNative(blob, `auratrack-backup-${dateStamp()}.json`, 'AuraTrack Backup', ['.json']);
 };
 
 export const exportToCSV = async (events, medications = [], medicationLogs = []) => {
@@ -32,25 +33,29 @@ export const exportToCSV = async (events, medications = [], medicationLogs = [])
     csv += medications.map(m =>
       [m.id, m.name, m.dose, m.unit, m.frequency,
        (m.scheduledTimes || []).join('|'), m.isRescue ? 1 : 0,
-       m.reminderEnabled ? 1 : 0, m.showInEmergency ? 1 : 0, m.active ? 1 : 0].join(',')
+       m.reminderEnabled ? 1 : 0, m.showInEmergency ? 1 : 0, m.active ? 1 : 0]
+        .map(formatCSVField)
+        .join(',')
     ).join('\n');
   }
 
   if (medicationLogs.length > 0) {
-    csv += '\n\nMEDICATION_LOGS\nid,medicationId,takenAt,scheduledTime,status,isEdited\n';
+    csv += '\n\nMEDICATION_LOGS\nid,medicationId,takenAt,scheduledTime,status,note,isEdited\n';
     csv += medicationLogs.map(l =>
-      [l.id, l.medicationId, l.takenAt, l.scheduledTime ?? '', l.status ?? '', l.isEdited ? 1 : 0].join(',')
+      [l.id, l.medicationId, l.takenAt, l.scheduledTime ?? '', l.status ?? '', l.note ?? '', l.isEdited ? 1 : 0]
+        .map(formatCSVField)
+        .join(',')
     ).join('\n');
   }
 
   const blob = new Blob([csv], { type: 'text/csv' });
-  await saveFileNative(blob, `auratrack-events-${dateStamp()}.csv`, 'AuraTrack CSV Export', ['.csv']);
+  return saveFileNative(blob, `auratrack-events-${dateStamp()}.csv`, 'AuraTrack CSV Export', ['.csv']);
 };
 
 export const exportToPDF = (events) => {
   const win = window.open('', '_blank');
   if (!win) {
-    alert('Pop-up blocked. Please allow pop-ups for this site, then try again.'); // eslint-disable-line no-alert
+    alert('Pop-up blocked. Please allow pop-ups for this site, then try again.');
     return;
   }
 
@@ -59,7 +64,7 @@ export const exportToPDF = (events) => {
     const loc = [s.region, s.subRegion, s.specificPart]
       .filter(p => p && p !== 'N/A' && p !== 'Internal/General')
       .join(' › ');
-    return loc ? `${path}  @  ${loc}` : path;
+    return esc(loc ? `${path}  @  ${loc}` : path);
   };
 
   win.document.write(`
@@ -97,7 +102,7 @@ export const exportToPDF = (events) => {
 export const exportNeurologistReport = (events, settings = {}, medications = [], medicationLogs = []) => {
   const win = window.open('', '_blank');
   if (!win) {
-    alert('Pop-up blocked. Please allow pop-ups for this site, then try again.'); // eslint-disable-line no-alert
+    alert('Pop-up blocked. Please allow pop-ups for this site, then try again.');
     return;
   }
 
@@ -350,7 +355,7 @@ export const exportNeurologistReport = (events, settings = {}, medications = [],
   // ── Medication section HTML
   const FREQ_SHORT = { OD: 'Once daily', BD: 'Twice daily', TDS: 'Three times daily', QDS: 'Four times daily', PRN: 'As needed (rescue)' };
   const medRows = medications.map(m =>
-    `<tr><td style="font-weight:700">${esc(m.name)}</td><td>${m.dose}${esc(m.unit)}</td><td>${esc(m.frequency)} — ${esc(FREQ_SHORT[m.frequency] || m.frequency)}</td></tr>`
+    `<tr><td style="font-weight:700">${esc(m.name)}</td><td>${esc(m.dose)}${esc(m.unit)}</td><td>${esc(m.frequency)} - ${esc(FREQ_SHORT[m.frequency] || m.frequency)}</td></tr>`
   ).join('');
 
   // Adherence: count logs vs. expected doses (OD=1, BD=2, TDS=3, QDS=4, PRN=variable)
@@ -409,7 +414,7 @@ export const exportNeurologistReport = (events, settings = {}, medications = [],
   </head><body>
   <div class="no-print" style="position:sticky;top:0;z-index:100;background:#1e293b;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
     <span style="color:#94a3b8;font-size:11px;font-weight:700;letter-spacing:0.05em">AURATRACK — NEUROLOGICAL REPORT</span>
-    <button onclick="window.print()" style="background:#dc2626;color:#fff;border:none;border-radius:6px;padding:8px 20px;font-size:12px;font-weight:900;cursor:pointer;letter-spacing:0.05em">&#128438; Print / Save as PDF</button>
+    <button id="auratrack-print-report" style="background:#dc2626;color:#fff;border:none;border-radius:6px;padding:8px 20px;font-size:12px;font-weight:900;cursor:pointer;letter-spacing:0.05em">&#128438; Print / Save as PDF</button>
   </div>
 
   <!-- HEADER -->
@@ -556,13 +561,14 @@ export const exportNeurologistReport = (events, settings = {}, medications = [],
 
   <!-- DISCLAIMER -->
   <div class="disclaimer">
-    This report was generated by AuraTrack v0.1.0, a personal seizure-logging PWA. All data was entered by the caretaker or patient.
+    This report was generated by AuraTrack v${esc(pkg.version)}, a personal seizure-logging PWA. All data was entered by the caretaker or patient.
     This document is not a substitute for professional medical assessment. Times and durations are based on manual input.
     Phase durations marked as edited may differ from real-time capture.
   </div>
 
   </body></html>`);
   win.document.close();
+  win.document.getElementById('auratrack-print-report')?.addEventListener('click', () => win.print());
 };
 
 // ─── Seizure Diary (one-page monthly calendar) ───────────────
@@ -570,7 +576,7 @@ export const exportNeurologistReport = (events, settings = {}, medications = [],
 export const exportSeizureDiary = (allEvents, settings = {}, medications = [], month, year) => {
   const win = window.open('', '_blank');
   if (!win) {
-    alert('Pop-up blocked. Please allow pop-ups for this site, then try again.'); // eslint-disable-line no-alert
+    alert('Pop-up blocked. Please allow pop-ups for this site, then try again.');
     return;
   }
 
@@ -668,7 +674,7 @@ export const exportSeizureDiary = (allEvents, settings = {}, medications = [], m
 
   const monthName = new Date(year, month - 1, 1).toLocaleString('en-GB', { month: 'long', year: 'numeric' });
   const medLine = medications.length > 0
-    ? `Medications: ${medications.map(m => `${m.name} ${m.dose}${m.unit} ${m.frequency}`).join(' · ')}`
+    ? `Medications: ${medications.map(m => `${m.name} ${m.dose}${m.unit} ${m.frequency}`).join(' | ')}`
     : '';
 
   win.document.write(`<!DOCTYPE html><html><head>
@@ -685,7 +691,7 @@ export const exportSeizureDiary = (allEvents, settings = {}, medications = [], m
 
   <div class="no-print" style="background:#1e293b;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
     <span style="color:#94a3b8;font-size:11px;font-weight:700">AURATRACK — SEIZURE DIARY</span>
-    <button onclick="window.print()" style="background:#dc2626;color:#fff;border:none;border-radius:6px;padding:7px 18px;font-size:12px;font-weight:900;cursor:pointer">Print / Save as PDF</button>
+    <button id="auratrack-print-diary" style="background:#dc2626;color:#fff;border:none;border-radius:6px;padding:7px 18px;font-size:12px;font-weight:900;cursor:pointer">Print / Save as PDF</button>
   </div>
 
   <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:10px;border-bottom:3px solid #dc2626;padding-bottom:8px">
@@ -726,6 +732,7 @@ export const exportSeizureDiary = (allEvents, settings = {}, medications = [], m
   </div>
   </body></html>`);
   win.document.close();
+  win.document.getElementById('auratrack-print-diary')?.addEventListener('click', () => win.print());
 };
 
 // ─── Helpers ─────────────────────────────────────────────────
@@ -755,11 +762,12 @@ async function saveFileNative(blob, suggestedName, description, extensions) {
       const writable = await handle.createWritable();
       await writable.write(blob);
       await writable.close();
-      return;
+      return { ok: true, cancelled: false };
     } catch (e) {
-      if (e.name === 'AbortError') return;
+      if (e.name === 'AbortError') return { ok: false, cancelled: true };
       // Fall through to legacy download on unexpected errors
     }
   }
   triggerDownload(blob, suggestedName);
+  return { ok: true, cancelled: false };
 }

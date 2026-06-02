@@ -47,7 +47,9 @@
   "tagging": {
     "step1_title": "Vaihe 1: Kohtaustyyppi",
     "feeling_title": "Minkälainen tunne?",
-    "region_title": "Missä se tapahtui?"
+    "region_title": "Missä se tapahtui?",
+    "skip_for_now": "Ohita nyt",
+    "save_timing_only": "Tallenna vain ajoitus"
   },
 
   "history": {
@@ -59,6 +61,7 @@
     "next": "Seuraava →",
     "page_of": "{{page}} / {{total}}",
     "clear": "Tyhjennä",
+    "needs_details": "Tarvitsee tiedot",
     "tab_seizures": "Kohtaukset",
     "tab_medications": "Lääkkeet",
     "tab_export": "Vie"
@@ -103,6 +106,7 @@
     "time": "Aika",
     "status": "Tila",
     "edited": "Muokattu",
+    "needs_details": "Tarvitsee tiedot",
     "symptoms": "Oireet",
     "triggers": "Mahdolliset laukaisijat",
     "notes": "Kliiniset havainnot",
@@ -175,7 +179,7 @@
     "section_disclaimer": "Lääketieteellinen vastuuvapauslauseke",
     "section_opensource": "Avoin lähdekoodi & Palaute",
     "about_text": "AuraTrack on yksityisyyteen keskittyvä kohtausseurantasovellus epilepsiaa sairastaville henkilöille ja heidän hoitajilleen. Kirjaa kohtaukset reaaliajassa, annotoi tapahtumat kliinisellä yksityiskohtaisuudella, seuraa lääkitystä ja luo jäsenneltyjä raportteja neurologillesi — kaikki tallennettuna paikallisesti laitteellesi.",
-    "privacy_text": "Kaikki tiedot tallennetaan yksinomaan laitteellesi IndexedDB:n avulla. Mitään ei lähetetä ulkoisille palvelimille. Terveystietosi eivät koskaan poistu laitteeltasi.",
+    "privacy_text": "Kaikki tiedot tallennetaan laitteellesi IndexedDB:n avulla. Terveystietosi poistuvat laitteelta vain, kun viet varmuuskopion tai käynnistät synkronoinnin.",
     "disclaimer_text": "AuraTrack on henkilökohtainen kirjaamistyökalu eikä ole lääkinnällinen laite. Sitä ei ole tarkoitettu diagnosoimaan, hoitamaan tai korvaamaan ammatillista lääketieteellistä neuvontaa. Kuulemme aina pätevää terveydenhuollon ammattilaista tilasi ja hoitosi suhteen.",
     "disclaimer_not_medical": "ei lääkinnällinen laite",
     "opensource_text": "AuraTrack on avoimen lähdekoodin ohjelma. Raportoi bugeja tai ehdota ominaisuuksia GitHub Issuesissa.",
@@ -317,9 +321,9 @@
       "import_data": "Tuo tietoja",
       "import_sub": "JSON-tiedosto",
       "danger_zone": "Vaaravyöhyke",
-      "clear_confirm": "Tämä poistaa pysyvästi kaikki kirjatut tapahtumat. Toimintoa ei voi peruuttaa.",
+      "clear_confirm": "Tämä poistaa pysyvästi kirjatut tapahtumat, lääkkeet ja annosloki. Toimintoa ei voi peruuttaa.",
       "clear_yes": "Kyllä, poista kaikki",
-      "clear_btn": "Tyhjennä kaikki tapahtumatiedot",
+      "clear_btn": "Tyhjennä kaikki terveystiedot",
       "reset_confirm": "Nollatako kaikki asetukset tehdasasetuksiin?",
       "reset_yes": "Kyllä, nollaa",
       "reset_btn": "Palauta asetukset oletuksiin",
@@ -327,7 +331,7 @@
       "no_data": "Ei vietäviä tietoja.",
       "exported": "{{events}} tapahtuma(a) ja {{meds}} lääke(ttä) viety.",
       "export_failed": "Vienti epäonnistui.",
-      "all_deleted": "Kaikki tapahtumatiedot poistettu.",
+      "all_deleted": "Kaikki terveystiedot poistettu.",
       "delete_failed": "Tietojen poistaminen epäonnistui. Yritä uudelleen.",
       "settings_reset": "Asetukset palautettu oletuksiin.",
       "no_data_in_file": "Tiedostosta ei löydy tietoja.",
@@ -372,7 +376,8 @@
     "edited": "Muokattu",
     "manual_entry": "Manuaalinen kirjaus",
     "view_edit": "Näytä / Muokkaa",
-    "delete": "Poista"
+    "delete": "Poista",
+    "untagged": "Merkitsemätön"
   },
 
   "summary": {

@@ -1,9 +1,7 @@
-import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatDuration, formatEventDate, formatEventTime } from '../utils/formatters';
 
 function DangerBadge({ dangerFlags }) {
-  const { t } = useTranslation();
   const flags = dangerFlags?.flags;
   if (!flags?.length) return null;
   const isCluster = flags.includes('cluster');

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { db } from '../data/db';
 import { formatDuration, formatEventDate, formatEventTime } from '../utils/formatters';
@@ -54,8 +54,10 @@ export default function EventDetailView({ eventId, onEdit, onClose, durationForm
 
   useEffect(() => {
     if (!eventId) return;
-    setNotFound(false);
-    setEvent(null);
+    const resetTimer = setTimeout(() => {
+      setNotFound(false);
+      setEvent(null);
+    }, 0);
     db.events.get(eventId).then(async ev => {
       if (!ev) { setNotFound(true); return; }
       setEvent(ev);
@@ -68,6 +70,7 @@ export default function EventDetailView({ eventId, onEdit, onClose, durationForm
       console.error('Failed to load event:', err);
       setNotFound(true);
     });
+    return () => clearTimeout(resetTimer);
   }, [eventId]);
 
   if (notFound) {
@@ -170,14 +173,20 @@ export default function EventDetailView({ eventId, onEdit, onClose, durationForm
                 <span className="font-medium" style={{ color: 'var(--text-primary)' }}>{v}</span>
               </div>
             ))}
-            {event.isEdited && (
-              <div className="flex justify-between">
-                <span style={{ color: 'var(--text-dim)' }}>{t('event_detail.status')}</span>
-                <span className="font-medium text-xs uppercase" style={{ color: 'var(--text-secondary)' }}>{t('event_detail.edited')}</span>
-              </div>
-            )}
-          </div>
-        </div>
+	            {event.isEdited && (
+	              <div className="flex justify-between">
+	                <span style={{ color: 'var(--text-dim)' }}>{t('event_detail.status')}</span>
+	                <span className="font-medium text-xs uppercase" style={{ color: 'var(--text-secondary)' }}>{t('event_detail.edited')}</span>
+	              </div>
+	            )}
+	            {!event.isComplete && (
+	              <div className="flex justify-between">
+	                <span style={{ color: 'var(--text-dim)' }}>{t('event_detail.status')}</span>
+	                <span className="font-medium text-xs uppercase" style={{ color: 'var(--accent)' }}>{t('event_detail.needs_details', 'Needs details')}</span>
+	              </div>
+	            )}
+	          </div>
+	        </div>
 
         {/* Edit History */}
         {event.editLog?.length > 0 && (

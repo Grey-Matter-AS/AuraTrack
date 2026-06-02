@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export function ScrollFade({ children, className = '', wrapperClassName = 'flex-1', bgVar = '--bg-base' }) {
   const ref = useRef(null);

@@ -1,7 +1,6 @@
-import React from 'react';
 import { ScrollFade } from './ScrollFade';
 
-export function WizardMenu({ title, options, onPick, onBack }) {
+export function WizardMenu({ title, options, onPick, onBack, onSkip, skipLabel }) {
   return (
     <div className="flex flex-col h-full w-full max-w-md sm:max-w-xl md:max-w-2xl mx-auto animate-in fade-in zoom-in duration-300">
       <div className="flex justify-between items-center mb-8 shrink-0">
@@ -29,6 +28,15 @@ export function WizardMenu({ title, options, onPick, onBack }) {
             {opt}
           </button>
         ))}
+        {onSkip && (
+          <button
+            onClick={onSkip}
+            className="w-full py-5 px-8 text-center rounded-[2rem] text-xs font-black uppercase tracking-widest active:scale-[0.97] transition-all shadow-lg"
+            style={{ backgroundColor: 'rgba(245,158,11,0.16)', color: '#f59e0b', border: '2px solid rgba(245,158,11,0.45)' }}
+          >
+            {skipLabel}
+          </button>
+        )}
       </ScrollFade>
     </div>
   );

@@ -4,7 +4,7 @@ import { exportToJSON } from '../utils/exportHelpers';
 export function useAutoBackup({ settings, updateSettings, status, events, medications, medicationLogs, onBackupComplete }) {
   const checkingRef = useRef(false);
 
-  const checkAndBackup = () => {
+  const checkAndBackup = async () => {
     const { autoBackupFrequency: freq, autoBackupDays: days = [], lastAutoBackupAt } = settings;
 
     if (status !== 'IDLE') return;
@@ -22,11 +22,15 @@ export function useAutoBackup({ settings, updateSettings, status, events, medica
     if (checkingRef.current) return;
     checkingRef.current = true;
 
-    exportToJSON(events, medications, medicationLogs);
-    updateSettings('lastAutoBackupAt', Date.now());
-    onBackupComplete?.();
-
-    checkingRef.current = false;
+    try {
+      const result = await exportToJSON(events, medications, medicationLogs);
+      if (result?.ok) {
+        updateSettings('lastAutoBackupAt', Date.now());
+        onBackupComplete?.();
+      }
+    } finally {
+      checkingRef.current = false;
+    }
   };
 
   useEffect(() => {

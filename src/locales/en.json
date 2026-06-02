@@ -47,7 +47,9 @@
   "tagging": {
     "step1_title": "Step 1: Seizure Type",
     "feeling_title": "What kind of feeling?",
-    "region_title": "Where did it happen?"
+    "region_title": "Where did it happen?",
+    "skip_for_now": "Skip for now",
+    "save_timing_only": "Save timing only"
   },
 
   "history": {
@@ -59,6 +61,7 @@
     "next": "Next →",
     "page_of": "{{page}} / {{total}}",
     "clear": "Clear",
+    "needs_details": "Needs Details",
     "tab_seizures": "Seizures",
     "tab_medications": "Medications",
     "tab_export": "Export"
@@ -103,6 +106,7 @@
     "time": "Time",
     "status": "Status",
     "edited": "Edited",
+    "needs_details": "Needs details",
     "symptoms": "Symptoms",
     "triggers": "Possible Triggers",
     "notes": "Clinical Observations",
@@ -175,7 +179,7 @@
     "section_disclaimer": "Medical Disclaimer",
     "section_opensource": "Open Source & Feedback",
     "about_text": "AuraTrack is a privacy-first seizure tracking app for people with epilepsy and their caregivers. Record seizures in real time, annotate events with clinical detail, track medications, and generate structured reports for your neurologist — all stored locally on your device.",
-    "privacy_text": "All data is stored exclusively on your device using IndexedDB. Nothing is transmitted to any external server. Your health data never leaves your device.",
+    "privacy_text": "All data is stored on your device using IndexedDB. Your health data only leaves your device when you explicitly export a backup or start a sync.",
     "disclaimer_text": "AuraTrack is a personal logging tool and is not a medical device. It is not intended to diagnose, treat, or replace professional medical advice. Always consult a qualified healthcare provider regarding your condition and treatment.",
     "disclaimer_not_medical": "not a medical device",
     "opensource_text": "AuraTrack is open source. Report bugs or suggest features on GitHub Issues.",
@@ -317,9 +321,9 @@
       "import_data": "Import Data",
       "import_sub": "JSON file",
       "danger_zone": "Danger Zone",
-      "clear_confirm": "This permanently deletes all recorded events. Cannot be undone.",
+      "clear_confirm": "This permanently deletes recorded events, medications, and medication dose logs. Cannot be undone.",
       "clear_yes": "Yes, Delete All",
-      "clear_btn": "Clear All Event Data",
+      "clear_btn": "Clear All Health Data",
       "reset_confirm": "Reset all preferences to factory defaults?",
       "reset_yes": "Yes, Reset",
       "reset_btn": "Reset Settings to Defaults",
@@ -327,7 +331,7 @@
       "no_data": "No data to export.",
       "exported": "Exported {{events}} event(s) and {{meds}} medication(s).",
       "export_failed": "Export failed.",
-      "all_deleted": "All event data deleted.",
+      "all_deleted": "All health data deleted.",
       "delete_failed": "Failed to delete data. Please try again.",
       "settings_reset": "Settings reset to defaults.",
       "no_data_in_file": "No data found in file.",
@@ -372,7 +376,8 @@
     "edited": "Edited",
     "manual_entry": "Manual Entry",
     "view_edit": "View / Edit",
-    "delete": "Delete"
+    "delete": "Delete",
+    "untagged": "Untagged"
   },
 
   "summary": {

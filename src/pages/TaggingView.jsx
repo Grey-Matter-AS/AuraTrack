@@ -1,4 +1,3 @@
-import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { WizardMenu } from '../components/WizardMenu';
 import { ScrollFade } from '../components/ScrollFade';
@@ -16,10 +15,11 @@ export default function TaggingView({
   manualDurations, editedTimers, setManualDuration,
   overrideDateTime, isManualEntry, setEventDateTime,
   elapsed, laps, startTime,
-  onSave, onCancel,
+  onSave, onSkip, onCancel,
   durationFormat = 'seconds',
 }) {
   const { t } = useTranslation();
+  const skipLabel = t('tagging.skip_for_now');
 
   const handleTypeSelect = async (val) => {
     const targetId = editingId || activeEventId;
@@ -50,6 +50,7 @@ export default function TaggingView({
               onSetManualDuration={setManualDuration}
               onAddAnother={() => setTaggingStep('S_CAT')}
               onSave={onSave}
+              onSkip={onSkip}
               onCancel={onCancel}
               onRemoveSymptom={index => setTempSymptomList(tempSymptomList.filter((_, i) => i !== index))}
               editingId={editingId}
@@ -68,6 +69,8 @@ export default function TaggingView({
                 title={t('tagging.step1_title')}
                 options={SEIZURE_TYPES}
                 onPick={handleTypeSelect}
+                onSkip={onSkip}
+                skipLabel={skipLabel}
               />
             )}
 
@@ -77,6 +80,8 @@ export default function TaggingView({
                 title={t('tagging.feeling_title')}
                 options={Object.keys(SYMPTOM_WIZARD)}
                 onPick={v => { setSelections({ ...selections, group: v }); setTaggingStep('S_SYM'); }}
+                onSkip={onSkip}
+                skipLabel={skipLabel}
               />
             )}
             {taggingStep === 'S_SYM' && selections.group && SYMPTOM_WIZARD[selections.group] && (
@@ -85,6 +90,8 @@ export default function TaggingView({
                 options={Object.keys(SYMPTOM_WIZARD[selections.group])}
                 onPick={v => { setSelections({ ...selections, symptom: v }); setTaggingStep('S_DET'); }}
                 onBack={() => setTaggingStep('S_CAT')}
+                onSkip={onSkip}
+                skipLabel={skipLabel}
               />
             )}
             {taggingStep === 'S_DET' && selections.group && selections.symptom &&
@@ -125,6 +132,8 @@ export default function TaggingView({
                   }
                 }}
                 onBack={() => setTaggingStep('S_SYM')}
+                onSkip={onSkip}
+                skipLabel={skipLabel}
               />
             )}
 
@@ -134,6 +143,8 @@ export default function TaggingView({
                 title={t('tagging.region_title')}
                 options={Object.keys(REGION_WIZARD)}
                 onPick={v => { setSelections({ ...selections, region: v }); setTaggingStep('R_SUB'); }}
+                onSkip={onSkip}
+                skipLabel={skipLabel}
               />
             )}
             {taggingStep === 'R_SUB' && selections.region && REGION_WIZARD[selections.region] && (
@@ -145,6 +156,8 @@ export default function TaggingView({
                   const optionObj = SYMPTOM_WIZARD[selections.group]?.[selections.symptom]?.options.find(o => o.label === selections.detail);
                   setTaggingStep(optionObj?.forceRegion ? 'S_DET' : 'R_CAT');
                 }}
+                onSkip={onSkip}
+                skipLabel={skipLabel}
               />
             )}
             {taggingStep === 'R_DET' && selections.region && selections.subRegion &&
@@ -167,6 +180,8 @@ export default function TaggingView({
                   const optionObj = SYMPTOM_WIZARD[selections.group]?.[selections.symptom]?.options.find(o => o.label === selections.detail);
                   setTaggingStep(optionObj?.forceSubRegion ? 'S_DET' : 'R_SUB');
                 }}
+                onSkip={onSkip}
+                skipLabel={skipLabel}
               />
             )}
 

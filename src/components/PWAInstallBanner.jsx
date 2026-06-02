@@ -1,4 +1,3 @@
-import React from 'react';
 
 export function PWAInstallBanner({ isVisible, isIOS, install, dismiss, showManualInstructions, dismissManual }) {
   if (!isVisible) return null;

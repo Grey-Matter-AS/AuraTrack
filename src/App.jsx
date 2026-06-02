@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useEventTimer } from './hooks/useEventTimer';
 import { useEventHistory } from './hooks/useEventHistory';
@@ -127,10 +127,11 @@ function App() {
   useEffect(() => {
     try {
       const saved = localStorage.getItem('aura_startTime');
-      if (localStorage.getItem('aura_status') === 'RECORDING' && saved) {
-        timer.restore(parseInt(saved, 10));
-        setStatus('RECORDING');
-      }
+	      if (localStorage.getItem('aura_status') === 'RECORDING' && saved) {
+	        timer.restore(parseInt(saved, 10));
+	        const id = setTimeout(() => setStatus('RECORDING'), 0);
+	        return () => clearTimeout(id);
+	      }
     } catch { /* private browsing — crash recovery unavailable */ }
   }, []);
 
@@ -146,16 +147,18 @@ function App() {
   }, [status]);
 
   // Wake Lock: keep screen on during recording; show banner on unsupported browsers
-  useEffect(() => {
-    if (status === 'RECORDING') {
-      wakeLock.acquire().then(ok => {
-        if (!ok && !wakeLock.supported) setWakeLockUnsupported(true);
-      });
-    } else {
-      wakeLock.release();
-      setWakeLockUnsupported(false);
-    }
-  }, [status]);
+	  useEffect(() => {
+	    let resetTimer;
+	    if (status === 'RECORDING') {
+	      wakeLock.acquire().then(ok => {
+	        if (!ok && !wakeLock.supported) setWakeLockUnsupported(true);
+	      });
+	    } else {
+	      wakeLock.release();
+	      resetTimer = setTimeout(() => setWakeLockUnsupported(false), 0);
+	    }
+	    return () => clearTimeout(resetTimer);
+	  }, [status]);
 
   // Re-acquire wake lock when tab regains focus (OS releases it on tab switch)
   // Also re-schedule notifications on visibility change
@@ -233,6 +236,17 @@ function App() {
     }
   };
 
+  const handleSkipTagging = async () => {
+    try {
+      await wizard.handleDeferredSave();
+      await history.load();
+      setStatus('IDLE');
+    } catch (err) {
+      console.error('Deferred save failed:', err);
+      showToast('Save failed. Please try again.');
+    }
+  };
+
   const handleCancel = async () => {
     if (wizard.activeEventId && !wizard.editingId) {
       await db.events.delete(wizard.activeEventId).catch(() => {});
@@ -297,8 +311,8 @@ function App() {
 
   const handleSaveDoses = async (doses) => {
     const now = Date.now();
-    for (const { medicationId, scheduledHHMM } of doses) {
-      await meds.logDoseWithStatus(medicationId, scheduledHHMM ?? null, now, 'taken');
+    for (const { medicationId, scheduledHHMM, note } of doses) {
+      await meds.logDoseWithStatus(medicationId, scheduledHHMM ?? null, now, 'taken', note);
     }
     const logs = await meds.getLogsForDay(Date.now());
     setTodayLogs(logs);
@@ -329,7 +343,7 @@ function App() {
       <div className="flex-1 flex flex-col items-center px-3 overflow-hidden pb-8">
         {status === 'IDLE'         && <IdleView history={history.history} fullHistory={fullHistory} onStart={handleStart} onManualEntry={() => setShowManualEntry(true)} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail} medicationGroups={medicationGroups} allActiveMedications={allActiveMedications} onSaveDoses={handleSaveDoses} durationFormat={settings.durationFormat} dateFormat={settings.dateFormat} timeFormat={settings.timeFormat} />}
         {status === 'RECORDING'    && <RecordingView elapsed={timer.elapsed} startTime={timer.startTime} laps={timer.laps} onLap={timer.recordLap} onStop={handleStop} onEmergencyStop={handleEmergencyStop} onQuickNote={l => wizard.addQuickNote(l, timer.elapsed)} userMode={settings.userMode} quickNoteLabels={activeQuickNoteLabels} emergencyMedications={emergencyMedications} neurologistName={settings.neurologistName} neurologistContact={settings.neurologistContact} emergencyContact={settings.emergencyContact} durationFormat={settings.durationFormat} />}
-        {status === 'TAGGING'      && <TaggingView {...wizard} elapsed={timer.elapsed} laps={timer.laps} startTime={timer.startTime} onSave={handleSave} onCancel={handleCancel} durationFormat={settings.durationFormat} />}
+        {status === 'TAGGING'      && <TaggingView {...wizard} elapsed={timer.elapsed} laps={timer.laps} startTime={timer.startTime} onSave={handleSave} onSkip={handleSkipTagging} onCancel={handleCancel} durationFormat={settings.durationFormat} />}
         {status === 'HISTORY'      && <HistoryView onBack={() => setStatus('IDLE')} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail} historyPageSize={settings.historyPageSize} settings={settings} />}
         {status === 'SETTINGS'     && <SettingsView settings={settings} onUpdate={updateSettings} onReset={resetSettings} onBack={() => setStatus('IDLE')} pwa={pwa} notificationPermission={notifications.permission} onRequestNotificationPermission={async () => { const p = await notifications.requestPermission(); if (p === 'granted') notifications.scheduleForToday(meds.medications); }} onSync={() => setSyncModal({ open: true, connectToken: null, offerSDP: null })} />}
         {status === 'EVENT_DETAIL' && <EventDetailView eventId={detailEventId} onEdit={handleEdit} onClose={() => setStatus(previousStatus)} durationFormat={settings.durationFormat} dateFormat={settings.dateFormat} timeFormat={settings.timeFormat} />}

@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useMedications } from '../hooks/useMedications';
-import { getScheduledDosesForDay, getDoseStatus, defaultScheduledTimes } from '../utils/medicationSchedule';
+import { getScheduledDosesForDay, getDoseStatus } from '../utils/medicationSchedule';
 
 function parseHHMM(hhMM) {
   const [h, m] = hhMM.split(':').map(Number);
@@ -13,9 +13,9 @@ function startOfDay(ms) {
   return d.getTime();
 }
 
-function fmtDay(ms) {
+function fmtDay(ms, todayMs) {
   const d = new Date(ms);
-  const today = startOfDay(Date.now());
+  const today = startOfDay(todayMs);
   const yesterday = today - 86400000;
   if (ms === today) return 'Today';
   if (ms === yesterday) return 'Yesterday';
@@ -40,23 +40,25 @@ export function MedicationHistoryTab({ settings = {} }) {
   const [editCell, setEditCell] = useState(null);
   const [editTime, setEditTime] = useState('');
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    loadLogs();
-  }, [medications]);
+  const [nowMs] = useState(() => Date.now());
 
   const loadLogs = async () => {
     setLoading(true);
-    const logs = await getLogsForPeriod(0, Date.now() + 86400000);
+    const logs = await getLogsForPeriod(0, nowMs + 86400000);
     setAllLogs(logs);
     setLoading(false);
   };
+
+  useEffect(() => {
+    const id = setTimeout(loadLogs, 0);
+    return () => clearTimeout(id);
+  }, [medications]);
 
   const activeMeds = medications.filter(m => m.active && !m.isRescue);
 
   // Determine start date: earliest of (setting, earliest log, 30 days ago as fallback)
   const startDateMs = useMemo(() => {
-    const today = startOfDay(Date.now());
+    const today = startOfDay(nowMs);
     const maxBack = today - 365 * 86400000;
 
     const candidates = [];
@@ -71,15 +73,15 @@ export function MedicationHistoryTab({ settings = {} }) {
     return candidates.length > 0
       ? Math.max(Math.min(...candidates), maxBack)
       : today; // no history at all — just show today
-  }, [allLogs, settings.medicationStartDate]);
+  }, [allLogs, nowMs, settings.medicationStartDate]);
 
   // Build list of days from start to today, newest first
   const days = useMemo(() => {
-    const today = startOfDay(Date.now());
+    const today = startOfDay(nowMs);
     const result = [];
     for (let d = today; d >= startDateMs; d -= 86400000) result.push(d);
     return result;
-  }, [startDateMs]);
+  }, [nowMs, startDateMs]);
 
   // Fast log lookup: "dayStart|medId|hhMM" → log record
   const logIndex = useMemo(() => {
@@ -99,8 +101,8 @@ export function MedicationHistoryTab({ settings = {} }) {
     const log = getLog(dayMs, medId, hhMM);
     if (log) return log.status ?? getDoseStatus(hhMM, log.takenAt, dayMs);
     const scheduledTs = dayMs + parseHHMM(hhMM);
-    const isToday = dayMs === startOfDay(Date.now());
-    if (isToday && scheduledTs > Date.now()) return 'upcoming';
+    const isToday = dayMs === startOfDay(nowMs);
+    if (isToday && scheduledTs > nowMs) return 'upcoming';
     return 'nodata';
   };
 
@@ -196,8 +198,8 @@ export function MedicationHistoryTab({ settings = {} }) {
               className="px-4 py-3 border-b"
               style={{ borderColor: 'var(--border-subtle)' }}
             >
-              <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: dayMs === startOfDay(Date.now()) ? 'var(--accent)' : 'var(--text-dim)' }}>
-                {fmtDay(dayMs)}
+              <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: dayMs === startOfDay(nowMs) ? 'var(--accent)' : 'var(--text-dim)' }}>
+                {fmtDay(dayMs, nowMs)}
               </p>
             </div>
 
@@ -253,10 +255,15 @@ export function MedicationHistoryTab({ settings = {} }) {
                         {med.name}
                         {log.isEdited && <span className="ml-1.5 text-[9px] text-amber-400">✎</span>}
                       </p>
-                      <p className="text-[10px]" style={{ color: 'var(--text-faint)' }}>
-                        {med.dose}{med.unit} · Extra dose · {fmtTime(log.takenAt)}
-                      </p>
-                    </div>
+	                      <p className="text-[10px]" style={{ color: 'var(--text-faint)' }}>
+	                        {med.dose}{med.unit} · Extra dose · {fmtTime(log.takenAt)}
+	                      </p>
+	                      {log.note && (
+	                        <p className="text-[10px] mt-1 whitespace-pre-wrap" style={{ color: 'var(--text-dim)' }}>
+	                          {log.note}
+	                        </p>
+	                      )}
+	                    </div>
                     <span
                       className="ml-3 px-3 py-1 rounded-full font-black text-[9px] uppercase tracking-widest shrink-0"
                       style={{ backgroundColor: STATUS.taken.bg, color: STATUS.taken.text }}

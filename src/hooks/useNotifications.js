@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback } from 'react';
 import { defaultScheduledTimes, scheduledTimestampForToday } from '../utils/medicationSchedule';
 
 // Module-level timer store so timers survive component re-renders

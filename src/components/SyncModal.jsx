@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import QRCode from 'qrcode';
 import jsQR from 'jsqr';
 import { useP2PSync } from '../hooks/useP2PSync';
 import { useLANSync } from '../hooks/useLANSync';
 import { exportToJSON } from '../utils/exportHelpers';
 import { db } from '../data/db';
+import { assertImportFileSafe } from '../utils/importSanitizer';
 
 // ─── Shared sub-components ───────────────────────────────────
 
@@ -211,8 +212,8 @@ function EasySyncPanel({ connectToken, onDone }) {
       <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
         Sync over the internet between any two devices. Device A shows a QR code — Device B scans it with its camera to connect. Works across different networks (mobile data, WiFi).
       </p>
-      <StatusRow icon="🔒" text="Data travels peer-to-peer, encrypted with DTLS. A PIN confirms both devices are yours." />
-      <StatusRow icon="🌐" text="Uses PeerJS relay for signaling only — your health data never passes through any server." />
+      <StatusRow icon="🔒" text="Data travels peer-to-peer over a browser-encrypted connection. A PIN confirms both devices are yours." />
+      <StatusRow icon="🌐" text="PeerJS is used for connection signaling only; sync still shares metadata such as connection IDs." />
       <button onClick={p2p.startAsHost}
         className="w-full py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest active:scale-95 transition-all"
         style={{ backgroundColor: 'var(--accent)', color: '#fff' }}>
@@ -392,8 +393,9 @@ function ManualFilePanel({ onDone }) {
       const medications = await db.medications.toArray().catch(() => []);
       const medicationLogs = await db.medicationLogs.toArray().catch(() => []);
       if (!events.length && !medications.length) { setStatus('No data to export.'); return; }
-      await exportToJSON(events, medications, medicationLogs);
-      setStatus(`Exported ${events.length} event(s).`);
+      const result = await exportToJSON(events, medications, medicationLogs);
+      if (result?.ok) setStatus(`Exported ${events.length} event(s).`);
+      else if (!result?.cancelled) setStatus('Export failed.');
     } catch { setStatus('Export failed.'); }
   };
 
@@ -401,6 +403,7 @@ function ManualFilePanel({ onDone }) {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
+      assertImportFileSafe(file);
       const { mergeRemoteData } = await import('../utils/syncHelpers');
       const parsed = JSON.parse(await file.text());
       const r = await mergeRemoteData(parsed);
@@ -474,7 +477,9 @@ export default function SyncModal({ isOpen, onClose, connectToken, offerSDP }) {
 
   // Reset mode when opened fresh (no link)
   useEffect(() => {
-    if (isOpen && !connectToken && !offerSDP) setMode(null);
+    if (!isOpen || connectToken || offerSDP) return;
+    const id = setTimeout(() => setMode(null), 0);
+    return () => clearTimeout(id);
   }, [isOpen, connectToken, offerSDP]);
 
   if (!isOpen) return null;

@@ -1,4 +1,3 @@
-import React from 'react';
 import { useTranslation } from 'react-i18next';
 import pkg from '../../package.json';
 import { ScrollFade } from '../components/ScrollFade';

@@ -1,4 +1,3 @@
-import React from 'react';
 
 export function ExportCard({ label, description, onExport }) {
   return (

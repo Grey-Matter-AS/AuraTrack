@@ -28,12 +28,13 @@ export function useMedications() {
     await load();
   };
 
-  const logDoseWithStatus = async (medicationId, scheduledHHMM, takenAt, status) => {
+  const logDoseWithStatus = async (medicationId, scheduledHHMM, takenAt, status, note = '') => {
     await db.medicationLogs.add({
       medicationId,
       scheduledTime: scheduledHHMM ?? null,
       takenAt: takenAt ?? Date.now(),
       status: status ?? 'taken',
+      note: typeof note === 'string' ? note.slice(0, 500) : '',
     });
   };
 
@@ -90,7 +91,10 @@ export function useMedications() {
     } catch { /* silent */ }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    const id = setTimeout(load, 0);
+    return () => clearTimeout(id);
+  }, []);
 
   return {
     medications,

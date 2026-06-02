@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatDuration } from '../utils/formatters';
 
@@ -113,7 +113,8 @@ function RecordingView({
 
   const getDiff = (start, end) => {
     if (!start) return 0;
-    return Math.floor(((end || Date.now()) - start) / 1000);
+    if (!end) return elapsed;
+    return Math.floor((end - start) / 1000);
   };
 
   const auraDuration     = getDiff(startTime, laps.aura);
@@ -125,7 +126,10 @@ function RecordingView({
     if (alertDismissed) return;
     const triggerPatient   = userMode !== 'CARETAKER' && elapsed >= ALERT_THRESHOLD;
     const triggerCaretaker = userMode === 'CARETAKER'  && laps.aura && !laps.seizure && seizureDuration >= ALERT_THRESHOLD;
-    if (triggerPatient || triggerCaretaker) setShowAlert(true);
+    if (triggerPatient || triggerCaretaker) {
+      const id = setTimeout(() => setShowAlert(true), 0);
+      return () => clearTimeout(id);
+    }
   }, [elapsed, seizureDuration, laps, userMode, alertDismissed]);
 
   // Auto-stop at 12 minutes — ref guard ensures it fires exactly once

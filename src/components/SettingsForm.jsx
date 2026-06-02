@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { db } from '../data/db';
 import { exportToJSON } from '../utils/exportHelpers';
+import { assertImportFileSafe } from '../utils/importSanitizer';
+import { mergeRemoteData } from '../utils/syncHelpers';
 import { useMedications } from '../hooks/useMedications';
 import { defaultScheduledTimes, scheduledDaysLabel } from '../utils/medicationSchedule';
 import pkg from '../../package.json';
@@ -544,7 +546,11 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
       const medications = await db.medications.toArray().catch(() => []);
       const medicationLogs = await db.medicationLogs.toArray().catch(() => []);
       if (!events.length && !medications.length) { flash(t('settings.data.no_data')); return; }
-      exportToJSON(events, medications, medicationLogs);
+      const result = await exportToJSON(events, medications, medicationLogs);
+      if (!result?.ok) {
+        if (!result?.cancelled) flash(t('settings.data.export_failed'));
+        return;
+      }
       flash(t('settings.data.exported', { events: events.length, meds: medications.length }));
     } catch (err) {
       console.error('Export failed:', err);
@@ -552,58 +558,13 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
     }
   };
 
-  const isValidEvent = (e) =>
-    e && typeof e === 'object' &&
-    typeof e.startTime === 'number' &&
-    typeof e.duration === 'number';
-
   const processImport = async (file) => {
     try {
+      assertImportFileSafe(file);
       const text = await file.text();
       const parsed = JSON.parse(text);
-      const raw = Array.isArray(parsed) ? parsed : (parsed.events || []);
-      if (!raw.length && !parsed.medications?.length) { flash(t('settings.data.no_data_in_file')); return; }
-
-      let eventsImported = 0, medsImported = 0, logsImported = 0;
-
-      if (raw.length) {
-        const valid = raw.filter(isValidEvent);
-        if (valid.length < raw.length) {
-          console.warn(`Skipped ${raw.length - valid.length} malformed records during import`);
-        }
-        if (valid.length) {
-          const existing = await db.events.toArray();
-          const existingUUIDs = new Set(existing.map(e => e.uuid).filter(Boolean));
-          const existingTimes = new Set(existing.map(e => e.startTime));
-          const toInsert = valid.filter(e =>
-            e.uuid ? !existingUUIDs.has(e.uuid) : !existingTimes.has(e.startTime)
-          ).map(({ id, ...rest }) => rest);
-          if (toInsert.length) await db.events.bulkAdd(toInsert);
-          eventsImported = toInsert.length;
-        }
-      }
-
-      if (Array.isArray(parsed.medications) && parsed.medications.length) {
-        const existingMeds = await db.medications.toArray().catch(() => []);
-        const existingMedKeys = new Set(existingMeds.map(m => `${m.name}|${m.frequency}`));
-        const toInsert = parsed.medications
-          .filter(m => !existingMedKeys.has(`${m.name}|${m.frequency}`))
-          .map(({ id, ...rest }) => rest);
-        if (toInsert.length) await db.medications.bulkAdd(toInsert).catch(() => {});
-        medsImported = toInsert.length;
-      }
-
-      if (Array.isArray(parsed.medicationLogs) && parsed.medicationLogs.length) {
-        const existingLogs = await db.medicationLogs.toArray().catch(() => []);
-        const existingLogKeys = new Set(
-          existingLogs.map(l => `${l.medicationId}|${l.scheduledTime ?? ''}|${l.takenAt}`)
-        );
-        const toInsert = parsed.medicationLogs
-          .filter(l => !existingLogKeys.has(`${l.medicationId}|${l.scheduledTime ?? ''}|${l.takenAt}`))
-          .map(({ id, ...rest }) => rest);
-        if (toInsert.length) await db.medicationLogs.bulkAdd(toInsert).catch(() => {});
-        logsImported = toInsert.length;
-      }
+      const result = await mergeRemoteData(parsed);
+      const { events: eventsImported, medications: medsImported, logs: logsImported } = result;
 
       const parts = [];
       if (eventsImported) parts.push(`${eventsImported} event(s)`);
@@ -641,7 +602,11 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
 
   const handleClearAllData = async () => {
     try {
-      await db.events.clear();
+      await Promise.all([
+        db.events.clear(),
+        db.medications.clear().catch(() => {}),
+        db.medicationLogs.clear().catch(() => {}),
+      ]);
       setShowClearConfirm(false);
       flash(t('settings.data.all_deleted'));
     } catch (err) {

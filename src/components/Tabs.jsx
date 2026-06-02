@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export function Tabs({ tabs, activeTab, onTabChange }) {
   const ref = useRef(null);

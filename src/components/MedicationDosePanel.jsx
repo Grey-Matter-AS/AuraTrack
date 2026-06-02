@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { slotLabel, scheduledTimestampForDay } from '../utils/medicationSchedule';
 
 export function MedicationDosePanel({ medicationGroups, allActiveMedications, onSaveDoses }) {
-  const nowMs = Date.now();
+  const [nowMs] = useState(() => Date.now());
   // toggledKeys: Set of "medicationId|hhMM" strings
   const [toggledKeys, setToggledKeys] = useState(new Set());
   const [saved, setSaved] = useState(false);

@@ -47,7 +47,9 @@
   "tagging": {
     "step1_title": "Steg 1: Anfallstyp",
     "feeling_title": "Vilken typ av känsla?",
-    "region_title": "Var hände det?"
+    "region_title": "Var hände det?",
+    "skip_for_now": "Hoppa över nu",
+    "save_timing_only": "Spara endast tidtagning"
   },
 
   "history": {
@@ -59,6 +61,7 @@
     "next": "Nästa →",
     "page_of": "{{page}} / {{total}}",
     "clear": "Rensa",
+    "needs_details": "Behöver detaljer",
     "tab_seizures": "Anfall",
     "tab_medications": "Mediciner",
     "tab_export": "Exportera"
@@ -103,6 +106,7 @@
     "time": "Tid",
     "status": "Status",
     "edited": "Redigerad",
+    "needs_details": "Behöver detaljer",
     "symptoms": "Symtom",
     "triggers": "Möjliga utlösare",
     "notes": "Kliniska observationer",
@@ -175,7 +179,7 @@
     "section_disclaimer": "Medicinsk friskrivning",
     "section_opensource": "Öppen källkod & Feedback",
     "about_text": "AuraTrack är en integritetsfokuserad app för anfallsövervakning för personer med epilepsi och deras vårdgivare. Registrera anfall i realtid, annotera händelser med klinisk detalj, spåra mediciner och generera strukturerade rapporter för din neurolog — allt lagrat lokalt på din enhet.",
-    "privacy_text": "All data lagras uteslutande på din enhet med IndexedDB. Ingenting överförs till någon extern server. Din hälsodata lämnar aldrig din enhet.",
+    "privacy_text": "All data lagras på din enhet med IndexedDB. Din hälsodata lämnar bara enheten när du uttryckligen exporterar en säkerhetskopia eller startar synkronisering.",
     "disclaimer_text": "AuraTrack är ett personligt loggningsverktyg och är inte en medicinsk enhet. Det är inte avsett att diagnostisera, behandla eller ersätta professionell medicinsk rådgivning. Rådgör alltid med en kvalificerad sjukvårdspersonal om ditt tillstånd och din behandling.",
     "disclaimer_not_medical": "inte en medicinsk enhet",
     "opensource_text": "AuraTrack är öppen källkod. Rapportera buggar eller föreslå funktioner på GitHub Issues.",
@@ -317,9 +321,9 @@
       "import_data": "Importera data",
       "import_sub": "JSON-fil",
       "danger_zone": "Farlig zon",
-      "clear_confirm": "Detta tar permanent bort alla registrerade händelser. Kan inte ångras.",
+      "clear_confirm": "Detta tar permanent bort registrerade händelser, läkemedel och dosloggar. Kan inte ångras.",
       "clear_yes": "Ja, ta bort allt",
-      "clear_btn": "Rensa alla händelsedata",
+      "clear_btn": "Rensa all hälsodata",
       "reset_confirm": "Återställa alla inställningar till fabriksinställningar?",
       "reset_yes": "Ja, återställ",
       "reset_btn": "Återställ inställningar till standard",
@@ -327,7 +331,7 @@
       "no_data": "Inga data att exportera.",
       "exported": "{{events}} händelse(r) och {{meds}} medicin(er) exporterade.",
       "export_failed": "Export misslyckades.",
-      "all_deleted": "Alla händelsedata raderade.",
+      "all_deleted": "All hälsodata raderad.",
       "delete_failed": "Det gick inte att radera data. Försök igen.",
       "settings_reset": "Inställningar återställda till standard.",
       "no_data_in_file": "Inga data hittades i filen.",
@@ -372,7 +376,8 @@
     "edited": "Redigerad",
     "manual_entry": "Manuell registrering",
     "view_edit": "Visa / Redigera",
-    "delete": "Radera"
+    "delete": "Radera",
+    "untagged": "Otaggad"
   },
 
   "summary": {

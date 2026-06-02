@@ -47,7 +47,9 @@
   "tagging": {
     "step1_title": "Steg 1: Anfallstype",
     "feeling_title": "Kva slags kjensle?",
-    "region_title": "Kor skjedde det?"
+    "region_title": "Kor skjedde det?",
+    "skip_for_now": "Hopp over no",
+    "save_timing_only": "Lagre berre tidtaking"
   },
 
   "history": {
@@ -59,6 +61,7 @@
     "next": "Neste →",
     "page_of": "{{page}} / {{total}}",
     "clear": "Tilbakestill",
+    "needs_details": "Manglar detaljar",
     "tab_seizures": "Anfall",
     "tab_medications": "Medisinar",
     "tab_export": "Eksporter"
@@ -103,6 +106,7 @@
     "time": "Tid",
     "status": "Status",
     "edited": "Redigert",
+    "needs_details": "Manglar detaljar",
     "symptoms": "Symptom",
     "triggers": "Moglege utløysarar",
     "notes": "Kliniske observasjonar",
@@ -175,7 +179,7 @@
     "section_disclaimer": "Medisinsk ansvarsfraskriving",
     "section_opensource": "Open kjeldekode og tilbakemelding",
     "about_text": "AuraTrack er ei personvernfokusert app for anfallssporing for personar med epilepsi og deira omsorgspersonar. Registrer anfall i sanntid, annotter hendingar med klinisk detalj, spor medisinar og generer strukturerte rapportar til nevrologen din — alt lagra lokalt på eininga di.",
-    "privacy_text": "Alle data lagrast utelukkande på eininga di med IndexedDB. Ingenting overførast til nokon ekstern tenar. Helsedataene dine forlet aldri eininga di.",
+    "privacy_text": "Alle data lagrast på eininga di med IndexedDB. Helsedataa dine forlèt berre eininga når du eksplisitt eksporterer ein tryggleikskopi eller startar synkronisering.",
     "disclaimer_text": "AuraTrack er eit personleg loggingsverktøy og er ikkje eit medisinsk utstyr. Det er ikkje meint å diagnostisere, behandle eller erstatte profesjonell medisinsk rådgjeving. Rådfør deg alltid med ein kvalifisert helseperson om din tilstand og handsaming.",
     "disclaimer_not_medical": "ikkje eit medisinsk utstyr",
     "opensource_text": "AuraTrack er open kjeldekode. Rapporter feil eller føreslå funksjonar på GitHub Issues.",
@@ -317,9 +321,9 @@
       "import_data": "Importer data",
       "import_sub": "JSON-fil",
       "danger_zone": "Faresone",
-      "clear_confirm": "Dette slettar permanent alle registrerte hendingar. Kan ikkje angrast.",
+      "clear_confirm": "Dette slettar permanent registrerte hendingar, medisinar og doseringsloggar. Kan ikkje angrast.",
       "clear_yes": "Ja, slett alt",
-      "clear_btn": "Slett alle hendingsdata",
+      "clear_btn": "Slett alle helsedata",
       "reset_confirm": "Tilbakestille alle preferansar til fabrikkstandard?",
       "reset_yes": "Ja, tilbakestill",
       "reset_btn": "Tilbakestill innstillingar til standard",
@@ -327,7 +331,7 @@
       "no_data": "Ingen data å eksportere.",
       "exported": "Eksporterte {{events}} hending(ar) og {{meds}} medisin(ar).",
       "export_failed": "Eksport mislykkast.",
-      "all_deleted": "Alle hendingsdata sletta.",
+      "all_deleted": "Alle helsedata sletta.",
       "delete_failed": "Klarte ikkje å slette data. Prøv igjen.",
       "settings_reset": "Innstillingar tilbakestilte til standard.",
       "no_data_in_file": "Ingen data funne i fila.",
@@ -372,7 +376,8 @@
     "edited": "Redigert",
     "manual_entry": "Manuell registrering",
     "view_edit": "Vis / Rediger",
-    "delete": "Slett"
+    "delete": "Slett",
+    "untagged": "Umerkt"
   },
 
   "summary": {

@@ -1,14 +1,19 @@
 import { useState, useRef, useCallback } from 'react';
 import QRCode from 'qrcode';
 import { exportLocalData, mergeRemoteData, compressSDP, decompressSDP } from '../utils/syncHelpers';
+import { MAX_SYNC_PAYLOAD_CHARS } from '../utils/importSanitizer';
 
 const CHUNK_SIZE = 15000;
+const MAX_CHUNKS = Math.ceil(MAX_SYNC_PAYLOAD_CHARS / CHUNK_SIZE);
 
 function generatePin() {
-  return String(Math.floor(1000 + Math.random() * 9000));
+  const values = new Uint32Array(1);
+  crypto.getRandomValues(values);
+  return String(100000 + (values[0] % 900000));
 }
 
 function chunkString(str) {
+  if (str.length > MAX_SYNC_PAYLOAD_CHARS) throw new Error('Sync payload is too large.');
   const out = [];
   for (let i = 0; i < str.length; i += CHUNK_SIZE) out.push(str.slice(i, i + CHUNK_SIZE));
   return out.length ? out : [''];
@@ -53,8 +58,8 @@ export function useLANSync() {
   const go = (p) => { phaseRef.current = p; setPhase(p); };
 
   const cleanup = useCallback(() => {
-    try { chRef.current?.close(); } catch {}
-    try { pcRef.current?.close(); } catch {}
+    try { chRef.current?.close(); } catch { /* channel already closed */ }
+    try { pcRef.current?.close(); } catch { /* peer connection already closed */ }
     chRef.current = null;
     pcRef.current = null;
   }, []);
@@ -68,11 +73,17 @@ export function useLANSync() {
   }, [cleanup]);
 
   const sendLocalData = useCallback(async () => {
-    const json = JSON.stringify(await exportLocalData());
-    const chunks = chunkString(json);
-    chRef.current.send(JSON.stringify({ type: 'meta', total: chunks.length }));
-    chunks.forEach((d, i) => chRef.current.send(JSON.stringify({ type: 'chunk', index: i, data: d })));
-  }, []);
+    try {
+      const json = JSON.stringify(await exportLocalData());
+      const chunks = chunkString(json);
+      chRef.current.send(JSON.stringify({ type: 'meta', total: chunks.length }));
+      chunks.forEach((d, i) => chRef.current.send(JSON.stringify({ type: 'chunk', index: i, data: d })));
+    } catch (err) {
+      setError(err.message || 'Sync payload is too large.');
+      go('error');
+      cleanup();
+    }
+  }, [cleanup]);
 
   const onChannelMessage = useCallback(async (ev) => {
     let data;
@@ -81,18 +92,22 @@ export function useLANSync() {
     if (data.type === 'pin') { setRemotePin(data.pin); go('pin_confirm'); return; }
     if (data.type === 'pin_ok') { go('transferring'); await sendLocalData(); return; }
     if (data.type === 'meta') {
-      if (typeof data.total !== 'number' || data.total < 1 || data.total > 2000) return;
+      if (!Number.isInteger(data.total) || data.total < 1 || data.total > MAX_CHUNKS) return;
       rxRef.current = { chunks: new Array(data.total), expected: data.total };
       return;
     }
     if (data.type === 'chunk') {
       if (phaseRef.current !== 'transferring' && phaseRef.current !== 'merging') return;
+      if (!Number.isInteger(data.index) || data.index < 0 || data.index >= rxRef.current.expected) return;
+      if (typeof data.data !== 'string' || data.data.length > CHUNK_SIZE) return;
       rxRef.current.chunks[data.index] = data.data;
       const filled = rxRef.current.chunks.filter(c => c !== undefined).length;
       if (filled === rxRef.current.expected) {
         try {
           go('merging');
-          const r = await mergeRemoteData(JSON.parse(rxRef.current.chunks.join('')));
+          const payload = rxRef.current.chunks.join('');
+          if (payload.length > MAX_SYNC_PAYLOAD_CHARS) throw new Error('Received data is too large.');
+          const r = await mergeRemoteData(JSON.parse(payload));
           setResult(r);
           go('done');
           cleanup();

@@ -24,5 +24,13 @@ export const formatDuration = (seconds) => {
   return m > 0 ? `${m}m ${s}s` : `${s}s`;
 };
 
+export const formatCSVField = (value) => {
+  const raw = value == null ? '' : String(value);
+  const formulaSafe = /^[=+\-@]/.test(raw) ? `'${raw}` : raw;
+  return `"${formulaSafe.replace(/"/g, '""')}"`;
+};
+
 export const formatCSVRow = (event) =>
-  [event.id, event.date, event.time, event.type, event.duration, `"${(event.notes || '').replace(/"/g, '""')}"`].join(',');
+  [event.id, event.date, event.time, event.type, event.duration, event.notes || '']
+    .map(formatCSVField)
+    .join(',');

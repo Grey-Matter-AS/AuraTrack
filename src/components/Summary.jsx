@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { formatDuration } from '../utils/formatters';
 import {
   DndContext, closestCenter, PointerSensor, TouchSensor,
@@ -242,7 +243,8 @@ function EditableTotalTimer({ calcValue, manualDurations, editedTimers, onSetMan
 
 // ─── Inline date/time editor for edit-mode / manual entries ──
 function DateTimeOverrideRow({ startTime, overrideDateTime, onSetEventDateTime }) {
-  const d   = new Date(startTime || Date.now());
+  const [fallbackStartTime] = useState(() => Date.now());
+  const d   = new Date(startTime || fallbackStartTime);
   const pad = n => String(n).padStart(2, '0');
   const defDate = overrideDateTime?.date ?? `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   const defTime = overrideDateTime?.time ?? `${pad(d.getHours())}:${pad(d.getMinutes())}`;
@@ -291,6 +293,7 @@ function Summary({
   onSetManualDuration,
   onAddAnother,
   onSave,
+  onSkip,
   onCancel,
   onRemoveSymptom,
   // Date/time override (edit mode backdating + manual entry)
@@ -300,6 +303,7 @@ function Summary({
   onSetEventDateTime,
   durationFormat = 'seconds',
 }) {
+  const { t } = useTranslation();
   const [activeId, setActiveId] = useState(null);
 
   const auraDur     = laps?.aura    ? Math.floor((laps.aura    - startTime)          / 1000) : 0;
@@ -493,6 +497,16 @@ function Summary({
         >
           FINISH & SAVE LOG
         </button>
+
+        {onSkip && (
+          <button
+            onClick={onSkip}
+            className="w-full py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest active:scale-95 transition-all"
+            style={{ backgroundColor: 'rgba(245,158,11,0.16)', border: '2px solid rgba(245,158,11,0.45)', color: '#f59e0b' }}
+          >
+            {t('tagging.save_timing_only')}
+          </button>
+        )}
 
         <button
           onClick={onCancel}

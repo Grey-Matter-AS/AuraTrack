@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { db } from '../data/db';
 import { EventCard } from '../components/EventCard';
@@ -17,6 +17,7 @@ export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, hi
   const [allEvents, setAllEvents] = useState([]);
   const [page, setPage] = useState(0);
   const [typeFilter, setTypeFilter] = useState('');
+  const [completionFilter, setCompletionFilter] = useState('all');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
 
@@ -34,6 +35,7 @@ export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, hi
 
   const filtered = allEvents.filter(e => {
     if (typeFilter && e.type !== typeFilter) return false;
+    if (completionFilter === 'needs_details' && e.isComplete) return false;
     if (fromDate || toDate) {
       const eventTs = e.startTime ?? NaN;
       if (fromDate && eventTs < new Date(fromDate).setHours(0, 0, 0, 0)) return false;
@@ -44,6 +46,7 @@ export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, hi
 
   const totalPages = Math.ceil(filtered.length / historyPageSize);
   const paged = filtered.slice(page * historyPageSize, (page + 1) * historyPageSize);
+  const needsDetailsCount = allEvents.filter(e => !e.isComplete).length;
 
   const dangerMap = useMemo(() => buildDangerMap(allEvents), [allEvents]);
 
@@ -88,9 +91,20 @@ export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, hi
                 <option value="">{t('history.all_types')}</option>
                 {SEIZURE_TYPES.map(type => <option key={type} value={type}>{type}</option>)}
               </select>
-              {(fromDate || toDate) && (
+              <button
+                onClick={() => { setCompletionFilter(f => f === 'needs_details' ? 'all' : 'needs_details'); setPage(0); }}
+                className="px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all shrink-0"
+                style={{
+                  backgroundColor: completionFilter === 'needs_details' ? 'var(--accent)' : 'var(--bg-raised)',
+                  color: completionFilter === 'needs_details' ? '#fff' : 'var(--text-secondary)',
+                  border: completionFilter === 'needs_details' ? '1px solid transparent' : '1px solid var(--border)',
+                }}
+              >
+                {t('history.needs_details', 'Needs details')} {needsDetailsCount > 0 ? `(${needsDetailsCount})` : ''}
+              </button>
+              {(fromDate || toDate || completionFilter !== 'all') && (
                 <button
-                  onClick={() => { setFromDate(''); setToDate(''); setPage(0); }}
+                  onClick={() => { setFromDate(''); setToDate(''); setCompletionFilter('all'); setPage(0); }}
                   className="px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all shrink-0"
                   style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
                 >

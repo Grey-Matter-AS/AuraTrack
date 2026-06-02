@@ -1,4 +1,5 @@
 import { db } from '../data/db';
+import { MAX_SYNC_PAYLOAD_CHARS, sanitizeImportPayload } from './importSanitizer';
 
 export async function exportLocalData() {
   const events = await db.events.toArray();
@@ -9,44 +10,34 @@ export async function exportLocalData() {
 
 export async function mergeRemoteData(parsed) {
   const results = { events: 0, medications: 0, logs: 0 };
+  const { events, medications, medicationLogs } = sanitizeImportPayload(parsed);
 
-  const rawEvents = Array.isArray(parsed) ? parsed : (parsed.events || []);
-  const validEvents = rawEvents
-    .filter(e => e && typeof e.startTime === 'number' && typeof e.duration === 'number')
-    .map(e => ({
-      ...e,
-      notes: typeof e.notes === 'string' ? e.notes.slice(0, 5000) : '',
-      type:  typeof e.type  === 'string' ? e.type.slice(0, 100)   : 'Uncategorized',
-    }));
-  if (validEvents.length) {
+  if (events.length) {
     const existing = await db.events.toArray();
     const existingUUIDs = new Set(existing.map(e => e.uuid).filter(Boolean));
     const existingTimes = new Set(existing.map(e => e.startTime));
-    const toInsert = validEvents
-      .filter(e => e.uuid ? !existingUUIDs.has(e.uuid) : !existingTimes.has(e.startTime))
-      .map(({ id, ...rest }) => rest);
+    const toInsert = events
+      .filter(e => e.uuid ? !existingUUIDs.has(e.uuid) : !existingTimes.has(e.startTime));
     if (toInsert.length) await db.events.bulkAdd(toInsert);
     results.events = toInsert.length;
   }
 
-  if (Array.isArray(parsed.medications) && parsed.medications.length) {
+  if (medications.length) {
     const existing = await db.medications.toArray().catch(() => []);
     const existingKeys = new Set(existing.map(m => `${m.name}|${m.frequency}`));
-    const toInsert = parsed.medications
-      .filter(m => !existingKeys.has(`${m.name}|${m.frequency}`))
-      .map(({ id, ...rest }) => rest);
+    const toInsert = medications
+      .filter(m => !existingKeys.has(`${m.name}|${m.frequency}`));
     if (toInsert.length) await db.medications.bulkAdd(toInsert).catch(() => {});
     results.medications = toInsert.length;
   }
 
-  if (Array.isArray(parsed.medicationLogs) && parsed.medicationLogs.length) {
+  if (medicationLogs.length) {
     const existing = await db.medicationLogs.toArray().catch(() => []);
     const existingKeys = new Set(
       existing.map(l => `${l.medicationId}|${l.scheduledTime ?? ''}|${l.takenAt}`)
     );
-    const toInsert = parsed.medicationLogs
-      .filter(l => !existingKeys.has(`${l.medicationId}|${l.scheduledTime ?? ''}|${l.takenAt}`))
-      .map(({ id, ...rest }) => rest);
+    const toInsert = medicationLogs
+      .filter(l => !existingKeys.has(`${l.medicationId}|${l.scheduledTime ?? ''}|${l.takenAt}`));
     if (toInsert.length) await db.medicationLogs.bulkAdd(toInsert).catch(() => {});
     results.logs = toInsert.length;
   }
@@ -93,6 +84,8 @@ export async function decompressSDP(b64url) {
     const { done, value } = await reader.read();
     if (done) break;
     chunks.push(value);
+    const totalLen = chunks.reduce((n, c) => n + c.length, 0);
+    if (totalLen > MAX_SYNC_PAYLOAD_CHARS) throw new Error('SDP payload too large');
   }
   const totalLen = chunks.reduce((n, c) => n + c.length, 0);
   const out = new Uint8Array(totalLen);

@@ -47,7 +47,9 @@
   "tagging": {
     "step1_title": "Étape 1 : Type de crise",
     "feeling_title": "Quel type de sensation ?",
-    "region_title": "Où cela s'est-il produit ?"
+    "region_title": "Où cela s'est-il produit ?",
+    "skip_for_now": "Ignorer pour l’instant",
+    "save_timing_only": "Enregistrer seulement le minutage"
   },
 
   "history": {
@@ -59,6 +61,7 @@
     "next": "Suiv. →",
     "page_of": "{{page}} / {{total}}",
     "clear": "Effacer",
+    "needs_details": "Détails requis",
     "tab_seizures": "Crises",
     "tab_medications": "Médicaments",
     "tab_export": "Exporter"
@@ -103,6 +106,7 @@
     "time": "Heure",
     "status": "Statut",
     "edited": "Modifié",
+    "needs_details": "Détails requis",
     "symptoms": "Symptômes",
     "triggers": "Déclencheurs possibles",
     "notes": "Observations cliniques",
@@ -175,7 +179,7 @@
     "section_disclaimer": "Avertissement médical",
     "section_opensource": "Open Source & Retours",
     "about_text": "AuraTrack est une application de suivi des crises axée sur la confidentialité pour les personnes atteintes d'épilepsie et leurs aidants. Enregistrez les crises en temps réel, annotez les événements avec des détails cliniques, suivez les médicaments et générez des rapports structurés pour votre neurologue — tout stocké localement sur votre appareil.",
-    "privacy_text": "Toutes les données sont stockées exclusivement sur votre appareil via IndexedDB. Rien n'est transmis à un serveur externe. Vos données de santé ne quittent jamais votre appareil.",
+    "privacy_text": "Toutes les données sont stockées sur votre appareil via IndexedDB. Vos données de santé ne quittent l'appareil que lorsque vous exportez explicitement une sauvegarde ou lancez une synchronisation.",
     "disclaimer_text": "AuraTrack est un outil de journalisation personnel et n'est pas un dispositif médical. Il n'est pas destiné à diagnostiquer, traiter ou remplacer un avis médical professionnel. Consultez toujours un professionnel de santé qualifié concernant votre condition et votre traitement.",
     "disclaimer_not_medical": "pas un dispositif médical",
     "opensource_text": "AuraTrack est open source. Signalez des bugs ou suggérez des fonctionnalités sur GitHub Issues.",
@@ -317,9 +321,9 @@
       "import_data": "Importer des données",
       "import_sub": "Fichier JSON",
       "danger_zone": "Zone de danger",
-      "clear_confirm": "Cela supprime définitivement tous les événements enregistrés. Impossible à annuler.",
+      "clear_confirm": "Cela supprime définitivement les événements enregistrés, les médicaments et les journaux de doses. Impossible à annuler.",
       "clear_yes": "Oui, tout supprimer",
-      "clear_btn": "Effacer toutes les données d'événements",
+      "clear_btn": "Effacer toutes les données de santé",
       "reset_confirm": "Réinitialiser toutes les préférences aux valeurs d'usine ?",
       "reset_yes": "Oui, réinitialiser",
       "reset_btn": "Réinitialiser les paramètres par défaut",
@@ -327,7 +331,7 @@
       "no_data": "Aucune donnée à exporter.",
       "exported": "{{events}} événement(s) et {{meds}} médicament(s) exportés.",
       "export_failed": "Échec de l'export.",
-      "all_deleted": "Toutes les données d'événements supprimées.",
+      "all_deleted": "Toutes les données de santé supprimées.",
       "delete_failed": "Échec de la suppression des données. Veuillez réessayer.",
       "settings_reset": "Paramètres réinitialisés aux valeurs par défaut.",
       "no_data_in_file": "Aucune donnée trouvée dans le fichier.",
@@ -372,7 +376,8 @@
     "edited": "Modifié",
     "manual_entry": "Saisie manuelle",
     "view_edit": "Voir / Modifier",
-    "delete": "Supprimer"
+    "delete": "Supprimer",
+    "untagged": "Non renseigné"
   },
 
   "summary": {

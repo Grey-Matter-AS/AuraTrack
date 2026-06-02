@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { db } from '../data/db';
 import { ScrollFade } from '../components/ScrollFade';
@@ -115,7 +115,7 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false }
             const fromMs = new Date(fromDate).setHours(0, 0, 0, 0);
             const toMs   = new Date(toDate).setHours(23, 59, 59, 999);
             const logs   = await getLogsForPeriod(fromMs, toMs);
-            exportToJSON(events, medications, logs);
+	            await exportToJSON(events, medications, logs);
           }}
         />
         <ExportCard
@@ -126,7 +126,7 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false }
             const fromMs = new Date(fromDate).setHours(0, 0, 0, 0);
             const toMs   = new Date(toDate).setHours(23, 59, 59, 999);
             const logs   = await getLogsForPeriod(fromMs, toMs);
-            exportToCSV(events, medications, logs);
+	            await exportToCSV(events, medications, logs);
           }}
         />
         <ExportCard

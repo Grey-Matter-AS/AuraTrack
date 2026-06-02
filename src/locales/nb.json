@@ -47,7 +47,9 @@
   "tagging": {
     "step1_title": "Trinn 1: Anfallstype",
     "feeling_title": "Hvilken type følelse?",
-    "region_title": "Hvor skjedde det?"
+    "region_title": "Hvor skjedde det?",
+    "skip_for_now": "Hopp over nå",
+    "save_timing_only": "Lagre bare tidtaking"
   },
 
   "history": {
@@ -59,6 +61,7 @@
     "next": "Neste →",
     "page_of": "{{page}} / {{total}}",
     "clear": "Tilbakestill",
+    "needs_details": "Mangler detaljer",
     "tab_seizures": "Anfall",
     "tab_medications": "Medisiner",
     "tab_export": "Eksporter"
@@ -103,6 +106,7 @@
     "time": "Tid",
     "status": "Status",
     "edited": "Redigert",
+    "needs_details": "Mangler detaljer",
     "symptoms": "Symptomer",
     "triggers": "Mulige utløsere",
     "notes": "Kliniske observasjoner",
@@ -175,7 +179,7 @@
     "section_disclaimer": "Medisinsk ansvarsfraskrivelse",
     "section_opensource": "Åpen kildekode og tilbakemelding",
     "about_text": "AuraTrack er en personvernfokusert app for anfallssporing for personer med epilepsi og deres omsorgspersoner. Registrer anfall i sanntid, annotter hendelser med klinisk detalj, spor medisiner og generer strukturerte rapporter til nevrologen din — alt lagret lokalt på enheten din.",
-    "privacy_text": "Alle data lagres utelukkende på enheten din med IndexedDB. Ingenting overføres til noen ekstern server. Helsedataene dine forlater aldri enheten din.",
+    "privacy_text": "Alle data lagres på enheten din med IndexedDB. Helsedataene dine forlater bare enheten når du eksplisitt eksporterer en sikkerhetskopi eller starter synkronisering.",
     "disclaimer_text": "AuraTrack er et personlig loggingsverktøy og er ikke et medisinsk utstyr. Det er ikke ment å diagnostisere, behandle eller erstatte profesjonell medisinsk rådgivning. Rådfør alltid en kvalifisert helsepersonell om din tilstand og behandling.",
     "disclaimer_not_medical": "ikke et medisinsk utstyr",
     "opensource_text": "AuraTrack er åpen kildekode. Rapporter feil eller foreslå funksjoner på GitHub Issues.",
@@ -317,9 +321,9 @@
       "import_data": "Importer data",
       "import_sub": "JSON-fil",
       "danger_zone": "Faresone",
-      "clear_confirm": "Dette sletter permanent alle registrerte hendelser. Kan ikke angres.",
+      "clear_confirm": "Dette sletter permanent registrerte hendelser, medisiner og doseringslogger. Kan ikke angres.",
       "clear_yes": "Ja, slett alt",
-      "clear_btn": "Slett alle hendelsesdata",
+      "clear_btn": "Slett alle helsedata",
       "reset_confirm": "Tilbakestill alle preferanser til fabrikkstandard?",
       "reset_yes": "Ja, tilbakestill",
       "reset_btn": "Tilbakestill innstillinger til standard",
@@ -327,7 +331,7 @@
       "no_data": "Ingen data å eksportere.",
       "exported": "Eksporterte {{events}} hendelse(r) og {{meds}} medisin(er).",
       "export_failed": "Eksport mislyktes.",
-      "all_deleted": "Alle hendelsesdata slettet.",
+      "all_deleted": "Alle helsedata slettet.",
       "delete_failed": "Klarte ikke å slette data. Prøv igjen.",
       "settings_reset": "Innstillinger tilbakestilt til standard.",
       "no_data_in_file": "Ingen data funnet i filen.",
@@ -372,7 +376,8 @@
     "edited": "Redigert",
     "manual_entry": "Manuell registrering",
     "view_edit": "Vis / Rediger",
-    "delete": "Slett"
+    "delete": "Slett",
+    "untagged": "Umerket"
   },
 
   "summary": {
