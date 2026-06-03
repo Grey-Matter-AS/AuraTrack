@@ -195,7 +195,9 @@ AuraTrack/
 │   │   ├── usePWAInstall.js    ← Handles the "Install App" prompt and update notifications.
 │   │   ├── useWakeLock.js      ← Keeps the phone screen on during recording.
 │   │   ├── useNotifications.js ← Schedules browser push notifications for upcoming doses.
-│   │   └── useMedications.js   ← Manages medications list, scheduled times, and dose logs.
+│   │   ├── useMedications.js   ← Manages medications list, scheduled times, and dose logs.
+│   │   ├── useP2PSync.js       ← Internet-based device sync with PIN-verified PeerJS handshake.
+│   │   └── useLANSync.js       ← Same-WiFi device sync using WebRTC + QR-code signaling.
 │   │
 │   ├── pages/                  ← The 7 main screens of the app.
 │   │   ├── IdleView.jsx        ← Home screen: START button, dose tracker panel, recent events.
@@ -217,7 +219,8 @@ AuraTrack/
 │   │   ├── MedicationDosePanel.jsx ← Idle-screen dose tracker with LATE/MISSED status colours.
 │   │   ├── MedicationHistoryTab.jsx ← Scrollable grid showing every dose slot with status badges.
 │   │   ├── ManualEntrySheet.jsx ← Bottom-sheet form for logging a past seizure (date/time/duration).
-│   │   └── PWAInstallBanner.jsx ← The "Install this app" banner + update-available notification.
+│   │   ├── PWAInstallBanner.jsx ← The "Install this app" banner + update-available notification.
+│   │   └── SyncModal.jsx       ← Device-to-device sync UI: Easy Sync, Private Sync, and Manual File import/export.
 │   │
 │   └── utils/                  ← Pure helper functions (no React).
 │       ├── exportHelpers.js    ← Creates JSON, CSV, PDF, neurologist report, seizure diary.
@@ -410,6 +413,8 @@ useEffect(() => {
 ```
 
 When the timer starts, `useEventTimer` saves the start time and status to `localStorage`. If the browser closes during recording, reopening the app finds this saved state and continues the recording. The `try/catch` handles private browsing mode where `localStorage` access is blocked.
+
+`useEventTimer` now keeps its five control methods (`startTimer`, `stopTimer`, `restore`, `recordLap`, `setForEdit`) reference-stable with `useCallback`. Internally it uses refs for the live `startTime` and `laps` values, so the methods do not get recreated every render just because the stopwatch ticks. This is important because `App.jsx` and the recording flow treat these methods as long-lived controls, not as throwaway per-render closures.
 
 **The `stoppingRef` double-save guard:**
 
@@ -720,15 +725,20 @@ Mixing them in the same wizard step would confuse the clinical data model. A neu
 
 **What it stores:**
 - `startTime` — the exact millisecond the recording started
-- `elapsed` — seconds since start, updated every 100ms
+- `elapsed` — seconds since start, updated every 1 second
 - `laps` — object with optional `aura`, `seizure`, `recovery` timestamps
+- `startTimeRef` / `lapsRef` — internal refs holding the latest live values so the control methods can stay reference-stable
 
 **Key functions:**
-- `startTimer()` — saves start time to `localStorage` (crash recovery), starts 100ms interval
+- `startTimer()` — saves start time to `localStorage` (crash recovery), resets the phase markers, starts the 1-second interval
 - `stopTimer()` — clears the interval, returns a completed event object with all timing data
 - `restore(startMs)` — resumes a timer from a previously saved start time (crash recovery)
 - `recordLap(phase)` — records a phase transition timestamp
 - `setForEdit(duration, laps, startTime)` — puts the timer in read-only edit mode so the wizard can display the original timings
+
+**Why the refs matter:**
+
+The five control methods are wrapped in `useCallback`, but they do **not** depend on changing `startTime` or `laps` state. Instead, they read from refs that are updated whenever the timer state changes. This gives `App.jsx` a stable control surface and avoids accidental effect churn or render loops when the timer updates every second.
 
 ---
 
@@ -973,6 +983,59 @@ For example: `Levetiracetam 500mg BD`
 | mcg | Microgram doses |
 | ml | Liquid medications, rescue injections |
 | IU | International Units (some vitamins, biologics) |
+
+---
+
+#### `src/hooks/useP2PSync.js`
+
+**What it is:** The "Easy Sync" transport. It uses PeerJS for cross-network signaling so two devices can connect over the internet, then exchanges AuraTrack data directly over the browser data channel.
+
+**Security model:**
+
+- Device A generates a random 6-digit PIN
+- Device B connects using the scanned connection ID
+- The raw connection stays **unverified** until Device B sends back a `pin_ok` message that includes the exact PIN value
+- If the PIN is missing or wrong, the hook immediately closes the socket before any export payload is transferred
+
+This matters because the connection ID alone is not treated as proof of trust. A malicious console client that guesses or obtains the ID still cannot trigger a sync without also knowing the current PIN shown on the host screen.
+
+**Important states returned to the UI:**
+
+- `phase` — idle / waiting / pin_confirm / transferring / merging / done / error
+- `peerId` — the PeerJS connection identifier encoded into the QR code
+- `pin` / `remotePin` — the local PIN and the remote PIN shown for visual confirmation
+- `result` / `error` — final merge counts or failure message
+
+**Key functions:**
+
+- `startAsHost()` — generates the PIN, creates the PeerJS peer, waits for a guest
+- `connectToPeer(targetId)` — connects the guest device to the scanned host ID
+- `confirmPin()` — sends a handshake payload containing the actual PIN, promoting the connection into the verified state
+- `reset()` — tears down the connection and clears local sync state
+
+---
+
+#### `src/hooks/useLANSync.js`
+
+**What it is:** The "Private Sync" transport. It performs direct same-WiFi sync using WebRTC, with QR codes used only to pass the SDP offer/answer between devices.
+
+**How it differs from `useP2PSync`:**
+
+- No relay server is involved after the QR exchange
+- It uses a WebRTC `RTCDataChannel` instead of PeerJS
+- It enforces the **same PIN verification rule** before accepting any data payload
+
+**Security rule at the message boundary:**
+
+The data channel starts unverified. When the guest confirms the PIN, it must send a JSON message containing both `type: 'pin_ok'` and the actual `pin` value. The host compares that value with its locally generated secret. If the values do not match, the hook closes the data channel and the peer connection immediately.
+
+**Key functions:**
+
+- `startAsHost()` — creates the offer QR and generates the session PIN
+- `startAsGuest(encodedOffer)` — processes the scanned offer and produces the answer QR
+- `applyAnswer(encodedAnswer)` — completes the SDP handshake after the host scans the guest's QR
+- `confirmPin()` — sends the PIN-bearing handshake that upgrades the channel into the verified state
+- `reset()` — closes the channel / connection and clears temporary sync state
 
 ---
 
