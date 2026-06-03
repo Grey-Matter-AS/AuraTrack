@@ -1,11 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { haptic } from '../utils/hapticFeedback';
+
+const EMPTY_LAPS = { aura: null, seizure: null, recovery: null };
 
 export function useEventTimer() {
   const [isRunning, setIsRunning] = useState(false);
   const [startTime, setStartTime] = useState(null);
   const [elapsed, setElapsed] = useState(0);
-  const [laps, setLaps] = useState({ aura: null, seizure: null, recovery: null });
+  const [laps, setLaps] = useState(EMPTY_LAPS);
+  const startTimeRef = useRef(null);
+  const lapsRef = useRef(EMPTY_LAPS);
 
   useEffect(() => {
     let interval;
@@ -17,11 +21,13 @@ export function useEventTimer() {
     return () => clearInterval(interval);
   }, [isRunning, startTime]);
 
-  const startTimer = () => {
+  const startTimer = useCallback(() => {
     const now = Date.now();
+    startTimeRef.current = now;
     setStartTime(now);
     setElapsed(0);
-    setLaps({ aura: null, seizure: null, recovery: null });
+    lapsRef.current = EMPTY_LAPS;
+    setLaps(EMPTY_LAPS);
     setIsRunning(true);
     try {
       localStorage.setItem('aura_startTime', now);
@@ -31,17 +37,18 @@ export function useEventTimer() {
     } catch {
       // Private browsing or storage blocked — crash recovery unavailable, recording continues
     }
-  };
+  }, []);
 
-  const stopTimer = () => {
-    if (!startTime) {
+  const stopTimer = useCallback(() => {
+    if (!startTimeRef.current) {
       console.error('stopTimer called without startTime');
       return null;
     }
     setIsRunning(false);
     const endTime = Date.now();
-    const duration = Math.floor((endTime - startTime) / 1000);
-    const finalLaps = { ...laps, recovery: endTime };
+    const duration = Math.floor((endTime - startTimeRef.current) / 1000);
+    const finalLaps = { ...lapsRef.current, recovery: endTime };
+    lapsRef.current = finalLaps;
     setLaps(finalLaps);
     let date, time;
     try {
@@ -50,25 +57,31 @@ export function useEventTimer() {
       ['aura_startTime', 'aura_status', 'aura_startDateReadable', 'aura_startTimeReadable']
         .forEach(k => localStorage.removeItem(k));
     } catch { /* ignore — private browsing */ }
-    return { startTime, endTime, duration, laps: finalLaps, date, time };
-  };
+    return { startTime: startTimeRef.current, endTime, duration, laps: finalLaps, date, time };
+  }, []);
 
-  const recordLap = (phase) => {
-    setLaps(prev => ({ ...prev, [phase]: Date.now() }));
+  const recordLap = useCallback((phase) => {
+    const nextLaps = { ...lapsRef.current, [phase]: Date.now() };
+    lapsRef.current = nextLaps;
+    setLaps(nextLaps);
     haptic(100);
-  };
+  }, []);
 
-  const restore = (savedStartTime) => {
+  const restore = useCallback((savedStartTime) => {
+    startTimeRef.current = savedStartTime;
     setStartTime(savedStartTime);
     setElapsed(Math.floor((Date.now() - savedStartTime) / 1000));
     setIsRunning(true);
-  };
+  }, []);
 
-  const setForEdit = (duration, eventLaps, eventStartTime) => {
+  const setForEdit = useCallback((duration, eventLaps, eventStartTime) => {
+    const nextLaps = eventLaps || EMPTY_LAPS;
+    startTimeRef.current = eventStartTime || null;
+    lapsRef.current = nextLaps;
     setElapsed(duration ?? 0);
-    setLaps(eventLaps || { aura: null, seizure: null, recovery: null });
+    setLaps(nextLaps);
     setStartTime(eventStartTime || null);
-  };
+  }, []);
 
   return { startTime, elapsed, laps, startTimer, stopTimer, recordLap, restore, setForEdit };
 }

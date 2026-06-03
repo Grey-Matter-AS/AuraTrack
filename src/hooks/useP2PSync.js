@@ -30,6 +30,7 @@ export function useP2PSync() {
   const peerRef = useRef(null);
   const connRef = useRef(null);
   const pinRef = useRef(null);
+  const verifiedRef = useRef(false);
   const rxRef = useRef({ chunks: [], expected: 0 });
   const timeoutRef = useRef(null);
   const phaseRef = useRef('idle');
@@ -42,12 +43,14 @@ export function useP2PSync() {
     try { peerRef.current?.destroy(); } catch { /* peer already destroyed */ }
     connRef.current = null;
     peerRef.current = null;
+    verifiedRef.current = false;
   }, []);
 
   const reset = useCallback(() => {
     cleanup();
     go('idle');
     setPeerId(null); setPin(null); setRemotePin(null); setResult(null); setError(null);
+    pinRef.current = null;
     rxRef.current = { chunks: [], expected: 0 };
   }, [cleanup]);
 
@@ -74,8 +77,25 @@ export function useP2PSync() {
     }
 
     if (data.type === 'pin_ok') {
+      if (typeof data.pin !== 'string' || data.pin !== pinRef.current) {
+        setError('PIN mismatch. Connection rejected.');
+        go('error');
+        try { connRef.current?.close(); } catch { /* connection already closed */ }
+        connRef.current = null;
+        verifiedRef.current = false;
+        return;
+      }
+      verifiedRef.current = true;
       go('transferring');
       await sendLocalData();
+      return;
+    }
+
+    if (!verifiedRef.current) {
+      setError('Unverified connection rejected.');
+      go('error');
+      try { connRef.current?.close(); } catch { /* connection already closed */ }
+      connRef.current = null;
       return;
     }
 
@@ -113,6 +133,7 @@ export function useP2PSync() {
     go('generating');
     const newPin = generatePin();
     pinRef.current = newPin;
+    verifiedRef.current = false;
     setPin(newPin);
 
     const peer = new Peer();
@@ -132,6 +153,7 @@ export function useP2PSync() {
 
     peer.on('connection', (conn) => {
       clearTimeout(timeoutRef.current);
+      verifiedRef.current = false;
       connRef.current = conn;
       conn.on('open', () => {
         go('pin_confirm');
@@ -156,6 +178,7 @@ export function useP2PSync() {
 
   const connectToPeer = useCallback((targetId) => {
     go('connecting');
+    verifiedRef.current = false;
     const peer = new Peer();
     peerRef.current = peer;
 
@@ -177,9 +200,10 @@ export function useP2PSync() {
   }, [cleanup, handleData]);
 
   const confirmPin = useCallback(async () => {
-    if (!connRef.current) return;
+    if (!connRef.current || typeof pinRef.current !== 'string') return;
+    verifiedRef.current = true;
     go('transferring');
-    connRef.current.send({ type: 'pin_ok' });
+    connRef.current.send({ type: 'pin_ok', pin: pinRef.current });
     await sendLocalData();
   }, [sendLocalData]);
 

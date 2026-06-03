@@ -52,6 +52,7 @@ export function useLANSync() {
   const pcRef = useRef(null);
   const chRef = useRef(null);
   const pinRef = useRef(null);
+  const verifiedRef = useRef(false);
   const rxRef = useRef({ chunks: [], expected: 0 });
   const phaseRef = useRef('idle');
 
@@ -62,6 +63,7 @@ export function useLANSync() {
     try { pcRef.current?.close(); } catch { /* peer connection already closed */ }
     chRef.current = null;
     pcRef.current = null;
+    verifiedRef.current = false;
   }, []);
 
   const reset = useCallback(() => {
@@ -69,6 +71,7 @@ export function useLANSync() {
     go('idle');
     setOfferQR(null); setAnswerQR(null); setPin(null); setRemotePin(null);
     setResult(null); setError(null);
+    pinRef.current = null;
     rxRef.current = { chunks: [], expected: 0 };
   }, [cleanup]);
 
@@ -90,7 +93,31 @@ export function useLANSync() {
     try { data = JSON.parse(ev.data); } catch { return; }
 
     if (data.type === 'pin') { setRemotePin(data.pin); go('pin_confirm'); return; }
-    if (data.type === 'pin_ok') { go('transferring'); await sendLocalData(); return; }
+    if (data.type === 'pin_ok') {
+      if (typeof data.pin !== 'string' || data.pin !== pinRef.current) {
+        setError('PIN mismatch. Connection rejected.');
+        go('error');
+        try { chRef.current?.close(); } catch { /* channel already closed */ }
+        try { pcRef.current?.close(); } catch { /* peer connection already closed */ }
+        chRef.current = null;
+        pcRef.current = null;
+        verifiedRef.current = false;
+        return;
+      }
+      verifiedRef.current = true;
+      go('transferring');
+      await sendLocalData();
+      return;
+    }
+    if (!verifiedRef.current) {
+      setError('Unverified connection rejected.');
+      go('error');
+      try { chRef.current?.close(); } catch { /* channel already closed */ }
+      try { pcRef.current?.close(); } catch { /* peer connection already closed */ }
+      chRef.current = null;
+      pcRef.current = null;
+      return;
+    }
     if (data.type === 'meta') {
       if (!Number.isInteger(data.total) || data.total < 1 || data.total > MAX_CHUNKS) return;
       rxRef.current = { chunks: new Array(data.total), expected: data.total };
@@ -142,6 +169,7 @@ export function useLANSync() {
     go('generating_offer');
     const newPin = generatePin();
     pinRef.current = newPin;
+    verifiedRef.current = false;
     setPin(newPin);
     try {
       const pc = new RTCPeerConnection({ iceServers: [], iceTransportPolicy: 'all' });
@@ -170,6 +198,7 @@ export function useLANSync() {
   const startAsGuest = useCallback(async (encodedOffer) => {
     setIsHost(false);
     go('generating_answer');
+    verifiedRef.current = false;
     try {
       const offerSDP = await decompressSDP(encodedOffer);
       const pc = new RTCPeerConnection({ iceServers: [], iceTransportPolicy: 'all' });
@@ -202,9 +231,10 @@ export function useLANSync() {
   }, []);
 
   const confirmPin = useCallback(async () => {
-    if (!chRef.current) return;
+    if (!chRef.current || typeof pinRef.current !== 'string') return;
+    verifiedRef.current = true;
     go('transferring');
-    chRef.current.send(JSON.stringify({ type: 'pin_ok' }));
+    chRef.current.send(JSON.stringify({ type: 'pin_ok', pin: pinRef.current }));
     await sendLocalData();
   }, [sendLocalData]);
 
