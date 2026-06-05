@@ -1,6 +1,7 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import i18n from '../i18n';
+import { durationLineSVG, freqBarChartSVG, phaseStackSVG, typeBarSVG } from '../utils/pdfCharts';
 
 const COLORS = {
   ink: [17, 24, 39],
@@ -67,6 +68,12 @@ export async function downloadNeurologistReportPdf(data) {
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 40;
   let cursorY = 42;
+  const [freqChart, durationChart, typeChart, phaseChart] = await Promise.all([
+    renderSvgChart(freqBarChartSVG(data.charts.periodEvents, 30)),
+    renderSvgChart(durationLineSVG(data.charts.periodEvents)),
+    renderSvgChart(typeBarSVG(data.charts.byType, data.charts.totalEvents)),
+    renderSvgChart(phaseStackSVG(data.charts.periodEvents, 10)),
+  ]);
 
   cursorY = drawBrandHeader(doc, {
     margin,
@@ -228,6 +235,21 @@ export async function downloadNeurologistReportPdf(data) {
     });
   }
 
+  cursorY = ensurePageRoom(doc, cursorY, 360);
+  drawSectionTitle(doc, t('export.docs.trend_analysis'), margin, cursorY, pageWidth - margin);
+  cursorY += 12;
+  cursorY = await drawChartBlock(doc, margin, cursorY, pageWidth - margin * 2, freqChart, 150);
+  cursorY += 10;
+  cursorY = ensurePageRoom(doc, cursorY, 160);
+  cursorY = await drawChartBlock(doc, margin, cursorY, pageWidth - margin * 2, durationChart, 150);
+  cursorY += 10;
+  cursorY = ensurePageRoom(doc, cursorY, 170);
+  const halfWidth = (pageWidth - margin * 2 - 10) / 2;
+  const chartRowHeight = Math.max(typeChart.height * (halfWidth / typeChart.width), phaseChart.height * (halfWidth / phaseChart.width)) + 18;
+  drawChartCard(doc, margin, cursorY, halfWidth, chartRowHeight, typeChart);
+  drawChartCard(doc, margin + halfWidth + 10, cursorY, halfWidth, chartRowHeight, phaseChart);
+  cursorY += chartRowHeight + 16;
+
   if (data.detailEvents.length) {
     cursorY = ensurePageRoom(doc, cursorY, 120);
     drawSectionTitle(doc, t('export.docs.condensed_event_details'), margin, cursorY, pageWidth - margin);
@@ -238,29 +260,32 @@ export async function downloadNeurologistReportPdf(data) {
     });
   }
 
-  if (data.symptomLogRows.length) {
+  if (data.symptomLogGroups.length) {
     cursorY = ensurePageRoom(doc, cursorY, 100);
-    autoTable(doc, {
-      startY: cursorY + 18,
-      margin: { left: margin, right: margin },
-      theme: 'grid',
-      styles: { fontSize: 7, cellPadding: 4, overflow: 'linebreak', valign: 'top', textColor: COLORS.ink },
-      alternateRowStyles: { fillColor: [252, 252, 253] },
-      headStyles: { fillColor: COLORS.slate, textColor: 255, fontStyle: 'bold' },
-      head: [[
-        t('export.docs.date'),
-        t('export.docs.time'),
-        t('export.docs.type'),
-        t('export.docs.symptom_path'),
-        t('export.docs.medical_term'),
-        t('export.docs.location'),
-      ]],
-      body: data.symptomLogRows.map(row => [row.date, row.time, row.type, row.path || '-', row.med || '-', row.location || '-']),
-      didDrawPage: hookData => {
-        drawSectionTitle(doc, t('export.docs.ictal_symptom_log'), margin, hookData.settings.startY - 8, pageWidth - margin);
-      },
+    drawSectionTitle(doc, t('export.docs.ictal_symptom_log'), margin, cursorY, pageWidth - margin);
+    cursorY += 12;
+    data.symptomLogGroups.forEach(group => {
+      const groupRows = group.symptoms.map(symptom => [symptom.path || '-', symptom.med || '-', symptom.location || '-']);
+      const estimatedHeight = 44 + groupRows.length * 22;
+      cursorY = ensurePageRoom(doc, cursorY, estimatedHeight);
+      drawSymptomGroupHeader(doc, margin, cursorY, pageWidth - margin * 2, group, t);
+      autoTable(doc, {
+        startY: cursorY + 32,
+        margin: { left: margin + 8, right: margin + 8 },
+        theme: 'grid',
+        styles: { fontSize: 7, cellPadding: 4, overflow: 'linebreak', valign: 'top', textColor: COLORS.ink },
+        alternateRowStyles: { fillColor: [252, 252, 253] },
+        headStyles: { fillColor: [241, 245, 249], textColor: COLORS.ink, fontStyle: 'bold' },
+        head: [[
+          t('export.docs.symptom_path'),
+          t('export.docs.medical_term'),
+          t('export.docs.location'),
+        ]],
+        body: groupRows,
+        tableWidth: pageWidth - margin * 2 - 16,
+      });
+      cursorY = doc.lastAutoTable.finalY + 14;
     });
-    cursorY = doc.lastAutoTable.finalY + 16;
   }
 
   cursorY = ensurePageRoom(doc, cursorY, 114);
@@ -641,6 +666,72 @@ function drawQualityCard(doc, x, y, width, height, value, label) {
   doc.setFontSize(7);
   doc.setTextColor(...COLORS.soft);
   doc.text(String(label).toUpperCase(), x + width / 2, y + 37, { align: 'center' });
+}
+
+function drawSymptomGroupHeader(doc, x, y, width, group, t) {
+  doc.setDrawColor(...COLORS.line);
+  doc.setFillColor(...COLORS.panel);
+  doc.roundedRect(x, y, width, 36, 8, 8, 'FD');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7);
+  doc.setTextColor(...COLORS.soft);
+  doc.text(String(t('export.docs.event_number', { count: group.eventIndex })).toUpperCase(), x + 10, y + 11);
+  doc.setFontSize(8);
+  doc.setTextColor(...COLORS.ink);
+  doc.text(`${group.date} ${t('export.docs.at')} ${group.time}`, x + 10, y + 23);
+  doc.setTextColor(...COLORS.muted);
+  doc.setFontSize(8);
+  doc.text(group.type, x + 10, y + 32);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(...COLORS.muted);
+  doc.text(`${t('export.docs.total')}: ${group.totalLabel}`, x + width - 10, y + 21, { align: 'right' });
+}
+
+async function drawChartBlock(doc, x, y, width, chart, fallbackHeight = 150) {
+  const height = Math.max(fallbackHeight, chart.height * (width / chart.width)) + 18;
+  drawChartCard(doc, x, y, width, height, chart);
+  return y + height;
+}
+
+function drawChartCard(doc, x, y, width, height, chart) {
+  const innerPad = 9;
+  doc.setDrawColor(...COLORS.line);
+  doc.setFillColor(...COLORS.panel);
+  doc.roundedRect(x, y, width, height, 10, 10, 'FD');
+  const imageWidth = width - innerPad * 2;
+  const imageHeight = chart.height * (imageWidth / chart.width);
+  doc.addImage(chart.dataUrl, 'PNG', x + innerPad, y + innerPad, imageWidth, imageHeight);
+}
+
+async function renderSvgChart(svgMarkup) {
+  const viewBoxMatch = svgMarkup.match(/viewBox="0 0 ([0-9.]+) ([0-9.]+)"/);
+  const width = viewBoxMatch ? Number.parseFloat(viewBoxMatch[1]) : 520;
+  const height = viewBoxMatch ? Number.parseFloat(viewBoxMatch[2]) : 150;
+  const blob = new Blob([svgMarkup], { type: 'image/svg+xml;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  try {
+    const image = await loadImage(url);
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.ceil(width * 2);
+    canvas.height = Math.ceil(height * 2);
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+    return { dataUrl: canvas.toDataURL('image/png'), width, height };
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = reject;
+    image.src = src;
+  });
 }
 
 async function savePdfDocument(doc, filename) {

@@ -2,6 +2,11 @@ import { useState, useEffect } from 'react';
 import { db } from '../data/db';
 import { getScheduledDosesForDay } from '../utils/medicationSchedule';
 
+function makeUUID() {
+  if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
+  return `uuid-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
+}
+
 export function useMedications() {
   const [medications, setMedications] = useState([]);
 
@@ -13,7 +18,7 @@ export function useMedications() {
   };
 
   const addMedication = async (med) => {
-    await db.medications.add({ ...med, active: true });
+    await db.medications.add({ ...med, uuid: med.uuid || makeUUID(), active: true });
     await load();
   };
 
@@ -23,14 +28,19 @@ export function useMedications() {
   };
 
   const deleteMedication = async (id) => {
+    const med = await db.medications.get(id).catch(() => null);
     await db.medications.delete(id);
     await db.medicationLogs.where('medicationId').equals(id).delete().catch(() => {});
+    if (med?.uuid) await db.medicationLogs.where('medicationUuid').equals(med.uuid).delete().catch(() => {});
     await load();
   };
 
   const logDoseWithStatus = async (medicationId, scheduledHHMM, takenAt, status, note = '') => {
+    const med = await db.medications.get(medicationId).catch(() => null);
     await db.medicationLogs.add({
+      uuid: makeUUID(),
       medicationId,
+      medicationUuid: med?.uuid ?? null,
       scheduledTime: scheduledHHMM ?? null,
       takenAt: takenAt ?? Date.now(),
       status: status ?? 'taken',
@@ -77,11 +87,16 @@ export function useMedications() {
       for (const dose of doses) {
         if (dose.scheduledTs > now) continue; // not yet due
         const existing = todayLogs.find(
-          l => l.medicationId === dose.medicationId && l.scheduledTime === dose.scheduledHHMM
+          (l.medicationUuid && dose.medicationUuid
+            ? l.medicationUuid === dose.medicationUuid
+            : l.medicationId === dose.medicationId) &&
+          l.scheduledTime === dose.scheduledHHMM
         );
         if (!existing) {
           await db.medicationLogs.add({
+            uuid: makeUUID(),
             medicationId: dose.medicationId,
+            medicationUuid: dose.medicationUuid ?? null,
             scheduledTime: dose.scheduledHHMM,
             takenAt: dose.scheduledTs,
             status: 'missed',

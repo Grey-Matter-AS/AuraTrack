@@ -51,20 +51,47 @@ export async function mergeRemoteData(parsed) {
 
   if (medications.length) {
     const existing = await db.medications.toArray().catch(() => []);
-    const existingKeys = new Set(existing.map(m => `${m.name}|${m.frequency}`));
-    const toInsert = medications
-      .filter(m => !existingKeys.has(`${m.name}|${m.frequency}`));
+    const existingByUuid = new Map(existing.map(m => [m.uuid, m]).filter(([uuid]) => Boolean(uuid)));
+    const toInsert = [];
+    for (const med of medications) {
+      const existingByIdentity = (med.uuid && existingByUuid.get(med.uuid)) || null;
+      if (existingByIdentity) continue;
+      const key = `${med.name}|${med.frequency}`;
+      const existingByKey = existing.find(m => `${m.name}|${m.frequency}` === key);
+      if (existingByKey) {
+        if (med.uuid && !existingByKey.uuid) {
+          await db.medications.update(existingByKey.id, { uuid: med.uuid }).catch(() => {});
+        }
+        continue;
+      }
+      toInsert.push(med);
+    }
     if (toInsert.length) await db.medications.bulkAdd(toInsert).catch(() => {});
     results.medications = toInsert.length;
   }
 
   if (medicationLogs.length) {
+    const localMeds = await db.medications.toArray().catch(() => []);
+    const localMedIdByUuid = new Map(localMeds.map(m => [m.uuid, m.id]).filter(([uuid]) => Boolean(uuid)));
     const existing = await db.medicationLogs.toArray().catch(() => []);
+    const existingLogUuids = new Set(existing.map(l => l.uuid).filter(Boolean));
     const existingKeys = new Set(
-      existing.map(l => `${l.medicationId}|${l.scheduledTime ?? ''}|${l.takenAt}`)
+      existing.map(l => `${l.medicationUuid ?? l.medicationId}|${l.scheduledTime ?? ''}|${l.takenAt}`)
     );
-    const toInsert = medicationLogs
-      .filter(l => !existingKeys.has(`${l.medicationId}|${l.scheduledTime ?? ''}|${l.takenAt}`));
+    const toInsert = [];
+    for (const log of medicationLogs) {
+      if (log.uuid && existingLogUuids.has(log.uuid)) continue;
+      const localMedicationId = log.medicationUuid
+        ? localMedIdByUuid.get(log.medicationUuid)
+        : null;
+      if (!localMedicationId) continue;
+      const key = `${log.medicationUuid}|${log.scheduledTime ?? ''}|${log.takenAt}`;
+      if (existingKeys.has(key)) continue;
+      toInsert.push({
+        ...log,
+        medicationId: localMedicationId,
+      });
+    }
     if (toInsert.length) await db.medicationLogs.bulkAdd(toInsert).catch(() => {});
     results.logs = toInsert.length;
   }

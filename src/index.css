@@ -157,11 +157,23 @@ input, select, textarea {
     flex-direction: column !important;
   }
 
+  .date-time-row > * {
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
   input[type="date"],
   input[type="time"],
   input[type="month"] {
+    display: block;
     min-width: 0;
     width: 100%;
+    max-width: 100%;
+    inline-size: 100%;
+    max-inline-size: 100%;
     box-sizing: border-box;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }

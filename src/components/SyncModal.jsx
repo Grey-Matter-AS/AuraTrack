@@ -11,7 +11,7 @@ import { assertImportFileSafe } from '../utils/importSanitizer';
 
 function QRImg({ dataUrl, label }) {
   if (!dataUrl) return (
-    <div className="w-[200px] h-[200px] rounded-2xl flex items-center justify-center mx-auto"
+    <div className="w-[280px] h-[280px] rounded-2xl flex items-center justify-center mx-auto"
       style={{ backgroundColor: 'var(--bg-raised)' }}>
       <span className="text-[10px] font-black uppercase tracking-widest animate-pulse"
         style={{ color: 'var(--text-on-raised-muted)' }}>Generating…</span>
@@ -19,7 +19,7 @@ function QRImg({ dataUrl, label }) {
   );
   return (
     <div className="mx-auto w-fit">
-      <img src={dataUrl} alt="QR Code" className="rounded-2xl w-[200px] h-[200px]" />
+      <img src={dataUrl} alt="QR Code" className="rounded-2xl w-[280px] h-[280px] max-w-full" />
       {label && (
         <p className="text-center text-[9px] font-black uppercase tracking-widest mt-2"
           style={{ color: 'var(--text-dim)' }}>{label}</p>
@@ -241,24 +241,27 @@ function EasySyncPanel({ connectToken, role, onDone, onScanSenderQR }) {
 
   // Guest: auto-connect when opened with a token from scanned QR
   useEffect(() => {
-    if (connectToken) p2p.connectToPeer(connectToken);
+    if (connectToken && p2p.phase === 'idle') p2p.connectToPeer(connectToken);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [connectToken]);
+  }, [connectToken, p2p.phase]);
 
   // Host: generate QR once peer ID is known
   useEffect(() => {
     if (p2p.peerId) {
       const url = `${window.location.origin}${window.location.pathname}#sync=${p2p.peerId}`;
-      QRCode.toDataURL(url, { width: 220, margin: 2, errorCorrectionLevel: 'M' })
+      QRCode.toDataURL(url, { width: 320, margin: 2, errorCorrectionLevel: 'L' })
         .then(setQrUrl);
     }
   }, [p2p.peerId]);
 
   const phase = p2p.phase;
+  const retry = connectToken
+    ? () => p2p.reset()
+    : () => { p2p.reset(); setTimeout(() => p2p.startAsHost(), 0); };
 
   if (phase === 'done') return <DonePanel result={p2p.result} onClose={onDone} />;
   if (phase === 'error' || phase === 'timeout') return (
-    <ErrorPanel error={p2p.error} onRetry={p2p.reset} onClose={onDone} />
+    <ErrorPanel error={p2p.error} onRetry={retry} onClose={onDone} />
   );
 
   if (phase === 'idle') return (
@@ -375,9 +378,9 @@ function PrivateSyncPanel({ offerSDP, role, onDone, onScanSenderQR }) {
 
   // Guest: auto-process offer when opened with encoded SDP
   useEffect(() => {
-    if (offerSDP) lan.startAsGuest(offerSDP);
+    if (offerSDP && lan.phase === 'idle') lan.startAsGuest(offerSDP);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [offerSDP]);
+  }, [offerSDP, lan.phase]);
 
   const handleAnswerScanned = useCallback((url) => {
     setScanning(false);
@@ -390,9 +393,12 @@ function PrivateSyncPanel({ offerSDP, role, onDone, onScanSenderQR }) {
   }, [lan]);
 
   const phase = lan.phase;
+  const retry = offerSDP
+    ? () => lan.reset()
+    : () => { lan.reset(); setTimeout(() => lan.startAsHost(), 0); };
 
   if (phase === 'done') return <DonePanel result={lan.result} onClose={onDone} />;
-  if (phase === 'error') return <ErrorPanel error={lan.error} onRetry={lan.reset} onClose={onDone} />;
+  if (phase === 'error') return <ErrorPanel error={lan.error} onRetry={retry} onClose={onDone} />;
 
   if (scanning) return (
     <QRScanner

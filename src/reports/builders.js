@@ -314,18 +314,23 @@ export function buildNeurologistReportData(events, settings = {}, medications = 
         })),
       };
     }),
-    symptomLogRows: periodEvents
+    symptomLogGroups: periodEvents
       .filter(event => (event.symptoms || []).length > 0)
-      .flatMap(event => (event.symptoms || []).map(symptom => {
-        const described = describeSymptomPath(symptom);
-        return {
-          date: event.date || '-',
-          time: event.time || '-',
-          type: event.type || '-',
-          path: described.path,
-          med: symptom.med || '-',
-          location: described.location || '-',
-        };
+      .map((event, index) => ({
+        id: event.id,
+        eventIndex: index + 1,
+        date: event.date || '-',
+        time: event.time || '-',
+        type: event.type || '-',
+        totalLabel: formatDurationLabel(event.manualDurations?.total ?? event.duration ?? 0),
+        symptoms: (event.symptoms || []).map(symptom => {
+          const described = describeSymptomPath(symptom);
+          return {
+            path: described.path,
+            med: symptom.med || '-',
+            location: described.location || '-',
+          };
+        }),
       })),
     charts: {
       periodEvents,

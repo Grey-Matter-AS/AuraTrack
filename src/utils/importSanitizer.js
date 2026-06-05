@@ -110,6 +110,7 @@ export function sanitizeMedication(raw) {
   if (!name) return null;
   const frequency = FREQS.has(raw.frequency) ? raw.frequency : 'OD';
   return {
+    ...(asString(raw.uuid, 100) ? { uuid: asString(raw.uuid, 100) } : {}),
     name,
     dose: asFiniteNumber(raw.dose, 0),
     unit: asString(raw.unit, 20) || 'mg',
@@ -130,10 +131,13 @@ export function sanitizeMedication(raw) {
 export function sanitizeMedicationLog(raw) {
   if (!raw || typeof raw !== 'object') return null;
   const medicationId = asFiniteNumber(raw.medicationId);
+  const medicationUuid = asString(raw.medicationUuid, 100);
   const takenAt = asFiniteNumber(raw.takenAt);
-  if (medicationId == null || takenAt == null) return null;
+  if ((medicationId == null && !medicationUuid) || takenAt == null) return null;
   return {
-    medicationId,
+    ...(asString(raw.uuid, 100) ? { uuid: asString(raw.uuid, 100) } : {}),
+    ...(medicationId != null ? { medicationId } : {}),
+    ...(medicationUuid ? { medicationUuid } : {}),
     scheduledTime: validTime(raw.scheduledTime) ? raw.scheduledTime : null,
     takenAt,
     status: LOG_STATUSES.has(raw.status) ? raw.status : 'taken',

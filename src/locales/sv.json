@@ -192,7 +192,8 @@
       "flag_detail_edited_records": "Faslängder eller detaljer ändrades efter den första registreringen och kan skilja sig från realtidsregistrering.",
       "detail_badge_over5": ">5 MIN",
       "detail_badge_auto_stopped": "AUTOSTOPPAD",
-      "detail_badge_edited": "REDIGERAD"
+      "detail_badge_edited": "REDIGERAD",
+      "event_number": "Händelse #{{count}}"
     }
   },
 

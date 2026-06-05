@@ -47,6 +47,7 @@ export function getScheduledDosesForDay(medications, dateMs) {
     for (const hhMM of times) {
       doses.push({
         medicationId: med.id,
+        medicationUuid: med.uuid ?? null,
         medicationName: med.name,
         dose: med.dose,
         unit: med.unit,

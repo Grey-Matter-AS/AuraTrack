@@ -192,7 +192,8 @@
       "flag_detail_edited_records": "Phasendauern oder Details wurden nach der ersten Aufzeichnung bearbeitet und können von der Echtzeiterfassung abweichen.",
       "detail_badge_over5": ">5 MIN",
       "detail_badge_auto_stopped": "AUTOM. GESTOPPT",
-      "detail_badge_edited": "BEARBEITET"
+      "detail_badge_edited": "BEARBEITET",
+      "event_number": "Ereignis #{{count}}"
     }
   },
 

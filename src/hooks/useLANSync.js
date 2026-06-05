@@ -3,8 +3,27 @@ import QRCode from 'qrcode';
 import { exportLocalData, mergeRemoteData, compressSDP, decompressSDP } from '../utils/syncHelpers';
 import { MAX_SYNC_PAYLOAD_CHARS } from '../utils/importSanitizer';
 
-const CHUNK_SIZE = 15000;
+const CHUNK_SIZE = 4000;
 const MAX_CHUNKS = Math.ceil(MAX_SYNC_PAYLOAD_CHARS / CHUNK_SIZE);
+const BUFFER_HIGH_WATER = 64 * 1024;
+const BUFFER_WAIT_MS = 750;
+
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+async function waitForWritable(channel) {
+  if (!channel || typeof channel.bufferedAmount !== 'number' || channel.bufferedAmount < BUFFER_HIGH_WATER) return;
+  channel.bufferedAmountLowThreshold = Math.floor(BUFFER_HIGH_WATER / 2);
+  await Promise.race([
+    new Promise(resolve => {
+      const onLow = () => {
+        channel.removeEventListener?.('bufferedamountlow', onLow);
+        resolve();
+      };
+      channel.addEventListener?.('bufferedamountlow', onLow, { once: true });
+    }),
+    delay(BUFFER_WAIT_MS),
+  ]);
+}
 
 function generatePin() {
   const values = new Uint32Array(1);
@@ -36,7 +55,7 @@ async function gatherICE(pc) {
 async function sdpToQR(sdp, hashPrefix) {
   const compressed = await compressSDP(sdp);
   const url = appURL(`${hashPrefix}${compressed}`);
-  return QRCode.toDataURL(url, { width: 260, margin: 2, errorCorrectionLevel: 'M' });
+  return QRCode.toDataURL(url, { width: 420, margin: 2, errorCorrectionLevel: 'L' });
 }
 
 export function useLANSync() {
@@ -55,6 +74,8 @@ export function useLANSync() {
   const verifiedRef = useRef(false);
   const rxRef = useRef({ chunks: [], expected: 0 });
   const phaseRef = useRef('idle');
+  const isHostRef = useRef(true);
+  const sentLocalRef = useRef(false);
 
   const go = (p) => { phaseRef.current = p; setPhase(p); };
 
@@ -64,6 +85,7 @@ export function useLANSync() {
     chRef.current = null;
     pcRef.current = null;
     verifiedRef.current = false;
+    sentLocalRef.current = false;
   }, []);
 
   const reset = useCallback(() => {
@@ -73,14 +95,25 @@ export function useLANSync() {
     setResult(null); setError(null);
     pinRef.current = null;
     rxRef.current = { chunks: [], expected: 0 };
+    isHostRef.current = true;
   }, [cleanup]);
 
   const sendLocalData = useCallback(async () => {
     try {
+      const channel = chRef.current;
+      if (!channel || channel.readyState !== 'open') throw new Error('Connection is not ready for sync.');
       const json = JSON.stringify(await exportLocalData());
       const chunks = chunkString(json);
-      chRef.current.send(JSON.stringify({ type: 'meta', total: chunks.length }));
-      chunks.forEach((d, i) => chRef.current.send(JSON.stringify({ type: 'chunk', index: i, data: d })));
+      channel.send(JSON.stringify({ type: 'meta', total: chunks.length }));
+      for (let i = 0; i < chunks.length; i += 1) {
+        if (!chRef.current || chRef.current.readyState !== 'open') throw new Error('Connection closed during sync.');
+        channel.send(JSON.stringify({ type: 'chunk', index: i, data: chunks[i] }));
+        if (i < chunks.length - 1) {
+          await waitForWritable(channel);
+          if (i % 8 === 7) await delay(0);
+        }
+      }
+      sentLocalRef.current = true;
     } catch (err) {
       setError(err.message || 'Sync payload is too large.');
       go('error');
@@ -114,6 +147,11 @@ export function useLANSync() {
       await sendLocalData();
       return;
     }
+    if (data.type === 'done') {
+      go('done');
+      cleanup();
+      return;
+    }
     if (!verifiedRef.current) {
       setError('Unverified connection rejected.');
       go('error');
@@ -141,8 +179,14 @@ export function useLANSync() {
           if (payload.length > MAX_SYNC_PAYLOAD_CHARS) throw new Error('Received data is too large.');
           const r = await mergeRemoteData(JSON.parse(payload));
           setResult(r);
-          go('done');
-          cleanup();
+          if (isHostRef.current) {
+            chRef.current?.send(JSON.stringify({ type: 'done' }));
+            go('done');
+            cleanup();
+          } else if (!sentLocalRef.current) {
+            go('transferring');
+            await sendLocalData();
+          }
         } catch {
           setError('Received data could not be parsed.');
           go('error');
@@ -171,6 +215,7 @@ export function useLANSync() {
 
   const startAsHost = useCallback(async () => {
     setIsHost(true);
+    isHostRef.current = true;
     go('generating_offer');
     const newPin = generatePin();
     pinRef.current = newPin;
@@ -202,6 +247,7 @@ export function useLANSync() {
 
   const startAsGuest = useCallback(async (encodedOffer) => {
     setIsHost(false);
+    isHostRef.current = false;
     go('generating_answer');
     verifiedRef.current = false;
     try {
@@ -238,9 +284,8 @@ export function useLANSync() {
   const confirmPin = useCallback(async () => {
     if (!chRef.current || typeof pinRef.current !== 'string') return;
     verifiedRef.current = true;
-    go('transferring');
     chRef.current.send(JSON.stringify({ type: 'pin_ok', pin: pinRef.current }));
-    await sendLocalData();
+    go('connecting');
   }, [sendLocalData]);
 
   return {

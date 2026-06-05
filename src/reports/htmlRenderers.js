@@ -280,14 +280,25 @@ export function renderNeurologistReportHtml(data) {
 
       <div class="section">
         <h2>${esc(t('export.docs.ictal_symptom_log'))}</h2>
-        ${data.symptomLogRows.length
-          ? `<table>
-              <thead><tr>
-                <th>${esc(t('export.docs.date'))}</th><th>${esc(t('export.docs.time'))}</th><th>${esc(t('export.docs.type'))}</th>
-                <th>${esc(t('export.docs.symptom_path'))}</th><th>${esc(t('export.docs.medical_term'))}</th><th>${esc(t('export.docs.location'))}</th>
-              </tr></thead>
-              <tbody>${data.symptomLogRows.map(row => `<tr><td>${esc(row.date)}</td><td>${esc(row.time)}</td><td>${esc(row.type)}</td><td>${esc(row.path || '-')}</td><td>${esc(row.med || '-')}</td><td>${esc(row.location || '-')}</td></tr>`).join('')}</tbody>
-            </table>`
+        ${data.symptomLogGroups.length
+          ? data.symptomLogGroups.map(group => `<div style="border:1px solid #e5e7eb;border-radius:8px;background:#f9fafb;padding:10px 12px;margin-bottom:10px;page-break-inside:avoid">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px">
+                <div>
+                  <div style="font-size:9px;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;color:#9ca3af;margin-bottom:2px">${esc(t('export.docs.event_number', { count: group.eventIndex }))}</div>
+                  <div style="font-size:11px;color:#111827">
+                    <strong>${esc(group.date)}</strong> ${esc(t('export.docs.at'))} <strong>${esc(group.time)}</strong>
+                    <span style="margin-left:8px;color:#374151;font-weight:700">${esc(group.type)}</span>
+                  </div>
+                </div>
+                <div style="font-size:10px;color:#6b7280">${esc(t('export.docs.total'))}: <strong>${esc(group.totalLabel)}</strong></div>
+              </div>
+              <table>
+                <thead><tr>
+                  <th>${esc(t('export.docs.symptom_path'))}</th><th>${esc(t('export.docs.medical_term'))}</th><th>${esc(t('export.docs.location'))}</th>
+                </tr></thead>
+                <tbody>${group.symptoms.map(symptom => `<tr><td>${esc(symptom.path || '-')}</td><td>${esc(symptom.med || '-')}</td><td>${esc(symptom.location || '-')}</td></tr>`).join('')}</tbody>
+              </table>
+            </div>`).join('')
           : `<p style="color:#9ca3af;font-size:11px;margin:0">${esc(t('export.docs.no_symptoms_period'))}</p>`}
       </div>
 
