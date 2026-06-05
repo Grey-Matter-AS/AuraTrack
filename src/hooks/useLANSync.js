@@ -285,7 +285,7 @@ export function useLANSync() {
     if (!chRef.current || typeof pinRef.current !== 'string') return;
     verifiedRef.current = true;
     chRef.current.send(JSON.stringify({ type: 'pin_ok', pin: pinRef.current }));
-    go('connecting');
+    go('transferring');
   }, [sendLocalData]);
 
   return {

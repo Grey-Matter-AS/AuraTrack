@@ -280,7 +280,7 @@ export function useP2PSync() {
     if (!connRef.current || typeof pinRef.current !== 'string') return;
     verifiedRef.current = true;
     connRef.current.send({ type: 'pin_ok', pin: pinRef.current });
-    go('connecting');
+    go('transferring');
   }, []);
 
   return { phase, peerId, pin, remotePin, result, error, startAsHost, connectToPeer, confirmPin, reset };
