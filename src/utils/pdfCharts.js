@@ -3,16 +3,18 @@
 
 import { esc } from './htmlEscape';
 import { phaseDurs } from './phaseCalculations';
+import i18n from '../i18n';
 
 const NO_DATA = (title) => `<svg viewBox="0 0 520 140" xmlns="http://www.w3.org/2000/svg">
   <rect width="520" height="140" fill="#f9fafb" rx="6"/>
   <text x="260" y="58" text-anchor="middle" font-size="10" font-weight="bold" fill="#374151">${esc(title)}</text>
-  <text x="260" y="76" text-anchor="middle" font-size="9" fill="#9ca3af">No data available for this period</text>
+  <text x="260" y="76" text-anchor="middle" font-size="9" fill="#9ca3af">${esc(i18n.t('export.docs.no_data_available'))}</text>
 </svg>`;
 
 // ── A. Seizure frequency bar chart (last N days) ─────────────
 export function freqBarChartSVG(events, days = 30) {
-  if (!events.length) return NO_DATA(`SEIZURE FREQUENCY — LAST ${days} DAYS`);
+  const locale = i18n.resolvedLanguage || i18n.language || 'en';
+  if (!events.length) return NO_DATA(i18n.t('export.docs.chart_seizure_frequency', { count: days }));
 
   const W = 520, H = 150, ml = 35, mr = 15, mt = 18, mb = 30;
   const cw = W - ml - mr, ch = H - mt - mb;
@@ -21,7 +23,7 @@ export function freqBarChartSVG(events, days = 30) {
   const buckets = Array.from({ length: days }, (_, i) => {
     const d = new Date(now - (days - 1 - i) * 86400000);
     d.setHours(0, 0, 0, 0);
-    return { label: d.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' }), start: d.getTime(), end: d.getTime() + 86399999, count: 0, hasLong: false };
+    return { label: d.toLocaleDateString(locale, { month: 'short', day: 'numeric' }), start: d.getTime(), end: d.getTime() + 86399999, count: 0, hasLong: false };
   });
 
   events.forEach(e => {
@@ -55,12 +57,12 @@ export function freqBarChartSVG(events, days = 30) {
 
   return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
   <rect width="${W}" height="${H}" fill="white"/>
-  <text x="${W / 2}" y="11" text-anchor="middle" font-size="9" font-weight="bold" fill="#374151">SEIZURE FREQUENCY — LAST ${days} DAYS</text>
+  <text x="${W / 2}" y="11" text-anchor="middle" font-size="9" font-weight="bold" fill="#374151">${esc(i18n.t('export.docs.chart_seizure_frequency', { count: days }))}</text>
   ${yLines}${bars}${xLbls}
   <line x1="${ml}" y1="${mt}" x2="${ml}" y2="${mt + ch}" stroke="#d1d5db" stroke-width="1"/>
   <line x1="${ml}" y1="${mt + ch}" x2="${ml + cw}" y2="${mt + ch}" stroke="#d1d5db" stroke-width="1"/>
   <rect x="${W - 90}" y="${H - 18}" width="8" height="8" fill="#1e3a5f"/>
-  <text x="${W - 79}" y="${H - 11}" font-size="7" fill="#6b7280">Normal</text>
+  <text x="${W - 79}" y="${H - 11}" font-size="7" fill="#6b7280">${esc(i18n.t('export.docs.normal'))}</text>
   <rect x="${W - 40}" y="${H - 18}" width="8" height="8" fill="#dc2626"/>
   <text x="${W - 29}" y="${H - 11}" font-size="7" fill="#6b7280">&gt;5 min</text>
 </svg>`;
@@ -68,7 +70,7 @@ export function freqBarChartSVG(events, days = 30) {
 
 // ── B. Duration trend line chart ──────────────────────────────
 export function durationLineSVG(events) {
-  if (!events.length) return NO_DATA('SEIZURE DURATION TREND');
+  if (!events.length) return NO_DATA(i18n.t('export.docs.chart_duration_trend'));
 
   const W = 520, H = 150, ml = 45, mr = 15, mt = 18, mb = 28;
   const cw = W - ml - mr, ch = H - mt - mb;
@@ -105,7 +107,7 @@ export function durationLineSVG(events) {
 
   return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
   <rect width="${W}" height="${H}" fill="white"/>
-  <text x="${W / 2}" y="11" text-anchor="middle" font-size="9" font-weight="bold" fill="#374151">SEIZURE DURATION TREND</text>
+  <text x="${W / 2}" y="11" text-anchor="middle" font-size="9" font-weight="bold" fill="#374151">${esc(i18n.t('export.docs.chart_duration_trend'))}</text>
   ${yTicks}${thresh}
   <polyline points="${pts}" fill="none" stroke="#1e3a5f" stroke-width="1.5" stroke-linejoin="round"/>
   ${dots}${xLbls}
@@ -117,7 +119,7 @@ export function durationLineSVG(events) {
 // ── C. Seizure type distribution (horizontal bars) ────────────
 export function typeBarSVG(byType, total) {
   const entries = Object.entries(byType).sort(([, a], [, b]) => b - a);
-  if (!entries.length) return NO_DATA('SEIZURE TYPE DISTRIBUTION');
+  if (!entries.length) return NO_DATA(i18n.t('export.docs.chart_type_distribution'));
 
   const W = 520, rowH = 26, lblW = 160, barMax = 260, padT = 22, padB = 10;
   const H = padT + entries.length * rowH + padB;
@@ -133,7 +135,7 @@ export function typeBarSVG(byType, total) {
 
   return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
   <rect width="${W}" height="${H}" fill="white"/>
-  <text x="${W / 2}" y="14" text-anchor="middle" font-size="9" font-weight="bold" fill="#374151">SEIZURE TYPE DISTRIBUTION</text>
+  <text x="${W / 2}" y="14" text-anchor="middle" font-size="9" font-weight="bold" fill="#374151">${esc(i18n.t('export.docs.chart_type_distribution'))}</text>
   ${rows}
 </svg>`;
 }
@@ -141,7 +143,7 @@ export function typeBarSVG(byType, total) {
 // ── D. Phase breakdown stacked bar (last N events) ────────────
 export function phaseStackSVG(events, last = 10) {
   const slice = [...events].sort((a, b) => (a.startTime || 0) - (b.startTime || 0)).slice(-last);
-  if (!slice.length) return NO_DATA('PHASE BREAKDOWN');
+  if (!slice.length) return NO_DATA(i18n.t('export.docs.chart_phase_breakdown', { count: last }));
 
   const W = 520, H = 175, ml = 42, mr = 15, mt = 18, mb = 45;
   const cw = W - ml - mr, ch = H - mt - mb;
@@ -183,11 +185,11 @@ export function phaseStackSVG(events, last = 10) {
     `<rect x="${cx - 120}" y="${ly}" width="9" height="9" fill="#d97706" rx="1"/><text x="${cx - 108}" y="${ly + 8}" font-size="8" fill="#374151">Aura</text>` +
     `<rect x="${cx - 75}" y="${ly}" width="9" height="9" fill="#dc2626" rx="1"/><text x="${cx - 63}" y="${ly + 8}" font-size="8" fill="#374151">Seizure</text>` +
     `<rect x="${cx - 20}" y="${ly}" width="9" height="9" fill="#3b82f6" rx="1"/><text x="${cx - 8}" y="${ly + 8}" font-size="8" fill="#374151">Recovery</text>` +
-    `<rect x="${cx + 50}" y="${ly}" width="9" height="9" fill="#94a3b8" rx="1"/><text x="${cx + 62}" y="${ly + 8}" font-size="8" fill="#374151">No phase data</text>`;
+    `<rect x="${cx + 50}" y="${ly}" width="9" height="9" fill="#94a3b8" rx="1"/><text x="${cx + 62}" y="${ly + 8}" font-size="8" fill="#374151">${esc(i18n.t('export.docs.no_phase_data'))}</text>`;
 
   return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
   <rect width="${W}" height="${H}" fill="white"/>
-  <text x="${W / 2}" y="11" text-anchor="middle" font-size="9" font-weight="bold" fill="#374151">PHASE BREAKDOWN — LAST ${slice.length} EVENTS</text>
+  <text x="${W / 2}" y="11" text-anchor="middle" font-size="9" font-weight="bold" fill="#374151">${esc(i18n.t('export.docs.chart_phase_breakdown', { count: slice.length }))}</text>
   ${yTicks}${bars}${legend}
   <line x1="${ml}" y1="${mt}" x2="${ml}" y2="${mt + ch}" stroke="#d1d5db" stroke-width="1"/>
   <line x1="${ml}" y1="${mt + ch}" x2="${ml + cw}" y2="${mt + ch}" stroke="#d1d5db" stroke-width="1"/>

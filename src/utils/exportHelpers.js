@@ -2,6 +2,7 @@ import { formatCSVField, formatCSVRow } from './formatters';
 import { freqBarChartSVG, durationLineSVG, typeBarSVG, phaseStackSVG } from './pdfCharts';
 import { esc } from './htmlEscape';
 import { phaseDurs } from './phaseCalculations';
+import i18n from '../i18n';
 import pkg from '../../package.json';
 
 export const filterEventsByDateRange = (events, fromDateStr, toDateStr) => {
@@ -52,12 +53,9 @@ export const exportToCSV = async (events, medications = [], medicationLogs = [])
   return saveFileNative(blob, `auratrack-events-${dateStamp()}.csv`, 'AuraTrack CSV Export', ['.csv']);
 };
 
-export const exportToPDF = (events) => {
-  const win = window.open('', '_blank');
-  if (!win) {
-    alert('Pop-up blocked. Please allow pop-ups for this site, then try again.');
-    return;
-  }
+export const buildEventTablePreview = (events) => {
+  const locale = getCurrentLocale();
+  const t = (key, options) => i18n.t(key, options);
 
   const fmtSymptomPath = (s) => {
     const path = [s.symptom, s.detail].filter(Boolean).join(' › ');
@@ -67,45 +65,74 @@ export const exportToPDF = (events) => {
     return esc(loc ? `${path}  @  ${loc}` : path);
   };
 
-  win.document.write(`
-    <html><head><title>AuraTrack Export</title>
-    <style>
-      body { font-family: monospace; padding: 20px; }
-      table { border-collapse: collapse; width: 100%; }
-      td, th { border: 1px solid #ccc; padding: 6px 10px; text-align: left; }
-      .symp-row td { border-top: none; color: #666; font-style: italic; font-size: 0.9em; background: #fafafa; }
-    </style>
-    </head><body>
-    <h2>AuraTrack Event Log — ${new Date().toLocaleDateString()}</h2>
-    <table>
-      <thead><tr><th>Date</th><th>Time</th><th>Type</th><th>Duration</th><th>Notes</th></tr></thead>
-      <tbody>
-        ${events.map(e => {
-          const syms = e.symptoms || [];
-          const escapedNotes = esc(e.notes || '').replace(/\n/g, '<br>');
-          const eventRow = `<tr><td>${esc(e.date||'')}</td><td>${esc(e.time||'')}</td><td>${esc(e.type||'')}</td><td>${e.duration||0}s</td><td>${escapedNotes}</td></tr>`;
-          const sympRow = syms.length
-            ? `<tr class="symp-row"><td colspan="5">${syms.map(fmtSymptomPath).join('&nbsp;&nbsp;|&nbsp;&nbsp;')}</td></tr>`
-            : '';
-          return eventRow + sympRow;
-        }).join('')}
-      </tbody>
-    </table>
-    </body></html>
+  const styles = buildPreviewStyles(`
+    .auratrack-simple-report {
+      font-family: 'SFMono-Regular', 'Cascadia Mono', 'Roboto Mono', monospace;
+      color: #111827;
+      font-size: 12px;
+    }
+    .auratrack-simple-report h2 {
+      margin: 0 0 16px;
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+    }
+    .auratrack-simple-report table { border-collapse: collapse; width: 100%; }
+    .auratrack-simple-report td,
+    .auratrack-simple-report th {
+      border: 1px solid #d1d5db;
+      padding: 6px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    .auratrack-simple-report th {
+      background: #111827;
+      color: #fff;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .auratrack-simple-report .symp-row td {
+      border-top: none;
+      color: #4b5563;
+      font-style: italic;
+      font-size: 11px;
+      background: #f9fafb;
+    }
   `);
-  win.document.close();
-  win.print();
+
+  const html = `
+    <div class="auratrack-simple-report">
+      <h2>${esc(t('export.docs.event_log_title'))} - ${new Date().toLocaleDateString(locale)}</h2>
+      <table>
+        <thead><tr><th>${esc(t('export.docs.date'))}</th><th>${esc(t('export.docs.time'))}</th><th>${esc(t('export.docs.type'))}</th><th>${esc(t('export.docs.duration'))}</th><th>${esc(t('export.docs.notes'))}</th></tr></thead>
+        <tbody>
+          ${events.map(e => {
+            const syms = e.symptoms || [];
+            const escapedNotes = esc(e.notes || '').replace(/\n/g, '<br>');
+            const eventRow = `<tr><td>${esc(e.date || '')}</td><td>${esc(e.time || '')}</td><td>${esc(e.type || '')}</td><td>${e.duration || 0}s</td><td>${escapedNotes}</td></tr>`;
+            const sympRow = syms.length
+              ? `<tr class="symp-row"><td colspan="5">${syms.map(fmtSymptomPath).join('&nbsp;&nbsp;|&nbsp;&nbsp;')}</td></tr>`
+              : '';
+            return eventRow + sympRow;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  return {
+    title: `${t('export.pdf_label')} - ${new Date().toLocaleDateString(locale)}`,
+    styles,
+    html,
+  };
 };
 
 // ─── Clinical Neurologist Report ─────────────────────────────
 
-export const exportNeurologistReport = (events, settings = {}, medications = [], medicationLogs = []) => {
-  const win = window.open('', '_blank');
-  if (!win) {
-    alert('Pop-up blocked. Please allow pop-ups for this site, then try again.');
-    return;
-  }
-
+export const buildNeurologistReportPreview = (events, settings = {}, medications = [], medicationLogs = []) => {
+  const locale = getCurrentLocale();
+  const t = (key, options) => i18n.t(key, options);
   const {
     personName = '', caretakerName = '', dateOfBirth = '', emergencyContact = '',
     neurologistName = '', neurologistInstitution = '', neurologistContact = '',
@@ -116,9 +143,9 @@ export const exportNeurologistReport = (events, settings = {}, medications = [],
   const now = Date.now();
   const DAY = 86400000;
   const periodStart = now - 30 * DAY;
-  const generatedDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
-  const periodStartStr = new Date(periodStart).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-  const periodEndStr   = new Date(now).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  const generatedDate = new Date().toLocaleDateString(locale, { day: '2-digit', month: 'long', year: 'numeric' });
+  const periodStartStr = new Date(periodStart).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' });
+  const periodEndStr   = new Date(now).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' });
   const reporterLabel  = userMode === 'CARETAKER' ? caretakerName : personName;
   const subjectLabel   = userMode === 'CARETAKER' ? personName : 'Self';
 
@@ -149,7 +176,6 @@ export const exportNeurologistReport = (events, settings = {}, medications = [],
     const sec = s % 60;
     return m > 0 ? `${m}m ${sec}s` : `${sec}s`;
   };
-
   // ── Awareness analysis (scan symptoms for Mental & Speech > Awareness)
   const awareness = { awake: 0, confused: 0, blackout: 0 };
   periodEvents.forEach(e => {
@@ -231,7 +257,7 @@ export const exportNeurologistReport = (events, settings = {}, medications = [],
     return `<div style="border:1px solid #e5e7eb;border-radius:8px;padding:12px;margin-bottom:10px;page-break-inside:avoid">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
         <div>
-          <span style="font-weight:900;font-size:12px">${esc(e.date || '—')} at ${esc(e.time || '—')}</span>
+          <span style="font-weight:900;font-size:12px">${esc(e.date || '—')} ${esc(t('export.docs.at'))} ${esc(e.time || '—')}</span>
           <span style="margin-left:8px;font-size:11px;color:#374151;font-weight:700">${esc(e.type || 'Uncategorized')}</span>
           ${e.userModeAtTime ? `<span style="margin-left:6px">${recByTag(e.userModeAtTime)}</span>` : ''}
         </div>
@@ -239,30 +265,30 @@ export const exportNeurologistReport = (events, settings = {}, medications = [],
       </div>
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px">
         <div style="text-align:center;padding:5px;background:#f9fafb;border-radius:5px">
-          <div style="font-size:8px;color:#9ca3af;text-transform:uppercase;font-weight:700">Total</div>
+          <div style="font-size:8px;color:#9ca3af;text-transform:uppercase;font-weight:700">${esc(t('export.docs.total'))}</div>
           <div style="font-size:12px;font-weight:900">${fmtDur(total)}</div>
         </div>
         <div style="text-align:center;padding:5px;background:#fffbeb;border-radius:5px">
-          <div style="font-size:8px;color:#d97706;text-transform:uppercase;font-weight:700">Aura</div>
+          <div style="font-size:8px;color:#d97706;text-transform:uppercase;font-weight:700">${esc(t('export.docs.aura'))}</div>
           <div style="font-size:12px;font-weight:900;color:#d97706">${fmtDur(d.aura)}</div>
         </div>
         <div style="text-align:center;padding:5px;background:#fef2f2;border-radius:5px">
-          <div style="font-size:8px;color:#dc2626;text-transform:uppercase;font-weight:700">Seizure</div>
+          <div style="font-size:8px;color:#dc2626;text-transform:uppercase;font-weight:700">${esc(t('export.docs.seizure'))}</div>
           <div style="font-size:12px;font-weight:900;color:#dc2626">${fmtDur(d.seizure)}</div>
         </div>
         <div style="text-align:center;padding:5px;background:#eff6ff;border-radius:5px">
-          <div style="font-size:8px;color:#3b82f6;text-transform:uppercase;font-weight:700">Recovery</div>
+          <div style="font-size:8px;color:#3b82f6;text-transform:uppercase;font-weight:700">${esc(t('export.docs.recovery'))}</div>
           <div style="font-size:12px;font-weight:900;color:#3b82f6">${fmtDur(d.recovery)}</div>
         </div>
       </div>
       ${sympRows ? `<table style="border-collapse:collapse;width:100%;margin-bottom:6px">
         <thead><tr style="background:#f3f4f6">
-          <th style="padding:3px 5px;text-align:left;font-size:8px;text-transform:uppercase;color:#6b7280;font-weight:700">Symptom</th>
-          <th style="padding:3px 5px;text-align:left;font-size:8px;text-transform:uppercase;color:#6b7280;font-weight:700">Medical Term</th>
-          <th style="padding:3px 5px;text-align:left;font-size:8px;text-transform:uppercase;color:#6b7280;font-weight:700">Location</th>
+          <th style="padding:3px 5px;text-align:left;font-size:8px;text-transform:uppercase;color:#6b7280;font-weight:700">${esc(t('export.docs.symptom'))}</th>
+          <th style="padding:3px 5px;text-align:left;font-size:8px;text-transform:uppercase;color:#6b7280;font-weight:700">${esc(t('export.docs.medical_term'))}</th>
+          <th style="padding:3px 5px;text-align:left;font-size:8px;text-transform:uppercase;color:#6b7280;font-weight:700">${esc(t('export.docs.location'))}</th>
         </tr></thead>
         <tbody>${sympRows}</tbody>
-      </table>` : '<p style="font-size:10px;color:#9ca3af;margin:4px 0">No symptoms recorded</p>'}
+      </table>` : `<p style="font-size:10px;color:#9ca3af;margin:4px 0">${esc(t('export.docs.no_symptoms_recorded'))}</p>`}
       ${e.notes ? `<div style="margin-top:6px;padding:7px 9px;background:#f9fafb;border-radius:5px;font-size:10px;color:#374151;white-space:pre-wrap">${esc(e.notes)}</div>` : ''}
     </div>`;
   }).join('');
@@ -337,7 +363,7 @@ export const exportNeurologistReport = (events, settings = {}, medications = [],
 
   const flagsHtml = flags.length
     ? `<ul style="margin:0;padding-left:16px;font-size:11px;color:#111827;line-height:1.8">${flags.join('')}</ul>`
-    : `<p style="color:#059669;font-size:11px;font-weight:700;margin:0">&#10003; No clinical flags detected in this reporting period.</p>`;
+    : `<p style="color:#059669;font-size:11px;font-weight:700;margin:0">&#10003; ${esc(t('export.docs.no_clinical_flags'))}</p>`;
 
   // ── SECTION 7: Data Quality
   const fullyRecorded  = periodEvents.filter(e => e.isComplete && e.laps?.aura && e.laps?.seizure && e.laps?.recovery).length;
@@ -363,72 +389,90 @@ export const exportNeurologistReport = (events, settings = {}, medications = [],
   const expectedDoses = medications.reduce((sum, m) => sum + (freqPerDay[m.frequency] || 0) * 30, 0);
   const medSection = medications.length > 0 ? `
   <div class="section">
-    <h2>Current Medications</h2>
+    <h2>${esc(t('export.docs.current_medications'))}</h2>
     <table>
-      <thead><tr><th>Drug</th><th>Dose</th><th>Frequency</th></tr></thead>
+      <thead><tr><th>${esc(t('export.docs.drug'))}</th><th>${esc(t('export.docs.dose'))}</th><th>${esc(t('export.docs.frequency'))}</th></tr></thead>
       <tbody>${medRows}</tbody>
     </table>
     ${medicationLogs.length > 0
-      ? `<p style="font-size:10px;color:#374151;margin-top:8px"><strong>${medicationLogs.length} dose(s) logged</strong> in reporting period${expectedDoses > 0 ? ` (expected ~${expectedDoses} for this regimen over 30 days)` : ''}.</p>`
-      : `<p style="font-size:10px;color:#9ca3af;margin-top:8px">No dose logs recorded in this period.</p>`
+      ? `<p style="font-size:10px;color:#374151;margin-top:8px"><strong>${esc(t('export.docs.doses_logged', { count: medicationLogs.length }))}</strong>${expectedDoses > 0 ? ` ${esc(t('export.docs.expected_doses', { count: expectedDoses }))}` : ''}.</p>`
+      : `<p style="font-size:10px;color:#9ca3af;margin-top:8px">${esc(t('export.docs.no_dose_logs'))}</p>`
     }
   </div>` : '';
 
-  // ── Write HTML ────────────────────────────────────────────────
+  const title = `${t('export.neuro_report_label')} - ${personName || t('export.docs.patient')}`;
+  const styles = buildPreviewStyles(`
+    .auratrack-neuro-report,
+    .auratrack-neuro-report * { box-sizing: border-box; }
+    .auratrack-neuro-report {
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      font-size: 11px;
+      color: #111827;
+      line-height: 1.4;
+    }
+    .auratrack-neuro-report h2 {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #374151;
+      margin: 0 0 10px;
+      border-bottom: 2px solid #e5e7eb;
+      padding-bottom: 5px;
+    }
+    .auratrack-neuro-report table { border-collapse: collapse; width: 100%; }
+    .auratrack-neuro-report th {
+      background: #1e293b;
+      color: #fff;
+      padding: 6px 7px;
+      text-align: left;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .auratrack-neuro-report td {
+      padding: 5px 7px;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 10px;
+      vertical-align: top;
+    }
+    .auratrack-neuro-report .section { margin-bottom: 20px; page-break-inside: avoid; }
+    .auratrack-neuro-report .chart-wrap { margin-bottom: 10px; }
+    .auratrack-neuro-report .chart-wrap svg { width: 100%; height: auto; display: block; }
+    .auratrack-neuro-report .stat-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 14px; }
+    .auratrack-neuro-report .stat-card { background: #1e293b; border-radius: 6px; padding: 10px 8px; text-align: center; color: #fff; }
+    .auratrack-neuro-report .stat-value { font-size: 20px; font-weight: 900; font-family: monospace; }
+    .auratrack-neuro-report .stat-label { font-size: 8px; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; margin-top: 2px; }
+    .auratrack-neuro-report .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .auratrack-neuro-report .meta-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 9px 11px; }
+    .auratrack-neuro-report .meta-label { font-size: 8px; text-transform: uppercase; letter-spacing: 0.08em; color: #9ca3af; font-weight: 700; }
+    .auratrack-neuro-report .meta-value { font-size: 12px; font-weight: 800; color: #111827; margin-top: 2px; }
+    .auratrack-neuro-report .meta-sm { font-size: 10px; color: #374151; margin-top: 1px; }
+    .auratrack-neuro-report .header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 12px; border-bottom: 3px solid #dc2626; margin-bottom: 14px; }
+    .auratrack-neuro-report .ctx-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .auratrack-neuro-report .ctx-item { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px 10px; }
+    .auratrack-neuro-report .ctx-label { font-size: 8px; font-weight: 800; text-transform: uppercase; color: #9ca3af; letter-spacing: 0.06em; }
+    .auratrack-neuro-report .ctx-value { font-size: 10px; font-weight: 600; color: #374151; margin-top: 2px; }
+    .auratrack-neuro-report .qual-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 8px; }
+    .auratrack-neuro-report .qual-item { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px; text-align: center; }
+    .auratrack-neuro-report .qual-num { font-size: 18px; font-weight: 900; font-family: monospace; color: #1e293b; }
+    .auratrack-neuro-report .qual-label { font-size: 8px; text-transform: uppercase; color: #9ca3af; font-weight: 700; margin-top: 2px; }
+    .auratrack-neuro-report .disclaimer { font-size: 9px; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 8px; margin-top: 14px; }
+  `);
 
-  win.document.write(`<!DOCTYPE html><html><head>
-  <meta charset="UTF-8">
-  <title>AuraTrack Neurological Report — ${esc(personName || 'Patient')}</title>
-  <style>
-    @page { size: A4; margin: 18mm 16mm; }
-    * { box-sizing: border-box; }
-    body { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 11px; color: #111827; margin: 0; padding: 0; line-height: 1.4; }
-    h2 { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #374151; margin: 0 0 10px; border-bottom: 2px solid #e5e7eb; padding-bottom: 5px; }
-    table { border-collapse: collapse; width: 100%; }
-    th { background: #1e293b; color: #fff; padding: 6px 7px; text-align: left; font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em; }
-    td { padding: 5px 7px; border-bottom: 1px solid #e5e7eb; font-size: 10px; vertical-align: top; }
-    .section { margin-bottom: 20px; page-break-inside: avoid; }
-    .chart-wrap { margin-bottom: 10px; }
-    .chart-wrap svg { width: 100%; height: auto; display: block; }
-    .stat-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 14px; }
-    .stat-card { background: #1e293b; border-radius: 6px; padding: 10px 8px; text-align: center; color: #fff; }
-    .stat-value { font-size: 20px; font-weight: 900; font-family: monospace; }
-    .stat-label { font-size: 8px; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; margin-top: 2px; }
-    .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-    .meta-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 9px 11px; }
-    .meta-label { font-size: 8px; text-transform: uppercase; letter-spacing: 0.08em; color: #9ca3af; font-weight: 700; }
-    .meta-value { font-size: 12px; font-weight: 800; color: #111827; margin-top: 2px; }
-    .meta-sm { font-size: 10px; color: #374151; margin-top: 1px; }
-    .header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 12px; border-bottom: 3px solid #dc2626; margin-bottom: 14px; }
-    .ctx-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .ctx-item { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px 10px; }
-    .ctx-label { font-size: 8px; font-weight: 800; text-transform: uppercase; color: #9ca3af; letter-spacing: 0.06em; }
-    .ctx-value { font-size: 10px; font-weight: 600; color: #374151; margin-top: 2px; }
-    .qual-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 8px; }
-    .qual-item { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px; text-align: center; }
-    .qual-num { font-size: 18px; font-weight: 900; font-family: monospace; color: #1e293b; }
-    .qual-label { font-size: 8px; text-transform: uppercase; color: #9ca3af; font-weight: 700; margin-top: 2px; }
-    .disclaimer { font-size: 9px; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 8px; margin-top: 14px; }
-    @media print { .section { page-break-inside: avoid; } .no-print { display: none !important; } }
-  </style>
-  </head><body>
-  <div class="no-print" style="position:sticky;top:0;z-index:100;background:#1e293b;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-    <span style="color:#94a3b8;font-size:11px;font-weight:700;letter-spacing:0.05em">AURATRACK — NEUROLOGICAL REPORT</span>
-    <button id="auratrack-print-report" style="background:#dc2626;color:#fff;border:none;border-radius:6px;padding:8px 20px;font-size:12px;font-weight:900;cursor:pointer;letter-spacing:0.05em">&#128438; Print / Save as PDF</button>
-  </div>
-
-  <!-- HEADER -->
+  const html = `
+  <div class="auratrack-neuro-report">
   <div class="header">
     <div>
       <div style="font-size:9px;font-weight:900;letter-spacing:0.4em;color:#dc2626;text-transform:uppercase">AuraTrack</div>
-      <div style="font-size:18px;font-weight:900;margin-top:2px;letter-spacing:-0.3px">Neurological Report</div>
-      <div style="font-size:9px;color:#6b7280;margin-top:4px">Generated: ${generatedDate}</div>
-      <div style="font-size:9px;color:#6b7280">Period: ${periodStartStr} – ${periodEndStr} (30 days)</div>
+      <div style="font-size:18px;font-weight:900;margin-top:2px;letter-spacing:-0.3px">${esc(t('export.docs.neurological_report'))}</div>
+      <div style="font-size:9px;color:#6b7280;margin-top:4px">${esc(t('export.docs.generated'))}: ${generatedDate}</div>
+      <div style="font-size:9px;color:#6b7280">${esc(t('export.docs.period'))}: ${periodStartStr} – ${periodEndStr} (${esc(t('export.docs.last_30_days'))})</div>
     </div>
     <div style="text-align:right">
-      <div style="font-size:9px;color:#6b7280;margin-bottom:1px">Prepared by</div>
+      <div style="font-size:9px;color:#6b7280;margin-bottom:1px">${esc(t('export.docs.prepared_by'))}</div>
       <div style="font-weight:800;font-size:11px">${esc(reporterLabel || '—')}</div>
-      ${neurologistName ? `<div style="font-size:9px;color:#374151;margin-top:4px">For: <strong>${esc(neurologistName)}</strong></div>` : ''}
+      ${neurologistName ? `<div style="font-size:9px;color:#374151;margin-top:4px">${esc(t('export.docs.for_label'))}: <strong>${esc(neurologistName)}</strong></div>` : ''}
       ${neurologistInstitution ? `<div style="font-size:9px;color:#6b7280">${esc(neurologistInstitution)}</div>` : ''}
       ${neurologistContact ? `<div style="font-size:9px;color:#6b7280">${esc(neurologistContact)}</div>` : ''}
     </div>
@@ -437,79 +481,79 @@ export const exportNeurologistReport = (events, settings = {}, medications = [],
   <!-- PATIENT BLOCK -->
   <div class="meta-grid">
     <div class="meta-card">
-      <div class="meta-label">Patient</div>
+      <div class="meta-label">${esc(t('export.docs.patient'))}</div>
       <div class="meta-value">${esc(subjectLabel || '—')}</div>
-      ${includePatientDOB && dateOfBirth ? `<div class="meta-sm">DOB: ${new Date(dateOfBirth).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}</div>` : ''}
-      ${emergencyContact ? `<div class="meta-sm">Emergency: ${esc(emergencyContact)}</div>` : ''}
+      ${includePatientDOB && dateOfBirth ? `<div class="meta-sm">${esc(t('export.docs.dob'))}: ${new Date(dateOfBirth).toLocaleDateString(locale, { day: '2-digit', month: 'long', year: 'numeric' })}</div>` : ''}
+      ${emergencyContact ? `<div class="meta-sm">${esc(t('export.docs.emergency'))}: ${esc(emergencyContact)}</div>` : ''}
     </div>
     <div class="meta-card">
-      <div class="meta-label">Report Summary</div>
-      <div class="meta-sm" style="margin-top:3px"><strong>${totalEvents}</strong> event${totalEvents !== 1 ? 's' : ''} in 30-day period</div>
-      <div class="meta-sm"><strong>${daysCovered}</strong> day${daysCovered !== 1 ? 's' : ''} with recorded events</div>
-      <div class="meta-sm">Avg duration: <strong>${fmtDur(avgDuration)}</strong></div>
+      <div class="meta-label">${esc(t('export.docs.report_summary'))}</div>
+      <div class="meta-sm" style="margin-top:3px"><strong>${totalEvents}</strong> ${esc(t('export.docs.events_in_period', { count: totalEvents }))}</div>
+      <div class="meta-sm"><strong>${daysCovered}</strong> ${esc(t('export.docs.days_with_recorded_events', { count: daysCovered }))}</div>
+      <div class="meta-sm">${esc(t('export.docs.avg_duration'))}: <strong>${fmtDur(avgDuration)}</strong></div>
     </div>
   </div>
 
   <!-- STATS GRID -->
   <div class="stat-grid">
-    <div class="stat-card"><div class="stat-value">${totalEvents}</div><div class="stat-label">Events (30d)</div></div>
-    <div class="stat-card"><div class="stat-value">${fmtDur(avgDuration) === '—' ? '0s' : fmtDur(avgDuration)}</div><div class="stat-label">Avg Duration</div></div>
-    <div class="stat-card"><div class="stat-value">${daysCovered}</div><div class="stat-label">Days Affected</div></div>
-    <div class="stat-card"><div class="stat-value">${Object.keys(byType).length}</div><div class="stat-label">Seizure Types</div></div>
+    <div class="stat-card"><div class="stat-value">${totalEvents}</div><div class="stat-label">${esc(t('export.docs.events_30d'))}</div></div>
+    <div class="stat-card"><div class="stat-value">${fmtDur(avgDuration) === '—' ? '0s' : fmtDur(avgDuration)}</div><div class="stat-label">${esc(t('export.docs.avg_duration'))}</div></div>
+    <div class="stat-card"><div class="stat-value">${daysCovered}</div><div class="stat-label">${esc(t('export.docs.days_affected'))}</div></div>
+    <div class="stat-card"><div class="stat-value">${Object.keys(byType).length}</div><div class="stat-label">${esc(t('export.docs.seizure_types'))}</div></div>
   </div>
 
   ${medSection}
 
   <!-- SECTION 2: RECENT EVENTS TABLE -->
   <div class="section">
-    <h2>Recent Events (last ${recentEvents.length})</h2>
+    <h2>${esc(t('export.docs.recent_events', { count: recentEvents.length }))}</h2>
     <table>
       <thead><tr>
-        <th>#</th><th>Date</th><th>Time</th><th>Type</th>
-        <th style="text-align:right">Total</th>
-        <th style="text-align:right">Aura</th>
-        <th style="text-align:right">Seizure</th>
-        <th style="text-align:right">Recovery</th>
-        <th style="text-align:center">Notes</th>
-        <th style="text-align:center">Edited</th>
-        <th style="text-align:center">Rec. by</th>
+        <th>#</th><th>${esc(t('export.docs.date'))}</th><th>${esc(t('export.docs.time'))}</th><th>${esc(t('export.docs.type'))}</th>
+        <th style="text-align:right">${esc(t('export.docs.total'))}</th>
+        <th style="text-align:right">${esc(t('export.docs.aura'))}</th>
+        <th style="text-align:right">${esc(t('export.docs.seizure'))}</th>
+        <th style="text-align:right">${esc(t('export.docs.recovery'))}</th>
+        <th style="text-align:center">${esc(t('export.docs.notes'))}</th>
+        <th style="text-align:center">${esc(t('export.docs.edited'))}</th>
+        <th style="text-align:center">${esc(t('export.docs.recorded_by'))}</th>
       </tr></thead>
-      <tbody>${recentRows || '<tr><td colspan="10" style="color:#9ca3af">No events recorded</td></tr>'}</tbody>
+      <tbody>${recentRows || `<tr><td colspan="11" style="color:#9ca3af">${esc(t('export.docs.no_events_recorded'))}</td></tr>`}</tbody>
     </table>
   </div>
 
   <!-- SECTION 3: MEDICATION & CONTEXT -->
   <div class="section">
-    <h2>Medication &amp; Clinical Context</h2>
+    <h2>${esc(t('export.docs.medication_context'))}</h2>
     <div class="ctx-grid">
       <div class="ctx-item">
-        <div class="ctx-label">Awareness Levels (30-day period)</div>
+        <div class="ctx-label">${esc(t('export.docs.awareness_levels'))}</div>
         <div class="ctx-value">
           ${awarenessTotal > 0
-            ? `Fully awake: ${awareness.awake} &nbsp;|&nbsp; Confused: ${awareness.confused} &nbsp;|&nbsp; Blackout: ${awareness.blackout}`
-            : '<span style="color:#9ca3af">Not recorded</span>'}
+            ? `${esc(t('export.docs.fully_awake'))}: ${awareness.awake} &nbsp;|&nbsp; ${esc(t('export.docs.confused'))}: ${awareness.confused} &nbsp;|&nbsp; ${esc(t('export.docs.blackout'))}: ${awareness.blackout}`
+            : `<span style="color:#9ca3af">${esc(t('export.docs.not_recorded'))}</span>`}
         </div>
       </div>
       <div class="ctx-item">
-        <div class="ctx-label">Recovery Quality</div>
-        <div class="ctx-value" style="color:#9ca3af">Not recorded</div>
+        <div class="ctx-label">${esc(t('export.docs.recovery_quality'))}</div>
+        <div class="ctx-value" style="color:#9ca3af">${esc(t('export.docs.not_recorded'))}</div>
       </div>
       <div class="ctx-item">
-        <div class="ctx-label">Rescue Medication Use</div>
-        <div class="ctx-value" style="color:#9ca3af">Not recorded</div>
+        <div class="ctx-label">${esc(t('export.docs.rescue_medication_use'))}</div>
+        <div class="ctx-value" style="color:#9ca3af">${esc(t('export.docs.not_recorded'))}</div>
       </div>
       <div class="ctx-item">
-        <div class="ctx-label">Triggers / Medications (from report notes)</div>
+        <div class="ctx-label">${esc(t('export.docs.triggers_medications'))}</div>
         <div class="ctx-value">${reportNotes
           ? esc(reportNotes.length > 140 ? reportNotes.slice(0, 140) + '…' : reportNotes)
-          : '<span style="color:#9ca3af">Not recorded</span>'}</div>
+          : `<span style="color:#9ca3af">${esc(t('export.docs.not_recorded'))}</span>`}</div>
       </div>
     </div>
   </div>
 
   <!-- SECTION 4: TREND ANALYSIS -->
   <div class="section">
-    <h2>Trend Analysis</h2>
+    <h2>${esc(t('export.docs.trend_analysis'))}</h2>
     <div class="chart-wrap">${chart1}</div>
     <div class="chart-wrap">${chart2}</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
@@ -520,66 +564,61 @@ export const exportNeurologistReport = (events, settings = {}, medications = [],
 
   <!-- SECTION 5: CONDENSED EVENT DETAILS -->
   <div class="section">
-    <h2>Condensed Event Details</h2>
-    ${detailBlocks || '<p style="color:#9ca3af;font-size:11px;margin:0">No events to display.</p>'}
+    <h2>${esc(t('export.docs.condensed_event_details'))}</h2>
+    ${detailBlocks || `<p style="color:#9ca3af;font-size:11px;margin:0">${esc(t('export.docs.no_events_to_display'))}</p>`}
   </div>
 
   <!-- SECTION 5b: FULL SYMPTOM LOG -->
   <div class="section">
-    <h2>Ictal Symptom Log — All Period Events</h2>
+    <h2>${esc(t('export.docs.ictal_symptom_log'))}</h2>
     ${sympLogRows ? `<table>
       <thead><tr>
-        <th>Date</th><th>Time</th><th>Type</th>
-        <th>Symptom Path</th><th>Medical Term</th><th>Location</th>
+        <th>${esc(t('export.docs.date'))}</th><th>${esc(t('export.docs.time'))}</th><th>${esc(t('export.docs.type'))}</th>
+        <th>${esc(t('export.docs.symptom_path'))}</th><th>${esc(t('export.docs.medical_term'))}</th><th>${esc(t('export.docs.location'))}</th>
       </tr></thead>
       <tbody>${sympLogRows}</tbody>
-    </table>` : '<p style="color:#9ca3af;font-size:11px;margin:0">No symptoms recorded in this period.</p>'}
+    </table>` : `<p style="color:#9ca3af;font-size:11px;margin:0">${esc(t('export.docs.no_symptoms_period'))}</p>`}
   </div>
 
   <!-- SECTION 6: CLINICAL FLAGS -->
   <div class="section">
-    <h2>Clinical Flags</h2>
+    <h2>${esc(t('export.docs.clinical_flags'))}</h2>
     ${flagsHtml}
   </div>
 
   <!-- SECTION 7: DATA QUALITY -->
   <div class="section">
-    <h2>Data Quality &amp; Confidence</h2>
+    <h2>${esc(t('export.docs.data_quality_confidence'))}</h2>
     <div style="margin-bottom:10px">
       <span style="padding:4px 10px;border-radius:4px;font-size:10px;font-weight:900;background:${conf.bg};color:${conf.color}">
-        CONFIDENCE: ${conf.label} (${fullyPct}% fully recorded)
+        ${esc(t('export.docs.confidence_label'))}: ${conf.label} (${fullyPct}% ${esc(t('export.docs.fully_recorded').toLowerCase())})
       </span>
     </div>
     <div class="qual-grid">
-      <div class="qual-item"><div class="qual-num">${fullyRecorded}</div><div class="qual-label">Fully Recorded</div></div>
-      <div class="qual-item"><div class="qual-num">${partialRecorded}</div><div class="qual-label">Partial</div></div>
-      <div class="qual-item"><div class="qual-num">${untagged}</div><div class="qual-label">Untagged</div></div>
-      <div class="qual-item"><div class="qual-num">${autoStopped}</div><div class="qual-label">Auto-Stopped</div></div>
-      <div class="qual-item"><div class="qual-num">${edited}</div><div class="qual-label">Edited</div></div>
+      <div class="qual-item"><div class="qual-num">${fullyRecorded}</div><div class="qual-label">${esc(t('export.docs.fully_recorded'))}</div></div>
+      <div class="qual-item"><div class="qual-num">${partialRecorded}</div><div class="qual-label">${esc(t('export.docs.partial'))}</div></div>
+      <div class="qual-item"><div class="qual-num">${untagged}</div><div class="qual-label">${esc(t('export.docs.untagged'))}</div></div>
+      <div class="qual-item"><div class="qual-num">${autoStopped}</div><div class="qual-label">${esc(t('export.docs.auto_stopped'))}</div></div>
+      <div class="qual-item"><div class="qual-num">${edited}</div><div class="qual-label">${esc(t('export.docs.edited'))}</div></div>
     </div>
   </div>
 
   <!-- DISCLAIMER -->
   <div class="disclaimer">
-    This report was generated by AuraTrack v${esc(pkg.version)}, a personal seizure-logging PWA. All data was entered by the caretaker or patient.
-    This document is not a substitute for professional medical assessment. Times and durations are based on manual input.
-    Phase durations marked as edited may differ from real-time capture.
+    ${esc(t('export.docs.disclaimer_intro', { version: pkg.version }))}<br>
+    ${esc(t('export.docs.disclaimer_medical'))}<br>
+    ${esc(t('export.docs.disclaimer_edited'))}
   </div>
+  </div>`;
 
-  </body></html>`);
-  win.document.close();
-  win.document.getElementById('auratrack-print-report')?.addEventListener('click', () => win.print());
+  return { title, styles, html };
 };
 
 // ─── Seizure Diary (one-page monthly calendar) ───────────────
 
-export const exportSeizureDiary = (allEvents, settings = {}, medications = [], month, year) => {
-  const win = window.open('', '_blank');
-  if (!win) {
-    alert('Pop-up blocked. Please allow pop-ups for this site, then try again.');
-    return;
-  }
-
+export const buildSeizureDiaryPreview = (allEvents, settings = {}, medications = [], month, year) => {
+  const locale = getCurrentLocale();
+  const t = (key, options) => i18n.t(key, options);
   const patientName = settings.personName || settings.caretakerName || '';
 
   // Build a map of day-of-month → events for this month
@@ -672,73 +711,141 @@ export const exportSeizureDiary = (allEvents, settings = {}, medications = [], m
     </div>`;
   }
 
-  const monthName = new Date(year, month - 1, 1).toLocaleString('en-GB', { month: 'long', year: 'numeric' });
+  const monthName = new Date(year, month - 1, 1).toLocaleString(locale, { month: 'long', year: 'numeric' });
   const medLine = medications.length > 0
-    ? `Medications: ${medications.map(m => `${m.name} ${m.dose}${m.unit} ${m.frequency}`).join(' | ')}`
+    ? `${t('export.docs.medications_label')}: ${medications.map(m => `${m.name} ${m.dose}${m.unit} ${m.frequency}`).join(' | ')}`
     : '';
 
-  win.document.write(`<!DOCTYPE html><html><head>
-  <meta charset="UTF-8">
-  <title>AuraTrack Seizure Diary — ${esc(monthName)}</title>
-  <style>
+  const styles = buildPreviewStyles(`
     @page { size: A4 landscape; margin: 12mm 14mm; }
-    * { box-sizing: border-box; }
-    body { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 11px; color: #111827; margin: 0; padding: 0; }
-    .no-print { display: block; }
-    @media print { .no-print { display: none !important; } }
-  </style>
-  </head><body>
+    .auratrack-diary-preview,
+    .auratrack-diary-preview * { box-sizing: border-box; }
+    .auratrack-diary-preview {
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      font-size: 11px;
+      color: #111827;
+    }
+  `);
 
-  <div class="no-print" style="background:#1e293b;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-    <span style="color:#94a3b8;font-size:11px;font-weight:700">AURATRACK — SEIZURE DIARY</span>
-    <button id="auratrack-print-diary" style="background:#dc2626;color:#fff;border:none;border-radius:6px;padding:7px 18px;font-size:12px;font-weight:900;cursor:pointer">Print / Save as PDF</button>
-  </div>
+  const html = `
+    <div class="auratrack-diary-preview">
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:10px;border-bottom:3px solid #dc2626;padding-bottom:8px">
+        <div>
+          <div style="font-size:8px;font-weight:900;letter-spacing:0.4em;color:#dc2626;text-transform:uppercase">AuraTrack</div>
+          <div style="font-size:20px;font-weight:900;letter-spacing:-0.3px">${esc(monthName)} - ${esc(t('export.diary_title'))}</div>
+        </div>
+        <div style="text-align:right">
+          ${patientName ? `<div style="font-weight:800;font-size:12px">${esc(patientName)}</div>` : ''}
+          <div style="font-size:10px;color:#6b7280">${esc(t('export.docs.events_recorded_this_month', { count: totalEvents }))}</div>
+        </div>
+      </div>
 
-  <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:10px;border-bottom:3px solid #dc2626;padding-bottom:8px">
-    <div>
-      <div style="font-size:8px;font-weight:900;letter-spacing:0.4em;color:#dc2626;text-transform:uppercase">AuraTrack</div>
-      <div style="font-size:20px;font-weight:900;letter-spacing:-0.3px">${esc(monthName)} — Seizure Diary</div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px">
+        ${getWeekdayLabels(locale).map(d =>
+          `<div style="text-align:center;font-size:9px;font-weight:900;text-transform:uppercase;color:#6b7280;padding:3px 0">${d}</div>`
+        ).join('')}
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">
+        ${cells}
+      </div>
+
+      <div style="margin-top:10px;padding-top:8px;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">
+        <div>
+          <span style="font-size:8px;font-weight:900;text-transform:uppercase;color:#9ca3af;margin-right:6px">${esc(t('export.docs.legend'))}:</span>
+          ${legendHtml || `<span style="font-size:10px;color:#9ca3af">${esc(t('export.docs.no_events'))}</span>`}
+          <span style="margin-left:6px;display:inline-flex;align-items:center;gap:4px;font-size:10px;color:#d97706"><span style="font-weight:800">▲</span> ${esc(t('export.docs.trigger_reported'))}</span>
+        </div>
+        ${medLine ? `<div style="font-size:9px;color:#374151;max-width:400px">${esc(medLine)}</div>` : ''}
+      </div>
+
+      <div style="margin-top:6px;font-size:8px;color:#9ca3af;border-top:1px solid #e5e7eb;padding-top:6px">
+        ${esc(t('export.docs.diary_footer', { date: new Date().toLocaleDateString(locale) }))}
+      </div>
     </div>
-    <div style="text-align:right">
-      ${patientName ? `<div style="font-weight:800;font-size:12px">${esc(patientName)}</div>` : ''}
-      <div style="font-size:10px;color:#6b7280">${totalEvents} event${totalEvents !== 1 ? 's' : ''} recorded this month</div>
-    </div>
-  </div>
+  `;
 
-  <!-- Day-of-week header -->
-  <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px">
-    ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d =>
-      `<div style="text-align:center;font-size:9px;font-weight:900;text-transform:uppercase;color:#6b7280;padding:3px 0">${d}</div>`
-    ).join('')}
-  </div>
-
-  <!-- Calendar grid -->
-  <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">
-    ${cells}
-  </div>
-
-  <!-- Footer -->
-  <div style="margin-top:10px;padding-top:8px;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">
-    <div>
-      <span style="font-size:8px;font-weight:900;text-transform:uppercase;color:#9ca3af;margin-right:6px">Legend:</span>
-      ${legendHtml || '<span style="font-size:10px;color:#9ca3af">No events</span>'}
-      <span style="margin-left:6px;display:inline-flex;align-items:center;gap:4px;font-size:10px;color:#d97706"><span style="font-weight:800">▲</span> Trigger reported</span>
-    </div>
-    ${medLine ? `<div style="font-size:9px;color:#374151;max-width:400px">${esc(medLine)}</div>` : ''}
-  </div>
-
-  <div style="margin-top:6px;font-size:8px;color:#9ca3af;border-top:1px solid #e5e7eb;padding-top:6px">
-    Generated by AuraTrack · ${new Date().toLocaleDateString('en-GB')} · All data recorded by caretaker or patient. Not a substitute for professional medical assessment.
-  </div>
-  </body></html>`);
-  win.document.close();
-  win.document.getElementById('auratrack-print-diary')?.addEventListener('click', () => win.print());
+  return {
+    title: `AuraTrack Seizure Diary - ${monthName}`,
+    styles,
+    html,
+  };
 };
 
 // ─── Helpers ─────────────────────────────────────────────────
 
 function dateStamp() {
   return new Date().toISOString().slice(0, 10);
+}
+
+function buildPreviewStyles(documentStyles) {
+  return `
+    @page { size: A4; margin: 18mm 16mm; }
+    .auratrack-print-preview {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: #e5e7eb;
+      display: flex;
+      flex-direction: column;
+    }
+    .auratrack-print-preview-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: calc(env(safe-area-inset-top) + 12px) 16px 12px;
+      background: #111827;
+      color: #fff;
+    }
+    .auratrack-print-preview-document {
+      flex: 1;
+      overflow: auto;
+      padding: 16px;
+    }
+    .auratrack-print-preview-sheet {
+      width: min(100%, 960px);
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(15, 23, 42, 0.18);
+      padding: 24px;
+    }
+    ${documentStyles}
+    @media print {
+      body { background: #fff !important; }
+      .auratrack-print-preview-toolbar { display: none !important; }
+      .auratrack-print-preview {
+        position: static !important;
+        inset: auto !important;
+        background: #fff !important;
+        display: block !important;
+      }
+      .auratrack-print-preview-document {
+        overflow: visible !important;
+        padding: 0 !important;
+      }
+      .auratrack-print-preview-sheet {
+        width: auto !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+      }
+    }
+  `;
+}
+
+function getCurrentLocale() {
+  return i18n.resolvedLanguage || i18n.language || 'en';
+}
+
+function getWeekdayLabels(locale) {
+  const sunday = new Date(Date.UTC(2024, 0, 7));
+  return Array.from({ length: 7 }, (_, index) =>
+    new Date(sunday.getTime() + index * 86400000)
+      .toLocaleDateString(locale, { weekday: 'short' })
+  );
 }
 
 function triggerDownload(blob, filename) {

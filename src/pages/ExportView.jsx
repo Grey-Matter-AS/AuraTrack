@@ -3,11 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { db } from '../data/db';
 import { ScrollFade } from '../components/ScrollFade';
 import { ExportCard } from '../components/ExportCard';
-import { exportToJSON, exportToCSV, exportToPDF, exportNeurologistReport, exportSeizureDiary, filterEventsByDateRange } from '../utils/exportHelpers';
+import { PrintPreviewOverlay } from '../components/PrintPreviewOverlay';
+import { exportToJSON, exportToCSV, buildEventTablePreview, buildNeurologistReportPreview, buildSeizureDiaryPreview, filterEventsByDateRange } from '../utils/exportHelpers';
 import { useMedications } from '../hooks/useMedications';
 
 export default function ExportView({ onBack, settings = {}, isEmbedded = false }) {
   const { t } = useTranslation();
+  const [printPreview, setPrintPreview] = useState(null);
   const [fromDate, setFromDate] = useState(
     () => new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10)
   );
@@ -25,15 +27,15 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false }
     return filterEventsByDateRange(all, fromDate, toDate);
   };
 
-  const handleExport = async (fn) => {
+  const handleSimplePdfReport = async () => {
     const events = await getEvents();
-    fn(events);
+    setPrintPreview(buildEventTablePreview(events));
   };
 
   const handleSeizureDiary = async () => {
     const all = await db.events.orderBy('startTime').toArray();
     const [year, month] = diaryMonth.split('-').map(Number);
-    exportSeizureDiary(all, settings, medications, month, year);
+    setPrintPreview(buildSeizureDiaryPreview(all, settings, medications, month, year));
   };
 
   const handleNeurologistReport = async () => {
@@ -41,7 +43,7 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false }
     const fromMs = new Date(fromDate).setHours(0, 0, 0, 0);
     const toMs   = new Date(toDate).setHours(23, 59, 59, 999);
     const medLogs = await getLogsForPeriod(fromMs, toMs);
-    exportNeurologistReport(events, settings, medications, medLogs);
+    setPrintPreview(buildNeurologistReportPreview(events, settings, medications, medLogs));
   };
 
   const ContentWrapper = isEmbedded ? 'div' : ScrollFade;
@@ -51,6 +53,14 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false }
 
   return (
     <div className={isEmbedded ? 'w-full pb-10 space-y-0' : 'flex-1 flex flex-col w-full max-w-md sm:max-w-xl md:max-w-2xl overflow-hidden'}>
+      {printPreview && (
+        <PrintPreviewOverlay
+          title={printPreview.title}
+          styles={printPreview.styles}
+          html={printPreview.html}
+          onClose={() => setPrintPreview(null)}
+        />
+      )}
 
       {/* Header — hidden when embedded in History tab */}
       {!isEmbedded && (
@@ -132,7 +142,7 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false }
         <ExportCard
           label={t('export.pdf_label')}
           description={t('export.pdf_desc')}
-          onExport={() => handleExport(exportToPDF)}
+          onExport={handleSimplePdfReport}
         />
 
         {/* ── Clinical Report ── */}
@@ -170,7 +180,7 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false }
             className="w-full py-3 rounded-xl font-black uppercase text-[10px] tracking-widest text-center"
             style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
           >
-            {t('export.generate_print')}
+            {t('export.open_preview')}
           </div>
         </div>
 
@@ -216,7 +226,7 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false }
               className="mt-5 px-5 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all active:scale-95"
               style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
             >
-              {t('export.generate')}
+              {t('export.open_preview')}
             </button>
           </div>
         </div>
