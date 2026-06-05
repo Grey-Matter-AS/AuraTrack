@@ -1,6 +1,18 @@
 import { ScrollFade } from './ScrollFade';
 
-export function WizardMenu({ title, options, onPick, onBack, onSkip, skipLabel }) {
+export function WizardMenu({
+  title,
+  options,
+  onPick,
+  onBack,
+  onSkip,
+  skipLabel,
+  multiSelect = false,
+  selectedOptions = [],
+  onToggleOption,
+  onConfirmSelection,
+  confirmLabel = 'Confirm Selection',
+}) {
   return (
     <div className="flex flex-col h-full w-full max-w-md sm:max-w-xl md:max-w-2xl mx-auto animate-in fade-in zoom-in duration-300">
       <div className="flex justify-between items-center mb-8 shrink-0">
@@ -21,13 +33,32 @@ export function WizardMenu({ title, options, onPick, onBack, onSkip, skipLabel }
         {options.map(opt => (
           <button
             key={opt}
-            onClick={() => onPick(opt)}
+            onClick={() => (multiSelect ? onToggleOption?.(opt) : onPick?.(opt))}
             className="w-full py-7 px-8 text-left rounded-[2rem] text-sm font-black uppercase tracking-widest active:scale-[0.97] transition-all shadow-lg"
-            style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-primary)', border: '2px solid var(--border)' }}
+            style={multiSelect && selectedOptions.includes(opt)
+              ? { backgroundColor: 'color-mix(in srgb, var(--accent) 18%, var(--bg-raised))', color: 'var(--text-primary)', border: '2px solid var(--accent)' }
+              : { backgroundColor: 'var(--bg-raised)', color: 'var(--text-primary)', border: '2px solid var(--border)' }}
           >
-            {opt}
+            <span className="flex items-center justify-between gap-4">
+              <span>{opt}</span>
+              {multiSelect && (
+                <span className="text-xs" style={{ color: selectedOptions.includes(opt) ? 'var(--accent)' : 'var(--text-faint)' }}>
+                  {selectedOptions.includes(opt) ? 'SELECTED' : 'TAP TO ADD'}
+                </span>
+              )}
+            </span>
           </button>
         ))}
+        {multiSelect && onConfirmSelection && (
+          <button
+            onClick={onConfirmSelection}
+            disabled={selectedOptions.length === 0}
+            className="w-full py-5 px-8 text-center rounded-[2rem] text-xs font-black uppercase tracking-widest active:scale-[0.97] transition-all shadow-lg disabled:opacity-50 disabled:active:scale-100"
+            style={{ backgroundColor: 'var(--accent)', color: '#fff', border: '2px solid color-mix(in srgb, var(--accent) 65%, white 0%)' }}
+          >
+            {confirmLabel}
+          </button>
+        )}
         {onSkip && (
           <button
             onClick={onSkip}

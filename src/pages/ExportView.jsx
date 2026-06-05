@@ -4,7 +4,17 @@ import { db } from '../data/db';
 import { ScrollFade } from '../components/ScrollFade';
 import { ExportCard } from '../components/ExportCard';
 import { PrintPreviewOverlay } from '../components/PrintPreviewOverlay';
-import { exportToJSON, exportToCSV, buildEventTablePreview, buildNeurologistReportPreview, buildSeizureDiaryPreview, filterEventsByDateRange } from '../utils/exportHelpers';
+import {
+  exportToJSON,
+  exportToCSV,
+  buildEventTablePreview,
+  buildNeurologistReportPreview,
+  buildSeizureDiaryPreview,
+  exportEventLogPDF,
+  exportNeurologistReportPDF,
+  exportSeizureDiaryPDF,
+  filterEventsByDateRange,
+} from '../utils/exportHelpers';
 import { useMedications } from '../hooks/useMedications';
 
 export default function ExportView({ onBack, settings = {}, isEmbedded = false }) {
@@ -32,10 +42,21 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false }
     setPrintPreview(buildEventTablePreview(events));
   };
 
+  const handleSimplePdfDownload = async () => {
+    const events = await getEvents();
+    await exportEventLogPDF(events);
+  };
+
   const handleSeizureDiary = async () => {
     const all = await db.events.orderBy('startTime').toArray();
     const [year, month] = diaryMonth.split('-').map(Number);
     setPrintPreview(buildSeizureDiaryPreview(all, settings, medications, month, year));
+  };
+
+  const handleSeizureDiaryPdf = async () => {
+    const all = await db.events.orderBy('startTime').toArray();
+    const [year, month] = diaryMonth.split('-').map(Number);
+    await exportSeizureDiaryPDF(all, settings, medications, month, year);
   };
 
   const handleNeurologistReport = async () => {
@@ -44,6 +65,14 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false }
     const toMs   = new Date(toDate).setHours(23, 59, 59, 999);
     const medLogs = await getLogsForPeriod(fromMs, toMs);
     setPrintPreview(buildNeurologistReportPreview(events, settings, medications, medLogs));
+  };
+
+  const handleNeurologistReportPdf = async () => {
+    const events = await getEvents();
+    const fromMs = new Date(fromDate).setHours(0, 0, 0, 0);
+    const toMs   = new Date(toDate).setHours(23, 59, 59, 999);
+    const medLogs = await getLogsForPeriod(fromMs, toMs);
+    await exportNeurologistReportPDF(events, settings, medications, medLogs);
   };
 
   const ContentWrapper = isEmbedded ? 'div' : ScrollFade;
@@ -120,29 +149,38 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false }
         <ExportCard
           label={t('export.backup_json_label')}
           description={t('export.backup_json_desc')}
-          onExport={async () => {
-            const events = await getEvents();
-            const fromMs = new Date(fromDate).setHours(0, 0, 0, 0);
-            const toMs   = new Date(toDate).setHours(23, 59, 59, 999);
-            const logs   = await getLogsForPeriod(fromMs, toMs);
-	            await exportToJSON(events, medications, logs);
-          }}
+          actions={[{
+            label: t('export.generate'),
+            onClick: async () => {
+              const events = await getEvents();
+              const fromMs = new Date(fromDate).setHours(0, 0, 0, 0);
+              const toMs   = new Date(toDate).setHours(23, 59, 59, 999);
+              const logs   = await getLogsForPeriod(fromMs, toMs);
+              await exportToJSON(events, medications, logs);
+            },
+          }]}
         />
         <ExportCard
           label={t('export.csv_label')}
           description={t('export.csv_desc')}
-          onExport={async () => {
-            const events = await getEvents();
-            const fromMs = new Date(fromDate).setHours(0, 0, 0, 0);
-            const toMs   = new Date(toDate).setHours(23, 59, 59, 999);
-            const logs   = await getLogsForPeriod(fromMs, toMs);
-	            await exportToCSV(events, medications, logs);
-          }}
+          actions={[{
+            label: t('export.generate'),
+            onClick: async () => {
+              const events = await getEvents();
+              const fromMs = new Date(fromDate).setHours(0, 0, 0, 0);
+              const toMs   = new Date(toDate).setHours(23, 59, 59, 999);
+              const logs   = await getLogsForPeriod(fromMs, toMs);
+              await exportToCSV(events, medications, logs);
+            },
+          }]}
         />
         <ExportCard
           label={t('export.pdf_label')}
           description={t('export.pdf_desc')}
-          onExport={handleSimplePdfReport}
+          actions={[
+            { label: t('export.open_preview'), onClick: handleSimplePdfReport, variant: 'secondary' },
+            { label: t('export.download_pdf'), onClick: handleSimplePdfDownload },
+          ]}
         />
 
         {/* ── Clinical Report ── */}
@@ -151,9 +189,8 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false }
         </p>
 
         <div
-          className="rounded-2xl p-6 space-y-3 active:scale-[0.98] transition-transform cursor-pointer"
+          className="rounded-2xl p-6 space-y-3"
           style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--accent)', boxShadow: `0 0 20px color-mix(in srgb, var(--accent) 15%, transparent)` }}
-          onClick={handleNeurologistReport}
         >
           <div className="flex items-start gap-4">
             <div
@@ -176,11 +213,21 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false }
               )}
             </div>
           </div>
-          <div
-            className="w-full py-3 rounded-xl font-black uppercase text-[10px] tracking-widest text-center"
-            style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
-          >
-            {t('export.open_preview')}
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={handleNeurologistReport}
+              className="flex-1 min-w-[150px] py-3 rounded-xl font-black uppercase text-[10px] tracking-widest text-center active:scale-95 transition-all"
+              style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
+            >
+              {t('export.open_preview')}
+            </button>
+            <button
+              onClick={handleNeurologistReportPdf}
+              className="flex-1 min-w-[150px] py-3 rounded-xl font-black uppercase text-[10px] tracking-widest text-center active:scale-95 transition-all"
+              style={{ backgroundColor: 'var(--accent)', color: '#fff', border: '1px solid transparent' }}
+            >
+              {t('export.download_pdf')}
+            </button>
           </div>
         </div>
 
@@ -221,13 +268,22 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false }
                 style={{ backgroundColor: 'var(--bg-raised)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
               />
             </div>
-            <button
-              onClick={handleSeizureDiary}
-              className="mt-5 px-5 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all active:scale-95"
-              style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
-            >
-              {t('export.open_preview')}
-            </button>
+            <div className="mt-5 flex gap-2">
+              <button
+                onClick={handleSeizureDiary}
+                className="px-5 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all active:scale-95"
+                style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
+              >
+                {t('export.open_preview')}
+              </button>
+              <button
+                onClick={handleSeizureDiaryPdf}
+                className="px-5 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all active:scale-95"
+                style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
+              >
+                {t('export.download_pdf')}
+              </button>
+            </div>
           </div>
         </div>
 

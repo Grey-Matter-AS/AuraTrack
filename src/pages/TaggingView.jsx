@@ -1,9 +1,69 @@
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { WizardMenu } from '../components/WizardMenu';
 import { ScrollFade } from '../components/ScrollFade';
 import Summary from '../components/Summary';
 import { SYMPTOM_WIZARD, REGION_WIZARD, SEIZURE_TYPES } from '../data/constants';
 import { db } from '../data/db';
+
+const FAVORITES_KEY = 'favoriteSymptomSets';
+
+function addSymptomBundles(existingSymptoms, bundleBase, specificParts) {
+  return [
+    ...existingSymptoms,
+    ...specificParts.map(part => ({
+      ...bundleBase,
+      specificPart: part,
+    })),
+  ];
+}
+
+function TextEntryStep({
+  title,
+  value,
+  onChange,
+  onSubmit,
+  onBack,
+  placeholder,
+  submitLabel,
+}) {
+  return (
+    <div className="flex flex-col h-full w-full max-w-md sm:max-w-xl md:max-w-2xl mx-auto animate-in fade-in zoom-in duration-300">
+      <div className="flex justify-between items-center mb-8 shrink-0">
+        {onBack ? (
+          <button
+            onClick={onBack}
+            className="px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
+            style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+          >
+            ← BACK
+          </button>
+        ) : <div className="w-10" />}
+        <p className="text-center font-black uppercase text-[11px] tracking-[0.3em]" style={{ color: 'var(--text-dim)' }}>{title}</p>
+        <div className="w-10" />
+      </div>
+
+      <div className="space-y-4">
+        <textarea
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          className="w-full rounded-[2rem] p-5 text-base min-h-[140px] outline-none transition-all resize-none"
+          style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+          placeholder={placeholder}
+          autoFocus
+        />
+        <button
+          onClick={onSubmit}
+          disabled={!value.trim()}
+          className="w-full py-5 rounded-[2rem] text-xs font-black uppercase tracking-widest transition-all disabled:opacity-50"
+          style={{ backgroundColor: 'var(--accent)', color: '#fff', border: '2px solid color-mix(in srgb, var(--accent) 65%, white 0%)' }}
+        >
+          {submitLabel}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function TaggingView({
   taggingStep, setTaggingStep,
@@ -20,6 +80,87 @@ export default function TaggingView({
 }) {
   const { t } = useTranslation();
   const skipLabel = t('tagging.skip_for_now');
+  const [favoriteSets, setFavoriteSets] = useState([]);
+  const [pendingSpecificParts, setPendingSpecificParts] = useState([]);
+  const [customDraft, setCustomDraft] = useState('');
+  const [customMode, setCustomMode] = useState(null);
+
+  useEffect(() => {
+    let mounted = true;
+    db.settings.get(FAVORITES_KEY).then(row => {
+      if (mounted) setFavoriteSets(Array.isArray(row?.value) ? row.value : []);
+    }).catch(() => {
+      if (mounted) setFavoriteSets([]);
+    });
+    return () => { mounted = false; };
+  }, []);
+
+  const updateFavoriteSets = async (nextSets) => {
+    setFavoriteSets(nextSets);
+    await db.settings.put({ key: FAVORITES_KEY, value: nextSets });
+  };
+
+  const openCustomStep = (mode) => {
+    setCustomMode(mode);
+    setCustomDraft('');
+    setTaggingStep('CUSTOM_INPUT');
+  };
+
+  const submitCustomEntry = async () => {
+    const value = customDraft.trim();
+    if (!value) return;
+
+    if (customMode === 'symptom') {
+      setSelections({
+        ...selections,
+        symptom: value,
+        detail: '',
+        medical: 'Custom',
+      });
+      setTaggingStep('S_DET');
+    } else if (customMode === 'detail') {
+      setSelections({
+        ...selections,
+        detail: value,
+        medical: selections.medical || 'Custom',
+      });
+      setTaggingStep('R_CAT');
+    } else if (customMode === 'favorite') {
+      const nextSets = [
+        ...favoriteSets,
+        {
+          id: crypto.randomUUID(),
+          name: value,
+          symptoms: tempSymptomList.map(symptom => ({ ...symptom })),
+        },
+      ];
+      await updateFavoriteSets(nextSets);
+      setTaggingStep('SUMMARY');
+    }
+    setCustomDraft('');
+    setCustomMode(null);
+  };
+
+  const addFavoriteSetToSelection = (favorite) => {
+    setTempSymptomList([
+      ...tempSymptomList,
+      ...favorite.symptoms.map(symptom => ({ ...symptom })),
+    ]);
+    setTaggingStep('SUMMARY');
+  };
+
+  const finalizeSymptomSelection = (specificParts) => {
+    if (!specificParts.length) return;
+    const bundleBase = {
+      symptom: selections.symptom,
+      detail: selections.detail,
+      med: selections.medical,
+      region: selections.region,
+    };
+    setTempSymptomList(addSymptomBundles(tempSymptomList, bundleBase, specificParts));
+    setPendingSpecificParts([]);
+    setTaggingStep('SUMMARY');
+  };
 
   const handleTypeSelect = async (val) => {
     const targetId = editingId || activeEventId;
@@ -49,6 +190,7 @@ export default function TaggingView({
               editedTimers={editedTimers}
               onSetManualDuration={setManualDuration}
               onAddAnother={() => setTaggingStep('S_CAT')}
+              onSaveFavorite={() => openCustomStep('favorite')}
               onSave={onSave}
               onSkip={onSkip}
               onCancel={onCancel}
@@ -78,8 +220,31 @@ export default function TaggingView({
             {taggingStep === 'S_CAT' && (
               <WizardMenu
                 title={t('tagging.feeling_title')}
-                options={Object.keys(SYMPTOM_WIZARD)}
-                onPick={v => { setSelections({ ...selections, group: v }); setTaggingStep('S_SYM'); }}
+                options={[
+                  ...(favoriteSets.length ? ['★ Favorite Symptom Sets'] : []),
+                  ...Object.keys(SYMPTOM_WIZARD),
+                ]}
+                onPick={v => {
+                  if (v === '★ Favorite Symptom Sets') {
+                    setTaggingStep('FAV_PICK');
+                    return;
+                  }
+                  setSelections({ ...selections, group: v, symptom: '', detail: '', region: '', subRegion: '', specificPart: '', medical: '' });
+                  setTaggingStep('S_SYM');
+                }}
+                onSkip={onSkip}
+                skipLabel={skipLabel}
+              />
+            )}
+            {taggingStep === 'FAV_PICK' && favoriteSets.length > 0 && (
+              <WizardMenu
+                title="Favorite Sets"
+                options={favoriteSets.map(set => set.name)}
+                onPick={name => {
+                  const favorite = favoriteSets.find(set => set.name === name);
+                  if (favorite) addFavoriteSetToSelection(favorite);
+                }}
+                onBack={() => setTaggingStep('S_CAT')}
                 onSkip={onSkip}
                 skipLabel={skipLabel}
               />
@@ -87,45 +252,59 @@ export default function TaggingView({
             {taggingStep === 'S_SYM' && selections.group && SYMPTOM_WIZARD[selections.group] && (
               <WizardMenu
                 title={selections.group}
-                options={Object.keys(SYMPTOM_WIZARD[selections.group])}
-                onPick={v => { setSelections({ ...selections, symptom: v }); setTaggingStep('S_DET'); }}
+                options={[...Object.keys(SYMPTOM_WIZARD[selections.group]), '+ Add Custom Symptom']}
+                onPick={v => {
+                  if (v === '+ Add Custom Symptom') {
+                    openCustomStep('symptom');
+                    return;
+                  }
+                  setSelections({ ...selections, symptom: v, detail: '', region: '', subRegion: '', specificPart: '', medical: '' });
+                  setTaggingStep('S_DET');
+                }}
                 onBack={() => setTaggingStep('S_CAT')}
                 onSkip={onSkip}
                 skipLabel={skipLabel}
               />
             )}
-            {taggingStep === 'S_DET' && selections.group && selections.symptom &&
-              SYMPTOM_WIZARD[selections.group]?.[selections.symptom] && (
+            {taggingStep === 'S_DET' && selections.group && selections.symptom && (
               <WizardMenu
                 title={selections.symptom}
-                options={SYMPTOM_WIZARD[selections.group][selections.symptom].options.map(o => o.label)}
+                options={
+                  selections.symptom in (SYMPTOM_WIZARD[selections.group] || {})
+                    ? [...SYMPTOM_WIZARD[selections.group][selections.symptom].options.map(o => o.label), '+ Add Custom Detail']
+                    : ['+ Add Custom Detail']
+                }
                 onPick={label => {
-                  const optionObj = SYMPTOM_WIZARD[selections.group][selections.symptom].options.find(o => o.label === label);
-                  const groupConfig = SYMPTOM_WIZARD[selections.group][selections.symptom];
+                  if (label === '+ Add Custom Detail') {
+                    openCustomStep('detail');
+                    return;
+                  }
+                  const groupConfig = SYMPTOM_WIZARD[selections.group]?.[selections.symptom];
+                  const optionObj = groupConfig?.options.find(o => o.label === label);
                   const updatedSelections = {
                     ...selections,
                     detail: label,
-                    medical: optionObj.med,
-                    region: optionObj.forceRegion || '',
-                    subRegion: optionObj.forceSubRegion || ''
+                    medical: optionObj?.med || selections.medical || 'Custom',
+                    region: optionObj?.forceRegion || '',
+                    subRegion: optionObj?.forceSubRegion || ''
                   };
                   setSelections(updatedSelections);
 
-                  if (optionObj.forceSubRegion) {
+                  if (optionObj?.forceSubRegion) {
                     setTaggingStep('R_DET');
                     return;
                   }
-                  if (groupConfig.skipRegion) {
+                  if (groupConfig?.skipRegion) {
                     const bundle = {
                       symptom: selections.symptom,
                       detail: label,
-                      med: optionObj.med,
+                      med: optionObj?.med || selections.medical || 'Custom',
                       region: 'N/A',
                       specificPart: 'Internal/General'
                     };
                     setTempSymptomList([...tempSymptomList, bundle]);
                     setTaggingStep('SUMMARY');
-                  } else if (optionObj.forceRegion) {
+                  } else if (optionObj?.forceRegion) {
                     setTaggingStep('R_SUB');
                   } else {
                     setTaggingStep('R_CAT');
@@ -142,7 +321,7 @@ export default function TaggingView({
               <WizardMenu
                 title={t('tagging.region_title')}
                 options={Object.keys(REGION_WIZARD)}
-                onPick={v => { setSelections({ ...selections, region: v }); setTaggingStep('R_SUB'); }}
+                onPick={v => { setPendingSpecificParts([]); setSelections({ ...selections, region: v }); setTaggingStep('R_SUB'); }}
                 onSkip={onSkip}
                 skipLabel={skipLabel}
               />
@@ -151,7 +330,7 @@ export default function TaggingView({
               <WizardMenu
                 title={selections.region}
                 options={Object.keys(REGION_WIZARD[selections.region])}
-                onPick={v => { setSelections({ ...selections, subRegion: v }); setTaggingStep('R_DET'); }}
+                onPick={v => { setPendingSpecificParts([]); setSelections({ ...selections, subRegion: v }); setTaggingStep('R_DET'); }}
                 onBack={() => {
                   const optionObj = SYMPTOM_WIZARD[selections.group]?.[selections.symptom]?.options.find(o => o.label === selections.detail);
                   setTaggingStep(optionObj?.forceRegion ? 'S_DET' : 'R_CAT');
@@ -165,23 +344,42 @@ export default function TaggingView({
               <WizardMenu
                 title={selections.subRegion}
                 options={REGION_WIZARD[selections.region][selections.subRegion]}
-                onPick={v => {
-                  const bundle = {
-                    symptom: selections.symptom,
-                    detail: selections.detail,
-                    med: selections.medical,
-                    region: selections.region,
-                    specificPart: v
-                  };
-                  setTempSymptomList([...tempSymptomList, bundle]);
-                  setTaggingStep('SUMMARY');
+                multiSelect
+                selectedOptions={pendingSpecificParts}
+                onToggleOption={v => {
+                  setPendingSpecificParts(prev => prev.includes(v) ? prev.filter(part => part !== v) : [...prev, v]);
                 }}
+                onConfirmSelection={() => finalizeSymptomSelection(pendingSpecificParts)}
+                confirmLabel={pendingSpecificParts.length > 0 ? `Add ${pendingSpecificParts.length} Selected` : 'Add Selected'}
                 onBack={() => {
+                  setPendingSpecificParts([]);
                   const optionObj = SYMPTOM_WIZARD[selections.group]?.[selections.symptom]?.options.find(o => o.label === selections.detail);
                   setTaggingStep(optionObj?.forceSubRegion ? 'S_DET' : 'R_SUB');
                 }}
                 onSkip={onSkip}
                 skipLabel={skipLabel}
+              />
+            )}
+            {taggingStep === 'CUSTOM_INPUT' && (
+              <TextEntryStep
+                title={customMode === 'favorite' ? 'Favorite Set Name' : customMode === 'detail' ? 'Custom Detail' : 'Custom Symptom'}
+                value={customDraft}
+                onChange={setCustomDraft}
+                onSubmit={submitCustomEntry}
+                onBack={() => {
+                  setCustomDraft('');
+                  const previousStep = customMode === 'favorite' ? 'SUMMARY' : customMode === 'detail' ? 'S_DET' : 'S_SYM';
+                  setCustomMode(null);
+                  setTaggingStep(previousStep);
+                }}
+                placeholder={
+                  customMode === 'favorite'
+                    ? 'For example: Left arm sensory cluster'
+                    : customMode === 'detail'
+                      ? 'Describe the symptom detail or variant'
+                      : 'Name the symptom to add under this menu'
+                }
+                submitLabel={customMode === 'favorite' ? 'Save Favorite Set' : 'Continue'}
               />
             )}
 

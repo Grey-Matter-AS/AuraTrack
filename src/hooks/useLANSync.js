@@ -92,7 +92,12 @@ export function useLANSync() {
     let data;
     try { data = JSON.parse(ev.data); } catch { return; }
 
-    if (data.type === 'pin') { setRemotePin(data.pin); go('pin_confirm'); return; }
+    if (data.type === 'pin') {
+      pinRef.current = data.pin;
+      setRemotePin(data.pin);
+      go('pin_confirm');
+      return;
+    }
     if (data.type === 'pin_ok') {
       if (typeof data.pin !== 'string' || data.pin !== pinRef.current) {
         setError('PIN mismatch. Connection rejected.');

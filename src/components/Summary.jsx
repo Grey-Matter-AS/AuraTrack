@@ -292,6 +292,7 @@ function Summary({
   editedTimers,
   onSetManualDuration,
   onAddAnother,
+  onSaveFavorite,
   onSave,
   onSkip,
   onCancel,
@@ -490,6 +491,16 @@ function Summary({
         >
           + ADD ANOTHER SYMPTOM
         </button>
+
+        {onSaveFavorite && tempSymptomList.length > 0 && (
+          <button
+            onClick={onSaveFavorite}
+            className="w-full py-4 rounded-2xl font-black uppercase text-xs tracking-widest active:scale-95 transition-all"
+            style={{ backgroundColor: 'rgba(59,130,246,0.12)', color: '#60a5fa', border: '1px solid rgba(59,130,246,0.35)' }}
+          >
+            Save Current Symptoms as Favorite Set
+          </button>
+        )}
 
         <button
           onClick={onSave}

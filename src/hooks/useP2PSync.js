@@ -71,6 +71,7 @@ export function useP2PSync() {
     if (!data || typeof data !== 'object') return;
 
     if (data.type === 'pin') {
+      pinRef.current = data.pin;
       setRemotePin(data.pin);
       go('pin_confirm');
       return;
