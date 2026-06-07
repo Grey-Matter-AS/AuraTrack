@@ -112,7 +112,7 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false }
         <p className="text-[10px] font-black uppercase tracking-widest mb-3" style={{ color: 'var(--text-dim)' }}>
           {t('export.date_range')}
         </p>
-        <div className="flex gap-3 date-time-row">
+        <div className="date-selector-stack">
           <div className="flex-1">
             <p className="text-[9px] font-black uppercase tracking-widest mb-1" style={{ color: 'var(--text-faint)' }}>{t('export.from')}</p>
             <input
@@ -256,7 +256,7 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false }
               </p>
             </div>
           </div>
-          <div className="flex gap-3 items-center">
+          <div className="date-selector-stack">
             <div className="flex-1">
               <p className="text-[9px] font-black uppercase tracking-widest mb-1" style={{ color: 'var(--text-faint)' }}>{t('export.month')}</p>
               <input
@@ -268,7 +268,7 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false }
                 style={{ backgroundColor: 'var(--bg-raised)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
               />
             </div>
-            <div className="mt-5 flex gap-2">
+            <div className="date-selector-actions">
               <button
                 onClick={handleSeizureDiary}
                 className="px-5 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all active:scale-95"
