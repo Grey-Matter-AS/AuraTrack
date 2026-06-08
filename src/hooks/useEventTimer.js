@@ -37,6 +37,7 @@ export function useEventTimer() {
     } catch {
       // Private browsing or storage blocked — crash recovery unavailable, recording continues
     }
+    return now;
   }, []);
 
   const stopTimer = useCallback(() => {

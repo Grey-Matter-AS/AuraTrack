@@ -5,15 +5,24 @@
     "back": "← VOLVER",
     "help_label": "Ayuda"
   },
-
   "idle": {
     "start": "INICIAR",
     "log_past": "+ Registrar crisis pasada",
     "recent_events": "Eventos recientes",
     "last_5": "ÚLTIMAS 5",
-    "no_events": "No se han registrado eventos aún."
+    "no_events": "No se han registrado eventos aún.",
+    "start_eeg_diary": "Start EEG Diary",
+    "eeg_active": "EEG Diary Active",
+    "eeg_session_default": "EEG monitoring session",
+    "eeg_session_elapsed": "Session elapsed",
+    "end_eeg": "End EEG",
+    "current_activity": "Current activity",
+    "stop_activity": "Stop Activity",
+    "view_log": "View Log",
+    "eeg_no_activity": "No EEG activity running",
+    "start_activity": "Start Activity",
+    "eeg_auto_stop_hint": "If a seizure starts, any active EEG activity is stopped automatically and a seizure reference is added to the EEG log."
   },
-
   "recording": {
     "total_elapsed": "Tiempo total",
     "aura": "Aura",
@@ -29,9 +38,14 @@
     "self_mode": "Modo personal activado",
     "long_seizure_warning": "CRISIS PROLONGADA — VIGILAR DE CERCA",
     "approaching_threshold": "ACERCÁNDOSE AL UMBRAL DE ALERTA",
-    "auto_stop_notice": "El temporizador se detiene automáticamente a los 12:00"
+    "auto_stop_notice": "El temporizador se detiene automáticamente a los 12:00",
+    "optional_video": "Optional video",
+    "video_hint": "Start only if it is safe and helpful to capture the seizure.",
+    "start_video": "Start Video",
+    "stop_video": "Stop Video",
+    "video_badge": "Video",
+    "video_error_unavailable": "Camera permission or video recording is not available on this device."
   },
-
   "alert": {
     "medical_alert": "ALERTA MÉDICA",
     "unresponsive": "SIN RESPUESTA",
@@ -43,7 +57,6 @@
     "emergency_contact": "Contacto de emergencia",
     "elapsed": "Transcurrido"
   },
-
   "tagging": {
     "step1_title": "Paso 1: Tipo de crisis",
     "feeling_title": "¿Qué tipo de sensación?",
@@ -51,7 +64,6 @@
     "skip_for_now": "Omitir por ahora",
     "save_timing_only": "Guardar solo el tiempo"
   },
-
   "history": {
     "title": "Historial",
     "events_count": "{{count}} EVENTOS",
@@ -64,9 +76,9 @@
     "needs_details": "Necesita detalles",
     "tab_seizures": "Crisis",
     "tab_medications": "Medicamentos",
-    "tab_export": "Exportar"
+    "tab_export": "Exportar",
+    "tab_eeg": "EEG Diary"
   },
-
   "export": {
     "title": "Exportar e informes",
     "date_range": "Rango de fechas",
@@ -194,9 +206,11 @@
       "detail_badge_auto_stopped": "AUTODETENIDO",
       "detail_badge_edited": "EDITADO",
       "event_number": "Evento #{{count}}"
-    }
+    },
+    "eeg_title": "EEG Diary",
+    "eeg_label": "EEG Clinical Table",
+    "eeg_desc": "Export the most recent EEG session as a table-first clinical PDF."
   },
-
   "event_detail": {
     "title": "Detalle del evento",
     "edit": "Editar",
@@ -219,9 +233,15 @@
     "danger_prolonged_title": "Crisis prolongada",
     "danger_prolonged_desc": "Este evento duró más de 5 minutos. Busque atención médica si aún no lo ha hecho.",
     "danger_cluster_title": "Cluster ×{{count}} / Riesgo de estado epiléptico",
-    "danger_cluster_desc": "{{count}} crisis en 8 minutos. Consulte a un neurólogo de inmediato."
+    "danger_cluster_desc": "{{count}} crisis en 8 minutos. Consulte a un neurólogo de inmediato.",
+    "eeg_session": "EEG session",
+    "linked": "Linked",
+    "video_file": "Video file",
+    "saved_to_storage": "Saved to device storage",
+    "associated_video": "Associated video",
+    "saved_seizure_video": "Saved seizure video",
+    "video_saved_hint": "The file is saved in device storage and referenced here for the neurologist record."
   },
-
   "help": {
     "title": "Ayuda",
     "about_btn": "Acerca de AuraTrack",
@@ -276,7 +296,6 @@
       }
     }
   },
-
   "about": {
     "title": "Acerca de",
     "section_about": "Acerca de",
@@ -293,7 +312,6 @@
     "license": "Licencia",
     "report_issue": "Informar un problema"
   },
-
   "settings": {
     "title": "Ajustes",
     "badge_caretaker": "CUIDADOR",
@@ -351,7 +369,9 @@
       "haptic_help": "Vibración al pulsar botones (el dispositivo debe admitirlo)",
       "quick_labels": "Etiquetas de notas rápidas",
       "quick_labels_help": "Personalice los botones de acceso rápido mostrados durante la grabación. Déjelo en blanco para ocultar un botón.",
-      "button_n": "Botón {{n}}"
+      "button_n": "Botón {{n}}",
+      "eeg_diary": "Enable EEG Diary",
+      "eeg_diary_help": "Turn this on only when long-term EEG monitoring is needed. The EEG diary controls stay hidden on the idle screen unless enabled."
     },
     "medications": {
       "section": "Medicamentos",
@@ -453,14 +473,12 @@
       "reinstall_sub": "Toque si descartó el banner de instalación por error"
     }
   },
-
   "delete_modal": {
     "title": "¿ELIMINAR REGISTRO?",
     "body": "Esta entrada médica se eliminará permanentemente. Esta acción no se puede deshacer.",
     "confirm": "SÍ, ELIMINAR PERMANENTEMENTE",
     "cancel": "CANCELAR"
   },
-
   "manual_entry": {
     "title": "Registrar crisis pasada",
     "intro": "Introduzca la fecha, hora y duración de la crisis. Luego puede añadir el tipo de crisis, síntomas, desencadenantes y notas.",
@@ -477,7 +495,6 @@
     "cancel": "Cancelar",
     "error_duration": "La duración total debe ser mayor que 0."
   },
-
   "event_card": {
     "edited": "Editado",
     "manual_entry": "Entrada manual",
@@ -485,7 +502,6 @@
     "delete": "Eliminar",
     "untagged": "Sin etiquetar"
   },
-
   "summary": {
     "save": "Guardar",
     "cancel": "Cancelar",
@@ -502,5 +518,44 @@
     "total": "Total",
     "manual_durations": "Ajustar duraciones manualmente",
     "remove_symptom": "Eliminar"
+  },
+  "eeg": {
+    "title": "EEG Diary",
+    "description": "EEG sessions stay separate from seizure history. Seizures recorded during EEG appear here as linked reference rows.",
+    "report_title": "EEG Diary Report",
+    "start_session": "Start EEG Diary",
+    "start_activity": "Start EEG Activity",
+    "start": "Start",
+    "close": "Close",
+    "cancel": "Cancel",
+    "custom_hours": "Custom hours",
+    "session_label_placeholder": "Session label (optional)",
+    "session_notes_placeholder": "Notes for this EEG session (optional)",
+    "search_activities_placeholder": "Search common activities",
+    "exact_activity_placeholder": "Exact activity details (optional)",
+    "mood_placeholder": "Mood (optional)",
+    "notes_placeholder": "Notes (optional)",
+    "end_active": "End Active EEG",
+    "session_default": "EEG session",
+    "no_sessions": "No EEG sessions yet.",
+    "started": "Started",
+    "no_activities": "No EEG activities logged for this session.",
+    "seizure_reference": "Seizure reference",
+    "activity": "Activity",
+    "mood_label": "Mood",
+    "running": "Running",
+    "edit_seizure_reference": "EEG Seizure Reference",
+    "edit_activity": "Edit EEG Activity",
+    "linked_description": "This entry is linked to the seizure record and keeps its timing from that event.",
+    "save": "Save",
+    "no_mood": "No mood",
+    "duration_seconds": "Duration seconds",
+    "delete": "Delete",
+    "type": "Type",
+    "end": "End",
+    "notes_or_reference": "Notes / Seizure Ref",
+    "seizure_type": "Seizure",
+    "activity_type": "Activity",
+    "badge": "EEG"
   }
 }

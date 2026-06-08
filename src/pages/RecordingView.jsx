@@ -103,13 +103,21 @@ function RecordingView({
   neurologistContact,
   emergencyContact,
   durationFormat = 'seconds',
+  onStartVideo,
+  onStopVideo,
+  videoRecording = false,
+  videoSupported = false,
+  videoError = '',
+  previewStream = null,
 }) {
   const { t } = useTranslation();
   const fmtDur = (s) => durationFormat === 'human' ? formatDuration(s) : `${s}s`;
+  const seizureStartLabel = startTime ? new Date(startTime).toLocaleString() : '';
   const [showMarkers, setShowMarkers] = useState(false);
   const [alertDismissed, setAlertDismissed] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const emergencyFiredRef = useRef(false);
+  const previewRef = useRef(null);
 
   const getDiff = (start, end) => {
     if (!start) return 0;
@@ -138,12 +146,18 @@ function RecordingView({
       emergencyFiredRef.current = true;
       onEmergencyStop?.();
     }
-  }, [elapsed]);
+  }, [elapsed, onEmergencyStop]);
 
   const dismissAlert = () => {
     setShowAlert(false);
     setAlertDismissed(true);
   };
+
+  useEffect(() => {
+    if (!previewRef.current) return;
+    previewRef.current.srcObject = previewStream || null;
+    if (previewStream) previewRef.current.play().catch(() => {});
+  }, [previewStream]);
 
   return (
     <>
@@ -175,6 +189,33 @@ function RecordingView({
 
         {/* 2. MAIN TIMER */}
         <div className="flex-1 flex flex-col justify-center text-center py-4">
+          <div className="flex justify-center mb-4">
+            <div className="relative w-32 sm:w-36 aspect-[3/4] rounded-[1.5rem] overflow-hidden" style={{ backgroundColor: 'var(--bg-raised)', border: '1px solid var(--border)' }}>
+              {previewStream ? (
+                <>
+                  <video ref={previewRef} className="w-full h-full object-cover" playsInline muted />
+                  <div className="absolute left-2 right-2 bottom-2 px-2 py-1 rounded-lg text-[10px] font-black"
+                    style={{ backgroundColor: 'rgba(15,23,42,0.72)', color: '#fff' }}>
+                    <div>{seizureStartLabel}</div>
+                    <div>
+                      T+{String(Math.floor(elapsed / 3600)).padStart(2, '0')}:{String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0')}:{String(elapsed % 60).padStart(2, '0')}
+                    </div>
+                  </div>
+                  <div className="absolute top-2 left-2 px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-widest"
+                    style={{ backgroundColor: 'rgba(185,28,28,0.88)', color: '#fff' }}>
+                    {t('recording.video_badge', 'Video')}
+                  </div>
+                </>
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center px-3 text-center">
+                  <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--text-faint)' }}>{t('recording.optional_video', 'Optional video')}</p>
+                  <p className="text-[11px] mt-2 leading-relaxed" style={{ color: 'var(--text-dim)' }}>
+                    {t('recording.video_hint', 'Start only if it is safe and helpful to capture the seizure.')}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
           <p className="text-xs font-black uppercase tracking-[0.4em] mb-2" style={{ color: 'var(--text-dim)' }}>{t('recording.total_elapsed')}</p>
           <div
             className="text-[11vh] font-mono font-black tracking-tighter tabular-nums leading-none"
@@ -187,6 +228,23 @@ function RecordingView({
             <p className="text-red-500 text-[10px] font-black uppercase tracking-widest mt-2 animate-pulse">
               {userMode === 'CARETAKER' ? t('recording.long_seizure_warning') : t('recording.approaching_threshold')}
             </p>
+          )}
+          <div className="flex justify-center mt-4">
+            <button
+              onClick={videoRecording ? onStopVideo : onStartVideo}
+              disabled={!videoSupported && !videoRecording}
+              className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest disabled:opacity-40"
+              style={{
+                backgroundColor: videoRecording ? 'rgba(185,28,28,0.12)' : 'var(--bg-raised)',
+                color: videoRecording ? '#ef4444' : 'var(--text-secondary)',
+                border: `1px solid ${videoRecording ? 'rgba(185,28,28,0.25)' : 'var(--border)'}`,
+              }}
+            >
+              {videoRecording ? t('recording.stop_video', 'Stop Video') : t('recording.start_video', 'Start Video')}
+            </button>
+          </div>
+          {videoError && (
+            <p className="text-[11px] mt-2" style={{ color: '#fca5a5' }}>{videoError}</p>
           )}
         </div>
 

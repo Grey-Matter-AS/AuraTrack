@@ -64,6 +64,18 @@ export function EventCard({ event, onEdit, onDelete, onViewDetail, dangerFlags, 
                 style={{ backgroundColor: 'rgba(99,102,241,0.15)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.3)' }}
               >{t('event_card.manual_entry')}</span>
             )}
+            {event.videoAttached && (
+              <span
+                className="text-[9px] px-1.5 py-0.5 rounded uppercase font-bold"
+                style={{ backgroundColor: 'rgba(14,165,233,0.15)', color: '#38bdf8', border: '1px solid rgba(56,189,248,0.3)' }}
+              >{t('recording.video_badge', 'Video')}</span>
+            )}
+            {event.eegSessionId && (
+              <span
+                className="text-[9px] px-1.5 py-0.5 rounded uppercase font-bold"
+                style={{ backgroundColor: 'rgba(234,179,8,0.15)', color: '#facc15', border: '1px solid rgba(250,204,21,0.25)' }}
+              >{t('eeg.badge', 'EEG')}</span>
+            )}
             {!event.isComplete && (
               <span
                 className="text-[9px] px-1.5 py-0.5 rounded uppercase font-bold"

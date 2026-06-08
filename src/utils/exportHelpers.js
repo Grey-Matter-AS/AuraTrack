@@ -1,7 +1,7 @@
 import { formatCSVField, formatCSVRow } from './formatters';
-import { buildEventLogData, buildNeurologistReportData, buildSeizureDiaryData } from '../reports/builders';
-import { renderEventLogHtml, renderNeurologistReportHtml, renderSeizureDiaryHtml } from '../reports/htmlRenderers';
-import { downloadEventLogPdf, downloadNeurologistReportPdf, downloadSeizureDiaryPdf } from '../reports/pdfRenderers';
+import { buildEventLogData, buildNeurologistReportData, buildSeizureDiaryData, buildEegDiaryReportData } from '../reports/builders';
+import { renderEventLogHtml, renderNeurologistReportHtml, renderSeizureDiaryHtml, renderEegDiaryHtml } from '../reports/htmlRenderers';
+import { downloadEventLogPdf, downloadNeurologistReportPdf, downloadSeizureDiaryPdf, downloadEegDiaryPdf } from '../reports/pdfRenderers';
 
 export const filterEventsByDateRange = (events, fromDateStr, toDateStr) => {
   const from = fromDateStr ? new Date(fromDateStr).setHours(0, 0, 0, 0) : 0;
@@ -9,19 +9,21 @@ export const filterEventsByDateRange = (events, fromDateStr, toDateStr) => {
   return events.filter(event => event.startTime >= from && event.startTime <= to);
 };
 
-export const exportToJSON = async (events, medications = [], medicationLogs = []) => {
+export const exportToJSON = async (events, medications = [], medicationLogs = [], eegSessions = [], eegActivities = []) => {
   const payload = {
-    version: 6,
+    version: 7,
     exportedAt: Date.now(),
     events,
     medications,
     medicationLogs,
+    eegSessions,
+    eegActivities,
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
   return saveFileNative(blob, `auratrack-backup-${dateStamp()}.json`, 'AuraTrack Backup', ['.json']);
 };
 
-export const exportToCSV = async (events, medications = [], medicationLogs = []) => {
+export const exportToCSV = async (events, medications = [], medicationLogs = [], eegSessions = [], eegActivities = []) => {
   const header = 'id,date,time,type,duration,notes';
   const rows = events.map(formatCSVRow).join('\n');
 
@@ -60,6 +62,41 @@ export const exportToCSV = async (events, medications = [], medicationLogs = [])
     ).join('\n');
   }
 
+  if (eegSessions.length > 0) {
+    csv += '\n\nEEG_SESSIONS\nid,startTime,plannedEndTime,actualEndTime,durationPreset,title,status,notes\n';
+    csv += eegSessions.map(session =>
+      [
+        session.id,
+        session.startTime,
+        session.plannedEndTime ?? '',
+        session.actualEndTime ?? '',
+        session.durationPreset ?? '',
+        session.title ?? '',
+        session.status ?? '',
+        session.notes ?? '',
+      ].map(formatCSVField).join(',')
+    ).join('\n');
+  }
+
+  if (eegActivities.length > 0) {
+    csv += '\n\nEEG_ACTIVITIES\nid,sessionId,kind,activityLabel,customActivityText,moodLabel,startTime,endTime,durationSec,linkedEventId,notes\n';
+    csv += eegActivities.map(activity =>
+      [
+        activity.id,
+        activity.sessionId,
+        activity.kind ?? '',
+        activity.activityLabel ?? '',
+        activity.customActivityText ?? '',
+        activity.moodLabel ?? '',
+        activity.startTime,
+        activity.endTime ?? '',
+        activity.durationSec ?? 0,
+        activity.linkedEventId ?? '',
+        activity.notes ?? '',
+      ].map(formatCSVField).join(',')
+    ).join('\n');
+  }
+
   const blob = new Blob([csv], { type: 'text/csv' });
   return saveFileNative(blob, `auratrack-events-${dateStamp()}.csv`, 'AuraTrack CSV Export', ['.csv']);
 };
@@ -79,6 +116,12 @@ export const exportNeurologistReportPDF = async (events, settings = {}, medicati
 
 export const exportSeizureDiaryPDF = async (allEvents, settings = {}, medications = [], month, year) =>
   downloadSeizureDiaryPdf(buildSeizureDiaryData(allEvents, settings, medications, month, year));
+
+export const buildEegDiaryPreview = (session, activities = []) =>
+  renderEegDiaryHtml(buildEegDiaryReportData(session, activities));
+
+export const exportEegDiaryPDF = async (session, activities = []) =>
+  downloadEegDiaryPdf(buildEegDiaryReportData(session, activities));
 
 function dateStamp() {
   return new Date().toISOString().slice(0, 10);

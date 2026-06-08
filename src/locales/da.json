@@ -5,15 +5,24 @@
     "back": "← TILBAGE",
     "help_label": "Hjælp"
   },
-
   "idle": {
     "start": "START",
     "log_past": "+ Registrer tidligere anfald",
     "recent_events": "Seneste hændelser",
     "last_5": "SENESTE 5",
-    "no_events": "Ingen hændelser registreret endnu."
+    "no_events": "Ingen hændelser registreret endnu.",
+    "start_eeg_diary": "Start EEG Diary",
+    "eeg_active": "EEG Diary Active",
+    "eeg_session_default": "EEG monitoring session",
+    "eeg_session_elapsed": "Session elapsed",
+    "end_eeg": "End EEG",
+    "current_activity": "Current activity",
+    "stop_activity": "Stop Activity",
+    "view_log": "View Log",
+    "eeg_no_activity": "No EEG activity running",
+    "start_activity": "Start Activity",
+    "eeg_auto_stop_hint": "If a seizure starts, any active EEG activity is stopped automatically and a seizure reference is added to the EEG log."
   },
-
   "recording": {
     "total_elapsed": "Samlet tid",
     "aura": "Aura",
@@ -29,9 +38,14 @@
     "self_mode": "Selvtilstand aktiveret",
     "long_seizure_warning": "LANGVARIGT ANFALD — FØLG NØJE MED",
     "approaching_threshold": "NÆRMER SIG ADVARSELSTÆRSKLEN",
-    "auto_stop_notice": "Tidtager stopper automatisk ved 12:00"
+    "auto_stop_notice": "Tidtager stopper automatisk ved 12:00",
+    "optional_video": "Optional video",
+    "video_hint": "Start only if it is safe and helpful to capture the seizure.",
+    "start_video": "Start Video",
+    "stop_video": "Stop Video",
+    "video_badge": "Video",
+    "video_error_unavailable": "Camera permission or video recording is not available on this device."
   },
-
   "alert": {
     "medical_alert": "MEDICINSK ADVARSEL",
     "unresponsive": "URESPONSIV",
@@ -43,7 +57,6 @@
     "emergency_contact": "Nødkontakt",
     "elapsed": "Tid"
   },
-
   "tagging": {
     "step1_title": "Trin 1: Anfaldtype",
     "feeling_title": "Hvilken type fornemmelse?",
@@ -51,7 +64,6 @@
     "skip_for_now": "Spring over nu",
     "save_timing_only": "Gem kun tidtagning"
   },
-
   "history": {
     "title": "Historik",
     "events_count": "{{count}} HÆNDELSER",
@@ -64,9 +76,9 @@
     "needs_details": "Mangler detaljer",
     "tab_seizures": "Anfald",
     "tab_medications": "Medicin",
-    "tab_export": "Eksport"
+    "tab_export": "Eksport",
+    "tab_eeg": "EEG Diary"
   },
-
   "export": {
     "title": "Eksport og rapporter",
     "date_range": "Datointerval",
@@ -194,9 +206,11 @@
       "detail_badge_auto_stopped": "AUTOSTOPPET",
       "detail_badge_edited": "REDIGERET",
       "event_number": "Hændelse #{{count}}"
-    }
+    },
+    "eeg_title": "EEG Diary",
+    "eeg_label": "EEG Clinical Table",
+    "eeg_desc": "Export the most recent EEG session as a table-first clinical PDF."
   },
-
   "event_detail": {
     "title": "Hændelsesdetaljer",
     "edit": "Rediger",
@@ -219,9 +233,15 @@
     "danger_prolonged_title": "Langvarigt anfald",
     "danger_prolonged_desc": "Denne hændelse varede mere end 5 minutter. Søg lægehjælp, hvis det ikke allerede er gjort.",
     "danger_cluster_title": "Klynge ×{{count}} / Risiko for status epilepticus",
-    "danger_cluster_desc": "{{count}} anfald forekom inden for 8 minutter. Kontakt omgående en neurolog."
+    "danger_cluster_desc": "{{count}} anfald forekom inden for 8 minutter. Kontakt omgående en neurolog.",
+    "eeg_session": "EEG session",
+    "linked": "Linked",
+    "video_file": "Video file",
+    "saved_to_storage": "Saved to device storage",
+    "associated_video": "Associated video",
+    "saved_seizure_video": "Saved seizure video",
+    "video_saved_hint": "The file is saved in device storage and referenced here for the neurologist record."
   },
-
   "help": {
     "title": "Hjælp",
     "about_btn": "Om AuraTrack",
@@ -276,7 +296,6 @@
       }
     }
   },
-
   "about": {
     "title": "Om",
     "section_about": "Om",
@@ -293,7 +312,6 @@
     "license": "Licens",
     "report_issue": "Rapporter et problem"
   },
-
   "settings": {
     "title": "Indstillinger",
     "badge_caretaker": "PÅRØRENDE",
@@ -351,7 +369,9 @@
       "haptic_help": "Vibration ved knapbetjening (enheden skal understøtte det)",
       "quick_labels": "Genvejsnotatetiketter",
       "quick_labels_help": "Tilpas genvejsknapperne vist under optagelse. Lad feltet stå tomt for at skjule en knap.",
-      "button_n": "Knap {{n}}"
+      "button_n": "Knap {{n}}",
+      "eeg_diary": "Enable EEG Diary",
+      "eeg_diary_help": "Turn this on only when long-term EEG monitoring is needed. The EEG diary controls stay hidden on the idle screen unless enabled."
     },
     "medications": {
       "section": "Medicin",
@@ -453,14 +473,12 @@
       "reinstall_sub": "Tryk, hvis du ved en fejl afviste installationsbanneret"
     }
   },
-
   "delete_modal": {
     "title": "SLET POST?",
     "body": "Denne medicinske registrering vil blive permanent fjernet. Handlingen kan ikke fortrydes.",
     "confirm": "JA, SLET PERMANENT",
     "cancel": "ANNULLER"
   },
-
   "manual_entry": {
     "title": "Registrer tidligere anfald",
     "intro": "Angiv dato, tidspunkt og varighed for anfaldet. Du kan derefter tilføje anfaldtype, symptomer, udløsende faktorer og noter.",
@@ -477,7 +495,6 @@
     "cancel": "Annuller",
     "error_duration": "Den samlede varighed skal være større end 0."
   },
-
   "event_card": {
     "edited": "Redigeret",
     "manual_entry": "Manuel registrering",
@@ -485,7 +502,6 @@
     "delete": "Slet",
     "untagged": "Ikke tagget"
   },
-
   "summary": {
     "save": "Gem",
     "cancel": "Annuller",
@@ -502,5 +518,44 @@
     "total": "Samlet",
     "manual_durations": "Justér varigheder manuelt",
     "remove_symptom": "Fjern"
+  },
+  "eeg": {
+    "title": "EEG Diary",
+    "description": "EEG sessions stay separate from seizure history. Seizures recorded during EEG appear here as linked reference rows.",
+    "report_title": "EEG Diary Report",
+    "start_session": "Start EEG Diary",
+    "start_activity": "Start EEG Activity",
+    "start": "Start",
+    "close": "Close",
+    "cancel": "Cancel",
+    "custom_hours": "Custom hours",
+    "session_label_placeholder": "Session label (optional)",
+    "session_notes_placeholder": "Notes for this EEG session (optional)",
+    "search_activities_placeholder": "Search common activities",
+    "exact_activity_placeholder": "Exact activity details (optional)",
+    "mood_placeholder": "Mood (optional)",
+    "notes_placeholder": "Notes (optional)",
+    "end_active": "End Active EEG",
+    "session_default": "EEG session",
+    "no_sessions": "No EEG sessions yet.",
+    "started": "Started",
+    "no_activities": "No EEG activities logged for this session.",
+    "seizure_reference": "Seizure reference",
+    "activity": "Activity",
+    "mood_label": "Mood",
+    "running": "Running",
+    "edit_seizure_reference": "EEG Seizure Reference",
+    "edit_activity": "Edit EEG Activity",
+    "linked_description": "This entry is linked to the seizure record and keeps its timing from that event.",
+    "save": "Save",
+    "no_mood": "No mood",
+    "duration_seconds": "Duration seconds",
+    "delete": "Delete",
+    "type": "Type",
+    "end": "End",
+    "notes_or_reference": "Notes / Seizure Ref",
+    "seizure_type": "Seizure",
+    "activity_type": "Activity",
+    "badge": "EEG"
   }
 }

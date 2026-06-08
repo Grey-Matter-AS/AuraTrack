@@ -59,6 +59,7 @@ export function describeSymptomPath(symptom = {}) {
 
 export function buildEventLogData(events) {
   const locale = getCurrentLocale();
+  const t = getTranslator();
   const generatedDate = new Date().toLocaleDateString(locale);
 
   return {
@@ -71,7 +72,7 @@ export function buildEventLogData(events) {
       type: event.type || '',
       durationSec: event.duration || 0,
       durationLabel: `${event.duration || 0}s`,
-      notesHtml: (event.notes || '').replace(/\n/g, '<br>'),
+      notesHtml: [event.notes || '', event.videoFileName ? `${t('event_detail.associated_video', 'Associated video')}: ${event.videoFileName}` : ''].filter(Boolean).join('\n').replace(/\n/g, '<br>'),
       symptoms: (event.symptoms || []).map(describeSymptomPath),
     })),
   };
@@ -284,6 +285,7 @@ export function buildNeurologistReportData(events, settings = {}, medications = 
         seizureLabel: formatDurationLabel(phase.seizure),
         recoveryLabel: formatDurationLabel(phase.recovery),
         hasNote: Boolean(event.notes && event.notes.trim()),
+        videoFileName: event.videoFileName || '',
         isEdited: Boolean(event.isEdited),
         userModeAtTime: event.userModeAtTime || '',
       };
@@ -302,6 +304,7 @@ export function buildNeurologistReportData(events, settings = {}, medications = 
         seizureLabel: formatDurationLabel(phase.seizure),
         recoveryLabel: formatDurationLabel(phase.recovery),
         notes: event.notes || '',
+        videoFileName: event.videoFileName || '',
         badges: [
           (event.duration || 0) > 300 ? t('export.docs.detail_badge_over5') : '',
           event.isEmergencyStop ? t('export.docs.detail_badge_auto_stopped') : '',
@@ -413,6 +416,39 @@ export function buildSeizureDiaryData(allEvents, settings = {}, medications = []
       ? medications.map(medication => `${medication.name} ${medication.dose}${medication.unit} ${medication.frequency}`).join(' | ')
       : '',
     generatedDate: new Date().toLocaleDateString(locale),
+  };
+}
+
+export function buildEegDiaryReportData(session, activities = []) {
+  const locale = getCurrentLocale();
+  const t = getTranslator();
+  const generatedDate = new Date().toLocaleDateString(locale);
+  const sessionEnd = session?.actualEndTime || session?.plannedEndTime || null;
+  return {
+    locale,
+    generatedDate,
+    session: session ? {
+      title: session.title || t('idle.eeg_session_default', 'EEG monitoring session'),
+      startLabel: new Date(session.startTime).toLocaleString(locale),
+      endLabel: sessionEnd ? new Date(sessionEnd).toLocaleString(locale) : t('eeg.running', 'Ongoing'),
+      status: session.status || 'ACTIVE',
+      notes: session.notes || '',
+      durationPreset: session.durationPreset || '',
+    } : null,
+    activities: activities.map(activity => ({
+      id: activity.id,
+      kind: activity.kind,
+      activityLabel: activity.activityLabel || '',
+      customActivityText: activity.customActivityText || '',
+      moodLabel: activity.moodLabel || '',
+      notes: activity.notes || '',
+      startLabel: new Date(activity.startTime).toLocaleString(locale),
+      endLabel: activity.endTime ? new Date(activity.endTime).toLocaleString(locale) : 'Running',
+      durationLabel: formatDurationLabel(activity.durationSec || 0),
+      seizureRef: activity.kind === 'SEIZURE_REFERENCE'
+        ? `Event #${activity.linkedEventId || '-'}`
+        : '',
+    })),
   };
 }
 

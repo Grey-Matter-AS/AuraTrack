@@ -30,6 +30,7 @@ const DEFAULTS = {
 
   // Recording
   hapticFeedback: true,
+  eegDiaryEnabled: false,
   quickNoteLabels: ['FELL', 'RESCUE MED', 'NOT RESPONDING', 'FULL BODY', 'LEFT SIDE', 'RIGHT SIDE'],
 
   // Data & Backup

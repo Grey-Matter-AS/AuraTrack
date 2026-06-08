@@ -10,14 +10,16 @@ import {
   buildEventTablePreview,
   buildNeurologistReportPreview,
   buildSeizureDiaryPreview,
+  buildEegDiaryPreview,
   exportEventLogPDF,
   exportNeurologistReportPDF,
   exportSeizureDiaryPDF,
+  exportEegDiaryPDF,
   filterEventsByDateRange,
 } from '../utils/exportHelpers';
 import { useMedications } from '../hooks/useMedications';
 
-export default function ExportView({ onBack, settings = {}, isEmbedded = false }) {
+export default function ExportView({ onBack, settings = {}, isEmbedded = false, eeg = null }) {
   const { t } = useTranslation();
   const [printPreview, setPrintPreview] = useState(null);
   const [fromDate, setFromDate] = useState(
@@ -31,6 +33,16 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false }
   const [diaryMonth, setDiaryMonth] = useState(
     () => new Date().toISOString().slice(0, 7)  // 'YYYY-MM'
   );
+
+  const getEegBundle = async () => {
+    const sessions = eeg ? await eeg.getSessions() : await db.eegSessions.orderBy('startTime').reverse().toArray();
+    const session = sessions[0] || null;
+    const activities = session
+      ? (eeg ? await eeg.getActivitiesForSession(session.id) : (await db.eegActivities.where('sessionId').equals(session.id).sortBy('startTime')).reverse())
+      : [];
+    const allActivities = await db.eegActivities.orderBy('startTime').reverse().toArray();
+    return { sessions, session, activities, allActivities };
+  };
 
   const getEvents = async () => {
     const all = await db.events.orderBy('startTime').reverse().toArray();
@@ -156,7 +168,8 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false }
               const fromMs = new Date(fromDate).setHours(0, 0, 0, 0);
               const toMs   = new Date(toDate).setHours(23, 59, 59, 999);
               const logs   = await getLogsForPeriod(fromMs, toMs);
-              await exportToJSON(events, medications, logs);
+              const eegBundle = await getEegBundle();
+              await exportToJSON(events, medications, logs, eegBundle.sessions, eegBundle.allActivities);
             },
           }]}
         />
@@ -170,7 +183,8 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false }
               const fromMs = new Date(fromDate).setHours(0, 0, 0, 0);
               const toMs   = new Date(toDate).setHours(23, 59, 59, 999);
               const logs   = await getLogsForPeriod(fromMs, toMs);
-              await exportToCSV(events, medications, logs);
+              const eegBundle = await getEegBundle();
+              await exportToCSV(events, medications, logs, eegBundle.sessions, eegBundle.allActivities);
             },
           }]}
         />
@@ -286,6 +300,34 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false }
             </div>
           </div>
         </div>
+
+        <p className="text-[9px] font-black uppercase tracking-[0.3em] px-1 pt-3" style={{ color: 'var(--text-faint)' }}>
+          {t('export.eeg_title', 'EEG Diary')}
+        </p>
+
+        <ExportCard
+          label={t('export.eeg_label', 'EEG Clinical Table')}
+          description={t('export.eeg_desc', 'Export the most recent EEG session as a table-first clinical PDF.')}
+          actions={[
+            {
+              label: t('export.open_preview'),
+              variant: 'secondary',
+              onClick: async () => {
+                const eegBundle = await getEegBundle();
+                if (!eegBundle.session) return;
+                setPrintPreview(buildEegDiaryPreview(eegBundle.session, eegBundle.activities));
+              },
+            },
+            {
+              label: t('export.download_pdf'),
+              onClick: async () => {
+                const eegBundle = await getEegBundle();
+                if (!eegBundle.session) return;
+                await exportEegDiaryPDF(eegBundle.session, eegBundle.activities);
+              },
+            },
+          ]}
+        />
 
       </ContentWrapper>
     </div>

@@ -769,6 +769,9 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
         <Row label={t('settings.recording.haptic')} help={t('settings.recording.haptic_help')}>
           <Toggle value={settings.hapticFeedback} onChange={v => onUpdate('hapticFeedback', v)} label={t('settings.recording.haptic')} />
         </Row>
+        <Row label={t('settings.recording.eeg_diary')} help={t('settings.recording.eeg_diary_help')}>
+          <Toggle value={settings.eegDiaryEnabled} onChange={v => onUpdate('eegDiaryEnabled', v)} label={t('settings.recording.eeg_diary')} />
+        </Row>
         <div>
           <FieldLabel>{t('settings.recording.quick_labels')}</FieldLabel>
           <p className="text-[11px] text-[var(--text-dim)] mb-3">{t('settings.recording.quick_labels_help')}</p>

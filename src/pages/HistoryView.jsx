@@ -7,13 +7,14 @@ import SeizureTrendChart from '../components/SeizureTrendChart';
 import { buildDangerMap } from '../utils/dangerFlags';
 import { Tabs } from '../components/Tabs';
 import { MedicationHistoryTab } from '../components/MedicationHistoryTab';
+import { EEGDiaryTab } from '../components/EEGDiaryTab';
 import ExportView from './ExportView';
 import { ScrollFade } from '../components/ScrollFade';
 
-export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, historyPageSize = 10, settings = {} }) {
+export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, historyPageSize = 10, settings = {}, initialTab = 'seizures', eeg = null }) {
   const { t } = useTranslation();
   const { durationFormat = 'seconds', dateFormat = 'locale', timeFormat = '12h' } = settings;
-  const [activeTab, setActiveTab] = useState('seizures');
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [allEvents, setAllEvents] = useState([]);
   const [page, setPage] = useState(0);
   const [typeFilter, setTypeFilter] = useState('');
@@ -23,6 +24,7 @@ export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, hi
 
   const HISTORY_TABS = [
     { id: 'seizures',    label: t('history.tab_seizures')    },
+    { id: 'eeg',         label: t('history.tab_eeg', 'EEG Diary') },
     { id: 'medications', label: t('history.tab_medications') },
     { id: 'export',      label: t('history.tab_export')      },
   ];
@@ -185,10 +187,23 @@ export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, hi
         </ScrollFade>
       )}
 
+      {activeTab === 'eeg' && eeg && (
+        <ScrollFade wrapperClassName="flex-1">
+          <EEGDiaryTab
+            activeSession={eeg.activeSession}
+            getSessions={eeg.getSessions}
+            getActivitiesForSession={eeg.getActivitiesForSession}
+            onUpdateActivity={eeg.updateActivity}
+            onDeleteActivity={eeg.deleteActivity}
+            onEndSession={eeg.endSession}
+          />
+        </ScrollFade>
+      )}
+
       {/* ── EXPORT TAB ── */}
       {activeTab === 'export' && (
         <ScrollFade wrapperClassName="flex-1">
-          <ExportView isEmbedded settings={settings} />
+          <ExportView isEmbedded settings={settings} eeg={eeg} />
         </ScrollFade>
       )}
 

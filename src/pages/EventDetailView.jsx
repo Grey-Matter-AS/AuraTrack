@@ -173,6 +173,18 @@ export default function EventDetailView({ eventId, onEdit, onClose, durationForm
                 <span className="font-medium" style={{ color: 'var(--text-primary)' }}>{v}</span>
               </div>
             ))}
+              {event.eegSessionId && (
+                <div className="flex justify-between">
+                  <span style={{ color: 'var(--text-dim)' }}>{t('event_detail.eeg_session', 'EEG session')}</span>
+                  <span className="font-medium text-xs uppercase" style={{ color: 'var(--accent)' }}>{t('event_detail.linked', 'Linked')}</span>
+                </div>
+              )}
+              {event.videoAttached && (
+                <div className="flex justify-between gap-3">
+                  <span style={{ color: 'var(--text-dim)' }}>{t('event_detail.video_file', 'Video file')}</span>
+                  <span className="font-medium text-right break-all" style={{ color: 'var(--text-primary)' }}>{event.videoFileName || t('event_detail.saved_to_storage', 'Saved to device storage')}</span>
+                </div>
+              )}
 	            {event.isEdited && (
 	              <div className="flex justify-between">
 	                <span style={{ color: 'var(--text-dim)' }}>{t('event_detail.status')}</span>
@@ -247,6 +259,21 @@ export default function EventDetailView({ eventId, onEdit, onClose, durationForm
           <div className="p-5 rounded-2xl" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
             <p className="text-[10px] font-black uppercase tracking-widest mb-3" style={{ color: 'var(--text-dim)' }}>{t('event_detail.notes')}</p>
             <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--text-primary)' }}>{event.notes}</p>
+          </div>
+        )}
+
+        {event.videoAttached && (
+          <div className="p-5 rounded-2xl" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
+            <p className="text-[10px] font-black uppercase tracking-widest mb-3" style={{ color: 'var(--text-dim)' }}>{t('event_detail.associated_video', 'Associated video')}</p>
+            <div className="space-y-2 text-sm">
+              <p style={{ color: 'var(--text-primary)' }}>{event.videoFileName || t('event_detail.saved_seizure_video', 'Saved seizure video')}</p>
+              {event.videoDurationSec ? (
+                <p style={{ color: 'var(--text-dim)' }}>{t('export.docs.duration')}: {fmtDur(event.videoDurationSec)}</p>
+              ) : null}
+              <p style={{ color: 'var(--text-dim)' }}>
+                {t('event_detail.video_saved_hint', 'The file is saved in device storage and referenced here for the neurologist record.')}
+              </p>
+            </div>
           </div>
         )}
 

@@ -12,6 +12,8 @@ import { useWakeLock } from './hooks/useWakeLock';
 import { useMedications } from './hooks/useMedications';
 import { useNotifications } from './hooks/useNotifications';
 import { useAutoBackup } from './hooks/useAutoBackup';
+import { useEegDiary } from './hooks/useEegDiary';
+import { useVideoRecorder } from './hooks/useVideoRecorder';
 import { getVisibleDosesForPanel } from './utils/medicationSchedule';
 import { PWAInstallBanner } from './components/PWAInstallBanner';
 import { ManualEntrySheet } from './components/ManualEntrySheet';
@@ -72,6 +74,7 @@ function App() {
   const [allMedLogs, setAllMedLogs] = useState([]);
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [syncModal, setSyncModal] = useState({ open: false, connectToken: null, offerSDP: null });
+  const [historyInitialTab, setHistoryInitialTab] = useState('seizures');
 
   const timer = useEventTimer();
   const history = useEventHistory();
@@ -82,6 +85,8 @@ function App() {
   const [wakeLockUnsupported, setWakeLockUnsupported] = useState(false);
   const meds = useMedications();
   const notifications = useNotifications();
+  const eeg = useEegDiary();
+  const video = useVideoRecorder();
   const stoppingRef = useRef(false);
 
   const showToast = (msg) => {
@@ -178,7 +183,13 @@ function App() {
     notifications.scheduleForToday(meds.medications);
   }, [meds.medications]);
 
-  const handleStart = () => { wizard.reset(); timer.startTimer(); setStatus('RECORDING'); };
+  const handleStart = async () => {
+    wizard.reset();
+    video.reset();
+    const seizureStartTime = timer.startTimer();
+    await eeg.stopForSeizureStart(seizureStartTime);
+    setStatus('RECORDING');
+  };
 
   const handleManualCreate = async ({ date, time, durationSec, manualDurations }) => {
     try {
@@ -196,6 +207,8 @@ function App() {
         editLog: [],
         userModeAtTime: settings.userMode,
         isManualEntry: true,
+        eegSessionId: eeg.activeSession?.id || null,
+        eegSessionUuid: eeg.activeSession?.uuid || '',
       });
       wizard.loadForManualEntry(id, manualDurations, { date, time });
       setShowManualEntry(false);
@@ -210,9 +223,22 @@ function App() {
     if (stoppingRef.current) return;
     stoppingRef.current = true;
     try {
+      const savedVideo = video.isRecording ? await video.stop() : video.savedVideo;
       const ev = timer.stopTimer();
       if (!ev) return;
-      const id = await db.events.add({ uuid: crypto.randomUUID(), ...ev, type: 'Uncategorized', isComplete: false, editLog: [], userModeAtTime: settings.userMode });
+      const eventPayload = {
+        uuid: crypto.randomUUID(),
+        ...ev,
+        type: 'Uncategorized',
+        isComplete: false,
+        editLog: [],
+        userModeAtTime: settings.userMode,
+        eegSessionId: eeg.activeSession?.id || null,
+        eegSessionUuid: eeg.activeSession?.uuid || '',
+        ...(savedVideo || { videoAttached: false }),
+      };
+      const id = await db.events.add(eventPayload);
+      await eeg.addSeizureReference({ id, ...eventPayload });
       wizard.setActiveEvent(id);
       setStatus('TAGGING');
     } catch (err) {
@@ -227,7 +253,12 @@ function App() {
 
   const handleSave = async () => {
     try {
+      const targetId = wizard.activeEventId;
       await wizard.handleFinalSave();
+      if (targetId) {
+        const event = await db.events.get(targetId);
+        if (event?.eegSessionId) await eeg.addSeizureReference(event);
+      }
       await history.load();
       setStatus('IDLE');
     } catch (err) {
@@ -238,7 +269,12 @@ function App() {
 
   const handleSkipTagging = async () => {
     try {
+      const targetId = wizard.activeEventId;
       await wizard.handleDeferredSave();
+      if (targetId) {
+        const event = await db.events.get(targetId);
+        if (event?.eegSessionId) await eeg.addSeizureReference(event);
+      }
       await history.load();
       setStatus('IDLE');
     } catch (err) {
@@ -251,6 +287,7 @@ function App() {
     if (wizard.activeEventId && !wizard.editingId) {
       await db.events.delete(wizard.activeEventId).catch(() => {});
     }
+    video.reset();
     wizard.reset();
     setStatus('IDLE');
   };
@@ -271,9 +308,10 @@ function App() {
     if (stoppingRef.current) return;
     stoppingRef.current = true;
     try {
+      const savedVideo = video.isRecording ? await video.stop() : video.savedVideo;
       const ev = timer.stopTimer();
       if (!ev) { setStatus('IDLE'); return; }
-      await db.events.add({
+      const eventPayload = {
         uuid: crypto.randomUUID(),
         ...ev,
         type: 'Uncategorized',
@@ -282,7 +320,12 @@ function App() {
         userModeAtTime: settings.userMode,
         notes: 'PATIENT UNRESPONSIVE — all timers automatically stopped at 12 minutes.',
         isEmergencyStop: true,
-      });
+        eegSessionId: eeg.activeSession?.id || null,
+        eegSessionUuid: eeg.activeSession?.uuid || '',
+        ...(savedVideo || { videoAttached: false }),
+      };
+      const id = await db.events.add(eventPayload);
+      await eeg.addSeizureReference({ id, ...eventPayload });
       wizard.reset();
       await history.load();
       setStatus('IDLE');
@@ -341,10 +384,10 @@ function App() {
       )}
 
       <div className="flex-1 flex flex-col items-center px-3 overflow-hidden pb-8">
-        {status === 'IDLE'         && <IdleView history={history.history} fullHistory={fullHistory} onStart={handleStart} onManualEntry={() => setShowManualEntry(true)} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail} medicationGroups={medicationGroups} allActiveMedications={allActiveMedications} onSaveDoses={handleSaveDoses} durationFormat={settings.durationFormat} dateFormat={settings.dateFormat} timeFormat={settings.timeFormat} />}
-        {status === 'RECORDING'    && <RecordingView elapsed={timer.elapsed} startTime={timer.startTime} laps={timer.laps} onLap={timer.recordLap} onStop={handleStop} onEmergencyStop={handleEmergencyStop} onQuickNote={l => wizard.addQuickNote(l, timer.elapsed)} userMode={settings.userMode} quickNoteLabels={activeQuickNoteLabels} emergencyMedications={emergencyMedications} neurologistName={settings.neurologistName} neurologistContact={settings.neurologistContact} emergencyContact={settings.emergencyContact} durationFormat={settings.durationFormat} />}
+        {status === 'IDLE'         && <IdleView history={history.history} fullHistory={fullHistory} onStart={handleStart} onManualEntry={() => setShowManualEntry(true)} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail} medicationGroups={medicationGroups} allActiveMedications={allActiveMedications} onSaveDoses={handleSaveDoses} durationFormat={settings.durationFormat} dateFormat={settings.dateFormat} timeFormat={settings.timeFormat} eegSession={eeg.activeSession} eegCurrentActivity={eeg.currentActivity} onStartEegSession={eeg.startSession} onEndEegSession={eeg.endSession} onStartEegActivity={eeg.startActivity} onStopEegActivity={eeg.stopActivity} onOpenEegDiary={() => { setHistoryInitialTab('eeg'); setStatus('HISTORY'); }} eegDiaryEnabled={settings.eegDiaryEnabled} />}
+        {status === 'RECORDING'    && <RecordingView elapsed={timer.elapsed} startTime={timer.startTime} laps={timer.laps} onLap={timer.recordLap} onStop={handleStop} onEmergencyStop={handleEmergencyStop} onQuickNote={l => wizard.addQuickNote(l, timer.elapsed)} userMode={settings.userMode} quickNoteLabels={activeQuickNoteLabels} emergencyMedications={emergencyMedications} neurologistName={settings.neurologistName} neurologistContact={settings.neurologistContact} emergencyContact={settings.emergencyContact} durationFormat={settings.durationFormat} onStartVideo={async () => { const result = await video.start({ seizureStartTime: timer.startTime, seizureStartLabel: timer.startTime ? new Date(timer.startTime).toLocaleString() : new Date().toLocaleString() }); if (!result?.ok) showToast(video.error || 'Unable to start video recording.'); }} onStopVideo={async () => { await video.stop(); }} videoRecording={video.isRecording} videoSupported={video.isSupported} videoError={video.error} previewStream={video.previewStream} />}
         {status === 'TAGGING'      && <TaggingView {...wizard} elapsed={timer.elapsed} laps={timer.laps} startTime={timer.startTime} onSave={handleSave} onSkip={handleSkipTagging} onCancel={handleCancel} durationFormat={settings.durationFormat} />}
-        {status === 'HISTORY'      && <HistoryView onBack={() => setStatus('IDLE')} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail} historyPageSize={settings.historyPageSize} settings={settings} />}
+        {status === 'HISTORY'      && <HistoryView onBack={() => setStatus('IDLE')} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail} historyPageSize={settings.historyPageSize} settings={settings} initialTab={historyInitialTab} eeg={eeg} />}
         {status === 'SETTINGS'     && <SettingsView settings={settings} onUpdate={updateSettings} onReset={resetSettings} onBack={() => setStatus('IDLE')} pwa={pwa} notificationPermission={notifications.permission} onRequestNotificationPermission={async () => { const p = await notifications.requestPermission(); if (p === 'granted') notifications.scheduleForToday(meds.medications); }} onSync={() => setSyncModal({ open: true, connectToken: null, offerSDP: null })} />}
         {status === 'EVENT_DETAIL' && <EventDetailView eventId={detailEventId} onEdit={handleEdit} onClose={() => setStatus(previousStatus)} durationFormat={settings.durationFormat} dateFormat={settings.dateFormat} timeFormat={settings.timeFormat} />}
         {status === 'HELP'         && <HelpView onBack={() => setStatus('IDLE')} onAbout={goToAbout} />}

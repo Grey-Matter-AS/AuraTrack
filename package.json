@@ -8,7 +8,11 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:e2e:chromium": "TMPDIR=/tmp playwright test --project=chromium",
+    "test:e2e:mobile": "TMPDIR=/tmp playwright test --project=webkit-mobile",
+    "test:e2e": "TMPDIR=/tmp playwright test",
+    "test:e2e:headed": "TMPDIR=/tmp playwright test --headed"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -33,6 +37,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.54.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",

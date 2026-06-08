@@ -64,3 +64,21 @@ db.version(8).stores({
     if (Object.keys(updates).length) await logsTable.update(log.id, updates);
   }
 });
+
+db.version(9).stores({
+  events: '++id, uuid, startTime, date, type, isComplete, isEdited, notes, eegSessionId, videoAttached',
+  settings: 'key',
+  medications: '++id, uuid',
+  medicationLogs: '++id, uuid, medicationId, medicationUuid, takenAt, scheduledTime',
+  eegSessions: '++id, uuid, startTime, status, actualEndTime',
+  eegActivities: '++id, uuid, sessionId, kind, startTime, endTime, linkedEventId, isEdited'
+}).upgrade(async tx => {
+  const eventTable = tx.table('events');
+  const events = await eventTable.toArray();
+  for (const event of events) {
+    const updates = {};
+    if (!event.uuid) updates.uuid = makeUUID();
+    if (event.videoAttached == null) updates.videoAttached = false;
+    if (Object.keys(updates).length) await eventTable.update(event.id, updates);
+  }
+});

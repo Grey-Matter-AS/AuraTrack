@@ -6,7 +6,7 @@ export function renderEventLogHtml(data) {
   const t = translator();
   const styles = buildPreviewStyles(`
     .auratrack-simple-report {
-      font-family: 'SFMono-Regular', 'Cascadia Mono', 'Roboto Mono', monospace;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
       color: #111827;
       font-size: 12px;
     }
@@ -118,7 +118,7 @@ export function renderNeurologistReportHtml(data) {
     .auratrack-neuro-report .chart-wrap svg { width: 100%; height: auto; display: block; }
     .auratrack-neuro-report .stat-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 14px; }
     .auratrack-neuro-report .stat-card { background: #1e293b; border-radius: 6px; padding: 10px 8px; text-align: center; color: #fff; }
-    .auratrack-neuro-report .stat-value { font-size: 20px; font-weight: 900; font-family: monospace; }
+    .auratrack-neuro-report .stat-value { font-size: 20px; font-weight: 900; }
     .auratrack-neuro-report .stat-label { font-size: 8px; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; margin-top: 2px; }
     .auratrack-neuro-report .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
     .auratrack-neuro-report .meta-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 9px 11px; }
@@ -132,7 +132,7 @@ export function renderNeurologistReportHtml(data) {
     .auratrack-neuro-report .ctx-value { font-size: 10px; font-weight: 600; color: #374151; margin-top: 2px; }
     .auratrack-neuro-report .qual-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 8px; }
     .auratrack-neuro-report .qual-item { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px; text-align: center; }
-    .auratrack-neuro-report .qual-num { font-size: 18px; font-weight: 900; font-family: monospace; color: #1e293b; }
+    .auratrack-neuro-report .qual-num { font-size: 18px; font-weight: 900; color: #1e293b; }
     .auratrack-neuro-report .qual-label { font-size: 8px; text-transform: uppercase; color: #9ca3af; font-weight: 700; margin-top: 2px; }
     .auratrack-neuro-report .disclaimer { font-size: 9px; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 8px; margin-top: 14px; }
   `);
@@ -398,6 +398,89 @@ export function renderSeizureDiaryHtml(data) {
 
   return {
     title: `AuraTrack Seizure Diary - ${data.monthName}`,
+    styles,
+    html,
+  };
+}
+
+export function renderEegDiaryHtml(data) {
+  const t = translator();
+  const styles = buildPreviewStyles(`
+    .auratrack-eeg-report {
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      color: #111827;
+      font-size: 11px;
+    }
+    .auratrack-eeg-report table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+    .auratrack-eeg-report th,
+    .auratrack-eeg-report td {
+      border: 1px solid #d1d5db;
+      padding: 6px 8px;
+      text-align: left;
+      vertical-align: top;
+      overflow-wrap: anywhere;
+    }
+    .auratrack-eeg-report th {
+      background: #1e293b;
+      color: #fff;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+  `);
+
+  const html = `
+    <div class="auratrack-eeg-report">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;border-bottom:3px solid #dc2626;padding-bottom:8px;gap:12px">
+        <div>
+          <div style="font-size:8px;font-weight:900;letter-spacing:0.4em;color:#dc2626;text-transform:uppercase">AuraTrack</div>
+          <div style="font-size:18px;font-weight:900;letter-spacing:-0.3px">${esc(t('eeg.report_title', 'EEG Diary Report'))}</div>
+          <div style="font-size:10px;color:#6b7280;margin-top:4px">${esc(t('export.docs.generated'))}: ${esc(data.generatedDate)}</div>
+        </div>
+        ${data.session ? `<div style="text-align:right;font-size:10px;color:#374151">
+          <div><strong>${esc(data.session.title)}</strong></div>
+          <div>${esc(data.session.startLabel)} - ${esc(data.session.endLabel)}</div>
+          <div>${esc(data.session.status)}</div>
+        </div>` : ''}
+      </div>
+
+      ${data.session?.notes ? `<div style="margin-bottom:10px;padding:8px 10px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px">${esc(data.session.notes)}</div>` : ''}
+
+      <table>
+        <thead>
+          <tr>
+            <th>${esc(t('eeg.type', 'Type'))}</th>
+            <th>${esc(t('eeg.activity', 'Activity'))}</th>
+            <th>${esc(t('eeg.mood_label', 'Mood'))}</th>
+            <th>${esc(t('eeg.started', 'Started'))}</th>
+            <th>${esc(t('eeg.end', 'End'))}</th>
+            <th>${esc(t('export.docs.duration'))}</th>
+            <th>${esc(t('eeg.notes_or_reference', 'Notes / Seizure Ref'))}</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data.activities.length
+            ? data.activities.map(activity => `<tr>
+                <td>${esc(activity.kind === 'SEIZURE_REFERENCE' ? t('eeg.seizure_type', 'Seizure') : t('eeg.activity_type', 'Activity'))}</td>
+                <td>${esc([activity.activityLabel, activity.customActivityText].filter(Boolean).join(' - '))}</td>
+                <td>${esc(activity.moodLabel || '-')}</td>
+                <td>${esc(activity.startLabel)}</td>
+                <td>${esc(activity.endLabel)}</td>
+                <td>${esc(activity.durationLabel)}</td>
+                <td>${esc(activity.seizureRef || activity.notes || '-')}</td>
+              </tr>`).join('')
+            : `<tr><td colspan="7" style="color:#9ca3af">${esc(t('eeg.no_activities', 'No EEG activities logged for this session.'))}</td></tr>`}
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  return {
+    title: `AuraTrack ${t('eeg.report_title', 'EEG Diary Report')}`,
     styles,
     html,
   };

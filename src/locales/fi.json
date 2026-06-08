@@ -5,15 +5,24 @@
     "back": "← TAKAISIN",
     "help_label": "Ohje"
   },
-
   "idle": {
     "start": "ALOITA",
     "log_past": "+ Kirjaa mennyt kohtaus",
     "recent_events": "Viimeisimmät tapahtumat",
     "last_5": "VIIMEISET 5",
-    "no_events": "Ei vielä kirjattuja tapahtumia."
+    "no_events": "Ei vielä kirjattuja tapahtumia.",
+    "start_eeg_diary": "Start EEG Diary",
+    "eeg_active": "EEG Diary Active",
+    "eeg_session_default": "EEG monitoring session",
+    "eeg_session_elapsed": "Session elapsed",
+    "end_eeg": "End EEG",
+    "current_activity": "Current activity",
+    "stop_activity": "Stop Activity",
+    "view_log": "View Log",
+    "eeg_no_activity": "No EEG activity running",
+    "start_activity": "Start Activity",
+    "eeg_auto_stop_hint": "If a seizure starts, any active EEG activity is stopped automatically and a seizure reference is added to the EEG log."
   },
-
   "recording": {
     "total_elapsed": "Kulunut aika",
     "aura": "Aura",
@@ -29,9 +38,14 @@
     "self_mode": "Omatila käytössä",
     "long_seizure_warning": "PITKÄ KOHTAUS — TARKKAILE TIIVIISTI",
     "approaching_threshold": "LÄHESTYMÄSSÄ HÄLYTYSRAJAA",
-    "auto_stop_notice": "Ajastin pysähtyy automaattisesti kello 12:00"
+    "auto_stop_notice": "Ajastin pysähtyy automaattisesti kello 12:00",
+    "optional_video": "Optional video",
+    "video_hint": "Start only if it is safe and helpful to capture the seizure.",
+    "start_video": "Start Video",
+    "stop_video": "Stop Video",
+    "video_badge": "Video",
+    "video_error_unavailable": "Camera permission or video recording is not available on this device."
   },
-
   "alert": {
     "medical_alert": "LÄÄKETIETEELLINEN HÄLYTYS",
     "unresponsive": "EI REAGOI",
@@ -43,7 +57,6 @@
     "emergency_contact": "Hätäyhteyshenkilö",
     "elapsed": "Kulunut"
   },
-
   "tagging": {
     "step1_title": "Vaihe 1: Kohtaustyyppi",
     "feeling_title": "Minkälainen tunne?",
@@ -51,7 +64,6 @@
     "skip_for_now": "Ohita nyt",
     "save_timing_only": "Tallenna vain ajoitus"
   },
-
   "history": {
     "title": "Historia",
     "events_count": "{{count}} TAPAHTUMAA",
@@ -64,9 +76,9 @@
     "needs_details": "Tarvitsee tiedot",
     "tab_seizures": "Kohtaukset",
     "tab_medications": "Lääkkeet",
-    "tab_export": "Vie"
+    "tab_export": "Vie",
+    "tab_eeg": "EEG Diary"
   },
-
   "export": {
     "title": "Vienti & Raportit",
     "date_range": "Päivämääräväli",
@@ -194,9 +206,11 @@
       "detail_badge_auto_stopped": "AUTOPYSÄYTETTY",
       "detail_badge_edited": "MUOKATTU",
       "event_number": "Tapahtuma #{{count}}"
-    }
+    },
+    "eeg_title": "EEG Diary",
+    "eeg_label": "EEG Clinical Table",
+    "eeg_desc": "Export the most recent EEG session as a table-first clinical PDF."
   },
-
   "event_detail": {
     "title": "Tapahtuman tiedot",
     "edit": "Muokkaa",
@@ -219,9 +233,15 @@
     "danger_prolonged_title": "Pitkittynyt kohtaus",
     "danger_prolonged_desc": "Tämä tapahtuma kesti yli 5 minuuttia. Hakeudu lääkärin arvioon, jos sitä ei ole vielä tehty.",
     "danger_cluster_title": "Ryväs ×{{count}} / Status epilepticuksen riski",
-    "danger_cluster_desc": "{{count}} kohtausta 8 minuutin sisällä. Ota välittömästi yhteyttä neurologiin."
+    "danger_cluster_desc": "{{count}} kohtausta 8 minuutin sisällä. Ota välittömästi yhteyttä neurologiin.",
+    "eeg_session": "EEG session",
+    "linked": "Linked",
+    "video_file": "Video file",
+    "saved_to_storage": "Saved to device storage",
+    "associated_video": "Associated video",
+    "saved_seizure_video": "Saved seizure video",
+    "video_saved_hint": "The file is saved in device storage and referenced here for the neurologist record."
   },
-
   "help": {
     "title": "Ohje",
     "about_btn": "Tietoja AuraTrackistä",
@@ -276,7 +296,6 @@
       }
     }
   },
-
   "about": {
     "title": "Tietoja",
     "section_about": "Tietoja",
@@ -293,7 +312,6 @@
     "license": "Lisenssi",
     "report_issue": "Ilmoita ongelmasta"
   },
-
   "settings": {
     "title": "Asetukset",
     "badge_caretaker": "HOITAJA",
@@ -351,7 +369,9 @@
       "haptic_help": "Värinä painikkeita painettaessa (laitteen on tuettava sitä)",
       "quick_labels": "Pikanäppäinten nimet",
       "quick_labels_help": "Mukauta kirjauksen aikana näytettäviä pikavalintapainikkeita. Jätä tyhjäksi piilottaaksesi painikkeen.",
-      "button_n": "Painike {{n}}"
+      "button_n": "Painike {{n}}",
+      "eeg_diary": "Enable EEG Diary",
+      "eeg_diary_help": "Turn this on only when long-term EEG monitoring is needed. The EEG diary controls stay hidden on the idle screen unless enabled."
     },
     "medications": {
       "section": "Lääkkeet",
@@ -453,14 +473,12 @@
       "reinstall_sub": "Napauta jos hylkäsit asennusbannerin vahingossa"
     }
   },
-
   "delete_modal": {
     "title": "POISTA TIETUE?",
     "body": "Tämä lääketieteellinen merkintä poistetaan pysyvästi. Toimintoa ei voi peruuttaa.",
     "confirm": "KYLLÄ, POISTA PYSYVÄSTI",
     "cancel": "PERUUTA"
   },
-
   "manual_entry": {
     "title": "Kirjaa mennyt kohtaus",
     "intro": "Syötä kohtauksen päivämäärä, aika ja kesto. Voit sitten lisätä kohtauksen tyypin, oireet, laukaisijat ja muistiinpanot.",
@@ -477,7 +495,6 @@
     "cancel": "Peruuta",
     "error_duration": "Kokonaiskeston on oltava suurempi kuin 0."
   },
-
   "event_card": {
     "edited": "Muokattu",
     "manual_entry": "Manuaalinen kirjaus",
@@ -485,7 +502,6 @@
     "delete": "Poista",
     "untagged": "Merkitsemätön"
   },
-
   "summary": {
     "save": "Tallenna",
     "cancel": "Peruuta",
@@ -502,5 +518,44 @@
     "total": "Yhteensä",
     "manual_durations": "Säädä kestoja manuaalisesti",
     "remove_symptom": "Poista"
+  },
+  "eeg": {
+    "title": "EEG Diary",
+    "description": "EEG sessions stay separate from seizure history. Seizures recorded during EEG appear here as linked reference rows.",
+    "report_title": "EEG Diary Report",
+    "start_session": "Start EEG Diary",
+    "start_activity": "Start EEG Activity",
+    "start": "Start",
+    "close": "Close",
+    "cancel": "Cancel",
+    "custom_hours": "Custom hours",
+    "session_label_placeholder": "Session label (optional)",
+    "session_notes_placeholder": "Notes for this EEG session (optional)",
+    "search_activities_placeholder": "Search common activities",
+    "exact_activity_placeholder": "Exact activity details (optional)",
+    "mood_placeholder": "Mood (optional)",
+    "notes_placeholder": "Notes (optional)",
+    "end_active": "End Active EEG",
+    "session_default": "EEG session",
+    "no_sessions": "No EEG sessions yet.",
+    "started": "Started",
+    "no_activities": "No EEG activities logged for this session.",
+    "seizure_reference": "Seizure reference",
+    "activity": "Activity",
+    "mood_label": "Mood",
+    "running": "Running",
+    "edit_seizure_reference": "EEG Seizure Reference",
+    "edit_activity": "Edit EEG Activity",
+    "linked_description": "This entry is linked to the seizure record and keeps its timing from that event.",
+    "save": "Save",
+    "no_mood": "No mood",
+    "duration_seconds": "Duration seconds",
+    "delete": "Delete",
+    "type": "Type",
+    "end": "End",
+    "notes_or_reference": "Notes / Seizure Ref",
+    "seizure_type": "Seizure",
+    "activity_type": "Activity",
+    "badge": "EEG"
   }
 }

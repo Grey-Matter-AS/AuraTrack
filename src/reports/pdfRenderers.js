@@ -445,6 +445,61 @@ export async function downloadSeizureDiaryPdf(data) {
   return savePdfDocument(doc, `auratrack-seizure-diary-${data.year}-${String(data.month).padStart(2, '0')}.pdf`);
 }
 
+export async function downloadEegDiaryPdf(data) {
+  const t = translator();
+  const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+  const margin = 40;
+  drawBrandHeader(doc, {
+    margin,
+    top: 26,
+    title: t('eeg.report_title', 'EEG Diary Report'),
+    subtitleLines: [`${t('export.docs.generated')}: ${data.generatedDate}`],
+    rightTitle: data.session?.status || '',
+    rightValue: data.session?.title || '',
+    rightMeta: data.session ? [`${data.session.startLabel} - ${data.session.endLabel}`] : [],
+  });
+
+  if (data.session?.notes) {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(...COLORS.muted);
+    const split = doc.splitTextToSize(data.session.notes, doc.internal.pageSize.getWidth() - margin * 2);
+    doc.text(split, margin, 98);
+  }
+
+  autoTable(doc, {
+    startY: data.session?.notes ? 120 : 92,
+    margin: { left: margin, right: margin },
+    theme: 'grid',
+    styles: { fontSize: 8, cellPadding: 5, overflow: 'linebreak', textColor: COLORS.ink, valign: 'top' },
+    alternateRowStyles: { fillColor: [252, 252, 253] },
+    headStyles: { fillColor: COLORS.slate, textColor: 255, fontStyle: 'bold' },
+    head: [[
+      t('eeg.type', 'Type'),
+      t('eeg.activity', 'Activity'),
+      t('eeg.mood_label', 'Mood'),
+      t('eeg.started', 'Started'),
+      t('eeg.end', 'End'),
+      t('export.docs.duration'),
+      t('eeg.notes_or_reference', 'Notes / Seizure Ref'),
+    ]],
+    body: data.activities.length
+      ? data.activities.map(activity => [
+          activity.kind === 'SEIZURE_REFERENCE' ? t('eeg.seizure_type', 'Seizure') : t('eeg.activity_type', 'Activity'),
+          [activity.activityLabel, activity.customActivityText].filter(Boolean).join(' - '),
+          activity.moodLabel || '-',
+          activity.startLabel,
+          activity.endLabel,
+          activity.durationLabel,
+          activity.seizureRef || activity.notes || '-',
+        ])
+      : [['-', t('eeg.no_activities', 'No EEG activities logged for this session.'), '-', '-', '-', '-', '-']],
+  });
+
+  addPageNumbers(doc);
+  return savePdfDocument(doc, `auratrack-eeg-diary-${dateStamp()}.pdf`);
+}
+
 function drawSectionTitle(doc, title, x, y, lineEndX) {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10);
