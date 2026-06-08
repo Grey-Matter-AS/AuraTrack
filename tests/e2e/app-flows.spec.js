@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { seedAuraTrackState } from './support/auraTrackDb';
+import { countStoreRows, seedAuraTrackState } from './support/auraTrackDb';
 import { createRichCaretakerScenario } from './support/scenarios';
 
 test.describe('AuraTrack app flows', () => {
@@ -64,5 +64,20 @@ test.describe('AuraTrack app flows', () => {
     await page.getByRole('button', { name: 'HISTORY' }).click();
     await expect(page.getByText('Uncategorized')).toBeVisible();
     await expect(page.getByText('Manual Entry')).toBeVisible();
+  });
+
+  test('removes a seizure from history immediately after delete confirmation', async ({ page }) => {
+    await seedAuraTrackState(page, createRichCaretakerScenario());
+    await page.goto('/');
+
+    await page.getByRole('button', { name: 'HISTORY' }).click();
+    await expect(page.getByText('Tonic-Clonic')).toBeVisible();
+
+    await page.locator('button', { hasText: 'Delete' }).nth(0).click();
+    await page.getByRole('button', { name: 'YES, DELETE PERMANENTLY' }).click();
+
+    await expect(page.getByText('Tonic-Clonic')).not.toBeVisible();
+    await expect(page.getByText('1 EVENTS')).toBeVisible();
+    await expect.poll(async () => countStoreRows(page, 'events')).toBe(1);
   });
 });

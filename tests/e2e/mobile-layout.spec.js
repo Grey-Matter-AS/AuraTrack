@@ -54,4 +54,28 @@ test.describe('AuraTrack mobile layout', () => {
     expect(layout.actionRect).not.toBeNull();
     expect(layout.actionRect.top).toBeGreaterThanOrEqual(layout.monthRect.bottom);
   });
+
+  test('keeps the stop button reachable on small mobile recording screens', async ({ page, isMobile }) => {
+    test.skip(!isMobile, 'Mobile-only coverage for recording layout.');
+
+    await page.goto('/');
+    await page.getByRole('button', { name: 'START' }).click();
+
+    const layout = await page.evaluate(() => {
+      const stopButton = Array.from(document.querySelectorAll('button')).find(button => button.textContent?.trim() === 'STOP');
+      const rect = stopButton?.getBoundingClientRect();
+
+      return rect
+        ? {
+            top: rect.top,
+            bottom: rect.bottom,
+            viewportHeight: window.innerHeight,
+            scrollHeight: document.documentElement.scrollHeight,
+          }
+        : null;
+    });
+
+    expect(layout).not.toBeNull();
+    expect(layout.bottom).toBeLessThanOrEqual(layout.viewportHeight);
+  });
 });

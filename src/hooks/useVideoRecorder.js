@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import i18n from '../i18n';
 
 function supportedMimeType() {
@@ -54,6 +54,8 @@ export function useVideoRecorder() {
   const [error, setError] = useState('');
   const [savedVideo, setSavedVideo] = useState(null);
   const [permissionState, setPermissionState] = useState('idle');
+  const [availableCameras, setAvailableCameras] = useState([]);
+  const [activeCameraId, setActiveCameraId] = useState('');
   const mediaStreamRef = useRef(null);
   const recorderRef = useRef(null);
   const canvasRef = useRef(null);
@@ -61,13 +63,31 @@ export function useVideoRecorder() {
   const animationRef = useRef(null);
   const chunksRef = useRef([]);
   const startedAtRef = useRef(0);
+  const drawStateRef = useRef(null);
 
   useEffect(() => () => {
     if (animationRef.current) cancelAnimationFrame(animationRef.current);
     mediaStreamRef.current?.getTracks().forEach(track => track.stop());
   }, []);
 
-  const clearPreview = () => {
+  const refreshCameraList = useCallback(async (currentStream = mediaStreamRef.current) => {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const cameras = devices.filter(device => device.kind === 'videoinput');
+      const currentTrack = currentStream?.getVideoTracks?.()[0];
+      const currentDeviceId = currentTrack?.getSettings?.().deviceId || '';
+      setAvailableCameras(cameras);
+      setActiveCameraId(currentDeviceId || cameras[0]?.deviceId || '');
+      return cameras;
+    } catch (err) {
+      console.error('Failed to enumerate cameras:', err);
+      setAvailableCameras([]);
+      setActiveCameraId('');
+      return [];
+    }
+  }, []);
+
+  const clearPreview = useCallback(() => {
     if (animationRef.current) cancelAnimationFrame(animationRef.current);
     animationRef.current = null;
     mediaStreamRef.current?.getTracks().forEach(track => track.stop());
@@ -75,8 +95,11 @@ export function useVideoRecorder() {
     recorderRef.current = null;
     canvasRef.current = null;
     sourceVideoRef.current = null;
+    drawStateRef.current = null;
     setPreviewStream(null);
-  };
+    setAvailableCameras([]);
+    setActiveCameraId('');
+  }, []);
 
   const reset = () => {
     clearPreview();
@@ -88,30 +111,59 @@ export function useVideoRecorder() {
     setSavedVideo(null);
   };
 
-  const start = async ({ seizureStartTime, seizureStartLabel }) => {
+  const resolveVideoConstraints = useCallback(({ preferredFacingMode = 'environment', deviceId = '' } = {}) => {
+    if (deviceId) {
+      return { deviceId: { exact: deviceId } };
+    }
+    return { facingMode: { ideal: preferredFacingMode } };
+  }, []);
+
+  const attachStream = useCallback(async (stream) => {
+    const sourceVideo = Object.assign(document.createElement('video'), {
+      playsInline: true,
+      muted: true,
+    });
+    sourceVideo.srcObject = stream;
+    await sourceVideo.play();
+    sourceVideoRef.current = sourceVideo;
+
+    const width = sourceVideo.videoWidth || 640;
+    const height = sourceVideo.videoHeight || 480;
+    const canvas = canvasRef.current || Object.assign(document.createElement('canvas'), { width, height });
+    if (!canvasRef.current) {
+      canvasRef.current = canvas;
+    }
+
+    drawStateRef.current = { width, height };
+    mediaStreamRef.current = stream;
+    setPreviewStream(stream);
+    await refreshCameraList(stream);
+    return { sourceVideo, canvas, width, height };
+  }, [refreshCameraList]);
+
+  const replaceStream = useCallback(async ({ preferredFacingMode = 'environment', deviceId = '' } = {}) => {
+    const nextStream = await navigator.mediaDevices.getUserMedia({
+      video: resolveVideoConstraints({ preferredFacingMode, deviceId }),
+      audio: false,
+    });
+    const previousStream = mediaStreamRef.current;
+    await attachStream(nextStream);
+    previousStream?.getTracks().forEach(track => track.stop());
+    return nextStream;
+  }, [attachStream, resolveVideoConstraints]);
+
+  const start = async ({ seizureStartTime, seizureStartLabel, preferredFacingMode = 'environment' } = {}) => {
     if (!isSupported || isRecording) return { ok: false };
     try {
       setError('');
       setSavedVideo(null);
       setPermissionState('requesting');
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' },
+        video: resolveVideoConstraints({ preferredFacingMode }),
         audio: false,
       });
       setPermissionState('granted');
-      mediaStreamRef.current = stream;
-      setPreviewStream(stream);
-      const sourceVideo = document.createElement('video');
-      sourceVideo.playsInline = true;
-      sourceVideo.muted = true;
-      sourceVideo.srcObject = stream;
-      await sourceVideo.play();
-
-      const width = sourceVideo.videoWidth || 640;
-      const height = sourceVideo.videoHeight || 480;
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
+      const { sourceVideo, canvas, width, height } = await attachStream(stream);
       const ctx = canvas.getContext('2d');
       const overallStartTime = seizureStartTime || Date.now();
       const startLabel = seizureStartLabel || new Date(overallStartTime).toLocaleString();
@@ -126,17 +178,20 @@ export function useVideoRecorder() {
 
       const draw = () => {
         if (!ctx) return;
-        ctx.drawImage(sourceVideo, 0, 0, width, height);
+        const currentSource = sourceVideoRef.current;
+        const currentState = drawStateRef.current || { width, height };
+        if (!currentSource) return;
+        ctx.drawImage(currentSource, 0, 0, currentState.width, currentState.height);
         const elapsedSeconds = Math.floor((Date.now() - overallStartTime) / 1000);
         const lineOne = startLabel;
         const lineTwo = formatElapsed(elapsedSeconds);
         ctx.fillStyle = 'rgba(15, 23, 42, 0.76)';
-        ctx.fillRect(16, height - 84, 300, 64);
+        ctx.fillRect(16, currentState.height - 84, 300, 64);
         ctx.fillStyle = '#ffffff';
         ctx.font = '600 16px Arial, Helvetica, sans-serif';
-        ctx.fillText(lineOne, 28, height - 54);
+        ctx.fillText(lineOne, 28, currentState.height - 54);
         ctx.font = '700 22px Arial, Helvetica, sans-serif';
-        ctx.fillText(lineTwo, 28, height - 26);
+        ctx.fillText(lineTwo, 28, currentState.height - 26);
         animationRef.current = requestAnimationFrame(draw);
       };
       draw();
@@ -163,6 +218,24 @@ export function useVideoRecorder() {
       return { ok: false, error: err };
     }
   };
+
+  const switchCamera = useCallback(async () => {
+    if (!isRecording) return { ok: false };
+    try {
+      const cameras = availableCameras.length ? availableCameras : await refreshCameraList();
+      if (cameras.length < 2) return { ok: false, reason: 'single_camera' };
+      const currentIndex = cameras.findIndex(camera => camera.deviceId === activeCameraId);
+      const nextCamera = cameras[(currentIndex + 1 + cameras.length) % cameras.length];
+      if (!nextCamera?.deviceId) return { ok: false };
+      setError('');
+      await replaceStream({ deviceId: nextCamera.deviceId });
+      return { ok: true };
+    } catch (err) {
+      console.error('Failed to switch camera:', err);
+      setError(i18n.t('recording.video_error_unavailable', 'Camera permission or video recording is not available on this device.'));
+      return { ok: false, error: err };
+    }
+  }, [activeCameraId, availableCameras, isRecording, refreshCameraList, replaceStream]);
 
   const stop = async () => {
     if (!isRecording || !recorderRef.current) return savedVideo;
@@ -200,7 +273,11 @@ export function useVideoRecorder() {
     error,
     savedVideo,
     permissionState,
+    availableCameras,
+    activeCameraId,
+    canSwitchCamera: availableCameras.length > 1 && isRecording,
     start,
+    switchCamera,
     stop,
     reset,
   };

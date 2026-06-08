@@ -1,6 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { db } from '../data/db';
 import { EventCard } from '../components/EventCard';
 import { SEIZURE_TYPES } from '../data/constants';
 import SeizureTrendChart from '../components/SeizureTrendChart';
@@ -11,11 +10,10 @@ import { EEGDiaryTab } from '../components/EEGDiaryTab';
 import ExportView from './ExportView';
 import { ScrollFade } from '../components/ScrollFade';
 
-export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, historyPageSize = 10, settings = {}, initialTab = 'seizures', eeg = null }) {
+export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, historyPageSize = 10, settings = {}, initialTab = 'seizures', eeg = null, events = [] }) {
   const { t } = useTranslation();
   const { durationFormat = 'seconds', dateFormat = 'locale', timeFormat = '12h' } = settings;
   const [activeTab, setActiveTab] = useState(initialTab);
-  const [allEvents, setAllEvents] = useState([]);
   const [page, setPage] = useState(0);
   const [typeFilter, setTypeFilter] = useState('');
   const [completionFilter, setCompletionFilter] = useState('all');
@@ -29,11 +27,7 @@ export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, hi
     { id: 'export',      label: t('history.tab_export')      },
   ];
 
-  useEffect(() => {
-    db.events.orderBy('startTime').reverse().toArray()
-      .then(setAllEvents)
-      .catch(err => console.error('Failed to load events:', err));
-  }, []);
+  const allEvents = events;
 
   const filtered = allEvents.filter(e => {
     if (typeFilter && e.type !== typeFilter) return false;
@@ -47,7 +41,8 @@ export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, hi
   });
 
   const totalPages = Math.ceil(filtered.length / historyPageSize);
-  const paged = filtered.slice(page * historyPageSize, (page + 1) * historyPageSize);
+  const currentPage = Math.min(page, Math.max(0, totalPages - 1));
+  const paged = filtered.slice(currentPage * historyPageSize, (currentPage + 1) * historyPageSize);
   const needsDetailsCount = allEvents.filter(e => !e.isComplete).length;
 
   const dangerMap = useMemo(() => buildDangerMap(allEvents), [allEvents]);
@@ -158,18 +153,18 @@ export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, hi
             <div className="flex justify-between items-center pt-4" style={{ borderTop: '1px solid var(--border-subtle)' }}>
               <button
                 disabled={page === 0}
-                onClick={() => setPage(p => p - 1)}
+                onClick={() => setPage(p => Math.max(0, p - 1))}
                 className="px-4 py-2 rounded-xl text-xs font-black uppercase disabled:opacity-30 transition-all"
                 style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-secondary)' }}
               >
                 {t('history.prev')}
               </button>
               <span className="text-[10px] font-black uppercase" style={{ color: 'var(--text-faint)' }}>
-                {t('history.page_of', { page: page + 1, total: totalPages })}
+                {t('history.page_of', { page: currentPage + 1, total: totalPages })}
               </span>
               <button
-                disabled={page >= totalPages - 1}
-                onClick={() => setPage(p => p + 1)}
+                disabled={currentPage >= totalPages - 1}
+                onClick={() => setPage(p => Math.min(Math.max(0, totalPages - 1), p + 1))}
                 className="px-4 py-2 rounded-xl text-xs font-black uppercase disabled:opacity-30 transition-all"
                 style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-secondary)' }}
               >

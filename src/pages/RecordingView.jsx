@@ -105,10 +105,12 @@ function RecordingView({
   durationFormat = 'seconds',
   onStartVideo,
   onStopVideo,
+  onSwitchCamera,
   videoRecording = false,
   videoSupported = false,
   videoError = '',
   previewStream = null,
+  canSwitchCamera = false,
 }) {
   const { t } = useTranslation();
   const fmtDur = (s) => durationFormat === 'human' ? formatDuration(s) : `${s}s`;
@@ -164,7 +166,7 @@ function RecordingView({
       {/* RED ALERT — fullscreen overlay, stays on top of everything */}
       {showAlert && <RedAlert elapsed={elapsed} onClose={dismissAlert} emergencyMedications={emergencyMedications} neurologistName={neurologistName} neurologistContact={neurologistContact} emergencyContact={emergencyContact} />}
 
-      <div className="flex-1 min-h-0 flex flex-col items-center justify-between w-full max-w-md sm:max-w-xl md:max-w-2xl mx-auto px-4 py-6 animate-in fade-in">
+      <div className="flex-1 min-h-full flex flex-col items-center w-full max-w-md sm:max-w-xl md:max-w-2xl mx-auto px-4 py-6 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] animate-in fade-in gap-4">
 
         {/* 1. TOP: Phase Breakdown */}
         {userMode === 'CARETAKER' && (
@@ -188,7 +190,7 @@ function RecordingView({
         )}
 
         {/* 2. MAIN TIMER */}
-        <div className="flex-1 flex flex-col justify-center text-center py-4">
+        <div className="w-full flex flex-col text-center py-2">
           <div className="flex justify-center mb-4">
             <div className="relative w-32 sm:w-36 aspect-[3/4] rounded-[1.5rem] overflow-hidden" style={{ backgroundColor: 'var(--bg-raised)', border: '1px solid var(--border)' }}>
               {previewStream ? (
@@ -229,7 +231,7 @@ function RecordingView({
               {userMode === 'CARETAKER' ? t('recording.long_seizure_warning') : t('recording.approaching_threshold')}
             </p>
           )}
-          <div className="flex justify-center mt-4">
+          <div className="flex justify-center mt-4 gap-2 flex-wrap">
             <button
               onClick={videoRecording ? onStopVideo : onStartVideo}
               disabled={!videoSupported && !videoRecording}
@@ -242,6 +244,19 @@ function RecordingView({
             >
               {videoRecording ? t('recording.stop_video', 'Stop Video') : t('recording.start_video', 'Start Video')}
             </button>
+            {canSwitchCamera && (
+              <button
+                onClick={onSwitchCamera}
+                className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest"
+                style={{
+                  backgroundColor: 'var(--bg-raised)',
+                  color: 'var(--text-secondary)',
+                  border: '1px solid var(--border)',
+                }}
+              >
+                {t('recording.switch_camera', 'Switch Camera')}
+              </button>
+            )}
           </div>
           {videoError && (
             <p className="text-[11px] mt-2" style={{ color: '#fca5a5' }}>{videoError}</p>
@@ -249,7 +264,7 @@ function RecordingView({
         </div>
 
         {/* 3. DYNAMIC ACTION AREA */}
-        <div className="w-full flex gap-4 min-h-[25vh] items-stretch transition-all duration-500 mb-6">
+        <div className="w-full flex gap-4 min-h-[25vh] items-stretch transition-all duration-500">
 
           {/* LEFT COLUMN: Phase Buttons */}
           <div className={`flex flex-col gap-4 transition-all duration-500 ${showMarkers ? 'w-[48%]' : 'w-full'}`}>
@@ -310,7 +325,7 @@ function RecordingView({
         </div>
 
         {/* 4. STOP Button */}
-        <div className="w-full shrink-0">
+        <div className="w-full shrink-0 sticky bottom-0 pt-2" style={{ background: 'linear-gradient(to top, var(--bg-base) 75%, transparent)' }}>
           <button
             onClick={onStop}
             className="w-full py-[clamp(1rem,4vh,2.5rem)] text-5xl font-black rounded-[3rem] active:scale-95 transition-transform uppercase"
