@@ -325,7 +325,7 @@ function RecordingView({
         </div>
 
         {/* 4. STOP Button */}
-        <div className="w-full shrink-0 sticky bottom-0 pt-2" style={{ background: 'linear-gradient(to top, var(--bg-base) 75%, transparent)' }}>
+        <div className="w-full shrink-0 pt-2">
           <button
             onClick={onStop}
             className="w-full py-[clamp(1rem,4vh,2.5rem)] text-5xl font-black rounded-[3rem] active:scale-95 transition-transform uppercase"
