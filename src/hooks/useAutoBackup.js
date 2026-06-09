@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { exportToJSON } from '../utils/exportHelpers';
+import { db } from '../data/db';
 
-export function useAutoBackup({ settings, updateSettings, status, events, medications, medicationLogs, onBackupComplete }) {
+export function useAutoBackup({ settings, updateSettings, status, events, medications, medicationLogs, onBackupComplete, onBackupError }) {
   const checkingRef = useRef(false);
 
   const checkAndBackup = async () => {
@@ -23,11 +24,25 @@ export function useAutoBackup({ settings, updateSettings, status, events, medica
     checkingRef.current = true;
 
     try {
-      const result = await exportToJSON(events, medications, medicationLogs);
+      const [eegSessions, eegActivities] = await Promise.all([
+        db.eegSessions.toArray().catch(() => []),
+        db.eegActivities.toArray().catch(() => []),
+      ]);
+      const result = await exportToJSON({
+        settings,
+        events,
+        medications,
+        medicationLogs,
+        eegSessions,
+        eegActivities,
+      });
       if (result?.ok) {
-        updateSettings('lastAutoBackupAt', Date.now());
+        await updateSettings('lastAutoBackupAt', Date.now());
         onBackupComplete?.();
       }
+    } catch (error) {
+      console.error('Auto-backup failed:', error);
+      onBackupError?.(error);
     } finally {
       checkingRef.current = false;
     }

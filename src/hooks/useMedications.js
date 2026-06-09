@@ -9,16 +9,24 @@ function makeUUID() {
 
 export function useMedications() {
   const [medications, setMedications] = useState([]);
+  const [lastError, setLastError] = useState(null);
 
   const load = async () => {
     try {
       const meds = await db.medications.orderBy('id').toArray();
       setMedications(meds);
-    } catch { /* ignore — table may not exist in older DB versions */ }
+      setLastError(null);
+      return meds;
+    } catch (err) {
+      console.error('Failed to load medications:', err);
+      setLastError({ scope: 'load_medications', message: 'Failed to load medications.' });
+      throw err;
+    }
   };
 
   const addMedication = async (med) => {
     await db.medications.add({ ...med, uuid: med.uuid || makeUUID(), active: true });
+    setLastError(null);
     await load();
   };
 
@@ -55,13 +63,21 @@ export function useMedications() {
       const end = new Date(dateMs);
       end.setHours(23, 59, 59, 999);
       return await db.medicationLogs.where('takenAt').between(start.getTime(), end.getTime(), true, true).toArray();
-    } catch { return []; }
+    } catch (err) {
+      console.error('Failed to load medication logs for day:', err);
+      setLastError({ scope: 'load_logs_day', message: 'Failed to load medication logs.' });
+      throw err;
+    }
   };
 
   const getLogsForPeriod = async (fromMs, toMs) => {
     try {
       return await db.medicationLogs.where('takenAt').between(fromMs, toMs, true, true).toArray();
-    } catch { return []; }
+    } catch (err) {
+      console.error('Failed to load medication logs for period:', err);
+      setLastError({ scope: 'load_logs_period', message: 'Failed to load medication logs.' });
+      throw err;
+    }
   };
 
   const updateLog = async (id, changes) => {
@@ -86,12 +102,12 @@ export function useMedications() {
       const doses = getScheduledDosesForDay(meds, now);
       for (const dose of doses) {
         if (dose.scheduledTs > now) continue; // not yet due
-        const existing = todayLogs.find(
-          (l.medicationUuid && dose.medicationUuid
-            ? l.medicationUuid === dose.medicationUuid
-            : l.medicationId === dose.medicationId) &&
-          l.scheduledTime === dose.scheduledHHMM
-        );
+        const existing = todayLogs.find((log) => {
+          const matchesMedication = log.medicationUuid && dose.medicationUuid
+            ? log.medicationUuid === dose.medicationUuid
+            : log.medicationId === dose.medicationId;
+          return matchesMedication && log.scheduledTime === dose.scheduledHHMM;
+        });
         if (!existing) {
           await db.medicationLogs.add({
             uuid: makeUUID(),
@@ -103,7 +119,12 @@ export function useMedications() {
           });
         }
       }
-    } catch { /* silent */ }
+      setLastError(null);
+    } catch (err) {
+      console.error('Failed to mark missed doses:', err);
+      setLastError({ scope: 'mark_missed', message: 'Failed to record missed doses.' });
+      throw err;
+    }
   };
 
   useEffect(() => {
@@ -122,5 +143,7 @@ export function useMedications() {
     getLogsForPeriod,
     updateLog,
     markMissedDoses,
+    lastError,
+    clearLastError: () => setLastError(null),
   };
 }

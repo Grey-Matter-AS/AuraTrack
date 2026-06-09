@@ -44,8 +44,12 @@ export function MedicationHistoryTab({ settings = {} }) {
 
   const loadLogs = async () => {
     setLoading(true);
-    const logs = await getLogsForPeriod(0, nowMs + 86400000);
-    setAllLogs(logs);
+    try {
+      const logs = await getLogsForPeriod(0, nowMs + 86400000);
+      setAllLogs(logs);
+    } catch {
+      setAllLogs([]);
+    }
     setLoading(false);
   };
 

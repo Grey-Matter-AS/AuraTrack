@@ -28,4 +28,19 @@ export default defineConfig([
       'react-hooks/set-state-in-effect': 'off',
     },
   },
+  {
+    files: ['cypress/**/*.js'],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.mocha,
+        ...globals.node,
+        ...globals.cypress,
+      },
+    },
+    rules: {
+      'react-hooks/rules-of-hooks': 'off',
+      'react-hooks/set-state-in-effect': 'off',
+    },
+  },
 ])

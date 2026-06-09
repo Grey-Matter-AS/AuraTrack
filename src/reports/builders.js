@@ -1,5 +1,6 @@
 import i18n from '../i18n';
 import { phaseDurs } from '../utils/phaseCalculations';
+import { esc } from '../utils/htmlEscape';
 
 const DAY_MS = 86400000;
 
@@ -72,7 +73,10 @@ export function buildEventLogData(events) {
       type: event.type || '',
       durationSec: event.duration || 0,
       durationLabel: `${event.duration || 0}s`,
-      notesHtml: [event.notes || '', event.videoFileName ? `${t('event_detail.associated_video', 'Associated video')}: ${event.videoFileName}` : ''].filter(Boolean).join('\n').replace(/\n/g, '<br>'),
+      notesHtml: [event.notes || '', event.videoFileName ? `${t('event_detail.associated_video', 'Associated video')}: ${event.videoFileName}` : '']
+        .filter(Boolean)
+        .map(line => esc(line))
+        .join('<br>'),
       symptoms: (event.symptoms || []).map(describeSymptomPath),
     })),
   };

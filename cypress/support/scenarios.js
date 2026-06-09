@@ -5,7 +5,7 @@ function at(hour, minute = 0, dayOffset = 0) {
   return base + (dayOffset * DAY) + (hour * 60 + minute) * 60 * 1000;
 }
 
-export function createRichCaretakerScenario() {
+export function richCaretakerScenario() {
   const eegSessionId = 1;
   const lamotrigineId = 1;
   const diazepamId = 2;
@@ -149,6 +149,7 @@ export function createRichCaretakerScenario() {
         id: 1,
         uuid: 'eeg-activity-1',
         sessionId: eegSessionId,
+        sessionUuid: 'eeg-session-1',
         kind: 'ACTIVITY',
         activityLabel: 'Reading',
         customActivityText: 'Quiet reading on sofa',
@@ -168,6 +169,7 @@ export function createRichCaretakerScenario() {
         id: 2,
         uuid: 'eeg-activity-2',
         sessionId: eegSessionId,
+        sessionUuid: 'eeg-session-1',
         kind: 'SEIZURE_REFERENCE',
         activityLabel: 'Focal Aware',
         customActivityText: '',

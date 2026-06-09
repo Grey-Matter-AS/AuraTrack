@@ -84,7 +84,7 @@ function App() {
     deleteEvent,
   } = useEventHistory();
   const wizard = useTaggingWizard();
-  const { settings, updateSettings, resetSettings } = useSettings();
+  const { settings, updateSettings, resetSettings, lastError: settingsError, clearLastError: clearSettingsError } = useSettings();
   const pwa = usePWAInstall();
   const wakeLock = useWakeLock();
   const [wakeLockUnsupported, setWakeLockUnsupported] = useState(false);
@@ -114,6 +114,7 @@ function App() {
     medications: meds.medications,
     medicationLogs: allMedLogs,
     onBackupComplete: () => showToast('Auto-backup saved to Downloads'),
+    onBackupError: () => showToast('Auto-backup failed. Please export a manual backup.'),
   });
 
   // Sync haptic preference to the module singleton
@@ -154,14 +155,34 @@ function App() {
 
   useEffect(() => {
     if (status === 'IDLE') {
-      loadHistory().catch(() => {});
-      loadAll().then(setFullHistory).catch(() => {});
-      meds.load();
-      meds.markMissedDoses().catch(() => {});
-      meds.getLogsForDay(Date.now()).then(setTodayLogs).catch(() => {});
-      db.medicationLogs.toArray().then(setAllMedLogs).catch(() => {});
+      loadHistory().catch((err) => console.error('Failed to refresh history:', err));
+      loadAll().then(setFullHistory).catch((err) => console.error('Failed to refresh full history:', err));
+      meds.load().catch(() => showToast('Failed to load medications.'));
+      meds.markMissedDoses().catch(() => showToast('Failed to record missed doses. Please review medication history.'));
+      meds.getLogsForDay(Date.now()).then(setTodayLogs).catch(() => showToast('Failed to load today\'s medication logs.'));
+      db.medicationLogs.toArray().then(setAllMedLogs).catch(() => showToast('Failed to load medication history.'));
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, loadHistory, loadAll]);
+
+  useEffect(() => {
+    if (!settingsError) return;
+    const id = setTimeout(() => {
+      showToast(settingsError.message);
+      clearSettingsError();
+    }, 0);
+    return () => clearTimeout(id);
+  }, [settingsError, clearSettingsError]);
+
+  useEffect(() => {
+    if (!meds.lastError) return;
+    const id = setTimeout(() => {
+      showToast(meds.lastError.message);
+      meds.clearLastError();
+    }, 0);
+    return () => clearTimeout(id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [meds.lastError]);
 
   // Wake Lock: keep screen on during recording; show banner on unsupported browsers
 	  useEffect(() => {
@@ -367,17 +388,22 @@ function App() {
   const medicationGroups = getVisibleDosesForPanel(activeMedications, todayLogs);
 
   const handleSaveDoses = async (doses) => {
-    const now = Date.now();
-    for (const { medicationId, scheduledHHMM, note } of doses) {
-      await meds.logDoseWithStatus(medicationId, scheduledHHMM ?? null, now, 'taken', note);
+    try {
+      const now = Date.now();
+      for (const { medicationId, scheduledHHMM, note } of doses) {
+        await meds.logDoseWithStatus(medicationId, scheduledHHMM ?? null, now, 'taken', note);
+      }
+      const logs = await meds.getLogsForDay(Date.now());
+      setTodayLogs(logs);
+      const names = doses.map(d => {
+        const med = meds.medications.find(m => m.id === d.medicationId);
+        return med ? med.name : '';
+      }).filter(Boolean);
+      showToast(`Logged: ${names.join(', ')}`);
+    } catch (err) {
+      console.error('Failed to save dose logs:', err);
+      showToast('Failed to save dose logs. Please try again.');
     }
-    const logs = await meds.getLogsForDay(Date.now());
-    setTodayLogs(logs);
-    const names = doses.map(d => {
-      const med = meds.medications.find(m => m.id === d.medicationId);
-      return med ? med.name : '';
-    }).filter(Boolean);
-    showToast(`Logged: ${names.join(', ')}`);
   };
 
   return (

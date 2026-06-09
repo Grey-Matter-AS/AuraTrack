@@ -1,15 +1,24 @@
 export const MAX_IMPORT_FILE_BYTES = 5 * 1024 * 1024;
 export const MAX_SYNC_PAYLOAD_CHARS = 5 * 1024 * 1024;
+export const CANONICAL_BACKUP_SCHEMA = 'auratrack.backup';
+export const CANONICAL_BACKUP_VERSION = 1;
 
 const MAX_EVENTS = 5000;
 const MAX_MEDICATIONS = 500;
 const MAX_LOGS = 20000;
+const MAX_EEG_SESSIONS = 1000;
+const MAX_EEG_ACTIVITIES = 20000;
+const MAX_SETTINGS_KEYS = 200;
 const MAX_TEXT = 120;
 const MAX_NOTES = 5000;
 const MAX_ARRAY = 200;
+const MAX_JSON_DEPTH = 5;
+const MAX_JSON_KEYS = 50;
 
 const FREQS = new Set(['OD', 'BD', 'TDS', 'QDS', 'PRN']);
 const LOG_STATUSES = new Set(['taken', 'missed', 'late']);
+const EEG_SESSION_STATUSES = new Set(['ACTIVE', 'COMPLETED']);
+const EEG_ACTIVITY_KINDS = new Set(['ACTIVITY', 'SEIZURE_REFERENCE']);
 
 const asString = (value, max = MAX_TEXT) =>
   typeof value === 'string' ? value.trim().slice(0, max) : '';
@@ -71,6 +80,56 @@ const sanitizeEditLog = (arr) => {
     };
   }).filter(Boolean);
 };
+
+const sanitizeJsonValue = (value, depth = 0) => {
+  if (depth > MAX_JSON_DEPTH) return undefined;
+  if (value == null) return null;
+  if (typeof value === 'string') return value.slice(0, MAX_NOTES);
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') return Number.isFinite(value) ? value : undefined;
+  if (Array.isArray(value)) {
+    return value
+      .slice(0, MAX_ARRAY)
+      .map(item => sanitizeJsonValue(item, depth + 1))
+      .filter(item => item !== undefined);
+  }
+  if (typeof value === 'object') {
+    const out = {};
+    Object.entries(value).slice(0, MAX_JSON_KEYS).forEach(([key, nested]) => {
+      const safeKey = asString(key, 80);
+      if (!safeKey) return;
+      const safeValue = sanitizeJsonValue(nested, depth + 1);
+      if (safeValue !== undefined) out[safeKey] = safeValue;
+    });
+    return out;
+  }
+  return undefined;
+};
+
+const sanitizeSettingsEntries = (entries) => {
+  const out = {};
+  entries.slice(0, MAX_SETTINGS_KEYS).forEach(([rawKey, rawValue]) => {
+    const key = asString(rawKey, 80);
+    if (!key) return;
+    const value = sanitizeJsonValue(rawValue);
+    if (value !== undefined) out[key] = value;
+  });
+  return out;
+};
+
+export function sanitizeSettingsPayload(raw) {
+  if (Array.isArray(raw)) {
+    return sanitizeSettingsEntries(
+      raw
+        .filter(row => row && typeof row === 'object')
+        .map(row => [row.key, row.value])
+    );
+  }
+  if (raw && typeof raw === 'object') {
+    return sanitizeSettingsEntries(Object.entries(raw));
+  }
+  return {};
+}
 
 export function sanitizeEvent(raw) {
   if (!raw || typeof raw !== 'object') return null;
@@ -147,19 +206,108 @@ export function sanitizeMedicationLog(raw) {
   };
 }
 
+export function sanitizeEegSession(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const startTime = asFiniteNumber(raw.startTime);
+  if (startTime == null) return null;
+  return {
+    ...(asString(raw.uuid, 100) ? { uuid: asString(raw.uuid, 100) } : {}),
+    startTime,
+    plannedEndTime: asFiniteNumber(raw.plannedEndTime),
+    actualEndTime: asFiniteNumber(raw.actualEndTime),
+    durationPreset: asString(raw.durationPreset, 20) || '24h',
+    customHours: asFiniteNumber(raw.customHours),
+    title: asString(raw.title, 200),
+    notes: asString(raw.notes, MAX_NOTES),
+    status: EEG_SESSION_STATUSES.has(raw.status) ? raw.status : 'COMPLETED',
+    createdAt: asFiniteNumber(raw.createdAt, startTime),
+    updatedAt: asFiniteNumber(raw.updatedAt, startTime),
+  };
+}
+
+export function sanitizeEegActivity(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const startTime = asFiniteNumber(raw.startTime);
+  if (startTime == null) return null;
+  const kind = EEG_ACTIVITY_KINDS.has(raw.kind) ? raw.kind : 'ACTIVITY';
+  return {
+    ...(asString(raw.uuid, 100) ? { uuid: asString(raw.uuid, 100) } : {}),
+    ...(asFiniteNumber(raw.sessionId) != null ? { sessionId: asFiniteNumber(raw.sessionId) } : {}),
+    ...(asString(raw.sessionUuid, 100) ? { sessionUuid: asString(raw.sessionUuid, 100) } : {}),
+    kind,
+    activityLabel: asString(raw.activityLabel, 120),
+    customActivityText: asString(raw.customActivityText, 500),
+    moodLabel: asString(raw.moodLabel, 80),
+    notes: asString(raw.notes, MAX_NOTES),
+    startTime,
+    endTime: asFiniteNumber(raw.endTime),
+    durationSec: asNonNegativeInt(raw.durationSec, 0, Number.MAX_SAFE_INTEGER),
+    linkedEventId: asFiniteNumber(raw.linkedEventId),
+    linkedEventUuid: asString(raw.linkedEventUuid, 100),
+    isEdited: asBool(raw.isEdited),
+    editLog: sanitizeEditLog(raw.editLog),
+    createdAt: asFiniteNumber(raw.createdAt, startTime),
+    updatedAt: asFiniteNumber(raw.updatedAt, startTime),
+  };
+}
+
+function coercePayloadData(parsed) {
+  if (Array.isArray(parsed)) return { events: parsed };
+  if (parsed?.schema === CANONICAL_BACKUP_SCHEMA && parsed?.data && typeof parsed.data === 'object') {
+    return parsed.data;
+  }
+  return parsed && typeof parsed === 'object' ? parsed : {};
+}
+
 export function sanitizeImportPayload(parsed) {
-  const rawEvents = Array.isArray(parsed) ? parsed : (parsed?.events || []);
+  const data = coercePayloadData(parsed);
+  const rawEvents = Array.isArray(data) ? data : (data?.events || []);
   const events = Array.isArray(rawEvents)
     ? rawEvents.map(sanitizeEvent).filter(Boolean).slice(0, MAX_EVENTS)
     : [];
-  const medications = Array.isArray(parsed?.medications)
-    ? parsed.medications.map(sanitizeMedication).filter(Boolean).slice(0, MAX_MEDICATIONS)
+  const medications = Array.isArray(data?.medications)
+    ? data.medications.map(sanitizeMedication).filter(Boolean).slice(0, MAX_MEDICATIONS)
     : [];
-  const medicationLogs = Array.isArray(parsed?.medicationLogs)
-    ? parsed.medicationLogs.map(sanitizeMedicationLog).filter(Boolean).slice(0, MAX_LOGS)
+  const medicationLogs = Array.isArray(data?.medicationLogs)
+    ? data.medicationLogs.map(sanitizeMedicationLog).filter(Boolean).slice(0, MAX_LOGS)
     : [];
+  const eegSessions = Array.isArray(data?.eegSessions)
+    ? data.eegSessions.map(sanitizeEegSession).filter(Boolean).slice(0, MAX_EEG_SESSIONS)
+    : [];
+  const eegActivities = Array.isArray(data?.eegActivities)
+    ? data.eegActivities.map(sanitizeEegActivity).filter(Boolean).slice(0, MAX_EEG_ACTIVITIES)
+    : [];
+  const settings = sanitizeSettingsPayload(data?.settings);
 
-  return { events, medications, medicationLogs };
+  return { settings, events, medications, medicationLogs, eegSessions, eegActivities };
+}
+
+export function buildCanonicalBackupPayload(snapshot = {}) {
+  const {
+    settings = {},
+    events = [],
+    medications = [],
+    medicationLogs = [],
+    eegSessions = [],
+    eegActivities = [],
+  } = sanitizeImportPayload({
+    schema: CANONICAL_BACKUP_SCHEMA,
+    data: snapshot,
+  });
+
+  return {
+    schema: CANONICAL_BACKUP_SCHEMA,
+    version: CANONICAL_BACKUP_VERSION,
+    exportedAt: Date.now(),
+    data: {
+      settings,
+      events,
+      medications,
+      medicationLogs,
+      eegSessions,
+      eegActivities,
+    },
+  };
 }
 
 export function assertImportFileSafe(file) {

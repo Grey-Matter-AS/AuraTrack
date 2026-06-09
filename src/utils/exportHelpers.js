@@ -2,6 +2,7 @@ import { formatCSVField, formatCSVRow } from './formatters';
 import { buildEventLogData, buildNeurologistReportData, buildSeizureDiaryData, buildEegDiaryReportData } from '../reports/builders';
 import { renderEventLogHtml, renderNeurologistReportHtml, renderSeizureDiaryHtml, renderEegDiaryHtml } from '../reports/htmlRenderers';
 import { downloadEventLogPdf, downloadNeurologistReportPdf, downloadSeizureDiaryPdf, downloadEegDiaryPdf } from '../reports/pdfRenderers';
+import { buildCanonicalBackupPayload } from './importSanitizer';
 
 export const filterEventsByDateRange = (events, fromDateStr, toDateStr) => {
   const from = fromDateStr ? new Date(fromDateStr).setHours(0, 0, 0, 0) : 0;
@@ -9,16 +10,24 @@ export const filterEventsByDateRange = (events, fromDateStr, toDateStr) => {
   return events.filter(event => event.startTime >= from && event.startTime <= to);
 };
 
-export const exportToJSON = async (events, medications = [], medicationLogs = [], eegSessions = [], eegActivities = []) => {
-  const payload = {
-    version: 7,
-    exportedAt: Date.now(),
-    events,
-    medications,
-    medicationLogs,
-    eegSessions,
-    eegActivities,
-  };
+export const exportToJSON = async (
+  eventsOrSnapshot,
+  medications = [],
+  medicationLogs = [],
+  eegSessions = [],
+  eegActivities = [],
+  settings = {}
+) => {
+  const payload = Array.isArray(eventsOrSnapshot)
+    ? buildCanonicalBackupPayload({
+        settings,
+        events: eventsOrSnapshot,
+        medications,
+        medicationLogs,
+        eegSessions,
+        eegActivities,
+      })
+    : buildCanonicalBackupPayload(eventsOrSnapshot || {});
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
   return saveFileNative(blob, `auratrack-backup-${dateStamp()}.json`, 'AuraTrack Backup', ['.json']);
 };

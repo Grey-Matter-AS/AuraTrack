@@ -47,6 +47,7 @@ const DEFAULTS = {
 
 export function useSettings() {
   const [settings, setSettings] = useState(DEFAULTS);
+  const [lastError, setLastError] = useState(null);
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -60,6 +61,7 @@ export function useSettings() {
         setSettings(merged);
       } catch (err) {
         console.error('Failed to load settings, using defaults:', err);
+        setLastError({ scope: 'load_settings', message: 'Failed to load saved settings.' });
       }
     };
     loadSettings();
@@ -69,8 +71,12 @@ export function useSettings() {
     try {
       await db.settings.put({ key, value });
       setSettings(prev => ({ ...prev, [key]: value }));
+      setLastError(null);
+      return true;
     } catch (err) {
       console.error('Failed to save setting:', err);
+      setLastError({ scope: 'save_setting', message: `Failed to save setting "${key}".` });
+      throw err;
     }
   };
 
@@ -78,10 +84,14 @@ export function useSettings() {
     try {
       await db.settings.clear();
       setSettings(DEFAULTS);
+      setLastError(null);
+      return true;
     } catch (err) {
       console.error('Failed to reset settings:', err);
+      setLastError({ scope: 'reset_settings', message: 'Failed to reset settings.' });
+      throw err;
     }
   };
 
-  return { settings, updateSettings, resetSettings };
+  return { settings, updateSettings, resetSettings, lastError, clearLastError: () => setLastError(null) };
 }

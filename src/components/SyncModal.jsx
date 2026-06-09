@@ -522,10 +522,20 @@ function ManualFilePanel({ role, onDone }) {
   const handleExport = async () => {
     try {
       const events = await db.events.toArray();
+      const settingsRows = await db.settings.toArray().catch(() => []);
       const medications = await db.medications.toArray().catch(() => []);
       const medicationLogs = await db.medicationLogs.toArray().catch(() => []);
+      const eegSessions = await db.eegSessions.toArray().catch(() => []);
+      const eegActivities = await db.eegActivities.toArray().catch(() => []);
       if (!events.length && !medications.length) { setStatus('No data to export.'); return; }
-      const result = await exportToJSON(events, medications, medicationLogs);
+      const result = await exportToJSON({
+        settings: settingsRows,
+        events,
+        medications,
+        medicationLogs,
+        eegSessions,
+        eegActivities,
+      });
       if (result?.ok) setStatus(`Exported ${events.length} event(s).`);
       else if (!result?.cancelled) setStatus('Export failed.');
     } catch { setStatus('Export failed.'); }
@@ -539,8 +549,10 @@ function ManualFilePanel({ role, onDone }) {
       const { mergeRemoteData } = await import('../utils/syncHelpers');
       const parsed = JSON.parse(await file.text());
       const r = await mergeRemoteData(parsed);
-      const total = r.events + r.medications + r.logs;
-      setStatus(total ? `Added ${r.events} event(s), ${r.medications} medication(s), ${r.logs} dose log(s).` : 'Already up to date — no new records.');
+      const total = r.settings + r.events + r.medications + r.logs + r.eegSessions + r.eegActivities;
+      setStatus(total
+        ? `Added ${r.events} event(s), ${r.medications} medication(s), ${r.logs} dose log(s), ${r.eegSessions} EEG session(s), and ${r.eegActivities} EEG activity record(s).${r.conflicts?.length ? ` ${r.conflicts.length} conflict(s) kept local records.` : ''}`
+        : 'Already up to date — no new records.');
     } catch { setStatus('Import failed — invalid or corrupted file.'); }
     e.target.value = '';
   };
@@ -643,7 +655,9 @@ export default function SyncModal({ isOpen, onClose, connectToken, offerSDP }) {
 
   useEffect(() => {
     if (!isOpen) return;
-    if (connectToken || offerSDP) setRole('receiver');
+    if (!(connectToken || offerSDP)) return;
+    const id = setTimeout(() => setRole('receiver'), 0);
+    return () => clearTimeout(id);
   }, [isOpen, connectToken, offerSDP]);
 
   const startReceiverScan = useCallback(() => {

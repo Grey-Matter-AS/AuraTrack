@@ -337,20 +337,24 @@ function MedicationSection({ flash, notificationPermission, onRequestNotificatio
 
   const handleAdd = async () => {
     if (!form.name.trim() || !form.dose) return;
-    await addMedication({
-      name: form.name.trim(),
-      dose: parseFloat(form.dose),
-      unit: form.unit,
-      frequency: form.frequency,
-      isRescue: form.frequency === 'PRN',
-      scheduledTimes: form.scheduledTimes ?? defaultScheduledTimes(form.frequency),
-      scheduledDays: form.frequency === 'PRN' ? ALL_DAYS : (form.scheduledDays ?? ALL_DAYS),
-      reminderEnabled: form.reminderEnabled ?? false,
-      showInEmergency: form.showInEmergency ?? false,
-    });
-    setForm(EMPTY_MED);
-    setShowForm(false);
-    flash(t('settings.medications.added'));
+    try {
+      await addMedication({
+        name: form.name.trim(),
+        dose: parseFloat(form.dose),
+        unit: form.unit,
+        frequency: form.frequency,
+        isRescue: form.frequency === 'PRN',
+        scheduledTimes: form.scheduledTimes ?? defaultScheduledTimes(form.frequency),
+        scheduledDays: form.frequency === 'PRN' ? ALL_DAYS : (form.scheduledDays ?? ALL_DAYS),
+        reminderEnabled: form.reminderEnabled ?? false,
+        showInEmergency: form.showInEmergency ?? false,
+      });
+      setForm(EMPTY_MED);
+      setShowForm(false);
+      flash(t('settings.medications.added'));
+    } catch {
+      flash('Failed to add medication.');
+    }
   };
 
   const startEdit = (med) => {
@@ -370,26 +374,34 @@ function MedicationSection({ flash, notificationPermission, onRequestNotificatio
 
   const handleUpdate = async () => {
     if (!editForm.name.trim() || !editForm.dose) return;
-    await updateMedication(editingId, {
-      name: editForm.name.trim(),
-      dose: parseFloat(editForm.dose),
-      unit: editForm.unit,
-      frequency: editForm.frequency,
-      isRescue: editForm.frequency === 'PRN',
-      scheduledTimes: editForm.scheduledTimes ?? defaultScheduledTimes(editForm.frequency),
-      scheduledDays: editForm.frequency === 'PRN' ? ALL_DAYS : (editForm.scheduledDays ?? ALL_DAYS),
-      reminderEnabled: editForm.reminderEnabled ?? false,
-      showInEmergency: editForm.showInEmergency ?? false,
-    });
-    setEditingId(null);
-    setEditForm(null);
-    flash(t('settings.medications.updated'));
+    try {
+      await updateMedication(editingId, {
+        name: editForm.name.trim(),
+        dose: parseFloat(editForm.dose),
+        unit: editForm.unit,
+        frequency: editForm.frequency,
+        isRescue: editForm.frequency === 'PRN',
+        scheduledTimes: editForm.scheduledTimes ?? defaultScheduledTimes(editForm.frequency),
+        scheduledDays: editForm.frequency === 'PRN' ? ALL_DAYS : (editForm.scheduledDays ?? ALL_DAYS),
+        reminderEnabled: editForm.reminderEnabled ?? false,
+        showInEmergency: editForm.showInEmergency ?? false,
+      });
+      setEditingId(null);
+      setEditForm(null);
+      flash(t('settings.medications.updated'));
+    } catch {
+      flash('Failed to update medication.');
+    }
   };
 
   const handleDelete = async (id) => {
-    await deleteMedication(id);
-    setDeleteConfirm(null);
-    flash(t('settings.medications.removed'));
+    try {
+      await deleteMedication(id);
+      setDeleteConfirm(null);
+      flash(t('settings.medications.removed'));
+    } catch {
+      flash(t('settings.data.delete_failed'));
+    }
   };
 
   return (
@@ -539,14 +551,36 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
   }, []);
 
   const flash = (msg) => { setStatusMsg(msg); setTimeout(() => setStatusMsg(''), 4000); };
+  const summarizeImportResult = (result) => {
+    const parts = [];
+    if (result.settings) parts.push(`${result.settings} setting(s)`);
+    if (result.events) parts.push(`${result.events} event(s)`);
+    if (result.medications) parts.push(`${result.medications} medication(s)`);
+    if (result.logs) parts.push(`${result.logs} dose log(s)`);
+    if (result.eegSessions) parts.push(`${result.eegSessions} EEG session(s)`);
+    if (result.eegActivities) parts.push(`${result.eegActivities} EEG activity record(s)`);
+    const conflicts = result.conflicts?.length
+      ? ` ${result.conflicts.length} conflict(s) kept local data intact.`
+      : '';
+    return `${parts.join(', ') || t('settings.data.imported_nothing')}.${conflicts}`;
+  };
 
   const handleExportBackup = async () => {
     try {
       const events = await db.events.toArray();
+      const eegSessions = await db.eegSessions.toArray().catch(() => []);
+      const eegActivities = await db.eegActivities.toArray().catch(() => []);
       const medications = await db.medications.toArray().catch(() => []);
       const medicationLogs = await db.medicationLogs.toArray().catch(() => []);
       if (!events.length && !medications.length) { flash(t('settings.data.no_data')); return; }
-      const result = await exportToJSON(events, medications, medicationLogs);
+      const result = await exportToJSON({
+        settings,
+        events,
+        medications,
+        medicationLogs,
+        eegSessions,
+        eegActivities,
+      });
       if (!result?.ok) {
         if (!result?.cancelled) flash(t('settings.data.export_failed'));
         return;
@@ -564,14 +598,9 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
       const text = await file.text();
       const parsed = JSON.parse(text);
       const result = await mergeRemoteData(parsed);
-      const { events: eventsImported, medications: medsImported, logs: logsImported } = result;
-
-      const parts = [];
-      if (eventsImported) parts.push(`${eventsImported} event(s)`);
-      if (medsImported) parts.push(`${medsImported} medication(s)`);
-      if (logsImported) parts.push(`${logsImported} dose log(s)`);
-      flash(t('settings.data.imported', { summary: parts.join(', ') || t('settings.data.imported_nothing') }));
-    } catch {
+      flash(t('settings.data.imported', { summary: summarizeImportResult(result) }));
+    } catch (err) {
+      console.error('Import failed:', err);
       flash(t('settings.data.import_failed'));
     }
   };

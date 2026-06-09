@@ -164,12 +164,17 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false, 
           actions={[{
             label: t('export.generate'),
             onClick: async () => {
-              const events = await getEvents();
-              const fromMs = new Date(fromDate).setHours(0, 0, 0, 0);
-              const toMs   = new Date(toDate).setHours(23, 59, 59, 999);
-              const logs   = await getLogsForPeriod(fromMs, toMs);
+              const events = await db.events.orderBy('startTime').toArray();
+              const logs = await db.medicationLogs.toArray().catch(() => []);
               const eegBundle = await getEegBundle();
-              await exportToJSON(events, medications, logs, eegBundle.sessions, eegBundle.allActivities);
+              await exportToJSON({
+                settings,
+                events,
+                medications,
+                medicationLogs: logs,
+                eegSessions: eegBundle.sessions,
+                eegActivities: eegBundle.allActivities,
+              });
             },
           }]}
         />
