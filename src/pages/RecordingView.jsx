@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatDuration } from '../utils/formatters';
+import { CloseIcon } from '../components/AppIcons';
 
 const ALERT_THRESHOLD = 300;  // 5 minutes
 const AUTO_STOP_AT    = 720;  // 12 minutes
@@ -20,7 +21,7 @@ function RedAlert({ elapsed, onClose, emergencyMedications = [], neurologistName
         className="absolute top-6 right-6 w-10 h-10 rounded-full flex items-center justify-center text-xl font-black transition-all active:scale-90"
         style={{ backgroundColor: 'rgba(255,255,255,0.2)', color: '#fff' }}
       >
-        ✕
+        <CloseIcon className="w-5 h-5" />
       </button>
 
       {/* Content */}

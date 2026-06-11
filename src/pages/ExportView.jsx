@@ -4,6 +4,7 @@ import { db } from '../data/db';
 import { ScrollFade } from '../components/ScrollFade';
 import { ExportCard } from '../components/ExportCard';
 import { PrintPreviewOverlay } from '../components/PrintPreviewOverlay';
+import { ActivityIcon, CalendarIcon, DownloadIcon, EyeIcon, FileStackIcon, ReportIcon, StethoscopeIcon, TableIcon } from '../components/AppIcons';
 import {
   exportToJSON,
   exportToCSV,
@@ -161,8 +162,10 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false, 
         <ExportCard
           label={t('export.backup_json_label')}
           description={t('export.backup_json_desc')}
+          icon={<FileStackIcon className="w-5 h-5" />}
           actions={[{
             label: t('export.generate'),
+            icon: <DownloadIcon className="w-4 h-4" />,
             onClick: async () => {
               const events = await db.events.orderBy('startTime').toArray();
               const logs = await db.medicationLogs.toArray().catch(() => []);
@@ -181,8 +184,10 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false, 
         <ExportCard
           label={t('export.csv_label')}
           description={t('export.csv_desc')}
+          icon={<TableIcon className="w-5 h-5" />}
           actions={[{
             label: t('export.generate'),
+            icon: <DownloadIcon className="w-4 h-4" />,
             onClick: async () => {
               const events = await getEvents();
               const fromMs = new Date(fromDate).setHours(0, 0, 0, 0);
@@ -196,9 +201,10 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false, 
         <ExportCard
           label={t('export.pdf_label')}
           description={t('export.pdf_desc')}
+          icon={<ReportIcon className="w-5 h-5" />}
           actions={[
-            { label: t('export.open_preview'), onClick: handleSimplePdfReport, variant: 'secondary' },
-            { label: t('export.download_pdf'), onClick: handleSimplePdfDownload },
+            { label: t('export.open_preview'), icon: <EyeIcon className="w-4 h-4" />, onClick: handleSimplePdfReport, variant: 'secondary' },
+            { label: t('export.download_pdf'), icon: <DownloadIcon className="w-4 h-4" />, onClick: handleSimplePdfDownload },
           ]}
         />
 
@@ -228,7 +234,7 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false, 
               className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0"
               style={{ backgroundColor: 'color-mix(in srgb, var(--accent) 15%, transparent)' }}
             >
-              🩺
+              <StethoscopeIcon className="w-6 h-6" />
             </div>
             <div className="flex-1">
               <p className="font-black uppercase tracking-widest text-sm" style={{ color: 'var(--text-primary)' }}>
@@ -247,16 +253,18 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false, 
           <div className="flex flex-wrap gap-2">
             <button
               onClick={handleNeurologistReport}
-              className="flex-1 min-w-[150px] py-3 rounded-xl font-black uppercase text-[10px] tracking-widest text-center active:scale-95 transition-all"
+              className="flex-1 min-w-[150px] inline-flex items-center justify-center gap-2 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest text-center active:scale-95 transition-all"
               style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
             >
+              <EyeIcon className="w-4 h-4" />
               {t('export.open_preview')}
             </button>
             <button
               onClick={handleNeurologistReportPdf}
-              className="flex-1 min-w-[150px] py-3 rounded-xl font-black uppercase text-[10px] tracking-widest text-center active:scale-95 transition-all"
+              className="flex-1 min-w-[150px] inline-flex items-center justify-center gap-2 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest text-center active:scale-95 transition-all"
               style={{ backgroundColor: 'var(--accent)', color: '#fff', border: '1px solid transparent' }}
             >
+              <DownloadIcon className="w-4 h-4" />
               {t('export.download_pdf')}
             </button>
           </div>
@@ -276,7 +284,7 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false, 
               className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0"
               style={{ backgroundColor: 'var(--bg-raised)' }}
             >
-              📅
+              <CalendarIcon className="w-6 h-6" />
             </div>
             <div className="flex-1">
               <p className="font-black uppercase tracking-widest text-sm" style={{ color: 'var(--text-primary)' }}>
@@ -302,16 +310,18 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false, 
             <div className="date-selector-actions">
               <button
                 onClick={handleSeizureDiary}
-                className="px-5 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all active:scale-95"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all active:scale-95"
                 style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
               >
+                <EyeIcon className="w-4 h-4" />
                 {t('export.open_preview')}
               </button>
               <button
                 onClick={handleSeizureDiaryPdf}
-                className="px-5 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all active:scale-95"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all active:scale-95"
                 style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
               >
+                <DownloadIcon className="w-4 h-4" />
                 {t('export.download_pdf')}
               </button>
             </div>
@@ -325,9 +335,11 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false, 
         <ExportCard
           label={t('export.eeg_label', 'EEG Clinical Table')}
           description={t('export.eeg_desc', 'Export the most recent EEG session as a table-first clinical PDF.')}
+          icon={<ActivityIcon className="w-5 h-5" />}
           actions={[
             {
               label: t('export.open_preview'),
+              icon: <EyeIcon className="w-4 h-4" />,
               variant: 'secondary',
               onClick: async () => {
                 const eegBundle = await getEegBundle();
@@ -337,6 +349,7 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false, 
             },
             {
               label: t('export.download_pdf'),
+              icon: <DownloadIcon className="w-4 h-4" />,
               onClick: async () => {
                 const eegBundle = await getEegBundle();
                 if (!eegBundle.session) return;

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollFade } from './ScrollFade';
+import { CloseIcon } from './AppIcons';
 
 // ─── Min/sec duration input pair ─────────────────────────────
 function DurField({ label, value, onChange }) {
@@ -108,7 +109,7 @@ export function ManualEntrySheet({ onConfirm, onClose }) {
             className="min-w-[36px] min-h-[36px] flex items-center justify-center font-black text-sm active:opacity-60"
             style={{ color: 'var(--text-faint)' }}
           >
-            ✕
+            <CloseIcon className="w-4 h-4" />
           </button>
         </div>
 

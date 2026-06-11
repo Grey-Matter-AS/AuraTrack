@@ -12,6 +12,9 @@ export function WizardMenu({
   onToggleOption,
   onConfirmSelection,
   confirmLabel = 'Confirm Selection',
+  onPrimaryAction,
+  primaryActionLabel,
+  primaryActionIcon = null,
 }) {
   return (
     <div className="app-page-shell flex flex-col h-full mx-auto animate-in fade-in zoom-in duration-300">
@@ -59,6 +62,20 @@ export function WizardMenu({
             style={{ backgroundColor: 'var(--accent)', color: '#fff', border: '2px solid color-mix(in srgb, var(--accent) 65%, white 0%)' }}
           >
             {confirmLabel}
+          </button>
+        )}
+        {onPrimaryAction && primaryActionLabel && (
+          <button
+            onClick={onPrimaryAction}
+            className="w-full mt-4 py-5 px-8 text-center rounded-[2rem] text-xs font-black uppercase tracking-widest active:scale-[0.97] transition-all shadow-lg inline-flex items-center justify-center gap-2"
+            style={{
+              backgroundColor: 'color-mix(in srgb, var(--accent) 18%, var(--bg-card))',
+              color: 'var(--accent)',
+              border: '2px solid color-mix(in srgb, var(--accent) 55%, transparent)',
+            }}
+          >
+            {primaryActionIcon}
+            {primaryActionLabel}
           </button>
         )}
         {onSkip && (

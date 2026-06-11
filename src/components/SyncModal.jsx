@@ -3,6 +3,7 @@ import QRCode from 'qrcode';
 import jsQR from 'jsqr';
 import { useP2PSync } from '../hooks/useP2PSync';
 import { useLANSync } from '../hooks/useLANSync';
+import { CloseIcon, DownloadIcon, UploadIcon } from './AppIcons';
 import { exportToJSON } from '../utils/exportHelpers';
 import { db } from '../data/db';
 import { assertImportFileSafe } from '../utils/importSanitizer';
@@ -587,14 +588,14 @@ function ManualFilePanel({ role, onDone }) {
           style={role === 'sender'
             ? { backgroundColor: 'var(--accent)', color: '#fff' }
             : { backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)' }}>
-          <span>⬇</span> Export Backup (JSON)
+          <DownloadIcon className="w-4 h-4" /> Export Backup (JSON)
         </button>
         <button onClick={handleImportClick}
           className="w-full py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2"
           style={role === 'receiver'
             ? { backgroundColor: 'var(--accent)', color: '#fff' }
             : { backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)' }}>
-          <span>⬆</span> Import Backup (JSON)
+          <UploadIcon className="w-4 h-4" /> Import Backup (JSON)
         </button>
         <input ref={fileRef} type="file" accept=".json" className="hidden" onChange={handleImport} />
       </div>
@@ -721,7 +722,7 @@ export default function SyncModal({ isOpen, onClose, connectToken, offerSDP }) {
           <button onClick={onClose}
             className="w-8 h-8 rounded-xl text-sm font-black flex items-center justify-center active:scale-95 transition-all"
             style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)' }}>
-            ✕
+            <CloseIcon className="w-4 h-4" />
           </button>
         </div>
 

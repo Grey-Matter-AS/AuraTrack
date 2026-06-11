@@ -1,4 +1,6 @@
 
+import { CloseIcon, InstallIcon } from './AppIcons';
+
 export function PWAInstallBanner({ isVisible, isIOS, install, dismiss, showManualInstructions, dismissManual }) {
   if (!isVisible) return null;
 
@@ -15,7 +17,12 @@ export function PWAInstallBanner({ isVisible, isIOS, install, dismiss, showManua
           pointerEvents: 'auto',
         }}
       >
-        <div className="text-xl shrink-0">📲</div>
+        <div
+          className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
+          style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--accent)' }}
+        >
+          <InstallIcon className="w-5 h-5" />
+        </div>
 
         <div className="flex-1 min-w-0">
           {showManualInstructions ? (
@@ -51,9 +58,10 @@ export function PWAInstallBanner({ isVisible, isIOS, install, dismiss, showManua
         {!isIOS && !showManualInstructions && (
           <button
             onClick={install}
-            className="shrink-0 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider text-white active:scale-95 transition-transform"
+            className="shrink-0 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider text-white active:scale-95 transition-transform"
             style={{ backgroundColor: 'var(--accent)' }}
           >
+            <InstallIcon className="w-4 h-4" />
             Install
           </button>
         )}
@@ -64,7 +72,7 @@ export function PWAInstallBanner({ isVisible, isIOS, install, dismiss, showManua
           style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)' }}
           aria-label="Dismiss"
         >
-          ✕
+          <CloseIcon className="w-3.5 h-3.5" />
         </button>
       </div>
     </div>

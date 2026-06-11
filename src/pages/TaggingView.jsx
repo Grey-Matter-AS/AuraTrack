@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { WizardMenu } from '../components/WizardMenu';
+import { ArrowRightIcon } from '../components/AppIcons';
 import Summary from '../components/Summary';
 import { SYMPTOM_WIZARD, REGION_WIZARD, SEIZURE_TYPES } from '../data/constants';
 import { db } from '../data/db';
@@ -243,20 +244,18 @@ export default function TaggingView({
                 options={[
                   ...(favoriteSets.length ? ['Favorite Symptom Sets'] : []),
                   ...Object.keys(SYMPTOM_WIZARD),
-                  t('tagging.continue_to_summary', 'Continue to Summary'),
                 ]}
                 onPick={v => {
                   if (v === 'Favorite Symptom Sets') {
                     setTaggingStep('FAV_PICK');
                     return;
                   }
-                  if (v === t('tagging.continue_to_summary', 'Continue to Summary')) {
-                    setTaggingStep('SUMMARY');
-                    return;
-                  }
                   setSelections({ ...selections, group: v, symptom: '', detail: '', region: '', subRegion: '', specificPart: '', medical: '' });
                   setTaggingStep('S_SYM');
                 }}
+                onPrimaryAction={() => setTaggingStep('SUMMARY')}
+                primaryActionLabel={t('tagging.continue_to_summary', 'Continue to Summary')}
+                primaryActionIcon={<ArrowRightIcon className="w-4 h-4" />}
                 onSkip={onSkip}
                 skipLabel={skipLabel}
               />

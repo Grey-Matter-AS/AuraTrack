@@ -26,6 +26,7 @@ import EventDetailView from './pages/EventDetailView';
 import AboutView from './pages/AboutView';
 import HelpView from './pages/HelpView';
 import SyncModal from './components/SyncModal';
+import { HelpIcon, HistoryIcon, SettingsIcon } from './components/AppIcons';
 
 function Header({ onSettings, onHistory, onHelp }) {
   const { t } = useTranslation();
@@ -33,21 +34,23 @@ function Header({ onSettings, onHistory, onHelp }) {
     <div className="pt-4 pb-3 shrink-0 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 px-4 sm:px-6">
       <button
         onClick={onHistory}
-        className="app-toolbar-btn w-full max-w-[7.75rem] justify-self-start text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
+        className="app-toolbar-btn w-full max-w-[8.75rem] justify-self-start gap-2 text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
         style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
       >
+        <HistoryIcon className="w-4 h-4 shrink-0" />
         {t('nav.history')}
       </button>
       <div className="text-center">
         <h1 className="text-[10px] font-black tracking-[0.4em] text-[var(--text-faint)] uppercase opacity-50">AURATRACK</h1>
         <div className="h-1 w-4 bg-[var(--accent)] mx-auto mt-1 rounded-full opacity-60" />
       </div>
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 justify-self-end w-full max-w-[10.5rem]">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 justify-self-end w-full max-w-[12rem]">
         <button
           onClick={onSettings}
-          className="app-toolbar-btn text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
+          className="app-toolbar-btn gap-2 text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
           style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
         >
+          <SettingsIcon className="w-4 h-4 shrink-0" />
           {t('nav.settings')}
         </button>
         <button
@@ -56,7 +59,7 @@ function Header({ onSettings, onHistory, onHelp }) {
           style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
           aria-label={t('nav.help_label')}
         >
-          ?
+          <HelpIcon className="w-4.5 h-4.5" />
         </button>
       </div>
     </div>

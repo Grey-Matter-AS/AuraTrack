@@ -10,6 +10,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { TRIGGERS } from '../data/constants';
+import { CloseIcon, GripIcon } from './AppIcons';
 
 const POST_ICTAL_FINDINGS = [
   'Confusion',
@@ -18,7 +19,7 @@ const POST_ICTAL_FINDINGS = [
   'Speech difficulty',
 ];
 
-// ─── Drag-handle icon — ▲▼ pair signals "drag to reorder" ────
+// ─── Drag handle ───────────────────────────────────────────────
 function DragHandle(props) {
   return (
     <div
@@ -27,8 +28,7 @@ function DragHandle(props) {
       style={{ touchAction: 'none', color: 'var(--text-dim)', gap: '1px' }}
       aria-label="Drag to reorder"
     >
-      <span className="text-[11px] font-black leading-none select-none">▲</span>
-      <span className="text-[11px] font-black leading-none select-none">▼</span>
+      <GripIcon className="w-4 h-4" />
     </div>
   );
 }
@@ -67,7 +67,7 @@ function SortableSymptomRow({ symptom, index, onRemove }) {
         className="shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center text-[10px] font-black text-red-500 uppercase rounded-xl border transition-all active:bg-red-600 active:text-white"
         style={{ backgroundColor: 'rgba(239,68,68,0.08)', borderColor: 'rgba(239,68,68,0.3)' }}
       >
-        ✕
+        <CloseIcon className="w-4 h-4" />
       </button>
     </div>
   );
@@ -509,7 +509,7 @@ function Summary({
                       className="shrink-0 min-w-[40px] min-h-[40px] flex items-center justify-center text-[10px] font-black uppercase rounded-xl border transition-all active:bg-red-600 active:text-white"
                       style={{ backgroundColor: 'rgba(239,68,68,0.08)', borderColor: 'rgba(239,68,68,0.3)', color: '#ef4444' }}
                     >
-                      ✕
+                      <CloseIcon className="w-4 h-4" />
                     </button>
                   </div>
                 ))}

@@ -6,6 +6,7 @@ import { assertImportFileSafe } from '../utils/importSanitizer';
 import { mergeRemoteData } from '../utils/syncHelpers';
 import { useMedications } from '../hooks/useMedications';
 import { defaultScheduledTimes, scheduledDaysLabel } from '../utils/medicationSchedule';
+import { CloseIcon, DownloadIcon, EditIcon, InstallIcon, ResetIcon, SyncIcon, TrashIcon, UploadIcon } from './AppIcons';
 import pkg from '../../package.json';
 import i18n from '../i18n';
 
@@ -129,7 +130,14 @@ function ActionBtn({ label, sub, onClick, icon, variant = 'default' }) {
       className="flex flex-col items-center justify-center gap-1 py-5 rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all active:scale-95"
       style={{ backgroundColor: bg, color, border: variant === 'danger' ? '1px solid rgba(185,28,28,0.3)' : '1px solid var(--border)' }}
     >
-      {icon && <span className="text-2xl">{icon}</span>}
+      {icon && (
+        <span
+          className="w-10 h-10 rounded-2xl flex items-center justify-center"
+          style={{ backgroundColor: variant === 'danger' ? 'rgba(239,68,68,0.12)' : 'var(--bg-card)' }}
+        >
+          {icon}
+        </span>
+      )}
       <span className="text-center leading-snug whitespace-normal">{label}</span>
       {sub && <span className="text-[9px] opacity-60 font-medium normal-case tracking-normal">{sub}</span>}
     </button>
@@ -454,13 +462,13 @@ function MedicationSection({ flash, notificationPermission, onRequestNotificatio
                       className="min-w-[32px] min-h-[32px] flex items-center justify-center rounded-xl text-[11px] font-black transition-all active:scale-95"
                       style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-dim)', border: '1px solid var(--border)' }}
                       aria-label={`Edit ${m.name}`}
-                    >✎</button>
+                    ><EditIcon className="w-4 h-4" /></button>
                     <button
                       onClick={() => setDeleteConfirm(m.id)}
                       className="min-w-[32px] min-h-[32px] flex items-center justify-center rounded-xl text-[11px] font-black text-red-500 active:bg-red-600 active:text-white transition-all"
                       style={{ backgroundColor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)' }}
                       aria-label={`Remove ${m.name}`}
-                    >✕</button>
+                    ><CloseIcon className="w-4 h-4" /></button>
                   </div>
                 </div>
               </div>
@@ -893,11 +901,11 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <ActionBtn label={t('settings.data.export_backup')} sub={t('settings.data.export_sub')} icon="⬇" onClick={handleExportBackup} />
-          <ActionBtn label={t('settings.data.import_data')}   sub={t('settings.data.import_sub')}    icon="⬆" onClick={handleImportClick} />
+          <ActionBtn label={t('settings.data.export_backup')} sub={t('settings.data.export_sub')} icon={<DownloadIcon className="w-5 h-5" />} onClick={handleExportBackup} />
+          <ActionBtn label={t('settings.data.import_data')}   sub={t('settings.data.import_sub')}    icon={<UploadIcon className="w-5 h-5" />} onClick={handleImportClick} />
         </div>
         {onSync && (
-          <ActionBtn label="Sync to Another Device" sub="QR · WiFi · File" icon="⇄" onClick={onSync} />
+          <ActionBtn label="Sync to Another Device" sub="QR · WiFi · File" icon={<SyncIcon className="w-5 h-5" />} onClick={onSync} />
         )}
 
         <div
@@ -946,7 +954,7 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
               </div>
             </div>
           ) : (
-            <ActionBtn label={t('settings.data.clear_btn')} variant="danger" onClick={() => setShowClearConfirm(true)} />
+            <ActionBtn label={t('settings.data.clear_btn')} icon={<TrashIcon className="w-5 h-5" />} variant="danger" onClick={() => setShowClearConfirm(true)} />
           )}
         </div>
       </Section>}
@@ -985,7 +993,7 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
             <ActionBtn
               label={t('settings.about_section.reinstall')}
               sub={t('settings.about_section.reinstall_sub')}
-              icon="📲"
+              icon={<InstallIcon className="w-5 h-5" />}
               onClick={pwa.resetDismissal}
             />
           </div>
@@ -1004,7 +1012,7 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
               </div>
             </div>
           ) : (
-            <ActionBtn label={t('settings.data.reset_btn')} variant="danger" onClick={() => setShowResetConfirm(true)} />
+            <ActionBtn label={t('settings.data.reset_btn')} icon={<ResetIcon className="w-5 h-5" />} variant="danger" onClick={() => setShowResetConfirm(true)} />
           )}
         </div>
       </Section>}
