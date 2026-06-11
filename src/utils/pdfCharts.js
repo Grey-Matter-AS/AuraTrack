@@ -12,13 +12,13 @@ const NO_DATA = (title) => `<svg viewBox="0 0 520 140" xmlns="http://www.w3.org/
 </svg>`;
 
 // ── A. Seizure frequency bar chart (last N days) ─────────────
-export function freqBarChartSVG(events, days = 30) {
+export function freqBarChartSVG(events, days = 30, endMs = Date.now()) {
   const locale = i18n.resolvedLanguage || i18n.language || 'en';
   if (!events.length) return NO_DATA(i18n.t('export.docs.chart_seizure_frequency', { count: days }));
 
   const W = 520, H = 150, ml = 35, mr = 15, mt = 18, mb = 30;
   const cw = W - ml - mr, ch = H - mt - mb;
-  const now = Date.now();
+  const now = endMs;
 
   const buckets = Array.from({ length: days }, (_, i) => {
     const d = new Date(now - (days - 1 - i) * 86400000);
@@ -69,8 +69,8 @@ export function freqBarChartSVG(events, days = 30) {
 }
 
 // ── B. Duration trend line chart ──────────────────────────────
-export function durationLineSVG(events) {
-  if (!events.length) return NO_DATA(i18n.t('export.docs.chart_duration_trend'));
+export function durationLineSVG(events, days = events.length) {
+  if (!events.length) return NO_DATA(i18n.t('export.docs.chart_duration_trend', { count: days }));
 
   const W = 520, H = 150, ml = 45, mr = 15, mt = 18, mb = 28;
   const cw = W - ml - mr, ch = H - mt - mb;
@@ -107,7 +107,7 @@ export function durationLineSVG(events) {
 
   return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
   <rect width="${W}" height="${H}" fill="white"/>
-  <text x="${W / 2}" y="11" text-anchor="middle" font-size="9" font-weight="bold" fill="#374151">${esc(i18n.t('export.docs.chart_duration_trend'))}</text>
+  <text x="${W / 2}" y="11" text-anchor="middle" font-size="9" font-weight="bold" fill="#374151">${esc(i18n.t('export.docs.chart_duration_trend', { count: days }))}</text>
   ${yTicks}${thresh}
   <polyline points="${pts}" fill="none" stroke="#1e3a5f" stroke-width="1.5" stroke-linejoin="round"/>
   ${dots}${xLbls}

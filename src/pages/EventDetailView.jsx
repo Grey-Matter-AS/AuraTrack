@@ -254,6 +254,44 @@ export default function EventDetailView({ eventId, onEdit, onClose, durationForm
           </div>
         )}
 
+        {/* Post-ictal findings */}
+        {(event.postIctal?.findings?.length > 0 || event.postIctal?.paralysisLocations?.length > 0) && (
+          <div className="p-5 rounded-2xl" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
+            <p className="text-[10px] font-black uppercase tracking-widest mb-3" style={{ color: 'var(--text-dim)' }}>
+              {t('event_detail.post_ictal', 'Post-ictal findings')}
+            </p>
+
+            {event.postIctal?.findings?.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-3">
+                {event.postIctal.findings.map((finding) => (
+                  <span
+                    key={finding}
+                    className="px-3 py-1.5 rounded-full text-[11px] font-black uppercase tracking-wide"
+                    style={{ backgroundColor: 'rgba(96,165,250,0.12)', color: '#93c5fd', border: '1.5px solid rgba(96,165,250,0.35)' }}
+                  >
+                    {finding}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {event.postIctal?.paralysisLocations?.length > 0 && (
+              <div className="space-y-2">
+                {event.postIctal.paralysisLocations.map((location, index) => (
+                  <div key={`${location.region}-${location.subRegion}-${location.specificPart}-${index}`} className="rounded-2xl px-3 py-2" style={{ backgroundColor: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.25)' }}>
+                    <p className="text-[11px] font-black uppercase tracking-wide" style={{ color: '#93c5fd' }}>
+                      Todd&apos;s paralysis
+                    </p>
+                    <p className="text-[11px]" style={{ color: 'var(--text-secondary)' }}>
+                      {location.region} › {location.subRegion} › {location.specificPart}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Notes */}
         {event.notes && (
           <div className="p-5 rounded-2xl" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>

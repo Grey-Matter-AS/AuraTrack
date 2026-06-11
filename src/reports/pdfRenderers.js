@@ -69,8 +69,8 @@ export async function downloadNeurologistReportPdf(data) {
   const margin = 40;
   let cursorY = 42;
   const [freqChart, durationChart, typeChart, phaseChart] = await Promise.all([
-    renderSvgChart(freqBarChartSVG(data.charts.periodEvents, 30)),
-    renderSvgChart(durationLineSVG(data.charts.periodEvents)),
+    renderSvgChart(freqBarChartSVG(data.charts.periodEvents, data.periodDays, data.charts.periodEndMs)),
+    renderSvgChart(durationLineSVG(data.charts.periodEvents, data.periodDays)),
     renderSvgChart(typeBarSVG(data.charts.byType, data.charts.totalEvents)),
     renderSvgChart(phaseStackSVG(data.charts.periodEvents, 10)),
   ]);
@@ -81,7 +81,7 @@ export async function downloadNeurologistReportPdf(data) {
     title: t('export.docs.neurological_report'),
     subtitleLines: [
       `${t('export.docs.generated')}: ${data.generatedDate}`,
-      `${t('export.docs.period')}: ${data.periodStartStr} - ${data.periodEndStr} (${t('export.docs.last_30_days')})`,
+      `${t('export.docs.period')}: ${data.periodStartStr} - ${data.periodEndStr} (${t('export.docs.selected_days', { count: data.periodDays })})`,
     ],
     rightTitle: t('export.docs.prepared_by'),
     rightValue: data.settings.reporterLabel || '-',
@@ -128,7 +128,7 @@ export async function downloadNeurologistReportPdf(data) {
   const statWidth = (pageWidth - margin * 2 - statGap * 3) / 4;
   const statY = cursorY;
   [
-    [String(data.stats.totalEvents), t('export.docs.events_30d')],
+    [String(data.stats.totalEvents), t('export.docs.events_period', { count: data.periodDays })],
     [data.stats.avgDurationLabel === '-' ? '0s' : data.stats.avgDurationLabel, t('export.docs.avg_duration')],
     [String(data.stats.daysCovered), t('export.docs.days_affected')],
     [String(data.stats.seizureTypeCount), t('export.docs.seizure_types')],
@@ -205,7 +205,7 @@ export async function downloadNeurologistReportPdf(data) {
         ? `${t('export.docs.fully_awake')}: ${data.stats.awareness.awake} | ${t('export.docs.confused')}: ${data.stats.awareness.confused} | ${t('export.docs.blackout')}: ${data.stats.awareness.blackout}`
         : t('export.docs.not_recorded'),
     },
-    { label: t('export.docs.recovery_quality'), value: t('export.docs.not_recorded') },
+    { label: t('export.docs.recovery_quality'), value: data.stats.postIctalSummary || t('export.docs.post_ictal_none', 'No post-ictal findings recorded') },
     { label: t('export.docs.rescue_medication_use'), value: t('export.docs.not_recorded') },
     { label: t('export.docs.triggers_medications'), value: data.reportNotes || t('export.docs.not_recorded') },
   ];
@@ -639,7 +639,9 @@ function drawFlagCard(doc, x, y, width, flag) {
 
 function drawDetailEventCard(doc, x, y, width, event, t) {
   const notesLines = event.notes ? doc.splitTextToSize(event.notes, width - 24) : [];
-  const height = notesLines.length ? Math.max(104, 84 + notesLines.length * 9) : 96;
+  const postIctalLines = event.postIctal?.summary ? doc.splitTextToSize(`${t('export.docs.post_ictal_summary', 'Post-ictal summary')}: ${event.postIctal.summary}`, width - 24) : [];
+  const extraLines = notesLines.length + postIctalLines.length;
+  const height = extraLines ? Math.max(104, 84 + extraLines * 9) : 96;
   doc.setDrawColor(...COLORS.line);
   doc.roundedRect(x, y, width, height, 8, 8, 'S');
   doc.setFont('helvetica', 'bold');
@@ -685,11 +687,20 @@ function drawDetailEventCard(doc, x, y, width, event, t) {
     doc.text(value || '-', columnX, metricY + 13);
   });
 
+  let textY = y + 90;
+  if (event.postIctal?.summary) {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(...COLORS.blue);
+    doc.text(postIctalLines, x + 12, textY);
+    textY += postIctalLines.length * 9 + 4;
+  }
+
   if (event.notes) {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
     doc.setTextColor(...COLORS.muted);
-    doc.text(notesLines, x + 12, y + 90);
+    doc.text(notesLines, x + 12, textY);
   }
 
   return y + height;

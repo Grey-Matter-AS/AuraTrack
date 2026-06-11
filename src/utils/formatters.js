@@ -30,7 +30,24 @@ export const formatCSVField = (value) => {
   return `"${formulaSafe.replace(/"/g, '""')}"`;
 };
 
-export const formatCSVRow = (event) =>
-  [event.id, event.date, event.time, event.type, event.duration, event.notes || '']
+export const formatCSVRow = (event) => {
+  const postIctalFindings = Array.isArray(event.postIctal?.findings) ? event.postIctal.findings.join('|') : '';
+  const postIctalParalysisLocations = Array.isArray(event.postIctal?.paralysisLocations)
+    ? event.postIctal.paralysisLocations
+      .map((location) => [location.region, location.subRegion, location.specificPart].filter(Boolean).join(' > '))
+      .join('|')
+    : '';
+
+  return [
+    event.id,
+    event.date,
+    event.time,
+    event.type,
+    event.duration,
+    event.notes || '',
+    postIctalFindings,
+    postIctalParalysisLocations,
+  ]
     .map(formatCSVField)
     .join(',');
+};

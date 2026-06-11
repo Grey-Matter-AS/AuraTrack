@@ -58,6 +58,27 @@ export function describeSymptomPath(symptom = {}) {
   };
 }
 
+export function describePostIctal(postIctal = {}, t = getTranslator()) {
+  const findings = Array.isArray(postIctal.findings) ? postIctal.findings : [];
+  const paralysisLocations = Array.isArray(postIctal.paralysisLocations) ? postIctal.paralysisLocations : [];
+
+  const paralysisSummary = paralysisLocations.map((location) =>
+    [location.region, location.subRegion, location.specificPart].filter(Boolean).join(' > ')
+  );
+
+  const summaryParts = [
+    findings.length ? `${t('export.docs.post_ictal_findings', 'Post-ictal findings')}: ${findings.join(', ')}` : '',
+    paralysisSummary.length ? `${t('export.docs.post_ictal_paralysis', 'Post-ictal paralysis')}: ${paralysisSummary.join('; ')}` : '',
+  ].filter(Boolean);
+
+  return {
+    findings,
+    paralysisLocations,
+    paralysisSummary,
+    summary: summaryParts.join(' | '),
+  };
+}
+
 export function buildEventLogData(events) {
   const locale = getCurrentLocale();
   const t = getTranslator();
@@ -67,13 +88,18 @@ export function buildEventLogData(events) {
     locale,
     generatedDate,
     events: events.map(event => ({
+      postIctal: describePostIctal(event.postIctal, t),
       id: event.id,
       date: event.date || '',
       time: event.time || '',
       type: event.type || '',
       durationSec: event.duration || 0,
       durationLabel: `${event.duration || 0}s`,
-      notesHtml: [event.notes || '', event.videoFileName ? `${t('event_detail.associated_video', 'Associated video')}: ${event.videoFileName}` : '']
+      notesHtml: [
+        event.notes || '',
+        event.postIctal ? describePostIctal(event.postIctal, t).summary : '',
+        event.videoFileName ? `${t('event_detail.associated_video', 'Associated video')}: ${event.videoFileName}` : '',
+      ]
         .filter(Boolean)
         .map(line => esc(line))
         .join('<br>'),
@@ -82,14 +108,16 @@ export function buildEventLogData(events) {
   };
 }
 
-export function buildNeurologistReportData(events, settings = {}, medications = [], medicationLogs = []) {
+export function buildNeurologistReportData(events, settings = {}, medications = [], medicationLogs = [], reportRange = {}) {
   const locale = getCurrentLocale();
   const t = getTranslator();
   const now = Date.now();
-  const periodStart = now - 30 * DAY_MS;
+  const selectedFromMs = reportRange.fromMs ?? (events.length ? Math.min(...events.map(event => event.startTime || now)) : now);
+  const selectedToMs = reportRange.toMs ?? (events.length ? Math.max(...events.map(event => event.startTime || now)) : now);
+  const periodDays = Math.max(1, Math.floor((selectedToMs - selectedFromMs) / DAY_MS) + 1);
   const generatedDate = new Date(now).toLocaleDateString(locale, { day: '2-digit', month: 'long', year: 'numeric' });
-  const periodStartStr = new Date(periodStart).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' });
-  const periodEndStr = new Date(now).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' });
+  const periodStartStr = new Date(selectedFromMs).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' });
+  const periodEndStr = new Date(selectedToMs).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' });
 
   const {
     personName = '',
@@ -105,9 +133,17 @@ export function buildNeurologistReportData(events, settings = {}, medications = 
   } = settings;
 
   const allSorted = [...events].sort((a, b) => (b.startTime || 0) - (a.startTime || 0));
-  const periodEvents = allSorted.filter(event => (event.startTime || 0) >= periodStart);
+  const periodEvents = allSorted.filter(event => {
+    const startTime = event.startTime || 0;
+    return startTime >= selectedFromMs && startTime <= selectedToMs;
+  });
   const last10Events = allSorted.slice(0, 10);
-  const last10DaysEvents = allSorted.filter(event => (event.startTime || 0) >= now - 10 * DAY_MS);
+  const recentWindowDays = Math.min(10, periodDays);
+  const recentWindowStart = selectedToMs - (recentWindowDays - 1) * DAY_MS;
+  const last10DaysEvents = allSorted.filter(event => {
+    const startTime = event.startTime || 0;
+    return startTime >= recentWindowStart && startTime <= selectedToMs;
+  });
   const recentEvents = last10DaysEvents.length >= last10Events.length ? last10DaysEvents : last10Events;
 
   const byType = {};
@@ -125,6 +161,7 @@ export function buildNeurologistReportData(events, settings = {}, medications = 
   const subjectLabel = userMode === 'CARETAKER' ? personName : t('export.docs.self_subject');
 
   const awareness = { awake: 0, confused: 0, blackout: 0 };
+  const postIctalCounts = {};
   periodEvents.forEach(event => {
     (event.symptoms || []).forEach(symptom => {
       const value = (symptom.symptom || symptom.detail || '').toLowerCase();
@@ -132,7 +169,21 @@ export function buildNeurologistReportData(events, settings = {}, medications = 
       else if (value.includes('confused') || value.includes('dream')) awareness.confused += 1;
       else if (value.includes('blackout') || value.includes('loss')) awareness.blackout += 1;
     });
+    const postIctal = describePostIctal(event.postIctal, t);
+    postIctal.findings.forEach((finding) => {
+      postIctalCounts[finding] = (postIctalCounts[finding] || 0) + 1;
+    });
+    if (postIctal.paralysisLocations.length > 0) {
+      const paralysisLabel = t('export.docs.post_ictal_paralysis', 'Post-ictal paralysis');
+      postIctalCounts[paralysisLabel] = (postIctalCounts[paralysisLabel] || 0) + postIctal.paralysisLocations.length;
+    }
   });
+
+  const postIctalSummary = Object.entries(postIctalCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([label, count]) => `${label} (${count}x)`)
+    .join(', ');
 
   const detailMap = new Map();
   const addDetail = event => { if (event?.id != null) detailMap.set(event.id, event); };
@@ -157,7 +208,7 @@ export function buildNeurologistReportData(events, settings = {}, medications = 
     });
   }
 
-  const midpoint = periodStart + 15 * DAY_MS;
+  const midpoint = selectedFromMs + Math.floor(periodDays / 2) * DAY_MS;
   const firstHalf = periodEvents.filter(event => (event.startTime || 0) < midpoint).length;
   const secondHalf = periodEvents.filter(event => (event.startTime || 0) >= midpoint).length;
   if (secondHalf > firstHalf * 1.5 && secondHalf > 1) {
@@ -225,14 +276,14 @@ export function buildNeurologistReportData(events, settings = {}, medications = 
       : { label: 'LOW', color: '#dc2626', bg: '#fee2e2' };
 
   const freqPerDay = { OD: 1, BD: 2, TDS: 3, QDS: 4, PRN: 0 };
-  const expectedDoses = medications.reduce((sum, medication) => sum + (freqPerDay[medication.frequency] || 0) * 30, 0);
+  const expectedDoses = medications.reduce((sum, medication) => sum + (freqPerDay[medication.frequency] || 0) * periodDays, 0);
 
   return {
     locale,
     generatedDate,
     periodStartStr,
     periodEndStr,
-    periodDays: 30,
+    periodDays,
     settings: {
       personName,
       caretakerName,
@@ -256,6 +307,7 @@ export function buildNeurologistReportData(events, settings = {}, medications = 
       byType,
       awareness,
       awarenessTotal: awareness.awake + awareness.confused + awareness.blackout,
+      postIctalSummary,
       fullyRecorded,
       partialRecorded,
       untagged,
@@ -280,6 +332,7 @@ export function buildNeurologistReportData(events, settings = {}, medications = 
       const total = event.manualDurations?.total ?? event.duration ?? 0;
       return {
         index: index + 1,
+        postIctal: describePostIctal(event.postIctal, t),
         date: event.date || '-',
         time: event.time || '-',
         type: event.type || 'Uncategorized',
@@ -299,6 +352,7 @@ export function buildNeurologistReportData(events, settings = {}, medications = 
       const total = event.manualDurations?.total ?? event.duration ?? 0;
       return {
         id: event.id,
+        postIctal: describePostIctal(event.postIctal, t),
         date: event.date || '-',
         time: event.time || '-',
         type: event.type || 'Uncategorized',
@@ -341,6 +395,9 @@ export function buildNeurologistReportData(events, settings = {}, medications = 
       })),
     charts: {
       periodEvents,
+      periodDays,
+      periodStartMs: selectedFromMs,
+      periodEndMs: selectedToMs,
       byType,
       totalEvents,
     },

@@ -51,7 +51,7 @@ function ensureDatabase(indexedDB) {
   });
 }
 
-function clearAndSeedDatabase(win, seed) {
+export function clearAndSeedDatabase(win, seed) {
   return ensureDatabase(win.indexedDB).then((db) => {
     const payload = {
       events: seed.events ?? [],

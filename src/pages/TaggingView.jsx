@@ -70,6 +70,7 @@ export default function TaggingView({
   tempSymptomList, setTempSymptomList,
   notes, setNotes,
   triggers, triggerToggle,
+  postIctal, togglePostIctalFinding, addPostIctalParalysisLocations, removePostIctalParalysisLocation,
   editingId, activeEventId,
   manualDurations, editedTimers, setManualDuration,
   overrideDateTime, isManualEntry, setEventDateTime,
@@ -83,6 +84,19 @@ export default function TaggingView({
   const [pendingSpecificParts, setPendingSpecificParts] = useState([]);
   const [customDraft, setCustomDraft] = useState('');
   const [customMode, setCustomMode] = useState(null);
+
+  const finalizePostIctalParalysisSelection = (specificParts) => {
+    if (!specificParts.length) return;
+    addPostIctalParalysisLocations(specificParts.map((specificPart) => ({
+      region: selections.region,
+      subRegion: selections.subRegion,
+      specificPart,
+      label: "Post-ictal Paralysis",
+      med: "Todd's paralysis",
+    })));
+    setPendingSpecificParts([]);
+    setTaggingStep('SUMMARY');
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -182,6 +196,14 @@ export default function TaggingView({
               setNotes={setNotes}
               triggers={triggers}
               onTriggerToggle={triggerToggle}
+              postIctal={postIctal}
+              onTogglePostIctalFinding={togglePostIctalFinding}
+              onEditPostIctalParalysis={() => {
+                setPendingSpecificParts([]);
+                setSelections({ ...selections, region: '', subRegion: '' });
+                setTaggingStep('PI_R_CAT');
+              }}
+              onRemovePostIctalParalysisLocation={removePostIctalParalysisLocation}
               elapsed={elapsed}
               laps={laps}
               startTime={startTime}
@@ -221,10 +243,15 @@ export default function TaggingView({
                 options={[
                   ...(favoriteSets.length ? ['★ Favorite Symptom Sets'] : []),
                   ...Object.keys(SYMPTOM_WIZARD),
+                  t('tagging.continue_to_summary', 'Continue to Summary'),
                 ]}
                 onPick={v => {
                   if (v === '★ Favorite Symptom Sets') {
                     setTaggingStep('FAV_PICK');
+                    return;
+                  }
+                  if (v === t('tagging.continue_to_summary', 'Continue to Summary')) {
+                    setTaggingStep('SUMMARY');
                     return;
                   }
                   setSelections({ ...selections, group: v, symptom: '', detail: '', region: '', subRegion: '', specificPart: '', medical: '' });
@@ -356,6 +383,42 @@ export default function TaggingView({
                 }}
                 onSkip={onSkip}
                 skipLabel={skipLabel}
+              />
+            )}
+            {taggingStep === 'PI_R_CAT' && (
+              <WizardMenu
+                title={t('tagging.post_ictal_paralysis', 'Post-ictal paralysis')}
+                options={Object.keys(REGION_WIZARD)}
+                onPick={v => { setPendingSpecificParts([]); setSelections({ ...selections, region: v, subRegion: '' }); setTaggingStep('PI_R_SUB'); }}
+                onBack={() => setTaggingStep('SUMMARY')}
+              />
+            )}
+            {taggingStep === 'PI_R_SUB' && selections.region && REGION_WIZARD[selections.region] && (
+              <WizardMenu
+                title={selections.region}
+                options={Object.keys(REGION_WIZARD[selections.region])}
+                onPick={v => { setPendingSpecificParts([]); setSelections({ ...selections, subRegion: v }); setTaggingStep('PI_R_DET'); }}
+                onBack={() => setTaggingStep('PI_R_CAT')}
+              />
+            )}
+            {taggingStep === 'PI_R_DET' && selections.region && selections.subRegion &&
+              REGION_WIZARD[selections.region]?.[selections.subRegion] && (
+              <WizardMenu
+                title={selections.subRegion}
+                options={REGION_WIZARD[selections.region][selections.subRegion]}
+                multiSelect
+                selectedOptions={pendingSpecificParts}
+                onToggleOption={v => {
+                  setPendingSpecificParts(prev => prev.includes(v) ? prev.filter(part => part !== v) : [...prev, v]);
+                }}
+                onConfirmSelection={() => finalizePostIctalParalysisSelection(pendingSpecificParts)}
+                confirmLabel={pendingSpecificParts.length > 0
+                  ? t('tagging.add_paralysis_areas', { count: pendingSpecificParts.length })
+                  : t('tagging.add_paralysis_area', 'Add Paralysis Area')}
+                onBack={() => {
+                  setPendingSpecificParts([]);
+                  setTaggingStep('PI_R_SUB');
+                }}
               />
             )}
             {taggingStep === 'CUSTOM_INPUT' && (

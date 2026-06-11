@@ -33,7 +33,7 @@ export const exportToJSON = async (
 };
 
 export const exportToCSV = async (events, medications = [], medicationLogs = [], eegSessions = [], eegActivities = []) => {
-  const header = 'id,date,time,type,duration,notes';
+  const header = 'id,date,time,type,duration,notes,postIctalFindings,postIctalParalysisLocations';
   const rows = events.map(formatCSVRow).join('\n');
 
   let csv = `${header}\n${rows}`;
@@ -112,16 +112,16 @@ export const exportToCSV = async (events, medications = [], medicationLogs = [],
 
 export const buildEventTablePreview = (events) => renderEventLogHtml(buildEventLogData(events));
 
-export const buildNeurologistReportPreview = (events, settings = {}, medications = [], medicationLogs = []) =>
-  renderNeurologistReportHtml(buildNeurologistReportData(events, settings, medications, medicationLogs));
+export const buildNeurologistReportPreview = (events, settings = {}, medications = [], medicationLogs = [], reportRange = {}) =>
+  renderNeurologistReportHtml(buildNeurologistReportData(events, settings, medications, medicationLogs, reportRange));
 
 export const buildSeizureDiaryPreview = (allEvents, settings = {}, medications = [], month, year) =>
   renderSeizureDiaryHtml(buildSeizureDiaryData(allEvents, settings, medications, month, year));
 
 export const exportEventLogPDF = async (events) => downloadEventLogPdf(buildEventLogData(events));
 
-export const exportNeurologistReportPDF = async (events, settings = {}, medications = [], medicationLogs = []) =>
-  downloadNeurologistReportPdf(buildNeurologistReportData(events, settings, medications, medicationLogs));
+export const exportNeurologistReportPDF = async (events, settings = {}, medications = [], medicationLogs = [], reportRange = {}) =>
+  downloadNeurologistReportPdf(buildNeurologistReportData(events, settings, medications, medicationLogs, reportRange));
 
 export const exportSeizureDiaryPDF = async (allEvents, settings = {}, medications = [], month, year) =>
   downloadSeizureDiaryPdf(buildSeizureDiaryData(allEvents, settings, medications, month, year));

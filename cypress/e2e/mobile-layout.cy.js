@@ -4,7 +4,7 @@ import { richCaretakerScenario } from '../support/scenarios';
 
 describe('AuraTrack mobile layout', () => {
   beforeEach(() => {
-    cy.viewport(390, 844);
+    cy.viewport(320, 568);
   });
 
   it('keeps export date selectors stacked on narrow screens', () => {
@@ -32,17 +32,30 @@ describe('AuraTrack mobile layout', () => {
     });
   });
 
-  it('keeps the stop button reachable on small recording screens', () => {
-    cy.launchAuraTrack();
+  it('keeps the recording page fully scrollable on small phones', () => {
+    cy.launchAuraTrack(richCaretakerScenario());
     cy.contains('button', 'START').click();
 
     cy.window().then((win) => {
+      const scrollRegion = win.document.querySelector('[data-scroll-region="recording"]');
       const stopButton = [...win.document.querySelectorAll('button')]
         .find((button) => button.textContent?.trim() === 'STOP');
-      const rect = stopButton?.getBoundingClientRect();
+      const stopWrapper = stopButton?.parentElement;
+      const beforeRect = stopButton?.getBoundingClientRect();
 
-      expect(rect).to.not.equal(undefined);
-      expect(rect.bottom).to.be.at.most(win.innerHeight);
+      expect(scrollRegion).to.not.equal(null);
+      expect(stopButton).to.not.equal(undefined);
+      expect(win.getComputedStyle(stopWrapper).position).to.not.equal('sticky');
+      expect(win.getComputedStyle(stopWrapper).position).to.not.equal('fixed');
+      expect(scrollRegion.scrollHeight).to.be.greaterThan(scrollRegion.clientHeight);
+      expect(beforeRect.top).to.be.greaterThan(win.innerHeight);
+
+      scrollRegion.scrollTop = scrollRegion.scrollHeight;
+      scrollRegion.dispatchEvent(new win.Event('scroll'));
+
+      const afterRect = stopButton.getBoundingClientRect();
+      expect(afterRect.bottom).to.be.at.most(win.innerHeight);
+      expect(afterRect.top).to.be.at.least(0);
     });
   });
 });

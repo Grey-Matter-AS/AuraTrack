@@ -134,13 +134,10 @@ function RecordingView({
   // Trigger alert at 5-minute threshold
   useEffect(() => {
     if (alertDismissed) return;
-    const triggerPatient   = userMode !== 'CARETAKER' && elapsed >= ALERT_THRESHOLD;
-    const triggerCaretaker = userMode === 'CARETAKER'  && laps.aura && !laps.seizure && seizureDuration >= ALERT_THRESHOLD;
-    if (triggerPatient || triggerCaretaker) {
-      const id = setTimeout(() => setShowAlert(true), 0);
-      return () => clearTimeout(id);
+    if (elapsed >= ALERT_THRESHOLD) {
+      setShowAlert(true);
     }
-  }, [elapsed, seizureDuration, laps, userMode, alertDismissed]);
+  }, [elapsed, alertDismissed]);
 
   // Auto-stop at 12 minutes — ref guard ensures it fires exactly once
   useEffect(() => {
@@ -166,7 +163,7 @@ function RecordingView({
       {/* RED ALERT — fullscreen overlay, stays on top of everything */}
       {showAlert && <RedAlert elapsed={elapsed} onClose={dismissAlert} emergencyMedications={emergencyMedications} neurologistName={neurologistName} neurologistContact={neurologistContact} emergencyContact={emergencyContact} />}
 
-      <div className="flex-1 min-h-full flex flex-col items-center w-full max-w-md sm:max-w-xl md:max-w-2xl mx-auto px-4 py-6 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] animate-in fade-in gap-4">
+      <div data-recording-screen className="flex-1 min-h-full flex flex-col items-center w-full max-w-md sm:max-w-xl md:max-w-2xl mx-auto px-4 py-6 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] animate-in fade-in gap-4">
 
         {/* 1. TOP: Phase Breakdown */}
         {userMode === 'CARETAKER' && (
@@ -264,10 +261,10 @@ function RecordingView({
         </div>
 
         {/* 3. DYNAMIC ACTION AREA */}
-        <div className="w-full flex gap-4 min-h-[25vh] items-stretch transition-all duration-500">
+        <div className="w-full flex flex-col gap-4 transition-all duration-500 sm:flex-row sm:items-stretch sm:min-h-[25vh]">
 
           {/* LEFT COLUMN: Phase Buttons */}
-          <div className={`flex flex-col gap-4 transition-all duration-500 ${showMarkers ? 'w-[48%]' : 'w-full'}`}>
+          <div className={`flex flex-col gap-4 transition-all duration-500 w-full ${showMarkers ? 'sm:w-[48%]' : 'sm:w-full'}`}>
             {userMode === 'CARETAKER' && (
               <>
                 <button
@@ -309,7 +306,7 @@ function RecordingView({
 
           {/* RIGHT COLUMN: Marker Sidebar */}
           {showMarkers && (
-            <div className="w-[52%] grid grid-cols-1 gap-3 animate-in slide-in-from-right fade-in duration-300">
+            <div className="w-full grid grid-cols-1 gap-3 animate-in slide-in-from-right fade-in duration-300 sm:w-[52%]">
               {quickNoteLabels.map(label => (
                 <button
                   key={label}
@@ -326,8 +323,7 @@ function RecordingView({
 
         {/* 4. STOP Button */}
         <div
-          className="w-full shrink-0 pt-2 sticky bottom-0"
-          style={{ background: 'linear-gradient(to top, var(--bg-base) 72%, transparent)' }}
+          className="w-full shrink-0 pt-2"
         >
           <button
             onClick={onStop}

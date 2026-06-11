@@ -11,6 +11,13 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { TRIGGERS } from '../data/constants';
 
+const POST_ICTAL_FINDINGS = [
+  'Confusion',
+  'Sleepiness',
+  'Weakness',
+  'Speech difficulty',
+];
+
 // ─── Drag-handle icon — ▲▼ pair signals "drag to reorder" ────
 function DragHandle(props) {
   return (
@@ -285,6 +292,10 @@ function Summary({
   setNotes,
   triggers = [],
   onTriggerToggle,
+  postIctal = { findings: [], paralysisLocations: [] },
+  onTogglePostIctalFinding,
+  onEditPostIctalParalysis,
+  onRemovePostIctalParalysisLocation,
   elapsed,
   laps,
   startTime,
@@ -398,7 +409,7 @@ function Summary({
 
           {tempSymptomList.length === 0 ? (
             <div className="py-8 text-center border-2 border-dashed rounded-[2rem]" style={{ borderColor: 'var(--border)' }}>
-              <p className="italic text-sm" style={{ color: 'var(--text-faint)' }}>No symptoms tagged yet.</p>
+              <p className="italic text-sm" style={{ color: 'var(--text-faint)' }}>{t('tagging.no_ictal_symptoms', 'No ictal symptoms tagged yet.')}</p>
             </div>
           ) : (
             <DndContext
@@ -439,6 +450,76 @@ function Summary({
               </DragOverlay>
             </DndContext>
           )}
+        </div>
+
+        {/* Post-ictal findings */}
+        <div className="w-full">
+          <p className="text-[10px] font-black uppercase tracking-widest mb-3 ml-1" style={{ color: 'var(--text-dim)' }}>
+            {t('tagging.post_ictal_findings', 'Post-ictal findings')} <span className="font-normal normal-case tracking-normal" style={{ color: 'var(--text-faint)' }}>({t('tagging.recovery_phase', 'recovery phase')})</span>
+          </p>
+          <div className="flex flex-wrap gap-2 mb-3">
+            {POST_ICTAL_FINDINGS.map((finding) => {
+              const selected = postIctal.findings.includes(finding);
+              return (
+                <button
+                  key={finding}
+                  onClick={() => onTogglePostIctalFinding?.(finding)}
+                  className="px-3 py-2 rounded-full text-[11px] font-black uppercase tracking-wide transition-all active:scale-95"
+                  style={selected
+                    ? { backgroundColor: '#60a5fa', color: '#0f172a', border: '1.5px solid #60a5fa' }
+                    : { backgroundColor: 'transparent', color: 'var(--text-dim)', border: '1.5px solid var(--border)' }}
+                >
+                  {finding}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="rounded-[2rem] p-4" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <div>
+                <p className="text-sm font-black uppercase tracking-wide" style={{ color: 'var(--text-primary)' }}>{t('tagging.post_ictal_paralysis', 'Post-ictal paralysis')}</p>
+                <p className="text-[11px] mt-1" style={{ color: 'var(--text-dim)' }}>
+                  {t('tagging.post_ictal_paralysis_help', "Record Todd's paralysis with exact affected body parts.")}
+                </p>
+              </div>
+              <button
+                onClick={onEditPostIctalParalysis}
+                className="shrink-0 min-h-[40px] px-3 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
+                style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
+              >
+                {t('tagging.add_area', '+ Add Area')}
+              </button>
+            </div>
+
+            {postIctal.paralysisLocations.length === 0 ? (
+              <p className="text-[11px]" style={{ color: 'var(--text-faint)' }}>
+                {t('tagging.no_paralysis_areas', 'No paralysis areas logged.')}
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {postIctal.paralysisLocations.map((location, index) => (
+                  <div key={`${location.region}-${location.subRegion}-${location.specificPart}-${index}`} className="flex items-center gap-3 rounded-2xl px-3 py-2" style={{ backgroundColor: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.25)' }}>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] font-black uppercase tracking-wide" style={{ color: '#93c5fd' }}>
+                        {t('tagging.todds_paralysis', "Todd's paralysis")}
+                      </p>
+                      <p className="text-[11px] truncate" style={{ color: 'var(--text-secondary)' }}>
+                        {location.region} › {location.subRegion} › {location.specificPart}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => onRemovePostIctalParalysisLocation?.(index)}
+                      className="shrink-0 min-w-[40px] min-h-[40px] flex items-center justify-center text-[10px] font-black uppercase rounded-xl border transition-all active:bg-red-600 active:text-white"
+                      style={{ backgroundColor: 'rgba(239,68,68,0.08)', borderColor: 'rgba(239,68,68,0.3)', color: '#ef4444' }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Trigger chips */}

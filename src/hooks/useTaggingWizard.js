@@ -3,6 +3,7 @@ import { db } from '../data/db';
 import { haptic } from '../utils/hapticFeedback';
 
 const EMPTY_SELECTIONS = { type: '', group: '', symptom: '', detail: '', region: '', subRegion: '', specificPart: '' };
+const EMPTY_POST_ICTAL = { findings: [], paralysisLocations: [] };
 
 export function useTaggingWizard() {
   const [taggingStep, setTaggingStep] = useState('TYPE');
@@ -14,7 +15,8 @@ export function useTaggingWizard() {
   const [manualDurations, setManualDurationsState] = useState({});
   const [editedTimers, setEditedTimers] = useState([]);
   const [triggers, setTriggers] = useState([]);
-  const [overrideDateTime, setOverrideDateTimeState] = useState(null); // { date: 'YYYY-MM-DD', time: 'HH:MM' }
+  const [postIctal, setPostIctal] = useState(EMPTY_POST_ICTAL);
+  const [overrideDateTime, setOverrideDateTimeState] = useState(null);
   const [isManualEntry, setIsManualEntry] = useState(false);
 
   const setActiveEvent = (id) => {
@@ -34,6 +36,36 @@ export function useTaggingWizard() {
     setOverrideDateTimeState({ date, time });
   };
 
+  const togglePostIctalFinding = (label) => {
+    setPostIctal(prev => ({
+      ...prev,
+      findings: prev.findings.includes(label)
+        ? prev.findings.filter(item => item !== label)
+        : [...prev.findings, label],
+    }));
+  };
+
+  const addPostIctalParalysisLocations = (locations) => {
+    setPostIctal(prev => ({
+      ...prev,
+      paralysisLocations: [
+        ...prev.paralysisLocations,
+        ...locations.filter(location => !prev.paralysisLocations.some(existing =>
+          existing.region === location.region &&
+          existing.subRegion === location.subRegion &&
+          existing.specificPart === location.specificPart
+        )),
+      ],
+    }));
+  };
+
+  const removePostIctalParalysisLocation = (index) => {
+    setPostIctal(prev => ({
+      ...prev,
+      paralysisLocations: prev.paralysisLocations.filter((_, itemIndex) => itemIndex !== index),
+    }));
+  };
+
   const loadForEdit = (event) => {
     const eventType = event.type && event.type !== 'Uncategorized' ? event.type : '';
     setEditingId(event.id);
@@ -42,6 +74,7 @@ export function useTaggingWizard() {
     setTempSymptomList(event.symptoms || []);
     setNotes(event.notes || '');
     setTriggers(event.triggers || []);
+    setPostIctal(event.postIctal || EMPTY_POST_ICTAL);
     setManualDurationsState(event.manualDurations || {});
     setEditedTimers(event.editedTimers || []);
     setOverrideDateTimeState(null);
@@ -49,13 +82,12 @@ export function useTaggingWizard() {
     setTaggingStep(!event.isComplete && !eventType ? 'TYPE' : 'SUMMARY');
   };
 
-  // Called when creating a retrospective entry (Log Past Seizure flow)
   const loadForManualEntry = (id, manualDurs, dateTime) => {
     setActiveEventId(id);
     setEditingId(null);
     setManualDurationsState(manualDurs || {});
     setEditedTimers(Object.keys(manualDurs || {}));
-    setOverrideDateTimeState(dateTime); // { date, time }
+    setOverrideDateTimeState(dateTime);
     setIsManualEntry(true);
     setTaggingStep('TYPE');
   };
@@ -66,11 +98,8 @@ export function useTaggingWizard() {
 
     const existing = await db.events.get(targetId);
     let type = selections.type;
-    if (!type && editingId) {
-      type = existing?.type || 'Uncategorized';
-    }
+    if (!type && editingId) type = existing?.type || 'Uncategorized';
 
-    // If user changed the event's date/time, apply it
     const dateTimeOverride = overrideDateTime
       ? (() => {
           const newStartTime = new Date(`${overrideDateTime.date}T${overrideDateTime.time}`).getTime();
@@ -82,7 +111,6 @@ export function useTaggingWizard() {
         })()
       : {};
 
-    // Build edit log entry when editing an existing record
     const newEditLog = existing?.editLog ? [...existing.editLog] : [];
     if (editingId && existing) {
       const resolvedType = type || 'Uncategorized';
@@ -91,6 +119,7 @@ export function useTaggingWizard() {
       if (notes !== (existing.notes || '')) changedFields.push('notes');
       if (JSON.stringify(triggers) !== JSON.stringify(existing.triggers || [])) changedFields.push('triggers');
       if (JSON.stringify(tempSymptomList) !== JSON.stringify(existing.symptoms || [])) changedFields.push('symptoms');
+      if (JSON.stringify(postIctal) !== JSON.stringify(existing.postIctal || EMPTY_POST_ICTAL)) changedFields.push('post-ictal');
       if (JSON.stringify(manualDurations) !== JSON.stringify(existing.manualDurations || {})) changedFields.push('durations');
       if (overrideDateTime) changedFields.push('date/time');
       newEditLog.push({ editedAt: new Date().getTime(), changedFields });
@@ -101,13 +130,13 @@ export function useTaggingWizard() {
       symptoms: [...tempSymptomList],
       notes,
       triggers: [...triggers],
+      postIctal,
       isComplete: true,
       isEdited: !!editingId,
       lastModified: new Date().getTime(),
       manualDurations,
       editedTimers,
       editLog: newEditLog,
-      // Keep event.duration in sync with any manual total edit so every view reads the same value
       ...(manualDurations?.total != null ? { duration: manualDurations.total } : {}),
       ...dateTimeOverride,
     });
@@ -141,6 +170,7 @@ export function useTaggingWizard() {
       if (notes !== (existing.notes || '')) changedFields.push('notes');
       if (JSON.stringify(triggers) !== JSON.stringify(existing.triggers || [])) changedFields.push('triggers');
       if (JSON.stringify(tempSymptomList) !== JSON.stringify(existing.symptoms || [])) changedFields.push('symptoms');
+      if (JSON.stringify(postIctal) !== JSON.stringify(existing.postIctal || EMPTY_POST_ICTAL)) changedFields.push('post-ictal');
       if (JSON.stringify(manualDurations) !== JSON.stringify(existing.manualDurations || {})) changedFields.push('durations');
       if (overrideDateTime) changedFields.push('date/time');
       if (changedFields.length) newEditLog.push({ editedAt: modifiedAt, changedFields });
@@ -152,6 +182,7 @@ export function useTaggingWizard() {
       symptoms: [...tempSymptomList],
       notes,
       triggers: [...triggers],
+      postIctal,
       isComplete: existing?.isComplete ?? false,
       isEdited: existing?.isEdited || didEdit,
       lastModified: modifiedAt,
@@ -171,6 +202,7 @@ export function useTaggingWizard() {
     setEditingId(null);
     setTempSymptomList([]);
     setTriggers([]);
+    setPostIctal(EMPTY_POST_ICTAL);
     setTaggingStep('TYPE');
     setSelections(EMPTY_SELECTIONS);
     setManualDurationsState({});
@@ -200,6 +232,7 @@ export function useTaggingWizard() {
     tempSymptomList, setTempSymptomList,
     notes, setNotes,
     triggers, triggerToggle,
+    postIctal, togglePostIctalFinding, addPostIctalParalysisLocations, removePostIctalParalysisLocation,
     editingId, activeEventId,
     manualDurations, editedTimers,
     overrideDateTime, isManualEntry,

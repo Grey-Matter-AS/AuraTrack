@@ -35,6 +35,24 @@ describe('AuraTrack core flows', () => {
     cy.contains('Diazepam').should('be.visible');
   });
 
+  it('uses the selected report date range instead of a hardcoded 30-day period', () => {
+    cy.launchAuraTrack(richCaretakerScenario());
+
+    cy.contains('button', 'HISTORY').click();
+    cy.contains('button', /^Export$/).click();
+    cy.get('input[type="date"]').eq(0).clear().type('2026-06-06');
+    cy.get('input[type="date"]').eq(1).clear().type('2026-06-07');
+    cy.contains('p', 'Neurologist Report')
+      .closest('div.rounded-2xl')
+      .within(() => {
+        cy.contains('button', 'Open Preview').click();
+      });
+
+    cy.contains('2 selected days').should('be.visible');
+    cy.contains('last 30 days').should('not.exist');
+    cy.contains('Events (2d)').should('be.visible');
+  });
+
   it('adds a medication and logs a manual seizure through the UI', () => {
     cy.launchAuraTrack();
 
@@ -62,5 +80,36 @@ describe('AuraTrack core flows', () => {
     cy.contains('button', 'HISTORY').click();
     cy.contains('Uncategorized').should('be.visible');
     cy.contains('Manual Entry').should('be.visible');
+  });
+
+  it('shows the emergency overlay after 5 minutes of total elapsed time even before aura ends', () => {
+    const resumedStartTime = Date.now() - 301000;
+    cy.launchAuraTrack(richCaretakerScenario());
+    cy.window().then((win) => {
+      win.localStorage.setItem('aura_startTime', String(resumedStartTime));
+      win.localStorage.setItem('aura_status', 'RECORDING');
+    });
+    cy.reload();
+
+    cy.contains('MEDICAL EMERGENCY').should('be.visible');
+    cy.contains('END AURA').should('exist');
+  });
+
+  it('captures post-ictal findings in the dedicated recovery section', () => {
+    cy.launchAuraTrack();
+
+    cy.contains('button', 'START').click();
+    cy.contains('button', 'STOP').click();
+    cy.contains('button', 'Tonic-Clonic').click();
+    cy.contains('button', 'Continue to Summary').click();
+    cy.contains('button', 'Confusion').click();
+    cy.contains('button', 'Sleepiness').click();
+    cy.contains('button', '+ Add Area').click();
+    cy.contains('button', 'Arms').click();
+    cy.contains('button', 'Left Arm').click();
+    cy.contains('button', 'Hand/Fingers').click();
+    cy.contains('button', 'Add 1 paralysis area').click();
+    cy.contains('Todd\'s paralysis').should('be.visible');
+    cy.contains('Arms › Left Arm › Hand/Fingers').should('be.visible');
   });
 });

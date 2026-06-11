@@ -76,7 +76,7 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false, 
     const fromMs = new Date(fromDate).setHours(0, 0, 0, 0);
     const toMs   = new Date(toDate).setHours(23, 59, 59, 999);
     const medLogs = await getLogsForPeriod(fromMs, toMs);
-    setPrintPreview(buildNeurologistReportPreview(events, settings, medications, medLogs));
+    setPrintPreview(buildNeurologistReportPreview(events, settings, medications, medLogs, { fromDate, toDate, fromMs, toMs }));
   };
 
   const handleNeurologistReportPdf = async () => {
@@ -84,7 +84,7 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false, 
     const fromMs = new Date(fromDate).setHours(0, 0, 0, 0);
     const toMs   = new Date(toDate).setHours(23, 59, 59, 999);
     const medLogs = await getLogsForPeriod(fromMs, toMs);
-    await exportNeurologistReportPDF(events, settings, medications, medLogs);
+    await exportNeurologistReportPDF(events, settings, medications, medLogs, { fromDate, toDate, fromMs, toMs });
   };
 
   const ContentWrapper = isEmbedded ? 'div' : ScrollFade;

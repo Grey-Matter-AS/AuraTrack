@@ -72,8 +72,8 @@ export function renderEventLogHtml(data) {
 
 export function renderNeurologistReportHtml(data) {
   const t = translator();
-  const chart1 = freqBarChartSVG(data.charts.periodEvents, 30);
-  const chart2 = durationLineSVG(data.charts.periodEvents);
+  const chart1 = freqBarChartSVG(data.charts.periodEvents, data.periodDays, data.charts.periodEndMs);
+  const chart2 = durationLineSVG(data.charts.periodEvents, data.periodDays);
   const chart3 = typeBarSVG(data.charts.byType, data.charts.totalEvents);
   const chart4 = phaseStackSVG(data.charts.periodEvents, 10);
 
@@ -144,7 +144,7 @@ export function renderNeurologistReportHtml(data) {
           <div style="font-size:9px;font-weight:900;letter-spacing:0.4em;color:#dc2626;text-transform:uppercase">AuraTrack</div>
           <div style="font-size:18px;font-weight:900;margin-top:2px;letter-spacing:-0.3px">${esc(t('export.docs.neurological_report'))}</div>
           <div style="font-size:9px;color:#6b7280;margin-top:4px">${esc(t('export.docs.generated'))}: ${esc(data.generatedDate)}</div>
-          <div style="font-size:9px;color:#6b7280">${esc(t('export.docs.period'))}: ${esc(data.periodStartStr)} - ${esc(data.periodEndStr)} (${esc(t('export.docs.last_30_days'))})</div>
+          <div style="font-size:9px;color:#6b7280">${esc(t('export.docs.period'))}: ${esc(data.periodStartStr)} - ${esc(data.periodEndStr)} (${esc(t('export.docs.selected_days', { count: data.periodDays }))})</div>
         </div>
         <div style="text-align:right">
           <div style="font-size:9px;color:#6b7280;margin-bottom:1px">${esc(t('export.docs.prepared_by'))}</div>
@@ -171,7 +171,7 @@ export function renderNeurologistReportHtml(data) {
       </div>
 
       <div class="stat-grid">
-        <div class="stat-card"><div class="stat-value">${data.stats.totalEvents}</div><div class="stat-label">${esc(t('export.docs.events_30d'))}</div></div>
+        <div class="stat-card"><div class="stat-value">${data.stats.totalEvents}</div><div class="stat-label">${esc(t('export.docs.events_period', { count: data.periodDays }))}</div></div>
         <div class="stat-card"><div class="stat-value">${esc(data.stats.avgDurationLabel === '-' ? '0s' : data.stats.avgDurationLabel)}</div><div class="stat-label">${esc(t('export.docs.avg_duration'))}</div></div>
         <div class="stat-card"><div class="stat-value">${data.stats.daysCovered}</div><div class="stat-label">${esc(t('export.docs.days_affected'))}</div></div>
         <div class="stat-card"><div class="stat-value">${data.stats.seizureTypeCount}</div><div class="stat-label">${esc(t('export.docs.seizure_types'))}</div></div>
@@ -222,7 +222,7 @@ export function renderNeurologistReportHtml(data) {
           </div>
           <div class="ctx-item">
             <div class="ctx-label">${esc(t('export.docs.recovery_quality'))}</div>
-            <div class="ctx-value">${esc(t('export.docs.not_recorded'))}</div>
+            <div class="ctx-value">${data.stats.postIctalSummary ? esc(data.stats.postIctalSummary) : esc(t('export.docs.post_ictal_none', 'No post-ictal findings recorded'))}</div>
           </div>
           <div class="ctx-item">
             <div class="ctx-label">${esc(t('export.docs.rescue_medication_use'))}</div>
@@ -273,6 +273,11 @@ export function renderNeurologistReportHtml(data) {
                     <tbody>${event.symptoms.map(symptom => `<tr><td>${esc(symptom.path || '-')}</td><td>${esc(symptom.med || '-')}</td><td>${esc(symptom.location || '-')}</td></tr>`).join('')}</tbody>
                   </table>`
                 : `<p style="font-size:10px;color:#9ca3af;margin:4px 0">${esc(t('export.docs.no_symptoms_recorded'))}</p>`}
+              ${event.postIctal.summary
+                ? `<div style="margin-top:6px;padding:7px 9px;background:#eff6ff;border-radius:5px;font-size:10px;color:#1e3a8a">
+                    <strong>${esc(t('export.docs.post_ictal_summary', 'Post-ictal summary'))}:</strong> ${esc(event.postIctal.summary)}
+                  </div>`
+                : ''}
               ${event.notes ? `<div style="margin-top:6px;padding:7px 9px;background:#f9fafb;border-radius:5px;font-size:10px;color:#374151;white-space:pre-wrap">${esc(event.notes)}</div>` : ''}
             </div>`).join('')
           : `<p style="color:#9ca3af;font-size:11px;margin:0">${esc(t('export.docs.no_events_to_display'))}</p>`}
