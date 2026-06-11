@@ -67,8 +67,8 @@ export function describePostIctal(postIctal = {}, t = getTranslator()) {
   );
 
   const summaryParts = [
-    findings.length ? `${t('export.docs.post_ictal_findings', 'Post-ictal findings')}: ${findings.join(', ')}` : '',
-    paralysisSummary.length ? `${t('export.docs.post_ictal_paralysis', 'Post-ictal paralysis')}: ${paralysisSummary.join('; ')}` : '',
+    findings.length ? `${t('export.docs.post_ictal_findings', 'After-seizure symptoms')}: ${findings.join(', ')}` : '',
+    paralysisSummary.length ? `${t('export.docs.post_ictal_paralysis', 'After-seizure paralysis')}: ${paralysisSummary.join('; ')}` : '',
   ].filter(Boolean);
 
   return {
@@ -174,7 +174,7 @@ export function buildNeurologistReportData(events, settings = {}, medications = 
       postIctalCounts[finding] = (postIctalCounts[finding] || 0) + 1;
     });
     if (postIctal.paralysisLocations.length > 0) {
-      const paralysisLabel = t('export.docs.post_ictal_paralysis', 'Post-ictal paralysis');
+      const paralysisLabel = t('export.docs.post_ictal_paralysis', 'After-seizure paralysis');
       postIctalCounts[paralysisLabel] = (postIctalCounts[paralysisLabel] || 0) + postIctal.paralysisLocations.length;
     }
   });

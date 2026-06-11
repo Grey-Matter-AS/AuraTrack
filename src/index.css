@@ -33,6 +33,14 @@
 
   /* Text on --bg-raised containers (stays dark in both themes) */
   --text-on-raised-muted: rgba(255,255,255,0.75);
+
+  /* Shared layout / touch sizing */
+  --touch-target-compact: 2.75rem;
+  --touch-target-comfortable: 3.5rem;
+  --touch-target-large: 4.75rem;
+  --panel-radius: 1.75rem;
+  --panel-radius-lg: 2.25rem;
+  --surface-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
 }
 
 /* Light theme overrides */
@@ -142,6 +150,134 @@ input, select, textarea {
 /* ─── Utility: hide scrollbar but keep scroll behaviour ─────── */
 .custom-scrollbar { scrollbar-width: none; }
 .custom-scrollbar::-webkit-scrollbar { display: none; }
+
+.app-surface-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--panel-radius-lg);
+  box-shadow: var(--surface-shadow);
+}
+
+.app-page-shell {
+  width: 100%;
+  max-width: 40rem;
+}
+
+@media (min-width: 768px) {
+  .app-page-shell {
+    max-width: 48rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .app-page-shell {
+    max-width: 58rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .app-page-shell {
+    max-width: 64rem;
+  }
+}
+
+.app-section-card {
+  background-color: color-mix(in srgb, var(--bg-card) 88%, var(--bg-base));
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--panel-radius);
+  padding: clamp(1rem, 3vw, 1.5rem);
+}
+
+.app-toolbar-btn {
+  min-height: var(--touch-target-compact);
+  min-width: 4.75rem;
+  padding: 0.7rem 0.95rem;
+  border-radius: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  line-height: 1.1;
+}
+
+.app-action-tile {
+  width: 100%;
+  min-height: var(--touch-target-large);
+  padding: 1rem 1.1rem;
+  border-radius: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.35rem;
+  text-align: left;
+}
+
+.app-action-tile--compact {
+  min-height: var(--touch-target-comfortable);
+  padding: 0.9rem 1rem;
+  border-radius: 1.25rem;
+}
+
+.app-action-tile--center {
+  align-items: center;
+  text-align: center;
+}
+
+.app-action-tile__eyebrow {
+  font-size: 0.68rem;
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.app-action-tile__title {
+  font-size: 0.95rem;
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.app-action-tile__detail {
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.app-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+  gap: 0.75rem;
+}
+
+.app-choice-grid--compact {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+  gap: 0.75rem;
+}
+
+.app-balanced-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+  gap: 0.75rem;
+}
+
+.app-balanced-grid > * {
+  min-width: 0;
+}
+
+@media (orientation: landscape) and (max-height: 480px) {
+  [data-recording-screen] {
+    gap: 0.75rem;
+    padding-top: 1rem;
+    padding-bottom: calc(env(safe-area-inset-bottom) + 1rem);
+  }
+
+  [data-recording-screen] .app-action-tile {
+    min-height: 4.25rem;
+  }
+}
 
 /* Keep date selectors on their own line to avoid iOS overflow/clipping. */
 .date-selector-stack {

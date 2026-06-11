@@ -27,7 +27,7 @@ function TextEntryStep({
   submitLabel,
 }) {
   return (
-    <div className="flex flex-col h-full w-full max-w-md sm:max-w-xl md:max-w-2xl mx-auto animate-in fade-in zoom-in duration-300">
+    <div className="app-page-shell flex flex-col h-full mx-auto animate-in fade-in zoom-in duration-300">
       <div className="flex justify-between items-center mb-8 shrink-0">
         {onBack ? (
           <button
@@ -91,7 +91,7 @@ export default function TaggingView({
       region: selections.region,
       subRegion: selections.subRegion,
       specificPart,
-      label: "Post-ictal Paralysis",
+      label: "After-seizure Paralysis",
       med: "Todd's paralysis",
     })));
     setPendingSpecificParts([]);
@@ -184,7 +184,7 @@ export default function TaggingView({
   };
 
   return (
-    <div className="flex-1 min-h-full flex flex-col items-center w-full max-w-md sm:max-w-xl md:max-w-2xl overflow-y-auto py-4 custom-scrollbar animate-in fade-in slide-in-from-bottom-6">
+    <div className="app-page-shell flex-1 min-h-full flex flex-col items-center overflow-y-auto py-4 custom-scrollbar animate-in fade-in slide-in-from-bottom-6">
       <div className="w-full p-6 rounded-[2rem] shadow-2xl flex flex-col" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
 
         {taggingStep === 'SUMMARY' ? (
@@ -241,12 +241,12 @@ export default function TaggingView({
               <WizardMenu
                 title={t('tagging.feeling_title')}
                 options={[
-                  ...(favoriteSets.length ? ['★ Favorite Symptom Sets'] : []),
+                  ...(favoriteSets.length ? ['Favorite Symptom Sets'] : []),
                   ...Object.keys(SYMPTOM_WIZARD),
                   t('tagging.continue_to_summary', 'Continue to Summary'),
                 ]}
                 onPick={v => {
-                  if (v === '★ Favorite Symptom Sets') {
+                  if (v === 'Favorite Symptom Sets') {
                     setTaggingStep('FAV_PICK');
                     return;
                   }
@@ -387,7 +387,7 @@ export default function TaggingView({
             )}
             {taggingStep === 'PI_R_CAT' && (
               <WizardMenu
-                title={t('tagging.post_ictal_paralysis', 'Post-ictal paralysis')}
+                title={t('tagging.post_ictal_paralysis', 'After-seizure paralysis')}
                 options={Object.keys(REGION_WIZARD)}
                 onPick={v => { setPendingSpecificParts([]); setSelections({ ...selections, region: v, subRegion: '' }); setTaggingStep('PI_R_SUB'); }}
                 onBack={() => setTaggingStep('SUMMARY')}

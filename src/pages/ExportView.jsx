@@ -202,6 +202,18 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false, 
           ]}
         />
 
+        <div
+          className="rounded-2xl px-5 py-4"
+          style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}
+        >
+          <p className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--text-dim)' }}>
+            {t('export.privacy_notice_title')}
+          </p>
+          <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+            {t('export.privacy_notice_body')}
+          </p>
+        </div>
+
         {/* ── Clinical Report ── */}
         <p className="text-[9px] font-black uppercase tracking-[0.3em] px-1 pt-3" style={{ color: 'var(--text-faint)' }}>
           {t('export.clinical_report')}

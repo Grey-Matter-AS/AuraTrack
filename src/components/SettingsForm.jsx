@@ -899,6 +899,28 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
         {onSync && (
           <ActionBtn label="Sync to Another Device" sub="QR · WiFi · File" icon="⇄" onClick={onSync} />
         )}
+
+        <div
+          className="rounded-2xl p-4 space-y-2"
+          style={{ backgroundColor: 'var(--bg-raised)', border: '1px solid var(--border)' }}
+        >
+          <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--text-dim)' }}>
+            {t('settings.data.security_title')}
+          </p>
+          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+            {t('settings.data.security_current')}
+          </p>
+          <div className="space-y-2 pt-1">
+            {['exports', 'sync', 'recommendation'].map((item) => (
+              <div key={item} className="flex gap-2 items-start">
+                <span className="text-xs leading-6" style={{ color: 'var(--accent)' }}>•</span>
+                <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                  {t(`settings.data.security_${item}`)}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
         <input ref={fileInputRef} type="file" accept=".json" className="hidden" onChange={handleImport} />
 
         {statusMsg && (

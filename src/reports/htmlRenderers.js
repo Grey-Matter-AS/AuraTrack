@@ -222,7 +222,7 @@ export function renderNeurologistReportHtml(data) {
           </div>
           <div class="ctx-item">
             <div class="ctx-label">${esc(t('export.docs.recovery_quality'))}</div>
-            <div class="ctx-value">${data.stats.postIctalSummary ? esc(data.stats.postIctalSummary) : esc(t('export.docs.post_ictal_none', 'No post-ictal findings recorded'))}</div>
+            <div class="ctx-value">${data.stats.postIctalSummary ? esc(data.stats.postIctalSummary) : esc(t('export.docs.post_ictal_none', 'No after-seizure symptoms recorded'))}</div>
           </div>
           <div class="ctx-item">
             <div class="ctx-label">${esc(t('export.docs.rescue_medication_use'))}</div>
@@ -275,7 +275,7 @@ export function renderNeurologistReportHtml(data) {
                 : `<p style="font-size:10px;color:#9ca3af;margin:4px 0">${esc(t('export.docs.no_symptoms_recorded'))}</p>`}
               ${event.postIctal.summary
                 ? `<div style="margin-top:6px;padding:7px 9px;background:#eff6ff;border-radius:5px;font-size:10px;color:#1e3a8a">
-                    <strong>${esc(t('export.docs.post_ictal_summary', 'Post-ictal summary'))}:</strong> ${esc(event.postIctal.summary)}
+                    <strong>${esc(t('export.docs.post_ictal_summary', 'After-seizure summary'))}:</strong> ${esc(event.postIctal.summary)}
                   </div>`
                 : ''}
               ${event.notes ? `<div style="margin-top:6px;padding:7px 9px;background:#f9fafb;border-radius:5px;font-size:10px;color:#374151;white-space:pre-wrap">${esc(event.notes)}</div>` : ''}

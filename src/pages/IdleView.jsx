@@ -212,7 +212,7 @@ export default function IdleView({
   }, [eegSession, eegCurrentActivity]);
 
   return (
-    <div className="flex-1 flex flex-col items-center w-full max-w-md sm:max-w-xl md:max-w-2xl overflow-hidden">
+    <div className="app-page-shell flex-1 flex flex-col items-center overflow-hidden">
       {showSessionSheet && (
         <EegSessionSheet
           onClose={() => setShowSessionSheet(false)}
@@ -236,17 +236,17 @@ export default function IdleView({
       <div className="py-3 sm:py-6 shrink-0 flex flex-col items-center gap-4">
         <button
           onClick={onStart}
-          className="bg-red-600 active:scale-95 active:bg-red-500 transition-all rounded-full shadow-[0_0_60px_rgba(225,29,72,0.4)] flex items-center justify-center text-white font-black ring-4 ring-red-900/20"
+          className="bg-red-600 active:scale-95 active:bg-red-500 transition-all rounded-full shadow-[0_0_60px_rgba(225,29,72,0.4)] flex items-center justify-center text-white font-black ring-4 ring-red-900/20 text-center px-3"
           style={{
             width: 'min(15rem, 38vmin)',
             height: 'min(15rem, 38vmin)',
-            fontSize: 'min(2.25rem, 8vmin)',
+            fontSize: 'min(1.95rem, 6.9vmin)',
             borderWidth: 'min(12px, 2vmin)',
             borderStyle: 'solid',
             borderColor: '#1e293b',
           }}
         >
-          {t('idle.start')}
+          <span className="max-w-[72%] leading-[0.9]">{t('idle.start')}</span>
         </button>
         {onManualEntry && (
           <button

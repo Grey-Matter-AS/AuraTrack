@@ -119,7 +119,7 @@ export function useTaggingWizard() {
       if (notes !== (existing.notes || '')) changedFields.push('notes');
       if (JSON.stringify(triggers) !== JSON.stringify(existing.triggers || [])) changedFields.push('triggers');
       if (JSON.stringify(tempSymptomList) !== JSON.stringify(existing.symptoms || [])) changedFields.push('symptoms');
-      if (JSON.stringify(postIctal) !== JSON.stringify(existing.postIctal || EMPTY_POST_ICTAL)) changedFields.push('post-ictal');
+      if (JSON.stringify(postIctal) !== JSON.stringify(existing.postIctal || EMPTY_POST_ICTAL)) changedFields.push('after-seizure symptoms');
       if (JSON.stringify(manualDurations) !== JSON.stringify(existing.manualDurations || {})) changedFields.push('durations');
       if (overrideDateTime) changedFields.push('date/time');
       newEditLog.push({ editedAt: new Date().getTime(), changedFields });
@@ -170,7 +170,7 @@ export function useTaggingWizard() {
       if (notes !== (existing.notes || '')) changedFields.push('notes');
       if (JSON.stringify(triggers) !== JSON.stringify(existing.triggers || [])) changedFields.push('triggers');
       if (JSON.stringify(tempSymptomList) !== JSON.stringify(existing.symptoms || [])) changedFields.push('symptoms');
-      if (JSON.stringify(postIctal) !== JSON.stringify(existing.postIctal || EMPTY_POST_ICTAL)) changedFields.push('post-ictal');
+      if (JSON.stringify(postIctal) !== JSON.stringify(existing.postIctal || EMPTY_POST_ICTAL)) changedFields.push('after-seizure symptoms');
       if (JSON.stringify(manualDurations) !== JSON.stringify(existing.manualDurations || {})) changedFields.push('durations');
       if (overrideDateTime) changedFields.push('date/time');
       if (changedFields.length) newEditLog.push({ editedAt: modifiedAt, changedFields });

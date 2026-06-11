@@ -3,11 +3,8 @@
 import { richCaretakerScenario } from '../support/scenarios';
 
 describe('AuraTrack mobile layout', () => {
-  beforeEach(() => {
-    cy.viewport(320, 568);
-  });
-
   it('keeps export date selectors stacked on narrow screens', () => {
+    cy.viewport(320, 568);
     cy.launchAuraTrack(richCaretakerScenario());
     cy.contains('button', 'HISTORY').click();
     cy.contains('button', /^Export$/).click();
@@ -33,13 +30,14 @@ describe('AuraTrack mobile layout', () => {
   });
 
   it('keeps the recording page fully scrollable on small phones', () => {
+    cy.viewport(320, 568);
     cy.launchAuraTrack(richCaretakerScenario());
-    cy.contains('button', 'START').click();
+    cy.contains('button', 'START TIMER').click();
 
     cy.window().then((win) => {
       const scrollRegion = win.document.querySelector('[data-scroll-region="recording"]');
       const stopButton = [...win.document.querySelectorAll('button')]
-        .find((button) => button.textContent?.trim() === 'STOP');
+        .find((button) => button.textContent?.trim() === 'STOP TIMER');
       const stopWrapper = stopButton?.parentElement;
       const beforeRect = stopButton?.getBoundingClientRect();
 
@@ -56,6 +54,50 @@ describe('AuraTrack mobile layout', () => {
       const afterRect = stopButton.getBoundingClientRect();
       expect(afterRect.bottom).to.be.at.most(win.innerHeight);
       expect(afterRect.top).to.be.at.least(0);
+    });
+  });
+
+  [
+    { name: 'phone landscape', width: 568, height: 320 },
+    { name: 'tablet portrait', width: 820, height: 1180 },
+    { name: 'tablet landscape', width: 1180, height: 820 },
+  ].forEach(({ name, width, height }) => {
+    it(`keeps key timer controls readable and unclipped on ${name}`, () => {
+      cy.viewport(width, height);
+      cy.launchAuraTrack(richCaretakerScenario());
+      cy.contains('button', 'START TIMER').should('be.visible');
+
+      cy.window().then((win) => {
+        const root = win.document.documentElement;
+        const startButton = [...win.document.querySelectorAll('button')]
+          .find((button) => button.textContent?.includes('START TIMER'));
+
+        expect(root.scrollWidth - root.clientWidth).to.be.lessThan(3);
+        expect(startButton).to.not.equal(undefined);
+        expect(startButton.scrollWidth - startButton.clientWidth).to.be.lessThan(3);
+      });
+
+      cy.contains('button', 'START TIMER').click();
+      cy.contains('button', 'END AURA TIMER').should(height < 500 ? 'exist' : 'be.visible');
+
+      cy.window().then((win) => {
+        const root = win.document.documentElement;
+        const scrollRegion = win.document.querySelector('[data-scroll-region="recording"]');
+        const labels = ['END AURA TIMER', 'END SEIZURE TIMER', '+ EVENT NOTE', 'STOP TIMER'];
+
+        expect(root.scrollWidth - root.clientWidth).to.be.lessThan(3);
+        labels.forEach((label) => {
+          const button = [...win.document.querySelectorAll('button')]
+            .find((candidate) => candidate.textContent?.includes(label));
+
+          expect(button, `${label} exists`).to.not.equal(undefined);
+          expect(button.scrollWidth - button.clientWidth, `${label} text fits`).to.be.lessThan(3);
+        });
+
+        if (height < 500) {
+          expect(scrollRegion.scrollHeight).to.be.greaterThan(scrollRegion.clientHeight);
+        }
+      });
     });
   });
 });

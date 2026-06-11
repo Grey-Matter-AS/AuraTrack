@@ -6,7 +6,7 @@ describe('AuraTrack core flows', () => {
   it('navigates seeded caretaker data across history, medications, EEG, and export', () => {
     cy.launchAuraTrack(richCaretakerScenario());
 
-    cy.contains('button', 'START').should('be.visible');
+    cy.contains('button', 'START TIMER').should('be.visible');
     cy.contains('Focal Aware').should('exist');
 
     cy.contains('button', 'HISTORY').click();
@@ -92,14 +92,14 @@ describe('AuraTrack core flows', () => {
     cy.reload();
 
     cy.contains('MEDICAL EMERGENCY').should('be.visible');
-    cy.contains('END AURA').should('exist');
+    cy.contains('END AURA TIMER').should('exist');
   });
 
   it('captures post-ictal findings in the dedicated recovery section', () => {
     cy.launchAuraTrack();
 
-    cy.contains('button', 'START').click();
-    cy.contains('button', 'STOP').click();
+    cy.contains('button', 'START TIMER').click();
+    cy.contains('button', 'STOP TIMER').click();
     cy.contains('button', 'Tonic-Clonic').click();
     cy.contains('button', 'Continue to Summary').click();
     cy.contains('button', 'Confusion').click();

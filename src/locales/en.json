@@ -1,12 +1,12 @@
 {
   "nav": {
     "history": "HISTORY",
-    "settings": "⚙ SETTINGS",
+    "settings": "SETTINGS",
     "back": "← BACK",
     "help_label": "Help"
   },
   "idle": {
-    "start": "START",
+    "start": "START TIMER",
     "log_past": "+ Log Past Seizure",
     "recent_events": "Recent Events",
     "last_5": "LAST 5",
@@ -28,13 +28,13 @@
     "aura": "Aura",
     "seizure": "Seizure",
     "recovery": "Recovery",
-    "end_aura": "END AURA",
+    "end_aura": "END AURA TIMER",
     "aura_ended": "AURA ENDED ✓",
-    "end_seizure": "END SEIZURE",
+    "end_seizure": "END SEIZURE TIMER",
     "seizure_ended": "SEIZURE ENDED ✓",
     "event_note": "+ EVENT NOTE",
     "close_notes": "CLOSE NOTES",
-    "stop": "STOP",
+    "stop": "STOP TIMER",
     "self_mode": "Self Mode Enabled",
     "long_seizure_warning": "LONG SEIZURE — MONITOR CLOSELY",
     "approaching_threshold": "APPROACHING ALERT THRESHOLD",
@@ -65,9 +65,9 @@
     "save_timing_only": "Save timing only",
     "continue_to_summary": "Continue to Summary",
     "no_ictal_symptoms": "No ictal symptoms tagged yet.",
-    "post_ictal_findings": "Post-ictal findings",
-    "recovery_phase": "recovery phase",
-    "post_ictal_paralysis": "Post-ictal paralysis",
+    "post_ictal_findings": "After-seizure symptoms",
+    "recovery_phase": "after-seizure phase",
+    "post_ictal_paralysis": "After-seizure paralysis",
     "post_ictal_paralysis_help": "Record Todd's paralysis with exact affected body parts.",
     "add_area": "+ Add Area",
     "no_paralysis_areas": "No paralysis areas logged.",
@@ -102,6 +102,8 @@
     "csv_desc": "Events, medications, and dose logs in comma-separated format. Opens in Excel / Sheets.",
     "pdf_label": "PDF Report Export",
     "pdf_desc": "Printable event log with notes and symptom paths. Opens an in-app preview so you can print or save as PDF.",
+    "privacy_notice_title": "Privacy Notice",
+    "privacy_notice_body": "JSON backups, CSV files, and PDFs are saved as regular files. AuraTrack does not encrypt or password-protect exports today, so treat them like medical documents and store them in encrypted device or cloud storage when possible.",
     "clinical_report": "Clinical Report",
     "neuro_report_label": "Neurologist Report",
     "neuro_report_desc": "Purpose-built clinical PDF — patient info, phase timings, symptom breakdown, and full event log. Formatted for presenting to a neurologist or specialist.",
@@ -211,16 +213,16 @@
       "flag_reported_triggers": "Reported triggers ({{count}} events with triggers)",
       "flag_detail_recent_vs_prior": "{{recent}} events in the most recent 15 days vs {{prior}} in the prior 15 days.",
       "flag_detail_recent_avg_vs_earlier_avg": "Recent avg {{recent}} vs earlier avg {{earlier}}.",
-      "flag_detail_auto_terminated": "Timer stopped automatically at 12 minutes due to patient unresponsiveness; may indicate prolonged post-ictal state.",
+      "flag_detail_auto_terminated": "Timer stopped automatically at 12 minutes due to patient unresponsiveness; may indicate a prolonged recovery state.",
       "flag_detail_edited_records": "Phase durations or details were modified after initial recording and may differ from real-time capture.",
       "detail_badge_over5": ">5 MIN",
       "detail_badge_auto_stopped": "AUTO-STOPPED",
       "detail_badge_edited": "EDITED",
       "event_number": "Event #{{count}}",
-      "post_ictal_findings": "Post-ictal findings",
-      "post_ictal_paralysis": "Post-ictal paralysis",
-      "post_ictal_none": "No post-ictal findings recorded",
-      "post_ictal_summary": "Post-ictal summary",
+      "post_ictal_findings": "After-seizure symptoms",
+      "post_ictal_paralysis": "After-seizure paralysis",
+      "post_ictal_none": "No after-seizure symptoms recorded",
+      "post_ictal_summary": "After-seizure summary",
       "events_period": "Events ({{count}}d)",
       "selected_days": "{{count}} selected days"
     },
@@ -258,7 +260,7 @@
     "associated_video": "Associated video",
     "saved_seizure_video": "Saved seizure video",
     "video_saved_hint": "The file is saved in device storage and referenced here for the neurologist record.",
-    "post_ictal": "Post-ictal findings"
+    "post_ictal": "After-seizure symptoms"
   },
   "help": {
     "title": "Help",
@@ -322,7 +324,25 @@
     "section_disclaimer": "Medical Disclaimer",
     "section_opensource": "Open Source & Feedback",
     "about_text": "AuraTrack is a privacy-first seizure tracking app for people with epilepsy and their caregivers. Record seizures in real time, annotate events with clinical detail, track medications, and generate structured reports for your neurologist — all stored locally on your device.",
-    "privacy_text": "All data is stored on your device using IndexedDB. Your health data only leaves your device when you explicitly export a backup or start a sync.",
+    "privacy_text": "AuraTrack is designed to keep seizure and medication records local-first. By default, your data stays in your browser storage on this device and is only shared when you deliberately export, print, or sync it.",
+    "privacy_points": {
+      "local": {
+        "title": "Stored locally",
+        "body": "AuraTrack stores event logs, medications, dose logs, EEG diary entries, and report settings in IndexedDB on your device. The app does not require an account to create or keep these records."
+      },
+      "sharing": {
+        "title": "When data is shared",
+        "body": "Your health data leaves AuraTrack only when you choose to export a backup or report, print a PDF, save a video recording, or send data to another device during sync."
+      },
+      "sync": {
+        "title": "Sync behavior",
+        "body": "AuraTrack's device-to-device sync uses browser-encrypted transport. Depending on the sync mode, connection or signaling metadata may still pass through the signaling service or your local network."
+      },
+      "exports": {
+        "title": "Export security",
+        "body": "Exported JSON, CSV, PDF, and video files are regular files on the destination device. AuraTrack does not encrypt or password-protect those exported files today."
+      }
+    },
     "disclaimer_text": "AuraTrack is a personal logging tool and is not a medical device. It is not intended to diagnose, treat, or replace professional medical advice. Always consult a qualified healthcare provider regarding your condition and treatment.",
     "disclaimer_not_medical": "not a medical device",
     "opensource_text": "AuraTrack is open source. Report bugs or suggest features on GitHub Issues.",
@@ -464,6 +484,11 @@
       "export_sub": "JSON download",
       "import_data": "Import Data",
       "import_sub": "JSON file",
+      "security_title": "Privacy & Export Security",
+      "security_current": "Current behavior: AuraTrack backups are plain JSON files, and report exports are standard CSV or PDF files.",
+      "security_exports": "Exports are not encrypted or password-protected by AuraTrack today. Anyone who can open the saved file can read its contents.",
+      "security_sync": "Device-to-device sync uses browser-encrypted transport, but sync setup can still expose connection metadata depending on whether you use PeerJS signaling or local-network QR exchange.",
+      "security_recommendation": "Until native encrypted backups exist, store exports only in encrypted device storage, an encrypted cloud folder, or a password-protected archive that you manage outside the app.",
       "danger_zone": "Danger Zone",
       "clear_confirm": "This permanently deletes recorded events, medications, and medication dose logs. Cannot be undone.",
       "clear_yes": "Yes, Delete All",
@@ -506,7 +531,7 @@
     "phase_breakdown": "Phase Breakdown (optional)",
     "aura": "Aura",
     "ictal": "Seizure (Ictal)",
-    "recovery": "Post-Ictal / Recovery",
+    "recovery": "After-seizure / Recovery",
     "min": "min",
     "sec": "sec",
     "continue": "Continue to Details →",
@@ -524,7 +549,7 @@
     "save": "Save",
     "cancel": "Cancel",
     "add_another": "+ Add Another Symptom",
-    "notes_placeholder": "Clinical observations, post-ictal notes, medication given...",
+    "notes_placeholder": "Clinical observations, after-seizure notes, medication given...",
     "notes_label": "Notes",
     "triggers_label": "Possible Triggers",
     "symptoms_label": "Symptoms",

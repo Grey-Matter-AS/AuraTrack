@@ -3,9 +3,16 @@ import pkg from '../../package.json';
 import { ScrollFade } from '../components/ScrollFade';
 
 const GITHUB_URL = 'https://github.com/Grey-Matter-AS/AuraTrack';
+const PRIVACY_POINT_KEYS = ['local', 'sharing', 'sync', 'exports'];
 
 export default function AboutView({ onBack }) {
   const { t } = useTranslation();
+  const privacyPoints = PRIVACY_POINT_KEYS.map((key) => ({
+    key,
+    title: t(`about.privacy_points.${key}.title`),
+    body: t(`about.privacy_points.${key}.body`),
+  }));
+
   return (
     <div className="flex-1 flex flex-col w-full max-w-md sm:max-w-xl md:max-w-2xl overflow-hidden">
 
@@ -62,6 +69,22 @@ export default function AboutView({ onBack }) {
           <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
             {t('about.privacy_text')}
           </p>
+          <div className="mt-4 space-y-3">
+            {privacyPoints.map((point) => (
+              <div
+                key={point.key}
+                className="rounded-2xl px-4 py-3"
+                style={{ backgroundColor: 'var(--bg-base)', border: '1px solid var(--border)' }}
+              >
+                <p className="text-[10px] font-black uppercase tracking-widest mb-1.5" style={{ color: 'var(--text-dim)' }}>
+                  {point.title}
+                </p>
+                <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                  {point.body}
+                </p>
+              </div>
+            ))}
+          </div>
         </Section>
 
         <Section title={t('about.section_disclaimer')}>

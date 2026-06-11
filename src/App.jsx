@@ -30,10 +30,10 @@ import SyncModal from './components/SyncModal';
 function Header({ onSettings, onHistory, onHelp }) {
   const { t } = useTranslation();
   return (
-    <div className="pt-4 pb-2 shrink-0 grid grid-cols-3 items-center px-6">
+    <div className="pt-4 pb-3 shrink-0 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 px-4 sm:px-6">
       <button
         onClick={onHistory}
-        className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
+        className="app-toolbar-btn w-full max-w-[7.75rem] justify-self-start text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
         style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
       >
         {t('nav.history')}
@@ -42,17 +42,17 @@ function Header({ onSettings, onHistory, onHelp }) {
         <h1 className="text-[10px] font-black tracking-[0.4em] text-[var(--text-faint)] uppercase opacity-50">AURATRACK</h1>
         <div className="h-1 w-4 bg-[var(--accent)] mx-auto mt-1 rounded-full opacity-60" />
       </div>
-      <div className="flex items-center gap-2 justify-end">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 justify-self-end w-full max-w-[10.5rem]">
         <button
           onClick={onSettings}
-          className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
+          className="app-toolbar-btn text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
           style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
         >
           {t('nav.settings')}
         </button>
         <button
           onClick={onHelp}
-          className="w-8 h-8 rounded-xl text-[12px] font-black flex items-center justify-center active:scale-95 transition-all"
+          className="app-toolbar-btn aspect-square px-0 text-[12px] font-black active:scale-95 transition-all"
           style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
           aria-label={t('nav.help_label')}
         >

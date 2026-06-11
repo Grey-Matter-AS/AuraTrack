@@ -205,7 +205,7 @@ export async function downloadNeurologistReportPdf(data) {
         ? `${t('export.docs.fully_awake')}: ${data.stats.awareness.awake} | ${t('export.docs.confused')}: ${data.stats.awareness.confused} | ${t('export.docs.blackout')}: ${data.stats.awareness.blackout}`
         : t('export.docs.not_recorded'),
     },
-    { label: t('export.docs.recovery_quality'), value: data.stats.postIctalSummary || t('export.docs.post_ictal_none', 'No post-ictal findings recorded') },
+    { label: t('export.docs.recovery_quality'), value: data.stats.postIctalSummary || t('export.docs.post_ictal_none', 'No after-seizure symptoms recorded') },
     { label: t('export.docs.rescue_medication_use'), value: t('export.docs.not_recorded') },
     { label: t('export.docs.triggers_medications'), value: data.reportNotes || t('export.docs.not_recorded') },
   ];
@@ -639,7 +639,7 @@ function drawFlagCard(doc, x, y, width, flag) {
 
 function drawDetailEventCard(doc, x, y, width, event, t) {
   const notesLines = event.notes ? doc.splitTextToSize(event.notes, width - 24) : [];
-  const postIctalLines = event.postIctal?.summary ? doc.splitTextToSize(`${t('export.docs.post_ictal_summary', 'Post-ictal summary')}: ${event.postIctal.summary}`, width - 24) : [];
+  const postIctalLines = event.postIctal?.summary ? doc.splitTextToSize(`${t('export.docs.post_ictal_summary', 'After-seizure summary')}: ${event.postIctal.summary}`, width - 24) : [];
   const extraLines = notesLines.length + postIctalLines.length;
   const height = extraLines ? Math.max(104, 84 + extraLines * 9) : 96;
   doc.setDrawColor(...COLORS.line);

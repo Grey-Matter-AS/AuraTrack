@@ -163,7 +163,7 @@ function RecordingView({
       {/* RED ALERT — fullscreen overlay, stays on top of everything */}
       {showAlert && <RedAlert elapsed={elapsed} onClose={dismissAlert} emergencyMedications={emergencyMedications} neurologistName={neurologistName} neurologistContact={neurologistContact} emergencyContact={emergencyContact} />}
 
-      <div data-recording-screen className="flex-1 min-h-full flex flex-col items-center w-full max-w-md sm:max-w-xl md:max-w-2xl mx-auto px-4 py-6 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] animate-in fade-in gap-4">
+      <div data-recording-screen className="app-page-shell flex-1 min-h-full flex flex-col items-center mx-auto px-3 py-6 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] animate-in fade-in gap-4">
 
         {/* 1. TOP: Phase Breakdown */}
         {userMode === 'CARETAKER' && (
@@ -261,76 +261,91 @@ function RecordingView({
         </div>
 
         {/* 3. DYNAMIC ACTION AREA */}
-        <div className="w-full flex flex-col gap-4 transition-all duration-500 sm:flex-row sm:items-stretch sm:min-h-[25vh]">
-
-          {/* LEFT COLUMN: Phase Buttons */}
-          <div className={`flex flex-col gap-4 transition-all duration-500 w-full ${showMarkers ? 'sm:w-[48%]' : 'sm:w-full'}`}>
+        <div className="w-full app-surface-card p-3 sm:p-4">
+          <div className="flex flex-col gap-3">
             {userMode === 'CARETAKER' && (
-              <>
+              <div className="app-choice-grid">
                 <button
                   disabled={!!laps.aura}
                   onClick={() => onLap('aura')}
-                  className={`flex-1 rounded-[2rem] font-black uppercase text-sm tracking-[0.15em] leading-tight transition-all border-[3px] px-2 ${
-                    laps.aura
-                      ? 'bg-slate-900 border-slate-800 text-slate-700'
-                      : 'bg-amber-600 border-amber-400 text-white shadow-xl shadow-amber-900/40 active:scale-95'
-                  }`}
+                  className="app-action-tile border-[2px] transition-all active:scale-95 disabled:active:scale-100"
+                  style={laps.aura
+                    ? { backgroundColor: 'rgba(15,23,42,0.82)', borderColor: 'rgba(51,65,85,0.75)', color: 'var(--text-dim)' }
+                    : { backgroundColor: '#d97706', borderColor: '#fbbf24', color: '#fff', boxShadow: '0 18px 34px rgba(180,83,9,0.28)' }}
                 >
-                  {laps.aura ? t('recording.aura_ended') : t('recording.end_aura')}
+                  <span className="app-action-tile__eyebrow" style={{ color: laps.aura ? 'var(--text-faint)' : 'rgba(255,255,255,0.82)' }}>
+                    {t('recording.aura')}
+                  </span>
+                  <span className="app-action-tile__title">{laps.aura ? t('recording.aura_ended') : t('recording.end_aura')}</span>
+                  <span className="app-action-tile__detail" style={{ color: laps.aura ? 'var(--text-faint)' : 'rgba(255,255,255,0.88)' }}>
+                    {fmtDur(auraDuration)}
+                  </span>
                 </button>
 
                 <button
                   disabled={!laps.aura || !!laps.seizure}
                   onClick={() => onLap('seizure')}
-                  className={`flex-1 rounded-[2rem] font-black uppercase text-sm tracking-[0.15em] leading-tight transition-all border-[3px] px-2 ${
-                    laps.seizure
-                      ? 'bg-slate-900 border-slate-800 text-slate-700'
-                      : (!laps.aura ? 'opacity-20 border-slate-800' : 'bg-red-600 border-red-400 text-white shadow-xl shadow-red-900/40 active:scale-95')
-                  }`}
+                  className="app-action-tile border-[2px] transition-all active:scale-95 disabled:active:scale-100"
+                  style={laps.seizure
+                    ? { backgroundColor: 'rgba(15,23,42,0.82)', borderColor: 'rgba(51,65,85,0.75)', color: 'var(--text-dim)' }
+                    : (!laps.aura
+                        ? { backgroundColor: 'var(--bg-card)', borderColor: 'var(--border)', color: 'var(--text-faint)', opacity: 0.58 }
+                        : { backgroundColor: '#dc2626', borderColor: '#f87171', color: '#fff', boxShadow: '0 18px 34px rgba(127,29,29,0.3)' })}
                 >
-                  {laps.seizure ? t('recording.seizure_ended') : t('recording.end_seizure')}
+                  <span className="app-action-tile__eyebrow" style={{ color: laps.seizure ? 'var(--text-faint)' : (!laps.aura ? 'var(--text-faint)' : 'rgba(255,255,255,0.82)') }}>
+                    {t('recording.seizure')}
+                  </span>
+                  <span className="app-action-tile__title">{laps.seizure ? t('recording.seizure_ended') : t('recording.end_seizure')}</span>
+                  <span className="app-action-tile__detail" style={{ color: laps.seizure ? 'var(--text-faint)' : (!laps.aura ? 'var(--text-faint)' : 'rgba(255,255,255,0.88)') }}>
+                    {fmtDur(seizureDuration)}
+                  </span>
                 </button>
-              </>
+              </div>
             )}
 
             <button
               onClick={() => setShowMarkers(!showMarkers)}
-              className="py-5 rounded-2xl font-black uppercase text-xs tracking-widest border-2 transition-all"
+              className="app-action-tile app-action-tile--center border-[2px] transition-all active:scale-95"
               style={showMarkers
                 ? { backgroundColor: 'var(--accent)', borderColor: 'var(--accent)', color: '#fff' }
-                : { backgroundColor: 'var(--bg-raised)', borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
+                : { backgroundColor: 'var(--bg-raised)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
             >
-              {showMarkers ? t('recording.close_notes') : t('recording.event_note')}
+              <span className="app-action-tile__eyebrow" style={{ color: showMarkers ? 'rgba(255,255,255,0.82)' : 'var(--text-faint)' }}>
+                {t('recording.event_note')}
+              </span>
+              <span className="app-action-tile__title">{showMarkers ? t('recording.close_notes') : t('recording.event_note')}</span>
             </button>
-          </div>
 
-          {/* RIGHT COLUMN: Marker Sidebar */}
-          {showMarkers && (
-            <div className="w-full grid grid-cols-1 gap-3 animate-in slide-in-from-right fade-in duration-300 sm:w-[52%]">
-              {quickNoteLabels.map(label => (
-                <button
-                  key={label}
-                  onClick={() => onQuickNote(label)}
-                  className="rounded-2xl text-[11px] font-black tracking-tight uppercase transition-all px-3 shadow-lg leading-tight active:scale-95"
-                  style={{ backgroundColor: 'var(--bg-raised)', border: '2px solid var(--border)', color: 'var(--text-primary)' }}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          )}
+            {showMarkers && (
+              <div
+                className="pt-3 border-t animate-in slide-in-from-bottom-2 fade-in duration-300"
+                style={{ borderColor: 'var(--border-subtle)' }}
+              >
+                <div className="app-choice-grid--compact">
+                  {quickNoteLabels.map(label => (
+                    <button
+                      key={label}
+                      onClick={() => onQuickNote(label)}
+                      className="app-action-tile app-action-tile--compact app-action-tile--center text-[11px] font-black tracking-tight uppercase transition-all active:scale-95"
+                      style={{ backgroundColor: 'var(--bg-raised)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                    >
+                      <span className="leading-tight">{label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* 4. STOP Button */}
-        <div
-          className="w-full shrink-0 pt-2"
-        >
+        <div className="w-full max-w-[24rem] shrink-0 pt-1">
           <button
             onClick={onStop}
-            className="w-full py-[clamp(1rem,4vh,2.5rem)] text-5xl font-black rounded-[3rem] active:scale-95 transition-transform uppercase"
-            style={{ backgroundColor: 'var(--text-primary)', color: 'var(--bg-base)', border: '10px solid var(--bg-base)', boxShadow: '0 0 60px rgba(255,255,255,0.1)' }}
+            className="app-action-tile app-action-tile--center min-h-[5.5rem] text-3xl sm:text-4xl font-black rounded-[2rem] active:scale-95 transition-transform uppercase"
+            style={{ backgroundColor: 'var(--text-primary)', color: 'var(--bg-base)', border: '8px solid var(--bg-base)', boxShadow: '0 18px 48px rgba(255,255,255,0.12)' }}
           >
-            {t('recording.stop')}
+            <span className="max-w-[72%] leading-[0.92] text-center">{t('recording.stop')}</span>
           </button>
           {userMode === 'PATIENT' && (
             <p className="text-center text-xs mt-4 uppercase font-black tracking-[0.2em]" style={{ color: 'var(--text-dim)' }}>

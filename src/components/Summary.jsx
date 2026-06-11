@@ -357,8 +357,7 @@ function Summary({
     <div className="flex flex-col w-full mx-auto px-1">
 
       {/* 1. CLINICAL DURATION BREAKDOWN */}
-      <div className="p-5 rounded-[2.5rem] border mb-4 shadow-lg"
-        style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-subtle)' }}>
+      <div className="app-surface-card p-5 mb-5">
 
         {/* Date/time override row — shown when editing or logging past seizure */}
         {(editingId || isManualEntry) && onSetEventDateTime && (
@@ -394,21 +393,21 @@ function Summary({
       </div>
 
       {/* 2. MIDDLE CONTENT */}
-      <div className="space-y-6 pb-6">
+      <div className="space-y-5 pb-6">
 
         {/* Symptom list with drag-to-reorder */}
-        <div>
+        <div className="app-section-card">
           <p className="text-center font-black uppercase text-[11px] tracking-[0.3em] mb-1" style={{ color: 'var(--text-faint)' }}>
             LOGGED SYMPTOMS
           </p>
           {tempSymptomList.length > 1 && (
-            <p className="text-center text-[9px] mb-3" style={{ color: 'var(--text-faint)' }}>
+            <p className="text-center text-[9px] mb-4" style={{ color: 'var(--text-faint)' }}>
               Hold &amp; drag ≡ to reorder
             </p>
           )}
 
           {tempSymptomList.length === 0 ? (
-            <div className="py-8 text-center border-2 border-dashed rounded-[2rem]" style={{ borderColor: 'var(--border)' }}>
+            <div className="py-8 text-center border-2 border-dashed rounded-[1.5rem]" style={{ borderColor: 'var(--border)' }}>
               <p className="italic text-sm" style={{ color: 'var(--text-faint)' }}>{t('tagging.no_ictal_symptoms', 'No ictal symptoms tagged yet.')}</p>
             </div>
           ) : (
@@ -419,7 +418,7 @@ function Summary({
               onDragEnd={handleDragEnd}
             >
               <SortableContext items={itemsWithId.map(s => s._id)} strategy={verticalListSortingStrategy}>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {itemsWithId.map((symptom, index) => (
                     <SortableSymptomRow
                       key={symptom._id}
@@ -453,35 +452,32 @@ function Summary({
         </div>
 
         {/* Post-ictal findings */}
-        <div className="w-full">
+        <div className="app-section-card w-full">
           <p className="text-[10px] font-black uppercase tracking-widest mb-3 ml-1" style={{ color: 'var(--text-dim)' }}>
-            {t('tagging.post_ictal_findings', 'Post-ictal findings')} <span className="font-normal normal-case tracking-normal" style={{ color: 'var(--text-faint)' }}>({t('tagging.recovery_phase', 'recovery phase')})</span>
+            {t('tagging.post_ictal_findings', 'After-seizure symptoms')} <span className="font-normal normal-case tracking-normal" style={{ color: 'var(--text-faint)' }}>({t('tagging.recovery_phase', 'recovery phase')})</span>
           </p>
-          <div className="flex flex-wrap gap-2 mb-3">
+          <div className="app-choice-grid--compact mb-4">
             {POST_ICTAL_FINDINGS.map((finding) => {
               const selected = postIctal.findings.includes(finding);
               return (
                 <button
                   key={finding}
                   onClick={() => onTogglePostIctalFinding?.(finding)}
-                  className="px-3 py-2 rounded-full text-[11px] font-black uppercase tracking-wide transition-all active:scale-95"
+                  className="app-action-tile app-action-tile--compact app-action-tile--center text-[11px] font-black tracking-wide transition-all active:scale-95"
                   style={selected
                     ? { backgroundColor: '#60a5fa', color: '#0f172a', border: '1.5px solid #60a5fa' }
                     : { backgroundColor: 'transparent', color: 'var(--text-dim)', border: '1.5px solid var(--border)' }}
                 >
-                  {finding}
+                  <span className="leading-tight">{finding}</span>
                 </button>
               );
             })}
           </div>
 
-          <div className="rounded-[2rem] p-4" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
+          <div className="rounded-[1.5rem] p-4" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
             <div className="flex items-start justify-between gap-3 mb-3">
               <div>
-                <p className="text-sm font-black uppercase tracking-wide" style={{ color: 'var(--text-primary)' }}>{t('tagging.post_ictal_paralysis', 'Post-ictal paralysis')}</p>
-                <p className="text-[11px] mt-1" style={{ color: 'var(--text-dim)' }}>
-                  {t('tagging.post_ictal_paralysis_help', "Record Todd's paralysis with exact affected body parts.")}
-                </p>
+                <p className="text-sm font-black uppercase tracking-wide" style={{ color: 'var(--text-primary)' }}>{t('tagging.post_ictal_paralysis', 'After-seizure paralysis')}</p>
               </div>
               <button
                 onClick={onEditPostIctalParalysis}
@@ -493,18 +489,18 @@ function Summary({
             </div>
 
             {postIctal.paralysisLocations.length === 0 ? (
-              <p className="text-[11px]" style={{ color: 'var(--text-faint)' }}>
+              <p className="text-[11px] mb-3" style={{ color: 'var(--text-faint)' }}>
                 {t('tagging.no_paralysis_areas', 'No paralysis areas logged.')}
               </p>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-2 mb-3">
                 {postIctal.paralysisLocations.map((location, index) => (
                   <div key={`${location.region}-${location.subRegion}-${location.specificPart}-${index}`} className="flex items-center gap-3 rounded-2xl px-3 py-2" style={{ backgroundColor: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.25)' }}>
                     <div className="flex-1 min-w-0">
                       <p className="text-[11px] font-black uppercase tracking-wide" style={{ color: '#93c5fd' }}>
                         {t('tagging.todds_paralysis', "Todd's paralysis")}
                       </p>
-                      <p className="text-[11px] truncate" style={{ color: 'var(--text-secondary)' }}>
+                      <p className="text-[11px] leading-snug break-words" style={{ color: 'var(--text-secondary)' }}>
                         {location.region} › {location.subRegion} › {location.specificPart}
                       </p>
                     </div>
@@ -519,28 +515,32 @@ function Summary({
                 ))}
               </div>
             )}
+
+            <p className="text-[11px]" style={{ color: 'var(--text-dim)' }}>
+              {t('tagging.post_ictal_paralysis_help', "Record Todd's paralysis with exact affected body parts.")}
+            </p>
           </div>
         </div>
 
         {/* Trigger chips */}
-        <div className="w-full">
+        <div className="app-section-card w-full">
           <p className="text-[10px] font-black uppercase tracking-widest mb-3 ml-1" style={{ color: 'var(--text-dim)' }}>
             POSSIBLE TRIGGERS <span className="font-normal normal-case tracking-normal" style={{ color: 'var(--text-faint)' }}>(optional)</span>
           </p>
-          <div className="flex flex-wrap gap-2">
+          <div className="app-choice-grid--compact">
             {TRIGGERS.map(t => {
               const selected = triggers.includes(t);
               return (
                 <button
                   key={t}
                   onClick={() => onTriggerToggle?.(t)}
-                  className="px-3 py-2 rounded-full text-[11px] font-black uppercase tracking-wide transition-all active:scale-95"
+                  className="app-action-tile app-action-tile--compact app-action-tile--center text-[11px] font-black uppercase tracking-wide transition-all active:scale-95"
                   style={selected
                     ? { backgroundColor: 'var(--accent)', color: '#fff', border: '1.5px solid var(--accent)' }
                     : { backgroundColor: 'transparent', color: 'var(--text-dim)', border: '1.5px solid var(--border)' }
                   }
                 >
-                  {t}
+                  <span className="leading-tight">{t}</span>
                 </button>
               );
             })}
@@ -548,7 +548,7 @@ function Summary({
         </div>
 
         {/* Notes */}
-        <div className="w-full">
+        <div className="app-section-card w-full">
           <p className="text-[10px] font-black uppercase tracking-widest mb-3 ml-1" style={{ color: 'var(--text-dim)' }}>
             CLINICAL OBSERVATIONS
           </p>
@@ -557,56 +557,59 @@ function Summary({
             onChange={e => setNotes(e.target.value)}
             className="w-full rounded-[2rem] p-5 text-base min-h-[140px] outline-none transition-all resize-none"
             style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
-            placeholder="Describe what you observed — post-ictal state, circumstances, or anything clinically relevant..."
+            placeholder={t('event_card.notes_placeholder')}
           />
         </div>
       </div>
 
       {/* 3. BOTTOM ACTIONS */}
-      <div className="flex flex-col gap-3 py-4 mt-2"
-        style={{ borderTop: '1px solid var(--border-subtle)' }}>
-        <button
-          onClick={onAddAnother}
-          className="w-full py-4 rounded-2xl font-black uppercase text-xs tracking-widest active:scale-95 transition-all"
-          style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
-        >
-          + ADD ANOTHER SYMPTOM
-        </button>
-
-        {onSaveFavorite && tempSymptomList.length > 0 && (
+      <div className="app-section-card mt-2">
+        <div className="app-balanced-grid">
           <button
-            onClick={onSaveFavorite}
-            className="w-full py-4 rounded-2xl font-black uppercase text-xs tracking-widest active:scale-95 transition-all"
-            style={{ backgroundColor: 'rgba(59,130,246,0.12)', color: '#60a5fa', border: '1px solid rgba(59,130,246,0.35)' }}
+            onClick={onAddAnother}
+            className="app-action-tile app-action-tile--compact app-action-tile--center font-black uppercase text-xs tracking-widest active:scale-95 transition-all"
+            style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
           >
-            Save Current Symptoms as Favorite Set
+            + ADD ANOTHER SYMPTOM
           </button>
-        )}
+
+          {onSaveFavorite && tempSymptomList.length > 0 && (
+            <button
+              onClick={onSaveFavorite}
+              className="app-action-tile app-action-tile--compact app-action-tile--center font-black uppercase text-[11px] tracking-widest active:scale-95 transition-all"
+              style={{ backgroundColor: 'rgba(59,130,246,0.12)', color: '#60a5fa', border: '1px solid rgba(59,130,246,0.35)' }}
+            >
+              Save Current Symptoms as Favorite Set
+            </button>
+          )}
+        </div>
 
         <button
           onClick={onSave}
-          className="w-full py-6 bg-green-600 text-white rounded-[2.2rem] font-black uppercase text-sm tracking-[0.2em] shadow-xl active:scale-95 transition-transform"
+          className="w-full mt-3 min-h-[4.75rem] px-5 bg-green-600 text-white rounded-[1.85rem] font-black uppercase text-sm tracking-[0.2em] shadow-xl active:scale-95 transition-transform"
         >
           FINISH & SAVE LOG
         </button>
 
-        {onSkip && (
-          <button
-            onClick={onSkip}
-            className="w-full py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest active:scale-95 transition-all"
-            style={{ backgroundColor: 'rgba(245,158,11,0.16)', border: '2px solid rgba(245,158,11,0.45)', color: '#f59e0b' }}
-          >
-            {t('tagging.save_timing_only')}
-          </button>
-        )}
+        <div className="app-balanced-grid mt-3">
+          {onSkip && (
+            <button
+              onClick={onSkip}
+              className="app-action-tile app-action-tile--compact app-action-tile--center font-black uppercase text-[10px] tracking-widest active:scale-95 transition-all"
+              style={{ backgroundColor: 'rgba(245,158,11,0.16)', border: '2px solid rgba(245,158,11,0.45)', color: '#f59e0b' }}
+            >
+              {t('tagging.save_timing_only')}
+            </button>
+          )}
 
-        <button
-          onClick={onCancel}
-          className="w-full py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest active:bg-red-600 active:text-white transition-all"
-          style={{ backgroundColor: 'rgba(239,68,68,0.08)', border: '2px solid rgba(239,68,68,0.4)', color: '#ef4444' }}
-        >
-          CANCEL & DISCARD
-        </button>
+          <button
+            onClick={onCancel}
+            className="app-action-tile app-action-tile--compact app-action-tile--center font-black uppercase text-[10px] tracking-widest active:bg-red-600 active:text-white transition-all"
+            style={{ backgroundColor: 'rgba(239,68,68,0.08)', border: '2px solid rgba(239,68,68,0.4)', color: '#ef4444' }}
+          >
+            CANCEL & DISCARD
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -258,7 +258,7 @@ export default function EventDetailView({ eventId, onEdit, onClose, durationForm
         {(event.postIctal?.findings?.length > 0 || event.postIctal?.paralysisLocations?.length > 0) && (
           <div className="p-5 rounded-2xl" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
             <p className="text-[10px] font-black uppercase tracking-widest mb-3" style={{ color: 'var(--text-dim)' }}>
-              {t('event_detail.post_ictal', 'Post-ictal findings')}
+              {t('event_detail.post_ictal', 'After-seizure symptoms')}
             </p>
 
             {event.postIctal?.findings?.length > 0 && (
