@@ -176,6 +176,18 @@ export default function TaggingView({
     setTaggingStep('SUMMARY');
   };
 
+  const saveCustomSymptomToSummary = () => {
+    const bundle = {
+      symptom: selections.symptom,
+      detail: selections.detail || 'Custom detail',
+      med: selections.medical || 'Custom',
+      region: 'N/A',
+      specificPart: 'Internal/General',
+    };
+    setTempSymptomList([...tempSymptomList, bundle]);
+    setTaggingStep('SUMMARY');
+  };
+
   const handleTypeSelect = async (val) => {
     const targetId = editingId || activeEventId;
     if (!targetId) { console.error('No active event found'); return; }
@@ -291,10 +303,13 @@ export default function TaggingView({
               />
             )}
             {taggingStep === 'S_DET' && selections.group && selections.symptom && (
+              (() => {
+                const isCustomSymptom = !(selections.symptom in (SYMPTOM_WIZARD[selections.group] || {}));
+                return (
               <WizardMenu
                 title={selections.symptom}
                 options={
-                  selections.symptom in (SYMPTOM_WIZARD[selections.group] || {})
+                  !isCustomSymptom
                     ? [...SYMPTOM_WIZARD[selections.group][selections.symptom].options.map(o => o.label), '+ Add Custom Detail']
                     : ['+ Add Custom Detail']
                 }
@@ -334,10 +349,15 @@ export default function TaggingView({
                     setTaggingStep('R_CAT');
                   }
                 }}
+                onPrimaryAction={isCustomSymptom ? saveCustomSymptomToSummary : undefined}
+                primaryActionLabel={isCustomSymptom ? 'Save and Continue to Summary' : undefined}
+                primaryActionIcon={isCustomSymptom ? <ArrowRightIcon className="w-4 h-4" /> : null}
                 onBack={() => setTaggingStep('S_SYM')}
                 onSkip={onSkip}
                 skipLabel={skipLabel}
               />
+                );
+              })()
             )}
 
             {/* Step 3-5: Region Drill-Down */}
