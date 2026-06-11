@@ -3,6 +3,33 @@
 import { richCaretakerScenario } from '../support/scenarios';
 
 describe('AuraTrack mobile layout', () => {
+  it('separates the header actions cleanly on narrow phones', () => {
+    cy.viewport(320, 568);
+    cy.launchAuraTrack(richCaretakerScenario());
+
+    cy.window().then((win) => {
+      const historyButton = [...win.document.querySelectorAll('button')]
+        .find((button) => button.textContent?.includes('HISTORY'));
+      const settingsButton = [...win.document.querySelectorAll('button')]
+        .find((button) => button.textContent?.includes('SETTINGS'));
+      const helpButton = [...win.document.querySelectorAll('button')]
+        .find((button) => button.getAttribute('aria-label') === 'Help');
+
+      expect(historyButton).to.not.equal(undefined);
+      expect(settingsButton).to.not.equal(undefined);
+      expect(helpButton).to.not.equal(undefined);
+
+      const historyRect = historyButton.getBoundingClientRect();
+      const settingsRect = settingsButton.getBoundingClientRect();
+      const helpRect = helpButton.getBoundingClientRect();
+
+      expect(Math.abs(historyRect.top - settingsRect.top)).to.be.lessThan(2);
+      expect(settingsRect.left).to.be.greaterThan(historyRect.right);
+      expect(settingsRect.top).to.be.greaterThan(helpRect.bottom - 2);
+      expect(win.document.documentElement.scrollWidth - win.document.documentElement.clientWidth).to.be.lessThan(3);
+    });
+  });
+
   it('keeps export date selectors stacked on narrow screens', () => {
     cy.viewport(320, 568);
     cy.launchAuraTrack(richCaretakerScenario());

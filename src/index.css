@@ -200,6 +200,82 @@ input, select, textarea {
   line-height: 1.1;
 }
 
+.app-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.app-header__top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.app-header__top-spacer {
+  min-height: var(--touch-target-compact);
+}
+
+.app-header__brand {
+  min-width: 0;
+}
+
+.app-header__help {
+  justify-self: end;
+}
+
+.app-header__bottom {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.app-header__nav-btn {
+  width: 100%;
+  min-width: 0;
+}
+
+@media (min-width: 640px) {
+  .app-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .app-header__top,
+  .app-header__bottom {
+    display: contents;
+  }
+
+  .app-header__top-spacer {
+    display: none;
+  }
+
+  .app-header__brand {
+    grid-column: 2;
+    justify-self: center;
+  }
+
+  .app-header__history {
+    grid-column: 1;
+    justify-self: start;
+    max-width: 8.75rem;
+  }
+
+  .app-header__settings {
+    grid-column: 3;
+    justify-self: end;
+    max-width: 8.75rem;
+  }
+
+  .app-header__help {
+    grid-column: 4;
+    justify-self: end;
+  }
+}
+
 .app-action-tile {
   width: 100%;
   min-height: var(--touch-target-large);
