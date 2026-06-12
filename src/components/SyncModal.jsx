@@ -3,10 +3,10 @@ import QRCode from 'qrcode';
 import jsQR from 'jsqr';
 import { useP2PSync } from '../hooks/useP2PSync';
 import { useLANSync } from '../hooks/useLANSync';
+import { BackupTransferModal } from './BackupTransferModal';
 import { CloseIcon, DownloadIcon, UploadIcon } from './AppIcons';
-import { exportToJSON } from '../utils/exportHelpers';
-import { db } from '../data/db';
 import { assertImportFileSafe } from '../utils/importSanitizer';
+import { parseBackupFileText } from '../utils/backupFiles';
 
 // ─── Shared sub-components ───────────────────────────────────
 
@@ -516,31 +516,10 @@ function PrivateSyncPanel({ offerSDP, role, onDone, onScanSenderQR }) {
 
 // ─── Manual File panel ────────────────────────────────────────
 
-function ManualFilePanel({ role, onDone }) {
+function ManualFilePanel({ role, onDone, onBackupSuccess }) {
   const [status, setStatus] = useState(null);
   const fileRef = useRef(null);
-
-  const handleExport = async () => {
-    try {
-      const events = await db.events.toArray();
-      const settingsRows = await db.settings.toArray().catch(() => []);
-      const medications = await db.medications.toArray().catch(() => []);
-      const medicationLogs = await db.medicationLogs.toArray().catch(() => []);
-      const eegSessions = await db.eegSessions.toArray().catch(() => []);
-      const eegActivities = await db.eegActivities.toArray().catch(() => []);
-      if (!events.length && !medications.length) { setStatus('No data to export.'); return; }
-      const result = await exportToJSON({
-        settings: settingsRows,
-        events,
-        medications,
-        medicationLogs,
-        eegSessions,
-        eegActivities,
-      });
-      if (result?.ok) setStatus(`Exported ${events.length} event(s).`);
-      else if (!result?.cancelled) setStatus('Export failed.');
-    } catch { setStatus('Export failed.'); }
-  };
+  const [backupModal, setBackupModal] = useState({ mode: null, fileName: '', fileText: '' });
 
   const handleImport = async (e) => {
     const file = e.target.files?.[0];
@@ -548,8 +527,14 @@ function ManualFilePanel({ role, onDone }) {
     try {
       assertImportFileSafe(file);
       const { mergeRemoteData } = await import('../utils/syncHelpers');
-      const parsed = JSON.parse(await file.text());
-      const r = await mergeRemoteData(parsed);
+      const text = await file.text();
+      const parsed = parseBackupFileText(text);
+      if (parsed.kind === 'encrypted') {
+        setBackupModal({ mode: 'import', fileName: file.name, fileText: text });
+        e.target.value = '';
+        return;
+      }
+      const r = await mergeRemoteData(parsed.parsed);
       const total = r.settings + r.events + r.medications + r.logs + r.eegSessions + r.eegActivities;
       setStatus(total
         ? `Added ${r.events} event(s), ${r.medications} medication(s), ${r.logs} dose log(s), ${r.eegSessions} EEG session(s), and ${r.eegActivities} EEG activity record(s).${r.conflicts?.length ? ` ${r.conflicts.length} conflict(s) kept local records.` : ''}`
@@ -562,7 +547,7 @@ function ManualFilePanel({ role, onDone }) {
     if ('showOpenFilePicker' in window) {
       try {
         const [h] = await window.showOpenFilePicker({
-          types: [{ description: 'AuraTrack Backup', accept: { 'application/json': ['.json'] } }],
+          types: [{ description: 'AuraTrack Backup', accept: { 'application/json': ['.json', '.atbak'] } }],
           multiple: false,
         });
         const file = await h.getFile();
@@ -576,28 +561,56 @@ function ManualFilePanel({ role, onDone }) {
 
   return (
     <div className="space-y-4">
+      {backupModal.mode === 'export' && (
+        <BackupTransferModal
+          key="sync-backup-export"
+          isOpen
+          mode="export"
+          onClose={() => setBackupModal({ mode: null, fileName: '', fileText: '' })}
+          onExportSuccess={async (summary) => {
+            await onBackupSuccess?.(summary);
+            setStatus(`Exported ${summary.events} event(s).`);
+          }}
+        />
+      )}
+      {backupModal.mode === 'import' && (
+        <BackupTransferModal
+          key={`sync-backup-import-${backupModal.fileName}`}
+          isOpen
+          mode="import"
+          fileName={backupModal.fileName}
+          fileText={backupModal.fileText}
+          onClose={() => setBackupModal({ mode: null, fileName: '', fileText: '' })}
+          onImportSuccess={(r) => {
+            const total = r.settings + r.events + r.medications + r.logs + r.eegSessions + r.eegActivities;
+            setStatus(total
+              ? `Added ${r.events} event(s), ${r.medications} medication(s), ${r.logs} dose log(s), ${r.eegSessions} EEG session(s), and ${r.eegActivities} EEG activity record(s).${r.conflicts?.length ? ` ${r.conflicts.length} conflict(s) kept local records.` : ''}`
+              : 'Already up to date — no new records.');
+          }}
+        />
+      )}
       <RoleBadge role={role} />
       <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
         {role === 'sender'
-          ? 'Export a full JSON backup from this device and send that file to the receiving device by AirDrop, Files, email, or cloud storage.'
-          : 'Import a JSON backup that was exported from the sender device. Safe to repeat — duplicates are automatically skipped.'}
+          ? 'Create an encrypted AuraTrack backup on this device and send that file to the receiving device by AirDrop, Files, email, or cloud storage.'
+          : 'Import an encrypted AuraTrack backup from another device. Safe to repeat — duplicates are automatically skipped.'}
       </p>
       <div className="space-y-2">
-        <button onClick={handleExport}
+        <button onClick={() => setBackupModal({ mode: 'export', fileName: '', fileText: '' })}
           className="w-full py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2"
           style={role === 'sender'
             ? { backgroundColor: 'var(--accent)', color: '#fff' }
             : { backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)' }}>
-          <DownloadIcon className="w-4 h-4" /> Export Backup (JSON)
+          <DownloadIcon className="w-4 h-4" /> Create Encrypted Backup
         </button>
         <button onClick={handleImportClick}
           className="w-full py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2"
           style={role === 'receiver'
             ? { backgroundColor: 'var(--accent)', color: '#fff' }
             : { backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)' }}>
-          <UploadIcon className="w-4 h-4" /> Import Backup (JSON)
+          <UploadIcon className="w-4 h-4" /> Import Backup File
         </button>
-        <input ref={fileRef} type="file" accept=".json" className="hidden" onChange={handleImport} />
+        <input ref={fileRef} type="file" accept=".atbak,.json,application/json" className="hidden" onChange={handleImport} />
       </div>
       {status && (
         <p className="text-[11px] font-bold text-center py-1" style={{ color: 'var(--text-secondary)' }}>
@@ -621,7 +634,7 @@ const MODES = [
   { id: 'manual',  label: 'Manual File',   sub: 'Export / Import' },
 ];
 
-export default function SyncModal({ isOpen, onClose, connectToken, offerSDP }) {
+export default function SyncModal({ isOpen, onClose, connectToken, offerSDP, onBackupSuccess }) {
   // If opened via URL hash, jump straight to the right mode
   const defaultMode = connectToken ? 'easy' : offerSDP ? 'private' : null;
   const defaultRole = connectToken || offerSDP ? 'receiver' : 'sender';
@@ -780,7 +793,7 @@ export default function SyncModal({ isOpen, onClose, connectToken, offerSDP }) {
             )}
             {mode === 'easy'    && <EasySyncPanel connectToken={effectiveConnectToken} role={role} onDone={onClose} onScanSenderQR={startReceiverScan} />}
             {mode === 'private' && <PrivateSyncPanel offerSDP={effectiveOfferSDP} role={role} onDone={onClose} onScanSenderQR={startReceiverScan} />}
-            {mode === 'manual'  && <ManualFilePanel role={role} onDone={onClose} />}
+            {mode === 'manual'  && <ManualFilePanel role={role} onDone={onClose} onBackupSuccess={onBackupSuccess} />}
           </div>
         )}
       </div>

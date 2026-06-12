@@ -4,6 +4,7 @@ import { useEventTimer } from './hooks/useEventTimer';
 import { useEventHistory } from './hooks/useEventHistory';
 import { useTaggingWizard } from './hooks/useTaggingWizard';
 import { useSettings } from './hooks/useSettings';
+import { usePersistentStorage } from './hooks/usePersistentStorage';
 import { setHapticEnabled } from './utils/hapticFeedback';
 import { db } from './data/db';
 import { DeleteModal } from './components/DeleteModal';
@@ -11,10 +12,10 @@ import { usePWAInstall } from './hooks/usePWAInstall';
 import { useWakeLock } from './hooks/useWakeLock';
 import { useMedications } from './hooks/useMedications';
 import { useNotifications } from './hooks/useNotifications';
-import { useAutoBackup } from './hooks/useAutoBackup';
 import { useEegDiary } from './hooks/useEegDiary';
 import { useVideoRecorder } from './hooks/useVideoRecorder';
 import { getVisibleDosesForPanel } from './utils/medicationSchedule';
+import { BackupReminderModal } from './components/BackupReminderModal';
 import { PWAInstallBanner } from './components/PWAInstallBanner';
 import { ManualEntrySheet } from './components/ManualEntrySheet';
 import IdleView from './pages/IdleView';
@@ -78,9 +79,11 @@ function App() {
   const [toastMsg, setToastMsg] = useState('');
   const [todayLogs, setTodayLogs] = useState([]);
   const [allMedLogs, setAllMedLogs] = useState([]);
+  const [nowMs, setNowMs] = useState(() => Date.now());
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [syncModal, setSyncModal] = useState({ open: false, connectToken: null, offerSDP: null });
   const [historyInitialTab, setHistoryInitialTab] = useState('seizures');
+  const [settingsInitialTab, setSettingsInitialTab] = useState('identity');
 
   const timer = useEventTimer();
   const {
@@ -98,12 +101,13 @@ function App() {
   const notifications = useNotifications();
   const eeg = useEegDiary();
   const video = useVideoRecorder();
+  const storagePersistence = usePersistentStorage();
   const stoppingRef = useRef(false);
 
-  const showToast = (msg) => {
+  const showToast = useCallback((msg) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(''), 5000);
-  };
+  }, []);
 
   const refreshEvents = useCallback(async () => {
     await loadHistory();
@@ -111,17 +115,6 @@ function App() {
     setFullHistory(allEvents);
     return allEvents;
   }, [loadAll, loadHistory]);
-
-  useAutoBackup({
-    settings,
-    updateSettings,
-    status,
-    events: fullHistory,
-    medications: meds.medications,
-    medicationLogs: allMedLogs,
-    onBackupComplete: () => showToast('Auto-backup saved to Downloads'),
-    onBackupError: () => showToast('Auto-backup failed. Please export a manual backup.'),
-  });
 
   // Sync haptic preference to the module singleton
   useEffect(() => { setHapticEnabled(settings.hapticFeedback); }, [settings.hapticFeedback]);
@@ -189,6 +182,45 @@ function App() {
     return () => clearTimeout(id);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [meds.lastError]);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => setNowMs(Date.now()), 60000);
+    return () => clearInterval(intervalId);
+  }, []);
+
+  const handleBackupSuccess = useCallback(async () => {
+    await updateSettings('lastSuccessfulBackupAt', Date.now());
+    await updateSettings('lastBackupReminderDismissedAt', 0);
+    showToast('Encrypted backup saved to device storage.');
+  }, [showToast, updateSettings]);
+
+  useEffect(() => {
+    if (settings.backupReminderEnabled === false) return;
+    if (settings.lastSuccessfulBackupAt || settings.lastBackupReminderDismissedAt) return;
+    if (!fullHistory.length && !meds.medications.length && !allMedLogs.length && !eeg.activeSession && !eeg.currentActivity) return;
+    updateSettings('lastBackupReminderDismissedAt', Date.now()).catch(() => {});
+  }, [
+    allMedLogs.length,
+    eeg.activeSession,
+    eeg.currentActivity,
+    fullHistory.length,
+    meds.medications.length,
+    settings.backupReminderEnabled,
+    settings.lastBackupReminderDismissedAt,
+    settings.lastSuccessfulBackupAt,
+    updateSettings,
+  ]);
+
+  const hasBackupEligibleData =
+    fullHistory.length || meds.medications.length || allMedLogs.length || eeg.activeSession || eeg.currentActivity;
+  const backupReminderBaseline = Math.max(settings.lastSuccessfulBackupAt || 0, settings.lastBackupReminderDismissedAt || 0);
+  const shouldShowBackupReminder = Boolean(
+    settings.backupReminderEnabled !== false &&
+    status === 'IDLE' &&
+    hasBackupEligibleData &&
+    backupReminderBaseline &&
+    nowMs - backupReminderBaseline >= (settings.backupReminderIntervalDays || 7) * 864e5
+  );
 
   // Wake Lock: keep screen on during recording; show banner on unsupported browsers
 	  useEffect(() => {
@@ -420,7 +452,7 @@ function App() {
       data-accent={settings.accentColor}
       data-font-size={settings.fontSize}
     >
-      {showHeader && <Header onHistory={() => setStatus('HISTORY')} onSettings={() => setStatus('SETTINGS')} onHelp={goToHelp} />}
+      {showHeader && <Header onHistory={() => setStatus('HISTORY')} onSettings={() => { setSettingsInitialTab('identity'); setStatus('SETTINGS'); }} onHelp={goToHelp} />}
 
       {status === 'RECORDING' && wakeLockUnsupported && (
         <div className="shrink-0 text-xs text-center px-4 py-2"
@@ -436,8 +468,8 @@ function App() {
         {status === 'IDLE'         && <IdleView history={recentHistory} fullHistory={fullHistory} onStart={handleStart} onManualEntry={() => setShowManualEntry(true)} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail} medicationGroups={medicationGroups} allActiveMedications={allActiveMedications} onSaveDoses={handleSaveDoses} durationFormat={settings.durationFormat} dateFormat={settings.dateFormat} timeFormat={settings.timeFormat} eegSession={eeg.activeSession} eegCurrentActivity={eeg.currentActivity} onStartEegSession={eeg.startSession} onEndEegSession={eeg.endSession} onStartEegActivity={eeg.startActivity} onStopEegActivity={eeg.stopActivity} onOpenEegDiary={() => { setHistoryInitialTab('eeg'); setStatus('HISTORY'); }} eegDiaryEnabled={settings.eegDiaryEnabled} />}
         {status === 'RECORDING'    && <RecordingView elapsed={timer.elapsed} startTime={timer.startTime} laps={timer.laps} onLap={timer.recordLap} onStop={handleStop} onEmergencyStop={handleEmergencyStop} onQuickNote={l => wizard.addQuickNote(l, timer.elapsed)} userMode={settings.userMode} quickNoteLabels={activeQuickNoteLabels} emergencyMedications={emergencyMedications} neurologistName={settings.neurologistName} neurologistContact={settings.neurologistContact} emergencyContact={settings.emergencyContact} durationFormat={settings.durationFormat} onStartVideo={async () => { const result = await video.start({ seizureStartTime: timer.startTime, seizureStartLabel: timer.startTime ? new Date(timer.startTime).toLocaleString() : new Date().toLocaleString(), preferredFacingMode: settings.userMode === 'CARETAKER' ? 'environment' : 'user' }); if (!result?.ok) showToast(video.error || 'Unable to start video recording.'); }} onStopVideo={async () => { await video.stop(); }} onSwitchCamera={async () => { const result = await video.switchCamera(); if (!result?.ok && result?.reason !== 'single_camera') showToast(video.error || 'Unable to switch camera.'); }} videoRecording={video.isRecording} videoSupported={video.isSupported} videoError={video.error} previewStream={video.previewStream} canSwitchCamera={video.canSwitchCamera} />}
         {status === 'TAGGING'      && <TaggingView {...wizard} elapsed={timer.elapsed} laps={timer.laps} startTime={timer.startTime} onSave={handleSave} onSkip={handleSkipTagging} onCancel={handleCancel} durationFormat={settings.durationFormat} />}
-        {status === 'HISTORY'      && <HistoryView onBack={() => setStatus('IDLE')} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail} historyPageSize={settings.historyPageSize} settings={settings} initialTab={historyInitialTab} eeg={eeg} events={fullHistory} />}
-        {status === 'SETTINGS'     && <SettingsView settings={settings} onUpdate={updateSettings} onReset={resetSettings} onBack={() => setStatus('IDLE')} pwa={pwa} notificationPermission={notifications.permission} onRequestNotificationPermission={async () => { const p = await notifications.requestPermission(); if (p === 'granted') notifications.scheduleForToday(meds.medications); }} onSync={() => setSyncModal({ open: true, connectToken: null, offerSDP: null })} />}
+        {status === 'HISTORY'      && <HistoryView onBack={() => setStatus('IDLE')} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail} historyPageSize={settings.historyPageSize} settings={settings} initialTab={historyInitialTab} eeg={eeg} events={fullHistory} onBackupSuccess={handleBackupSuccess} />}
+        {status === 'SETTINGS'     && <SettingsView key={settingsInitialTab} settings={settings} onUpdate={updateSettings} onReset={resetSettings} onBack={() => setStatus('IDLE')} pwa={pwa} notificationPermission={notifications.permission} onRequestNotificationPermission={async () => { const p = await notifications.requestPermission(); if (p === 'granted') notifications.scheduleForToday(meds.medications); }} onSync={() => setSyncModal({ open: true, connectToken: null, offerSDP: null })} initialTab={settingsInitialTab} storagePersistence={storagePersistence} onBackupSuccess={handleBackupSuccess} />}
         {status === 'EVENT_DETAIL' && <EventDetailView eventId={detailEventId} onEdit={handleEdit} onClose={() => setStatus(previousStatus)} durationFormat={settings.durationFormat} dateFormat={settings.dateFormat} timeFormat={settings.timeFormat} />}
         {status === 'HELP'         && <HelpView onBack={() => setStatus('IDLE')} onAbout={goToAbout} />}
         {status === 'ABOUT'        && <AboutView onBack={() => setStatus(previousStatus)} />}
@@ -445,11 +477,26 @@ function App() {
 
       {itemToDelete && <DeleteModal onConfirm={handleDeleteConfirm} onCancel={() => setItemToDelete(null)} />}
       {showManualEntry && <ManualEntrySheet onConfirm={handleManualCreate} onClose={() => setShowManualEntry(false)} />}
+      <BackupReminderModal
+        isOpen={shouldShowBackupReminder}
+        overdueDays={settings.backupReminderIntervalDays || 7}
+        onBackupNow={() => {
+          setSettingsInitialTab('data');
+          setStatus('SETTINGS');
+        }}
+        onSnooze={async () => {
+          await updateSettings('lastBackupReminderDismissedAt', Date.now());
+        }}
+        onDisable={async () => {
+          await updateSettings('backupReminderEnabled', false);
+        }}
+      />
       <SyncModal
         isOpen={syncModal.open}
         onClose={() => setSyncModal({ open: false, connectToken: null, offerSDP: null })}
         connectToken={syncModal.connectToken}
         offerSDP={syncModal.offerSDP}
+        onBackupSuccess={handleBackupSuccess}
       />
 
       <PWAInstallBanner isVisible={pwa.isVisible} isIOS={pwa.isIOS} install={pwa.install} dismiss={pwa.dismiss} showManualInstructions={pwa.showManualInstructions} dismissManual={pwa.dismissManual} />

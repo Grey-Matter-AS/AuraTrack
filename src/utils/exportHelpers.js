@@ -2,34 +2,11 @@ import { formatCSVField, formatCSVRow } from './formatters';
 import { buildEventLogData, buildNeurologistReportData, buildSeizureDiaryData, buildEegDiaryReportData } from '../reports/builders';
 import { renderEventLogHtml, renderNeurologistReportHtml, renderSeizureDiaryHtml, renderEegDiaryHtml } from '../reports/htmlRenderers';
 import { downloadEventLogPdf, downloadNeurologistReportPdf, downloadSeizureDiaryPdf, downloadEegDiaryPdf } from '../reports/pdfRenderers';
-import { buildCanonicalBackupPayload } from './importSanitizer';
 
 export const filterEventsByDateRange = (events, fromDateStr, toDateStr) => {
   const from = fromDateStr ? new Date(fromDateStr).setHours(0, 0, 0, 0) : 0;
   const to = toDateStr ? new Date(toDateStr).setHours(23, 59, 59, 999) : Date.now();
   return events.filter(event => event.startTime >= from && event.startTime <= to);
-};
-
-export const exportToJSON = async (
-  eventsOrSnapshot,
-  medications = [],
-  medicationLogs = [],
-  eegSessions = [],
-  eegActivities = [],
-  settings = {}
-) => {
-  const payload = Array.isArray(eventsOrSnapshot)
-    ? buildCanonicalBackupPayload({
-        settings,
-        events: eventsOrSnapshot,
-        medications,
-        medicationLogs,
-        eegSessions,
-        eegActivities,
-      })
-    : buildCanonicalBackupPayload(eventsOrSnapshot || {});
-  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-  return saveFileNative(blob, `auratrack-backup-${dateStamp()}.json`, 'AuraTrack Backup', ['.json']);
 };
 
 export const exportToCSV = async (events, medications = [], medicationLogs = [], eegSessions = [], eegActivities = []) => {
@@ -107,7 +84,7 @@ export const exportToCSV = async (events, medications = [], medicationLogs = [],
   }
 
   const blob = new Blob([csv], { type: 'text/csv' });
-  return saveFileNative(blob, `auratrack-events-${dateStamp()}.csv`, 'AuraTrack CSV Export', ['.csv']);
+  return saveFileBlob(blob, `auratrack-events-${dateStamp()}.csv`, 'AuraTrack CSV Export', ['.csv']);
 };
 
 export const buildEventTablePreview = (events) => renderEventLogHtml(buildEventLogData(events));
@@ -147,7 +124,7 @@ function triggerDownload(blob, filename) {
   setTimeout(() => URL.revokeObjectURL(url), 100);
 }
 
-async function saveFileNative(blob, suggestedName, description, extensions) {
+export async function saveFileBlob(blob, suggestedName, description, extensions) {
   if ('showSaveFilePicker' in window) {
     try {
       const handle = await window.showSaveFilePicker({
@@ -164,4 +141,8 @@ async function saveFileNative(blob, suggestedName, description, extensions) {
   }
   triggerDownload(blob, suggestedName);
   return { ok: true, cancelled: false };
+}
+
+export async function saveTextFile(text, suggestedName, description, extensions, mimeType = 'application/json') {
+  return saveFileBlob(new Blob([text], { type: mimeType }), suggestedName, description, extensions);
 }

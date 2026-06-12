@@ -1,123 +1,102 @@
 # AuraTrack
 
-**AuraTrack** is a privacy-first seizure tracking PWA for people with epilepsy and their caregivers. Record seizures in real time, annotate events with clinical detail, track medications, and generate structured reports for your neurologist — all stored locally on your device. No account, no server, no data leaving your phone.
+AuraTrack is a privacy-first seizure tracking PWA for people with epilepsy and their caregivers. It records seizures in real time, tracks medications and adherence, supports EEG diary workflows, and generates clinician-friendly reports while keeping primary data local on the device.
 
-> **Not a medical device.** AuraTrack is a personal logging tool. Always consult a qualified healthcare provider for diagnosis, treatment, and medication decisions.
+> **Not a medical device.** AuraTrack is a personal logging tool and report assistant. It does not diagnose, treat, or replace professional medical advice.
 
----
+## What AuraTrack Does
 
-## Features
+### Seizure recording
 
-### Recording
+- One-tap start for urgent real-world use
+- Caretaker and self-recording modes
+- Live phase timing for aura, seizure, and recovery
+- Quick timestamped notes during recording
+- 4-minute warning, 5-minute emergency alert, 12-minute automatic stop
+- Optional seizure video capture when browser/device support is available
+- Manual entry flow for past seizures that were not recorded live
 
-- **One-tap START** — works even during aura; minimal interaction required
-- **Dual mode**
-  - *Caretaker* — full phase timing controls: mark Aura end, Seizure end, Recovery
-  - *Self* — simplified one-button interface for solo users
-- **Quick notes** — customisable shortcut buttons (Fell, Rescue Med, Not Responding, etc.) that stamp timestamped notes mid-recording
-- **Live danger indicators** — timer turns red at 4 minutes; warning banner appears at 5 minutes
-- **Emergency alert overlay** — full-screen red alert at 5 minutes showing emergency contacts, neurologist info, and rescue medications to administer
-- **Auto-stop at 12 minutes** — prevents runaway recordings; event is flagged as emergency stop
+### Clinical detail capture
 
-### Post-Recording Tagging
+- Guided tagging wizard for seizure type, symptoms, body regions, triggers, and notes
+- Drag-to-reorder symptom list
+- Editable phase timings after the event
+- Event detail view with danger flags, timings, notes, and audit markers
 
-- Step-by-step wizard: seizure type → symptom drill-down → anatomy mapping → triggers → clinical notes
-- Drag-to-reorder observed symptoms
-- Editable phase timers (aura / seizure / recovery) — correct timing after the fact
-- Retroactive date and time editing (edit mode and manual entry)
-- Log past seizures via **Manual Entry** from the home screen
+### Medication tracking
 
-### Event History
+- Structured medication list with OD / BD / TDS / QDS / PRN frequencies
+- Scheduled times and day-of-week recurrence
+- Rescue medication highlighting for emergency use
+- Daily dose tracker on the home screen
+- Medication history grid with corrections and edited markers
+- Browser notification reminders for scheduled doses
 
-- Filterable and paginated event list (filter by type or date; 5 / 10 / 25 / 50 per page)
-- **Seizure trend chart** — frequency over time at a glance
-- **Clinical danger flags** shown on each event card:
-  - ⚠ Prolonged — duration > 5 minutes
-  - ⚠ Cluster / SE Risk — 3+ events within an 8-minute window without confirmed recovery
-- Inline **Medications** tab and **Export** tab in History
+### EEG diary
 
-### Event Detail
+- Optional EEG session tracking
+- Activity logging during an EEG session
+- Linked seizure references inside the EEG diary view
+- EEG diary export support in CSV and PDF/report flows where relevant
 
-- Full event breakdown: total duration, aura / seizure / recovery phases, seizure type
-- Symptoms, body regions, triggers, and clinical notes
-- Danger alert banners with clinical guidance
-- Edit any field directly from the detail view
+### Reports and exports
 
-### Medication Tracking
+- Encrypted backup export using a user-supplied passphrase
+- Encrypted backup import for restore or device migration
+- CSV export for spreadsheet analysis
+- Printable event log / PDF export
+- Neurologist report with charts, medication summary, and clinical flags
+- Monthly seizure diary
+- EEG diary preview / PDF export
 
-- Add medications with name, dosage, unit, and frequency (OD / BD / TDS / QDS / PRN)
-- Set scheduled dose times and day-of-week recurrence
-- Flag rescue medications — shown prominently in the emergency alert overlay
-- **Daily dose tracker** on the home screen — mark doses taken or log an unscheduled dose
-- Full medication history log with dose-by-dose status
-- Dose reminder notifications (requires notification permission)
+### Sync and recovery
 
-### Export & Reports
+- Device-to-device sync over PeerJS, WebRTC/LAN, or manual file transfer
+- Backup reminders instead of background auto-backup
+- Storage protection status in Settings using `navigator.storage.persist()`
+- Silent persistence check where the browser allows it, manual retry/request where supported
 
-All exports are filterable by date range.
+## Privacy Model
 
-| Format | Contents |
-|--------|----------|
-| **Backup JSON** | Full data export — events, medications, dose logs. Use for backup or device migration. |
-| **Spreadsheet CSV** | Events, medications, and dose logs in flat CSV format for Excel / Google Sheets. |
-| **Simple Print / PDF** | Quick printable event table — opens print dialog. |
-| **Neurologist Report** | Purpose-built clinical PDF — patient info, phase timings, symptom breakdown, event log, and medication summary. Formatted for presenting at appointments. |
-| **Monthly Seizure Diary** | One-page calendar grid colour-coded by seizure type. The quick-reference sheet to bring to every appointment. |
+- Primary health data is stored locally in IndexedDB on the device
+- No account or backend is required for core use
+- Data leaves the device only when the user explicitly exports, prints, syncs, or saves a video file
+- Encrypted backups are protected with the passphrase chosen at export time
+- CSV, PDF, and video files are standard files and should be handled like sensitive medical documents
 
-### Settings
+## Backup Model
 
-Six tabs of configuration:
+- Auto-backup has been removed
+- AuraTrack uses reminder-driven manual backups
+- Backups are written as encrypted `.atbak` files
+- The encryption key is derived from the passphrase and is not stored by the app
+- Import decrypts in memory and does not intentionally leave a plaintext backup copy on disk
 
-| Tab | Options |
-|-----|---------|
-| **Profile** | Mode (Caretaker / Self), patient & caretaker names, date of birth, emergency contact, neurologist name, institution, contact |
-| **Medications** | Add, edit, deactivate, and delete medications; configure schedules and reminders |
-| **Display** | History page size, date format (system / ISO / US / EU), duration display (123s / 2m 3s), time format (12h / 24h) |
-| **Recording** | Haptic feedback toggle, customise all 6 quick note button labels |
-| **Reports** | Report notes for the neurologist report, patient DOB visibility in reports |
-| **Data** | Import JSON backup, export full data, clear all event data, reset settings to defaults |
+## Settings Areas
 
-**Appearance** (within Display settings): theme (Dark / Light / System), accent colour (Red / Blue / Green / Purple / Amber), font size (S / Normal / L / XL).
+| Area | Purpose |
+|------|---------|
+| Identity | User mode, names, date of birth, emergency contact |
+| Medications | Medication setup, schedules, reminders, emergency visibility |
+| Appearance | Theme, accent color, font size, language |
+| Recording | Haptics, EEG diary toggle, quick-note labels |
+| Clinician | Neurologist details, report notes, DOB inclusion |
+| Data & Backup | Storage protection, encrypted backup/import, reminder interval, destructive data actions |
 
-### PWA
-
-- Installable on Android, iOS, and desktop (Chrome / Edge / Safari)
-- Fully offline — all data and logic runs on-device
-- Screen wake lock keeps the display on during active recording
-- No backend, no account, no network required
-
-### Privacy
-
-All data is stored exclusively on your device using IndexedDB. Nothing is transmitted to any server. Your health data never leaves your device.
-
----
-
-## Clinical Thresholds
-
-| Threshold | Value |
-|-----------|-------|
-| Warning alert | 5 minutes |
-| Auto-stop | 12 minutes |
-| Prolonged seizure flag | > 5 minutes |
-| Cluster / SE risk window | 3+ events within 8 minutes (no confirmed recovery) |
-
----
-
-## Tech Stack
+## Technology
 
 | Layer | Technology |
-|-------|-----------|
-| Framework | React 19.2 + Vite 8 |
-| Styling | Tailwind CSS 4.2 |
-| Database | IndexedDB via Dexie 4.4 |
-| Charts | Recharts 3 |
-| Drag-and-drop | @dnd-kit |
-| PDF export | jsPDF + html2canvas |
-| PWA | vite-plugin-pwa |
+|------|------------|
+| UI | React 19 + Vite 8 |
+| Styling | Tailwind CSS 4 |
+| Local database | IndexedDB via Dexie |
+| Charts | Recharts |
+| Drag and drop | `@dnd-kit` |
+| Reports / PDF | jsPDF + custom HTML/SVG renderers |
+| PWA | `vite-plugin-pwa` |
+| i18n | i18next + react-i18next |
 
----
-
-## Getting Started
+## Development
 
 ```bash
 git clone https://github.com/Grey-Matter-AS/AuraTrack.git
@@ -128,30 +107,16 @@ npm run dev
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Start dev server (Vite) |
-| `npm run build` | Production build |
+| `npm run dev` | Start local dev server |
+| `npm run build` | Build production bundle |
 | `npm run preview` | Preview production build |
-| `npm run lint` | ESLint check |
+| `npm run lint` | Run ESLint |
 
----
+## Documentation
+
+- [README.md](/home/user01/Projects/AuraTrack/README.md) is the product-facing overview
+- [Meta_Explainer.md](/home/user01/Projects/AuraTrack/Meta_Explainer.md) is the full technical walkthrough of the app internals, data model, flows, and implementation details
 
 ## License
 
-AuraTrack is licensed under the **GNU General Public License v3.0** ([GPL-3.0-or-later](https://www.gnu.org/licenses/gpl-3.0.html)).
-
-- Free to use, modify, and distribute
-- Commercial use is allowed
-- Modifications must be shared under the same license
-- Improvements benefit the entire community
-
-See [LICENSE](LICENSE) for the full license text.
-
----
-
-## Contributing
-
-Contributions are welcome. This is a community-driven medical utility — improvements and bug fixes benefit patients and caregivers worldwide.
-
-Report bugs or request features via [GitHub Issues](https://github.com/Grey-Matter-AS/AuraTrack/issues).
-
-**Developer:** [Grey Matter AS](https://github.com/Grey-Matter-AS)
+AuraTrack is licensed under the GNU GPL v3.0 or later. See [LICENSE](/home/user01/Projects/AuraTrack/LICENSE).

@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { db } from '../data/db';
-import { exportToJSON } from '../utils/exportHelpers';
 import { assertImportFileSafe } from '../utils/importSanitizer';
 import { mergeRemoteData } from '../utils/syncHelpers';
 import { useMedications } from '../hooks/useMedications';
+import { BackupTransferModal } from './BackupTransferModal';
+import { parseBackupFileText } from '../utils/backupFiles';
 import { defaultScheduledTimes, scheduledDaysLabel } from '../utils/medicationSchedule';
 import { CloseIcon, DownloadIcon, EditIcon, InstallIcon, ResetIcon, SyncIcon, TrashIcon, UploadIcon } from './AppIcons';
 import pkg from '../../package.json';
@@ -41,7 +42,8 @@ function Row({ label, help, children }) {
       <div className="flex justify-between items-center">
         <div>
           <p className="text-sm font-bold text-[var(--text-primary)]">{label}</p>
-          {help && <p className="text-[11px] text-[var(--text-dim)] mt-0.5">{help}</p>}
+          {typeof help === 'string' && help && <p className="text-[11px] text-[var(--text-dim)] mt-0.5">{help}</p>}
+          {help && typeof help !== 'string' && <div className="text-[11px] text-[var(--text-dim)] mt-0.5">{help}</div>}
         </div>
         <div>{children}</div>
       </div>
@@ -122,24 +124,25 @@ function Toggle({ value, onChange, label }) {
 }
 
 function ActionBtn({ label, sub, onClick, icon, variant = 'default' }) {
-  const bg = variant === 'danger' ? 'rgba(185,28,28,0.1)' : 'var(--bg-raised)';
-  const color = variant === 'danger' ? '#ef4444' : 'var(--text-on-raised)';
+  const isDanger = variant === 'danger';
+  const bg = isDanger ? '#dc2626' : 'var(--bg-raised)';
+  const color = isDanger ? '#ffffff' : 'var(--text-on-raised)';
   return (
     <button
       onClick={onClick}
-      className="flex flex-col items-center justify-center gap-1 py-5 rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all active:scale-95"
-      style={{ backgroundColor: bg, color, border: variant === 'danger' ? '1px solid rgba(185,28,28,0.3)' : '1px solid var(--border)' }}
+      className={`w-full flex flex-col items-center justify-center rounded-2xl font-black uppercase tracking-widest transition-all active:scale-95 ${isDanger ? 'gap-2 px-4 py-6 min-h-[9rem] text-[11px]' : 'gap-1 py-5 text-[10px]'}`}
+      style={{ backgroundColor: bg, color, border: isDanger ? '1px solid rgba(127,29,29,0.9)' : '1px solid var(--border)' }}
     >
       {icon && (
         <span
-          className="w-10 h-10 rounded-2xl flex items-center justify-center"
-          style={{ backgroundColor: variant === 'danger' ? 'rgba(239,68,68,0.12)' : 'var(--bg-card)' }}
+          className={`rounded-2xl flex items-center justify-center ${isDanger ? 'w-14 h-14' : 'w-10 h-10'}`}
+          style={{ backgroundColor: isDanger ? 'rgba(255,255,255,0.14)' : 'var(--bg-card)' }}
         >
           {icon}
         </span>
       )}
-      <span className="text-center leading-snug whitespace-normal">{label}</span>
-      {sub && <span className="text-[9px] opacity-60 font-medium normal-case tracking-normal">{sub}</span>}
+      <span className={`text-center whitespace-normal ${isDanger ? 'leading-tight max-w-[18ch]' : 'leading-snug'}`}>{label}</span>
+      {sub && <span className={`font-medium normal-case tracking-normal ${isDanger ? 'text-[10px] opacity-90' : 'text-[9px] opacity-60'}`}>{sub}</span>}
     </button>
   );
 }
@@ -540,13 +543,14 @@ function MedicationSection({ flash, notificationPermission, onRequestNotificatio
 
 // ─── Main component ───────────────────────────────────────────
 
-export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, notificationPermission, onRequestNotificationPermission, onSync }) {
+export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, notificationPermission, onRequestNotificationPermission, onSync, storagePersistence, onBackupSuccess }) {
   const { t } = useTranslation();
   const fileInputRef = useRef();
   const [storageInfo, setStorageInfo] = useState(null);
   const [statusMsg, setStatusMsg] = useState('');
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [backupModal, setBackupModal] = useState({ mode: null, fileName: '', fileText: '' });
 
   useEffect(() => {
     if ('storage' in navigator) {
@@ -573,39 +577,18 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
     return `${parts.join(', ') || t('settings.data.imported_nothing')}.${conflicts}`;
   };
 
-  const handleExportBackup = async () => {
-    try {
-      const events = await db.events.toArray();
-      const eegSessions = await db.eegSessions.toArray().catch(() => []);
-      const eegActivities = await db.eegActivities.toArray().catch(() => []);
-      const medications = await db.medications.toArray().catch(() => []);
-      const medicationLogs = await db.medicationLogs.toArray().catch(() => []);
-      if (!events.length && !medications.length) { flash(t('settings.data.no_data')); return; }
-      const result = await exportToJSON({
-        settings,
-        events,
-        medications,
-        medicationLogs,
-        eegSessions,
-        eegActivities,
-      });
-      if (!result?.ok) {
-        if (!result?.cancelled) flash(t('settings.data.export_failed'));
-        return;
-      }
-      flash(t('settings.data.exported', { events: events.length, meds: medications.length }));
-    } catch (err) {
-      console.error('Export failed:', err);
-      flash(t('settings.data.export_failed'));
-    }
-  };
+  const handleExportBackup = () => setBackupModal({ mode: 'export', fileName: '', fileText: '' });
 
   const processImport = async (file) => {
     try {
       assertImportFileSafe(file);
       const text = await file.text();
-      const parsed = JSON.parse(text);
-      const result = await mergeRemoteData(parsed);
+      const parsed = parseBackupFileText(text);
+      if (parsed.kind === 'encrypted') {
+        setBackupModal({ mode: 'import', fileName: file.name, fileText: text });
+        return;
+      }
+      const result = await mergeRemoteData(parsed.parsed);
       flash(t('settings.data.imported', { summary: summarizeImportResult(result) }));
     } catch (err) {
       console.error('Import failed:', err);
@@ -624,7 +607,7 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
     if ('showOpenFilePicker' in window) {
       try {
         const [handle] = await window.showOpenFilePicker({
-          types: [{ description: 'AuraTrack Backup', accept: { 'application/json': ['.json'] } }],
+          types: [{ description: 'AuraTrack Backup', accept: { 'application/json': ['.json', '.atbak'] } }],
           multiple: false,
         });
         const file = await handle.getFile();
@@ -658,15 +641,83 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
     flash(t('settings.data.settings_reset'));
   };
 
+  const handleEncryptedImportSuccess = (result) => {
+    flash(t('settings.data.imported', { summary: summarizeImportResult(result) }));
+  };
+
+  const handleEncryptedExportSuccess = async (summary) => {
+    await onBackupSuccess?.(summary);
+    flash(t('settings.data.exported', { events: summary.events, meds: summary.medications }));
+  };
+
+  const persistenceStatusLabel = {
+    checking: t('settings.data.persistence_checking', 'Checking storage protection…'),
+    granted: t('settings.data.persistence_granted', 'Persistent storage enabled'),
+    not_requested: t('settings.data.persistence_not_requested', 'Permission can be requested'),
+    denied: t('settings.data.persistence_denied', 'Best-effort storage only'),
+    unsupported: t('settings.data.persistence_unsupported', 'Persistent storage not supported'),
+    error: t('settings.data.persistence_error', 'Persistent storage request failed'),
+  }[storagePersistence?.status || 'checking'];
+
+  const persistenceStatusHelp = {
+    checking: t('settings.data.persistence_help_checking', 'AuraTrack is checking whether the browser will protect this PWA storage from eviction.'),
+    granted: t('settings.data.persistence_help_granted', 'Browser-managed storage has been marked persistent. Data should not be evicted except by explicit user action.'),
+    not_requested: t('settings.data.persistence_help_not_requested', 'This browser may show a permission prompt, so AuraTrack waits for you to request storage protection manually.'),
+    denied: t('settings.data.persistence_help_denied', 'The browser did not grant persistent storage. Backups remain the main protection against data loss.'),
+    unsupported: t('settings.data.persistence_help_unsupported', 'This browser does not expose persistent storage controls. Backups remain the main protection against data loss.'),
+    error: t('settings.data.persistence_help_error', 'AuraTrack could not confirm persistent storage protection on this device. Backups remain the main protection against data loss.'),
+  }[storagePersistence?.status || 'checking'];
+
+  const persistenceFlowDetail = storagePersistence?.promptBehavior === 'user-prompt-possible'
+    ? t('settings.data.persistence_detail_flow_prompt', 'User-initiated request. A browser permission prompt may appear when you tap the button.')
+    : t('settings.data.persistence_detail_flow_auto', 'Automatic browser decision. The browser may silently grant or deny without showing a permission popup.');
+
+  const persistenceBrowserDetail = storagePersistence?.engine === 'webkit'
+    ? t('settings.data.persistence_detail_browser_webkit', 'WebKit browsers on iPhone/iPad and Safari-class environments usually decide this silently. Installing the app can help storage quotas, but backups are still essential.')
+    : storagePersistence?.engine === 'chromium'
+      ? t('settings.data.persistence_detail_browser_chromium', 'Chromium browsers such as Chrome and Edge usually decide this from browser heuristics, so tapping again may recheck without showing a prompt.')
+      : storagePersistence?.engine === 'gecko'
+        ? t('settings.data.persistence_detail_browser_gecko', 'Firefox-class browsers may show a permission prompt when requested from this screen.')
+        : t('settings.data.persistence_detail_browser_generic', 'Browser behavior varies by engine and device.');
+
+  const persistenceReasonDetail = (storagePersistence?.status === 'denied' || storagePersistence?.status === 'not_requested')
+    ? t('settings.data.persistence_detail_reason', 'Exact denial reasons are not exposed by the web API, so AuraTrack can only show the browser result, not why it decided that way.')
+    : null;
+
+  const persistenceActionLabel = storagePersistence?.promptBehavior === 'user-prompt-possible'
+    ? t('settings.data.persistence_request', 'Request access')
+    : t('settings.data.persistence_retry', 'Try again');
+
+  const persistenceTechnicalDetails = storagePersistence?.supported
+    ? [
+        {
+          label: t('settings.data.persistence_detail_browser_label', 'Browser'),
+          value: `${storagePersistence.browserLabel || t('settings.data.persistence_detail_unknown', 'Unknown')} · ${storagePersistence.platformLabel || t('settings.data.persistence_detail_unknown', 'Unknown')}`,
+        },
+        {
+          label: t('settings.data.persistence_detail_flow_label', 'Request mode'),
+          value: persistenceFlowDetail,
+        },
+        {
+          label: t('settings.data.persistence_detail_api_label', 'Web API'),
+          value: 'navigator.storage.persist() / persisted()',
+        },
+      ]
+    : [];
+
+  const lastBackupLabel = settings.lastSuccessfulBackupAt
+    ? new Date(settings.lastSuccessfulBackupAt).toLocaleString()
+    : t('settings.data.backup_never', 'Never');
+
   const noteLabel = settings.userMode === 'CARETAKER' ? t('settings.identity.patient_name') : t('settings.identity.your_name');
-  const tab = activeTab || 'profile';
+  const tab = activeTab || 'identity';
   const show = (id) => !activeTab || tab === id;
 
   return (
     <div className="space-y-4 w-full pb-10">
 
       {/* ── IDENTITY / PROFILE ── */}
-      {show('profile') && <Section title={t('settings.identity.section')}>
+      {show('identity') && <Section title={t('settings.identity.section')}>
         <div>
           <FieldLabel>{t('settings.identity.mode')}</FieldLabel>
           <Segments
@@ -692,7 +743,7 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
       </Section>}
 
       {/* ── APPEARANCE + DISPLAY ── */}
-      {show('display') && <Section title={t('settings.appearance.section')}>
+      {show('appearance') && <Section title={t('settings.appearance.section')}>
         <div>
           <FieldLabel>{t('settings.appearance.theme')}</FieldLabel>
           <Segments
@@ -760,7 +811,7 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
         </div>
       </Section>}
 
-      {show('display') && <Section title={t('settings.display.section')}>
+      {show('appearance') && <Section title={t('settings.display.section')}>
         <div>
           <FieldLabel>{t('settings.display.page_size')}</FieldLabel>
           <Segments
@@ -842,67 +893,79 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
           </Row>
         )}
 
-        <div>
-          <FieldLabel>{t('settings.data.auto_backup')}</FieldLabel>
-          <Segments
-            options={[
-              { value: 'never',  label: t('settings.data.auto_backup_never')  },
-              { value: 'weekly', label: t('settings.data.auto_backup_weekly') },
-            ]}
-            value={settings.autoBackupFrequency}
-            onChange={v => {
-              onUpdate('autoBackupFrequency', v);
-              if (v === 'never') onUpdate('autoBackupDays', []);
-            }}
-          />
-
-          {settings.autoBackupFrequency === 'weekly' && (() => {
-            const DAY_LABELS = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
-            const selected = Array.isArray(settings.autoBackupDays) ? settings.autoBackupDays : [];
-            const toggle = (idx) => {
-              const next = selected.includes(idx)
-                ? selected.filter(d => d !== idx)
-                : [...selected, idx];
-              onUpdate('autoBackupDays', next);
-            };
-            const statusLabel = selected.length
-              ? t('settings.data.scheduled_backup', { days: [...selected].sort((a,b)=>a-b).map(i => DAY_LABELS[i]).join(' · ') })
-              : null;
-            return (
-              <div className="mt-3 space-y-2">
-                <div className="flex gap-1.5 flex-wrap">
-                  {DAY_LABELS.map((label, idx) => {
-                    const active = selected.includes(idx);
-                    return (
-                      <button
-                        key={idx}
-                        onClick={() => toggle(idx)}
-                        className="py-1.5 px-2.5 rounded-lg font-black text-[10px] uppercase tracking-widest transition-all active:scale-95"
-                        style={{
-                          backgroundColor: active ? 'var(--accent)' : 'var(--bg-raised)',
-                          color: 'var(--text-on-raised)',
-                          border: active ? '2px solid transparent' : '2px solid var(--border)',
-                          opacity: active ? 1 : 0.7,
-                        }}
-                      >
-                        {label}
-                      </button>
-                    );
-                  })}
-                </div>
-                {statusLabel && (
-                  <p className="text-[11px] font-bold" style={{ color: 'var(--accent)' }}>{statusLabel}</p>
-                )}
+        <Row
+          label={t('settings.data.persistence_status', 'Storage protection')}
+          help={
+            <div className="space-y-2">
+              <p>{persistenceStatusHelp}</p>
+              <p>{persistenceBrowserDetail}</p>
+              {persistenceReasonDetail && <p>{persistenceReasonDetail}</p>}
+            </div>
+          }
+        >
+          <div className="flex items-center gap-2 flex-wrap justify-end">
+            <p className="text-sm font-bold" style={{ color: storagePersistence?.persisted ? '#4ade80' : 'var(--text-primary)' }}>
+              {persistenceStatusLabel}
+            </p>
+            {storagePersistence?.supported && !storagePersistence?.persisted && (
+              <button
+                onClick={() => storagePersistence.requestPersistence?.({ userInitiated: true })}
+                className="rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95"
+                style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
+              >
+                {persistenceActionLabel}
+              </button>
+            )}
+          </div>
+        </Row>
+        {persistenceTechnicalDetails.length > 0 && (
+          <div
+            className="rounded-2xl p-4 space-y-2"
+            style={{ backgroundColor: 'var(--bg-raised)', border: '1px solid var(--border)' }}
+          >
+            <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--text-dim)' }}>
+              {t('settings.data.persistence_details_title', 'Technical details')}
+            </p>
+            {persistenceTechnicalDetails.map((detail) => (
+              <div key={detail.label} className="flex flex-col gap-0.5">
+                <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--text-dim)' }}>
+                  {detail.label}
+                </p>
+                <p className="text-[11px]" style={{ color: 'var(--text-primary)' }}>
+                  {detail.value}
+                </p>
               </div>
-            );
-          })()}
+            ))}
+          </div>
+        )}
 
-          <p className="text-[11px] text-[var(--text-dim)] mt-2">{t('settings.data.auto_backup_help')}</p>
+        <Row label={t('settings.data.last_backup', 'Last successful backup')} help={t('settings.data.last_backup_help', 'Updated when an encrypted backup file is saved successfully.')}>
+          <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{lastBackupLabel}</p>
+        </Row>
+
+        <div>
+          <Row label={t('settings.data.backup_reminders', 'Backup reminders')} help={t('settings.data.backup_reminders_help', 'Reminders appear when no successful backup has been created within the chosen interval.')}>
+            <Toggle value={settings.backupReminderEnabled !== false} onChange={value => onUpdate('backupReminderEnabled', value)} label={t('settings.data.backup_reminders', 'Backup reminders')} />
+          </Row>
+          {settings.backupReminderEnabled !== false && (
+            <div className="mt-3">
+              <FieldLabel>{t('settings.data.backup_interval', 'Reminder interval')}</FieldLabel>
+              <Segments
+                options={[
+                  { value: 7, label: t('settings.data.backup_interval_7', '7 days') },
+                  { value: 14, label: t('settings.data.backup_interval_14', '14 days') },
+                  { value: 30, label: t('settings.data.backup_interval_30', '30 days') },
+                ]}
+                value={settings.backupReminderIntervalDays || 7}
+                onChange={value => onUpdate('backupReminderIntervalDays', value)}
+              />
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <ActionBtn label={t('settings.data.export_backup')} sub={t('settings.data.export_sub')} icon={<DownloadIcon className="w-5 h-5" />} onClick={handleExportBackup} />
-          <ActionBtn label={t('settings.data.import_data')}   sub={t('settings.data.import_sub')}    icon={<UploadIcon className="w-5 h-5" />} onClick={handleImportClick} />
+          <ActionBtn label={t('settings.data.export_backup')} sub={t('settings.data.export_sub')} icon={<UploadIcon className="w-5 h-5" />} onClick={handleExportBackup} />
+          <ActionBtn label={t('settings.data.import_data')}   sub={t('settings.data.import_sub')}    icon={<DownloadIcon className="w-5 h-5" />} onClick={handleImportClick} />
         </div>
         {onSync && (
           <ActionBtn label="Sync to Another Device" sub="QR · WiFi · File" icon={<SyncIcon className="w-5 h-5" />} onClick={onSync} />
@@ -929,7 +992,7 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
             ))}
           </div>
         </div>
-        <input ref={fileInputRef} type="file" accept=".json" className="hidden" onChange={handleImport} />
+        <input ref={fileInputRef} type="file" accept=".atbak,.json,application/json" className="hidden" onChange={handleImport} />
 
         {statusMsg && (
           <p className="text-center text-xs py-2 font-bold" style={{ color: statusMsg.includes('fail') || statusMsg.includes('No') || statusMsg.includes('mislyk') || statusMsg.includes('Ingen') ? '#ef4444' : '#4ade80' }}>
@@ -954,7 +1017,7 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
               </div>
             </div>
           ) : (
-            <ActionBtn label={t('settings.data.clear_btn')} icon={<TrashIcon className="w-5 h-5" />} variant="danger" onClick={() => setShowClearConfirm(true)} />
+            <ActionBtn label={t('settings.data.clear_btn')} icon={<TrashIcon className="w-7 h-7" />} variant="danger" onClick={() => setShowClearConfirm(true)} />
           )}
         </div>
       </Section>}
@@ -963,7 +1026,7 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
       {show('medications') && <MedicationSection flash={flash} notificationPermission={notificationPermission} onRequestNotificationPermission={onRequestNotificationPermission} settings={settings} onUpdate={onUpdate} />}
 
       {/* ── REPORTS & NEUROLOGIST ── */}
-      {show('reports') && <Section title={t('settings.reports.section')}>
+      {show('clinician') && <Section title={t('settings.reports.section')}>
         <p className="text-[11px] text-[var(--text-dim)] -mt-2">{t('settings.reports.section_desc')}</p>
         <TextField label={t('settings.reports.neuro_name')} value={settings.neurologistName} onChange={v => onUpdate('neurologistName', v)} placeholder={t('settings.reports.neuro_name_placeholder')} />
         <TextField label={t('settings.reports.institution')} value={settings.neurologistInstitution} onChange={v => onUpdate('neurologistInstitution', v)} placeholder={t('settings.reports.institution_placeholder')} />
@@ -1012,10 +1075,33 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
               </div>
             </div>
           ) : (
-            <ActionBtn label={t('settings.data.reset_btn')} icon={<ResetIcon className="w-5 h-5" />} variant="danger" onClick={() => setShowResetConfirm(true)} />
+            <ActionBtn label={t('settings.data.reset_btn')} icon={<ResetIcon className="w-7 h-7" />} variant="danger" onClick={() => setShowResetConfirm(true)} />
           )}
         </div>
       </Section>}
+
+      {backupModal.mode === 'export' && (
+        <BackupTransferModal
+          key="settings-backup-export"
+          isOpen
+          mode="export"
+          settings={settings}
+          onClose={() => setBackupModal({ mode: null, fileName: '', fileText: '' })}
+          onExportSuccess={handleEncryptedExportSuccess}
+        />
+      )}
+
+      {backupModal.mode === 'import' && (
+        <BackupTransferModal
+          key={`settings-backup-import-${backupModal.fileName}`}
+          isOpen
+          mode="import"
+          fileName={backupModal.fileName}
+          fileText={backupModal.fileText}
+          onClose={() => setBackupModal({ mode: null, fileName: '', fileText: '' })}
+          onImportSuccess={handleEncryptedImportSuccess}
+        />
+      )}
 
     </div>
   );

@@ -4,9 +4,9 @@ import { db } from '../data/db';
 import { ScrollFade } from '../components/ScrollFade';
 import { ExportCard } from '../components/ExportCard';
 import { PrintPreviewOverlay } from '../components/PrintPreviewOverlay';
+import { BackupTransferModal } from '../components/BackupTransferModal';
 import { ActivityIcon, CalendarIcon, DownloadIcon, EyeIcon, FileStackIcon, ReportIcon, StethoscopeIcon, TableIcon } from '../components/AppIcons';
 import {
-  exportToJSON,
   exportToCSV,
   buildEventTablePreview,
   buildNeurologistReportPreview,
@@ -20,9 +20,10 @@ import {
 } from '../utils/exportHelpers';
 import { useMedications } from '../hooks/useMedications';
 
-export default function ExportView({ onBack, settings = {}, isEmbedded = false, eeg = null }) {
+export default function ExportView({ onBack, settings = {}, isEmbedded = false, eeg = null, onBackupSuccess = null }) {
   const { t } = useTranslation();
   const [printPreview, setPrintPreview] = useState(null);
+  const [showBackupModal, setShowBackupModal] = useState(false);
   const [fromDate, setFromDate] = useState(
     () => new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10)
   );
@@ -103,6 +104,16 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false, 
           onClose={() => setPrintPreview(null)}
         />
       )}
+      {showBackupModal && (
+        <BackupTransferModal
+          key="history-export-backup"
+          isOpen
+          mode="export"
+          settings={settings}
+          onClose={() => setShowBackupModal(false)}
+          onExportSuccess={onBackupSuccess}
+        />
+      )}
 
       {/* Header — hidden when embedded in History tab */}
       {!isEmbedded && (
@@ -166,19 +177,7 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false, 
           actions={[{
             label: t('export.generate'),
             icon: <DownloadIcon className="w-4 h-4" />,
-            onClick: async () => {
-              const events = await db.events.orderBy('startTime').toArray();
-              const logs = await db.medicationLogs.toArray().catch(() => []);
-              const eegBundle = await getEegBundle();
-              await exportToJSON({
-                settings,
-                events,
-                medications,
-                medicationLogs: logs,
-                eegSessions: eegBundle.sessions,
-                eegActivities: eegBundle.allActivities,
-              });
-            },
+            onClick: async () => setShowBackupModal(true),
           }]}
         />
         <ExportCard

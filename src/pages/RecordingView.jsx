@@ -118,7 +118,6 @@ function RecordingView({
   const seizureStartLabel = startTime ? new Date(startTime).toLocaleString() : '';
   const [showMarkers, setShowMarkers] = useState(false);
   const [alertDismissed, setAlertDismissed] = useState(false);
-  const [showAlert, setShowAlert] = useState(false);
   const emergencyFiredRef = useRef(false);
   const previewRef = useRef(null);
 
@@ -132,13 +131,7 @@ function RecordingView({
   const seizureDuration  = laps.aura ? getDiff(laps.aura, laps.seizure) : 0;
   const recoveryDuration = laps.seizure ? getDiff(laps.seizure, null) : 0;
 
-  // Trigger alert at 5-minute threshold
-  useEffect(() => {
-    if (alertDismissed) return;
-    if (elapsed >= ALERT_THRESHOLD) {
-      setShowAlert(true);
-    }
-  }, [elapsed, alertDismissed]);
+  const showAlert = !alertDismissed && elapsed >= ALERT_THRESHOLD;
 
   // Auto-stop at 12 minutes — ref guard ensures it fires exactly once
   useEffect(() => {
@@ -149,7 +142,6 @@ function RecordingView({
   }, [elapsed, onEmergencyStop]);
 
   const dismissAlert = () => {
-    setShowAlert(false);
     setAlertDismissed(true);
   };
 

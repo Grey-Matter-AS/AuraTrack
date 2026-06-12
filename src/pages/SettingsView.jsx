@@ -4,17 +4,17 @@ import { SettingsForm } from '../components/SettingsForm';
 import { Tabs } from '../components/Tabs';
 import { ScrollFade } from '../components/ScrollFade';
 
-export default function SettingsView({ settings, onUpdate, onReset, onBack, pwa, notificationPermission, onRequestNotificationPermission, onSync }) {
+export default function SettingsView({ settings, onUpdate, onReset, onBack, pwa, notificationPermission, onRequestNotificationPermission, onSync, initialTab = 'identity', storagePersistence = null, onBackupSuccess = null }) {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState('profile');
+  const [activeTab, setActiveTab] = useState(initialTab);
 
   const TABS = [
-    { id: 'profile',     label: t('settings.tabs.profile')     },
+    { id: 'identity',    label: t('settings.tabs.identity')    },
     { id: 'medications', label: t('settings.tabs.medications') },
-    { id: 'display',     label: t('settings.tabs.display')     },
+    { id: 'appearance',  label: t('settings.tabs.appearance')  },
     { id: 'recording',   label: t('settings.tabs.recording')   },
-    { id: 'reports',     label: t('settings.tabs.reports')     },
-    { id: 'data',        label: t('settings.tabs.data')        },
+    { id: 'clinician',   label: t('settings.tabs.clinician')   },
+    { id: 'data',        label: t('settings.tabs.data_backup') },
   ];
 
   return (
@@ -51,6 +51,8 @@ export default function SettingsView({ settings, onUpdate, onReset, onBack, pwa,
           notificationPermission={notificationPermission}
           onRequestNotificationPermission={onRequestNotificationPermission}
           onSync={onSync}
+          storagePersistence={storagePersistence}
+          onBackupSuccess={onBackupSuccess}
         />
       </ScrollFade>
 

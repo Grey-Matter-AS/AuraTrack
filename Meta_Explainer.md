@@ -191,21 +191,24 @@ AuraTrack/
 │   │   ├── useEventTimer.js    ← Manages the live stopwatch during recording.
 │   │   ├── useEventHistory.js  ← Loads and deletes events from the database.
 │   │   ├── useTaggingWizard.js ← Manages the multi-step symptom form state + triggers.
-│   │   ├── useSettings.js      ← Loads and saves user preferences.
-│   │   ├── usePWAInstall.js    ← Handles the "Install App" prompt and update notifications.
+│   │   ├── useSettings.js      ← Loads and saves all user preferences, including backup reminder settings.
+│   │   ├── usePWAInstall.js    ← Handles the install banner and app-update notifications.
 │   │   ├── useWakeLock.js      ← Keeps the phone screen on during recording.
-│   │   ├── useNotifications.js ← Schedules browser push notifications for upcoming doses.
-│   │   ├── useMedications.js   ← Manages medications list, scheduled times, and dose logs.
+│   │   ├── useNotifications.js ← Schedules browser notifications for upcoming doses.
+│   │   ├── useMedications.js   ← Manages medications list, schedules, logs, and missed-dose filling.
+│   │   ├── usePersistentStorage.js ← Checks `navigator.storage.persist()` support and request flow.
+│   │   ├── useEegDiary.js      ← Manages EEG sessions, activities, edits, and linked seizure references.
+│   │   ├── useVideoRecorder.js ← Handles optional seizure video capture and save-to-file flow.
 │   │   ├── useP2PSync.js       ← Internet-based device sync with PIN-verified PeerJS handshake.
 │   │   └── useLANSync.js       ← Same-WiFi device sync using WebRTC + QR-code signaling.
 │   │
-│   ├── pages/                  ← The 7 main screens of the app.
+│   ├── pages/                  ← The main screens of the app.
 │   │   ├── IdleView.jsx        ← Home screen: START button, dose tracker panel, recent events.
-│   │   ├── RecordingView.jsx   ← Live recording screen: timer + phase buttons.
+│   │   ├── RecordingView.jsx   ← Live recording screen: timer, phase buttons, emergency overlay, optional video.
 │   │   ├── TaggingView.jsx     ← Post-seizure symptom entry wizard.
-│   │   ├── HistoryView.jsx     ← All past events: list, chart, filters + medication history tab.
+│   │   ├── HistoryView.jsx     ← Seizures, EEG diary, medication history, and export tabs.
 │   │   ├── SettingsView.jsx    ← Settings screen wrapper.
-│   │   ├── ExportView.jsx      ← Export data: JSON, CSV, PDF, neurologist report, seizure diary.
+│   │   ├── ExportView.jsx      ← Export hub: encrypted backup, CSV, PDFs, reports, seizure diary, EEG diary.
 │   │   └── EventDetailView.jsx ← Full details for a single event including triggers.
 │   │
 │   ├── components/             ← Reusable UI pieces used across screens.
@@ -218,19 +221,26 @@ AuraTrack/
 │   │   ├── ExportCard.jsx      ← A clickable card for each export format.
 │   │   ├── MedicationDosePanel.jsx ← Idle-screen dose tracker with LATE/MISSED status colours.
 │   │   ├── MedicationHistoryTab.jsx ← Scrollable grid showing every dose slot with status badges.
+│   │   ├── EEGDiaryTab.jsx     ← Timeline/history view for EEG sessions and activities.
 │   │   ├── ManualEntrySheet.jsx ← Bottom-sheet form for logging a past seizure (date/time/duration).
+│   │   ├── BackupTransferModal.jsx ← Passphrase UI for encrypted backup export/import.
+│   │   ├── BackupReminderModal.jsx ← Reminder modal prompting the user to create a fresh backup.
+│   │   ├── PrintPreviewOverlay.jsx ← Full-screen print-preview shell for report/export HTML.
 │   │   ├── PWAInstallBanner.jsx ← The "Install this app" banner + update-available notification.
-│   │   └── SyncModal.jsx       ← Device-to-device sync UI: Easy Sync, Private Sync, and Manual File import/export.
+│   │   └── SyncModal.jsx       ← Device-to-device sync UI: Easy Sync, Private Sync, and manual encrypted transfer.
 │   │
 │   └── utils/                  ← Pure helper functions (no React).
-│       ├── exportHelpers.js    ← Creates JSON, CSV, PDF, neurologist report, seizure diary.
+│       ├── exportHelpers.js    ← Creates CSV, preview HTML, PDF/report files, and save-file downloads.
+│       ├── backupFiles.js      ← Builds, encrypts, decrypts, and validates backup payloads.
 │       ├── dangerFlags.js      ← Detects dangerous seizure patterns (long duration, clusters).
 │       ├── hapticFeedback.js   ← Makes the phone vibrate on button presses.
 │       ├── formatters.js       ← Formats numbers into readable text (e.g., "2m 30s").
+│       ├── importSanitizer.js  ← Sanitises imported backups/sync payloads before merge.
 │       ├── medicationSchedule.js ← Scheduling calculations: slot expansion, visibility filtering, status.
 │       ├── htmlEscape.js       ← Shared HTML-escape helper used by PDF generators.
 │       ├── phaseCalculations.js ← Shared aura/seizure/recovery phase duration calculator.
-│       └── pdfCharts.js        ← Generates SVG charts for the neurologist report.
+│       ├── pdfCharts.js        ← Generates SVG charts for the neurologist report.
+│       └── syncHelpers.js      ← Canonical export/merge/compression helpers shared by sync flows.
 ```
 
 ---
@@ -829,18 +839,88 @@ const triggerToggle = (label) => {
 
 | Key | Default | What it controls |
 |-----|---------|-----------------|
-| `theme` | `'dark'` | `'dark'` or `'light'` |
-| `accentColor` | `'blue'` | The highlight color throughout the app |
+| `theme` | `'dark'` | `'dark'`, `'light'`, or `'system'` |
+| `accentColor` | `'red'` | The highlight color throughout the app |
 | `fontSize` | `'normal'` | Text size |
 | `userMode` | `'CARETAKER'` | `'CARETAKER'` or `'PATIENT'` |
 | `hapticFeedback` | `true` | Whether the phone vibrates on button presses |
+| `eegDiaryEnabled` | `false` | Whether the EEG diary controls are visible |
 | `personName` | `''` | Patient name (appears in neurologist reports) |
+| `caretakerName` | `''` | Caregiver/helper name |
+| `emergencyContact` | `''` | Emergency phone/name shown in the red alert overlay |
 | `neurologistName` | `''` | Doctor's name (appears in reports) |
+| `neurologistInstitution` | `''` | Clinician institution or hospital |
+| `neurologistContact` | `''` | Clinician contact details |
+| `includePatientDOB` | `true` | Whether DOB is printed in clinician-facing reports |
 | `reportNotes` | `''` | Additional clinical notes |
-| `historyPageSize` | `20` | How many events to show in HistoryView |
-| `quickNoteLabels` | `[]` | Custom labels for quick-note buttons during recording |
+| `historyPageSize` | `10` | How many events to show in HistoryView |
+| `dateFormat` | `'locale'` | Event/report date formatting mode |
+| `durationFormat` | `'seconds'` | Raw seconds vs human-readable timers |
+| `timeFormat` | `'12h'` | 12-hour vs 24-hour time |
+| `quickNoteLabels` | 6 default labels | Custom labels for quick-note buttons during recording |
+| `backupReminderEnabled` | `true` | Whether backup reminders are shown |
+| `backupReminderIntervalDays` | `7` | Reminder cadence in days |
+| `lastSuccessfulBackupAt` | `0` | Last successful encrypted backup timestamp |
+| `lastBackupReminderDismissedAt` | `0` | Last snooze/dismiss timestamp for backup reminders |
+| `language` | `'en'` | UI language code |
 
 **Pattern:** Uses Dexie's `settings` table as a key-value store. Each preference is stored as `{ key: 'theme', value: 'dark' }`. On load, all rows are fetched and assembled into a plain object. On update, only the changed key is written.
+
+**Defaults live in code, not the database:**
+
+```javascript
+const DEFAULTS = {
+  userMode: 'CARETAKER',
+  theme: 'dark',
+  eegDiaryEnabled: false,
+  backupReminderEnabled: true,
+  backupReminderIntervalDays: 7,
+  lastSuccessfulBackupAt: 0,
+  lastBackupReminderDismissedAt: 0,
+};
+```
+
+This pattern matters because new settings can be introduced safely. If an older installation has never seen `backupReminderIntervalDays`, the app still behaves correctly because the default fills the gap before any saved value is read.
+
+---
+
+#### `src/hooks/usePersistentStorage.js`
+
+**What it is:** A small hook that checks whether the browser supports storage persistence and whether AuraTrack's IndexedDB bucket has been marked as persistent.
+
+**Why this exists:**
+
+PWAs do not fully control whether browser storage will be evicted. `navigator.storage.persist()` is the closest web-standard tool we have for saying: "this data matters, please don't discard it under storage pressure." It is not a replacement for backups, but it reduces risk where browsers honor it.
+
+**Three important design rules:**
+
+1. **Silent where possible** — Chromium/WebKit browsers usually auto-decide, so the app can check/request without bothering the user.
+2. **User-initiated where needed** — Firefox-class browsers may show a permission prompt, so the hook avoids prompting on page load and waits for a Settings button tap.
+3. **Explain limitations honestly** — the web API only returns `true` or `false`; it does not reveal the exact reason for denial.
+
+**Core flow:**
+
+```javascript
+const alreadyPersistent = navigator.storage.persisted
+  ? await navigator.storage.persisted()
+  : false;
+
+if (alreadyPersistent) {
+  setState({ supported: true, status: 'granted', persisted: true });
+  return true;
+}
+
+if (!userInitiated && environment.promptBehavior === 'user-prompt-possible') {
+  setState({ supported: true, status: 'not_requested', persisted: false });
+  return false;
+}
+
+const granted = await navigator.storage.persist();
+```
+
+**Why the `not_requested` state is useful:**
+
+Without it, Firefox users could get a confusing permission prompt immediately on app load. With it, the Settings screen can say, in plain language: "permission can be requested" and show a button that triggers the request from a deliberate user action.
 
 ---
 
@@ -986,6 +1066,83 @@ For example: `Levetiracetam 500mg BD`
 
 ---
 
+#### `src/hooks/useEegDiary.js`
+
+**What it is:** The EEG diary state manager. It stores EEG sessions and in-session activities in IndexedDB and keeps an audit trail when entries are edited.
+
+**Why it exists separately from seizure history:**
+
+An EEG diary is not the same thing as a seizure log. EEG sessions have their own start/end times, their own activities, and may contain long stretches where nothing seizure-related happens. Keeping them in separate tables avoids forcing two different medical workflows into one schema.
+
+**What it manages:**
+
+- Starting and ending an EEG session
+- Starting and ending activities within that session
+- Linking seizures that happen during the session
+- Editing/deleting EEG activities later
+- Recording an edit log when structured fields change
+
+**Identity strategy:**
+
+Like the newer sync-ready tables, EEG rows get UUIDs so they can be merged across devices without trusting fragile auto-incremented local IDs.
+
+**Example edit-log builder:**
+
+```javascript
+function buildEditLog(existing, changedFields) {
+  return [
+    ...(existing || []),
+    {
+      at: Date.now(),
+      changedFields,
+    },
+  ];
+}
+```
+
+That edit log is important in a clinical app because it preserves the fact that a record was changed later instead of pretending the final state was the original observation.
+
+---
+
+#### `src/hooks/useVideoRecorder.js`
+
+**What it is:** Handles optional seizure video capture using `getUserMedia`, `MediaRecorder`, and a canvas overlay that stamps the seizure start label plus a running elapsed timer into the video itself.
+
+**Why the canvas layer exists:**
+
+Recording the raw camera stream would save a plain video, but clinicians often need timing context. AuraTrack draws the start timestamp and `T+HH:MM:SS` overlay into the frames before recording, so the saved video remains meaningful even when viewed outside the app.
+
+**Recording pipeline:**
+
+```javascript
+const stream = await navigator.mediaDevices.getUserMedia({
+  video: resolveVideoConstraints({ preferredFacingMode }),
+  audio: false,
+});
+
+const streamForRecording = canvas.captureStream(24);
+const recorder = new MediaRecorder(streamForRecording, mimeType ? { mimeType } : undefined);
+recorder.start(1000);
+```
+
+**Why save to the file system instead of IndexedDB:**
+
+Video blobs are large. Keeping them in IndexedDB would bloat the PWA database and make backup/restore far more fragile. Instead, AuraTrack saves the video as a normal user file, then stores only metadata on the seizure event:
+
+```javascript
+const metadata = {
+  videoAttached: true,
+  videoFileName: saveResult.fileName,
+  videoMimeType: mimeType,
+  videoSavedAt: Date.now(),
+  videoDurationSec: Math.max(1, Math.floor((stoppedAt - startedAtRef.current) / 1000)),
+};
+```
+
+This means the seizure record knows a video existed, but the backup model does not try to silently smuggle huge private video files into the encrypted `.atbak` archive.
+
+---
+
 #### `src/hooks/useP2PSync.js`
 
 **What it is:** The "Easy Sync" transport. It uses PeerJS for cross-network signaling so two devices can connect over the internet, then exchanges AuraTrack data directly over the browser data channel.
@@ -1071,6 +1228,7 @@ The data channel starts unverified. When the guest confirms the PIN, it must sen
 **What it shows:**
 - The big **START** button, with a small **"+ Log Past Seizure"** text link directly below it
 - The **Dose Tracker panel** (`MedicationDosePanel`) — only visible when at least one medication is configured
+- Optional **EEG session/activity launch controls** when EEG diary mode is enabled
 - A list of the most recent 5 events (from `history` prop)
 - Danger flag badges on events that were dangerous (>5 min, cluster)
 
@@ -1103,6 +1261,15 @@ The data channel starts unverified. When the guest confirms the PIN, it must sen
 | `allActiveMedications` | Full list of active medications (for the ad-hoc dose section) |
 | `onSaveDoses` | Called with toggled dose array to log them as taken |
 
+**EEG diary launch pattern:**
+
+IdleView can open two bottom sheets:
+
+- `EegSessionSheet` — starts a 24h, 72h, or custom EEG session
+- `EegActivitySheet` — starts a timed activity with optional mood and notes
+
+This keeps the home screen as the operational command center for both seizure capture and EEG observation.
+
 ---
 
 #### `src/pages/RecordingView.jsx`
@@ -1115,12 +1282,25 @@ The data channel starts unverified. When the guest confirms the PIN, it must sen
 - A STOP button
 - An emergency stop mechanism (12-minute auto-stop with countdown)
 - Quick-note buttons (configurable labels) for one-tap timestamped notes
+- Optional camera preview + seizure video controls when supported
 - In CARETAKER mode: a 5-minute warning overlay with emergency guidance
 - If wake lock is unsupported: a warning banner at the top
 
 **Phase tracking:**
 
 When a phase button is tapped, it calls `onLap(phase)`. The `useEventTimer` hook records the exact timestamp. These timestamps (stored in `laps`) are used later to calculate how long each phase lasted.
+
+**Optional video capture:**
+
+RecordingView does not assume the browser can record video. It receives capability props from `useVideoRecorder`:
+
+- `videoSupported`
+- `videoRecording`
+- `previewStream`
+- `canSwitchCamera`
+- `videoError`
+
+That keeps camera logic outside the presentation layer and lets the screen degrade gracefully on browsers with no media support.
 
 ---
 
@@ -1155,13 +1335,15 @@ const { triggers, triggerToggle, ...rest } = props;
 
 #### `src/pages/HistoryView.jsx`
 
-**What it is:** The event history browser. Shows all past events with filtering and charts.
+**What it is:** The history browser. It is no longer just a seizure list; it is a multi-tab review workspace.
 
 **What it shows:**
-- A scrollable list of `EventCard` components
-- Filter/sort controls
-- A `SeizureTrendChart` showing frequency and duration over time
-- An "Export" button that navigates to ExportView
+- **Seizures tab** — filtered seizure list + trend chart + "needs details" filter
+- **EEG Diary tab** — `EEGDiaryTab`
+- **Medications tab** — `MedicationHistoryTab`
+- **Export tab** — embedded `ExportView`
+
+This tabbed structure matters because it keeps all retrospective workflows together: review, correct, export, and compare.
 
 ---
 
@@ -1179,15 +1361,16 @@ const { triggers, triggerToggle, ...rest } = props;
 
 | Export | What it produces |
 |--------|-----------------|
-| Backup JSON | All event data as a `.json` file |
-| Spreadsheet CSV | Comma-separated event data for Excel/Sheets |
-| Simple Print / PDF | Opens a printable table in a new tab |
+| Encrypted Backup | A portable `.atbak` file with encrypted AuraTrack data |
+| Spreadsheet CSV | Comma-separated event, medication, dose-log, and EEG data for Excel/Sheets |
+| Simple Print / PDF | A printable table preview or downloaded PDF |
 | Neurologist Report | Detailed clinical PDF with charts, medications, and trigger analysis |
 | Monthly Seizure Diary | Single-page A4 calendar grid for bring-to-appointment use |
+| EEG Diary PDF | Printable/exportable EEG session summary |
 
 **Date range picker:**
 
-The JSON, CSV, PDF, and Neurologist Report use a date range picker (From → To). Both inputs enforce valid ranges: "From" cannot be after "To", and "To" cannot be in the future.
+Encrypted backup always captures the full canonical snapshot. CSV, simple PDF, and the neurologist report use a date range picker (From → To). Both inputs enforce valid ranges: "From" cannot be after "To", and "To" cannot be in the future.
 
 **Seizure Diary month picker:**
 
@@ -1198,6 +1381,21 @@ const [diaryMonth, setDiaryMonth] = useState(
 ```
 
 The diary uses a separate `<input type="month">` picker capped at the current month, since future months have no data.
+
+**How encrypted backup export is launched:**
+
+```jsx
+{showBackupModal && (
+  <BackupTransferModal
+    isOpen
+    mode="export"
+    settings={settings}
+    onExportSuccess={onBackupSuccess}
+  />
+)}
+```
+
+This is an important product distinction: backup export is not a simple one-click file dump. It is a guided encryption flow with passphrase validation and save-file UX.
 
 **How medications are passed to the neurologist report:**
 
@@ -1323,13 +1521,13 @@ Tap once to select (chip fills with the accent color). Tap again to deselect (ch
 
 **Sections (in order):**
 
-1. **Identity** — Patient name, neurologist name, user mode (Caretaker/Patient)
-2. **Recording** — Quick note button labels, haptic feedback toggle
-3. **Medications** (new) — Structured medication management
-4. **Appearance** — Theme, accent color, font size
-5. **History** — Page size setting
-6. **Data & Backup** — Export/import buttons, database version info
-7. **Reports & Neurologist** — Additional clinical notes (reportNotes)
+1. **Identity** — User mode, names, date of birth, emergency contact
+2. **Appearance** — Theme, accent color, font size, language, display formatting
+3. **Recording** — Haptic feedback, EEG diary toggle, quick note labels
+4. **Data & Backup** — Storage protection, encrypted backup/import, reminder interval, sync, security notes, danger zone
+5. **Medications** — Structured medication management
+6. **Clinician** — Neurologist details, report notes, DOB inclusion
+7. **About** — Version/schema details and install re-prompt
 
 **Medications section (`MedicationSection` component):**
 
@@ -1355,6 +1553,15 @@ Selecting PRN frequency automatically sets `isRescue = true`. Rescue medications
 
 *Why the confirmation on delete:*
 Deleting a medication also deletes all its dose logs (`medicationLogs` records). This is irreversible. The confirmation step prevents accidental data loss.
+
+**Data & Backup section highlights:**
+
+- Shows `navigator.storage.persist()` status and browser behavior hints
+- Lets the user request or retry persistence where the browser allows it
+- Shows the last successful backup timestamp
+- Lets the user configure reminder cadence (7/14/30 days)
+- Launches encrypted backup export/import
+- Contains intentionally severe red buttons for destructive actions
 
 ---
 
@@ -1463,6 +1670,24 @@ const slotIsLate   = diffMin > 0 && !slotIsMissed;
 
 ---
 
+#### `src/components/EEGDiaryTab.jsx`
+
+**What it is:** A dedicated history/timeline view for EEG sessions and their activities.
+
+**What it shows:**
+
+- EEG sessions in reverse chronological order
+- In-session activities with timestamps and durations
+- Linked seizure reference rows when a seizure happened during the EEG window
+- Inline editing for activity labels, mood, and notes
+- Session-ending controls
+
+**Why a separate tab matters:**
+
+Seizure history and EEG logging are related but not interchangeable. A neurologist may want to know, "What was the patient doing during the EEG recording?" even when no seizure occurred. That answer belongs in a diary-like timeline, not inside the seizure list.
+
+---
+
 #### `src/components/ManualEntrySheet.jsx`
 
 **What it is:** A bottom-sheet modal for logging a past seizure with the correct date, time, and duration. Opened from the "Log Past Seizure" link on IdleView.
@@ -1486,6 +1711,62 @@ const slotIsLate   = diffMin > 0 && !slotIsMissed;
 
 ---
 
+#### `src/components/BackupTransferModal.jsx`
+
+**What it is:** The modal used for both backup export and backup import. It is the human-facing shell around the encryption system.
+
+**Why one shared modal is better than two separate ones:**
+
+Export and import are mirror images of the same trust decision:
+
+- Export: "Choose a passphrase, confirm it, and create a portable encrypted file."
+- Import: "Enter the passphrase for this file, decrypt it safely, and merge it."
+
+Using one component keeps the passphrase guidance, error styling, and safety language consistent.
+
+**Export validation flow:**
+
+```javascript
+if (passphrase.length < MIN_BACKUP_PASSPHRASE_LENGTH) {
+  setError(`Passphrase must be at least ${MIN_BACKUP_PASSPHRASE_LENGTH} characters.`);
+  return;
+}
+if (passphrase !== confirmPassphrase) {
+  setError('Passphrases do not match.');
+  return;
+}
+```
+
+**Import safety model:**
+
+The component parses the file, confirms it is an encrypted backup schema, decrypts in memory, then hands the result to `mergeRemoteData()`. It does not intentionally create a plaintext export file as an intermediate step.
+
+---
+
+#### `src/components/BackupReminderModal.jsx`
+
+**What it is:** A reminder modal that appears when health data exists but no successful backup has been created within the configured reminder interval.
+
+**Why this replaced auto-backup:**
+
+Background auto-backup is a bad fit for a browser PWA because:
+
+- the app may not be running
+- browsers may suspend background work
+- there is no trustworthy silent destination for secure file storage
+
+So instead of pretending to do automatic recovery, AuraTrack does the honest thing: remind the user to make a fresh encrypted backup.
+
+**Choices offered:**
+
+- `Back up now`
+- `Remind me later`
+- `Turn off backup reminders`
+
+This keeps ergonomics simple while respecting that some users may not want weekly prompts.
+
+---
+
 #### `src/components/PWAInstallBanner.jsx`
 
 **What it is:** A banner that appears at the bottom of the screen promoting app installation, and also shows the "App update available" notification bar at the top.
@@ -1493,6 +1774,16 @@ const slotIsLate   = diffMin > 0 && !slotIsMissed;
 **Two behaviors:**
 1. **Install banner** — On Chrome/Edge Android: shows a styled "Install AuraTrack" button. On iOS/Safari: shows step-by-step instructions (tap Share → Add to Home Screen).
 2. **Update banner** — When `needRefresh` is true (a new service worker is ready), shows a thin banner at the top: "App update available [Reload]".
+
+---
+
+#### `src/components/PrintPreviewOverlay.jsx`
+
+**What it is:** A full-screen in-app preview shell for printable exports and reports.
+
+**Why it exists:**
+
+Earlier browser-print flows depended too heavily on popup timing and browser quirks. The preview overlay gives AuraTrack a controlled place to show generated HTML before the user prints or downloads a PDF, while still keeping the final export browser-friendly.
 
 ---
 
@@ -1509,11 +1800,16 @@ const slotIsLate   = diffMin > 0 && !slotIsMissed;
 | Function | What it does |
 |----------|-------------|
 | `filterEventsByDateRange(events, fromDate, toDate)` | Filters an event array to only those within the given date range |
-| `exportToJSON(events)` | Downloads a `.json` file containing all event data |
-| `exportToCSV(events)` | Downloads a `.csv` file (comma-separated values) |
-| `exportToPDF(events)` | Opens a new tab with a printable HTML table and calls `window.print()` |
-| `exportNeurologistReport(events, settings, medications, medicationLogs)` | Opens a new tab with a full clinical PDF-ready report |
-| `exportSeizureDiary(allEvents, settings, medications, month, year)` | Opens a new tab with a one-page monthly calendar grid |
+| `buildEventTablePreview(events)` | Builds preview HTML for the printable event table |
+| `buildNeurologistReportPreview(...)` | Builds preview HTML for the clinician report |
+| `buildSeizureDiaryPreview(...)` | Builds preview HTML for the monthly diary |
+| `buildEegDiaryPreview(session, activities)` | Builds preview HTML for an EEG diary export |
+| `exportToCSV(...)` | Downloads a `.csv` file (events, medications, logs, EEG data) |
+| `exportEventLogPDF(events)` | Saves a PDF version of the event table |
+| `exportNeurologistReportPDF(...)` | Saves the clinician report as a PDF |
+| `exportSeizureDiaryPDF(...)` | Saves the monthly diary as a PDF |
+| `exportEegDiaryPDF(session, activities)` | Saves an EEG diary PDF |
+| `saveFileBlob(...)` / `saveTextFile(...)` | Shared save-file helpers used by exports and backups |
 
 **How files are downloaded:**
 
@@ -1521,9 +1817,11 @@ Browsers don't let JavaScript write directly to your disk. Instead:
 
 1. Create the data as a `Blob` (raw bytes in memory)
 2. Create a temporary URL: `URL.createObjectURL(blob)`
-3. Create an invisible `<a>` tag with `download="filename.json"`
+3. Either use `showSaveFilePicker()` when available, or fall back to an invisible `<a download>`
 4. Programmatically click it
 5. Revoke the URL to free memory
+
+This dual path matters because modern browsers can offer a proper save dialog with a suggested filename, while older ones still need the classic download fallback.
 
 **The Edge browser hang fix:**
 
@@ -1654,6 +1952,65 @@ Where each `[count]` badge is a color-filled rectangle (red for TC, amber for FA
 | Uncategorized | Un | Gray |
 
 **Print settings:** `@page { size: A4 landscape; margin: 10mm; }` — ensures it fits on one sheet.
+
+---
+
+#### `src/utils/backupFiles.js`
+
+**What it is:** The encrypted-backup engine. It gathers the canonical backup payload, derives an encryption key from the user passphrase, encrypts with AES-GCM, and validates/decrypts imports.
+
+**Industry-standard pieces used:**
+
+- **PBKDF2-SHA-256** key derivation
+- **310,000 iterations**
+- **16-byte random salt**
+- **AES-GCM 256-bit** authenticated encryption
+- **12-byte random IV**
+
+**Key derivation:**
+
+```javascript
+return globalThis.crypto.subtle.deriveKey(
+  { name: 'PBKDF2', hash: 'SHA-256', salt, iterations },
+  baseKey,
+  { name: 'AES-GCM', length: 256 },
+  false,
+  ['encrypt', 'decrypt']
+);
+```
+
+**Why this design is the right fit here:**
+
+- The passphrase never needs to be stored
+- The backup file is portable between devices
+- AES-GCM provides both confidentiality and tamper detection
+- The file remains self-describing because the KDF and cipher metadata travel with the ciphertext
+
+**Schema shape of an encrypted backup file:**
+
+```json
+{
+  "schema": "auratrack.encrypted-backup",
+  "version": 1,
+  "kdf": { "name": "PBKDF2", "hash": "SHA-256", "iterations": 310000, "salt": "..." },
+  "cipher": { "name": "AES-GCM", "length": 256, "iv": "..." },
+  "ciphertext": "..."
+}
+```
+
+The app can also still parse legacy plain JSON backups for compatibility, but new backup creation goes through this encrypted format only.
+
+---
+
+#### `src/utils/syncHelpers.js`
+
+**What it is:** The shared import/export/merge brain used by sync and restore operations.
+
+**Why it matters:**
+
+Sync is not just "replace my database with the other device." That would destroy local edits. Instead, `mergeRemoteData()` compares identities, keeps UUID relationships intact, avoids duplicate medication logs where possible, and records counts for the UI.
+
+This same merge layer is reused after decrypting a backup import, which means restore and sync follow the same conflict-handling rules instead of maintaining two different ingestion paths.
 
 ---
 
@@ -1962,8 +2319,8 @@ A thin, minimal scrollbar that blends with the dark theme.
 ### Journey 3: Generating a Neurologist Report
 
 ```
-1. From HISTORY, taps Export button
-2. ExportView shown
+1. From HISTORY, opens the Export tab
+2. ExportView is shown inside History
 3. Optionally adjusts the date range (default: last 30 days)
 4. Taps "Generate & Print Report"
 5. App:
@@ -2112,13 +2469,14 @@ For seizures that happened when the app was not open (e.g. during sleep, or when
 
 ## 6. The Database
 
-### Entity-Relationship Diagram (v5 Schema)
+### Entity-Relationship Diagram (v9 Schema)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │  events                                                         │
 │  ─────────────────────────────────────────────────────────────  │
 │  id          (PK, auto)                                         │
+│  uuid        (indexed)   stable cross-device identity           │
 │  startTime   (indexed)   millisecond timestamp                  │
 │  date        (indexed)   'YYYY-MM-DD'                           │
 │  type        (indexed)   seizure type string                    │
@@ -2137,6 +2495,12 @@ For seizures that happened when the app was not open (e.g. during sleep, or when
 │  lastModified            ms timestamp                           │
 │  editLog                 array of edit records                  │
 │  quickNotes              array of { label, elapsed } objects    │
+│  eegSessionId            optional link to EEG session           │
+│  videoAttached           boolean                                │
+│  videoFileName           saved file name (metadata only)        │
+│  videoMimeType           MIME type of saved video               │
+│  videoSavedAt            timestamp of file save                 │
+│  videoDurationSec        recorded video duration                │
 └─────────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────────┐
@@ -2150,6 +2514,7 @@ For seizures that happened when the app was not open (e.g. during sleep, or when
 │  medications                          (added in v5)              │
 │  ──────────────────────────────────────────────────────────────  │
 │  id              (PK, auto)                                      │
+│  uuid            (indexed)   stable cross-device identity        │
 │  name                       e.g. 'Levetiracetam'                │
 │  dose                       e.g. 500                            │
 │  unit                       'mg' | 'g' | 'mcg' | 'ml' | 'IU'   │
@@ -2166,12 +2531,39 @@ For seizures that happened when the app was not open (e.g. during sleep, or when
 │  medicationLogs                       (added in v5, updated v6)  │
 │  ──────────────────────────────────────────────────────────────  │
 │  id             (PK, auto)                                       │
+│  uuid           (indexed)   stable cross-device identity         │
 │  medicationId   (indexed)   FK → medications.id                  │
+│  medicationUuid (indexed)   sync-friendly medication identity    │
 │  takenAt        (indexed)   ms timestamp when dose was recorded  │
 │  scheduledTime  (indexed)   'HH:MM' of the slot (null=ad-hoc)   │
 │  status                     'taken' | 'late' | 'missed'         │
 │  isEdited                   boolean (true if manually corrected) │
 │  lastModified               ms timestamp of last edit            │
+└──────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────┐
+│  eegSessions                         (added in v9)               │
+│  ──────────────────────────────────────────────────────────────  │
+│  id             (PK, auto)                                       │
+│  uuid           (indexed)   stable cross-device identity         │
+│  startTime      (indexed)   session start timestamp              │
+│  status         (indexed)   active | completed                   │
+│  actualEndTime  (indexed)   real session end time                │
+│  title                       optional label                       │
+│  notes                       optional session notes               │
+└──────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────┐
+│  eegActivities                       (added in v9)               │
+│  ──────────────────────────────────────────────────────────────  │
+│  id             (PK, auto)                                       │
+│  uuid           (indexed)   stable cross-device identity         │
+│  sessionId      (indexed)   FK → eegSessions.id                  │
+│  kind           (indexed)   activity / seizure_reference         │
+│  startTime      (indexed)   activity start                       │
+│  endTime        (indexed)   activity end                         │
+│  linkedEventId  (indexed)   optional FK → events.id              │
+│  isEdited       (indexed)   whether activity was corrected       │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
@@ -2185,15 +2577,21 @@ For seizures that happened when the app was not open (e.g. during sleep, or when
 | v4 | Added `settings` table for user preferences |
 | v5 | Added `medications` and `medicationLogs` tables |
 | v6 | Added `scheduledTime` index on `medicationLogs`; medications gained `scheduledTimes`, `scheduledDays`, `reminderEnabled`, `showInEmergency`; logs gained `status`, `isEdited`, `lastModified` |
+| v7 | Added UUIDs to events for safer cross-device identity |
+| v8 | Added UUIDs to medications and medication logs plus `medicationUuid` migration for sync |
+| v9 | Added EEG tables plus video metadata and EEG linkage on events |
 
 ### Automatic Migration
 
-When a user who has v4 or v5 data opens the v6 app, Dexie automatically:
-1. Creates or updates the `medications` table (new fields are absent on old records — treated as `undefined`, which is handled safely throughout)
-2. Creates the `medicationLogs` table (empty)
-3. Leaves every existing event completely untouched
+Dexie migrations run version-by-version. Modern upgrades do more than create empty tables:
 
-If a user has v3 data, Dexie runs both the v4 and v5 migrations sequentially. The user never needs to do anything. Their data is always safe.
+1. Older rows are preserved
+2. Missing UUIDs are generated for events/medications/logs
+3. Medication logs are backfilled with `medicationUuid` where possible
+4. Existing events gain safe defaults such as `videoAttached: false`
+5. New EEG tables are created without disturbing older seizure data
+
+The important idea is that AuraTrack treats migrations as additive and conservative. It does not wipe health data just because the schema grew more capable.
 
 ---
 
@@ -2310,23 +2708,24 @@ When displaying a list of 100 events, calling `computeDangerFlags(event, allEven
 
 | Format | File | Best for |
 |--------|------|---------|
-| **JSON** | `.json` | Full backup, restoring data later |
+| **Encrypted Backup** | `.atbak` | Full encrypted backup, restore, device migration |
 | **CSV** | `.csv` | Opening in Excel or Google Sheets |
-| **PDF** | Browser print | Simple printable table |
-| **Neurologist Report** | Browser print → PDF | Giving to a doctor |
-| **Seizure Diary** | Browser print → PDF | Monthly calendar for appointments |
+| **PDF** | Preview / saved PDF | Simple printable table |
+| **Neurologist Report** | Preview / saved PDF | Giving to a doctor |
+| **Seizure Diary** | Preview / saved PDF | Monthly calendar for appointments |
+| **EEG Diary PDF** | Preview / saved PDF | Printing or sharing EEG session context |
 
 ### How Files Are Downloaded
 
 Browsers don't let JavaScript write directly to your disk (security!). Instead, we:
 
 1. Create the data as a `Blob` (a lump of binary data in memory)
-2. Create a temporary URL pointing to that blob: `URL.createObjectURL(blob)`
-3. Create an invisible `<a>` tag with that URL and `download="filename.json"`
-4. Programmatically click the link
-5. Delete the URL
+2. Prefer `showSaveFilePicker()` when the browser supports it
+3. Fall back to `URL.createObjectURL(blob)` + an invisible `<a download>`
+4. Programmatically trigger the save
+5. Clean up the temporary URL
 
-This tricks the browser into starting a download.
+The encrypted backup flow uses the same save mechanism, but the bytes written to disk are ciphertext, not plaintext health data.
 
 ### The Neurologist Report — Section by Section
 
@@ -2458,6 +2857,30 @@ When a browser sees a `<link rel="manifest">` in `index.html`, it reads `manifes
 | `background_color` | "#0f172a" | Splash screen color while app loads |
 | `icons` | favicon.svg | The app icon |
 
+### Storage Protection vs Backups
+
+Installing the app and using a service worker does **not** guarantee that IndexedDB will live forever. Browsers can still evict site data under storage pressure or policy rules. AuraTrack therefore uses two layers:
+
+1. **Persistent-storage request** via `navigator.storage.persist()`
+2. **Encrypted manual backups** via `.atbak` files
+
+The first reduces risk. The second is the true recovery mechanism.
+
+**Settings-driven persistence request:**
+
+```javascript
+if (!userInitiated && environment.promptBehavior === 'user-prompt-possible') {
+  setState({
+    supported: true,
+    status: 'not_requested',
+    persisted: false,
+  });
+  return false;
+}
+```
+
+This is why AuraTrack sometimes says "Best-effort storage only" even though nothing is broken: the browser either denied persistence silently or simply does not expose a richer explanation. The app surfaces that honestly instead of making a false promise.
+
 ### How iOS Is Different
 
 Apple made PWA installation on iOS deliberately manual (they prefer native apps in their App Store). You have to:
@@ -2579,7 +3002,7 @@ Every technical term used in this document, explained plainly:
 
 **Trigger** — An environmental or lifestyle factor that precedes a seizure and may have contributed to it. Common triggers include sleep deprivation, stress, missed medication, alcohol, and illness. Distinct from *symptoms* (which describe what happens *during* a seizure). In AuraTrack, triggers are selected as chips in the Summary step of the wizard.
 
-**`isManualEntry`** — A boolean flag on an event record set to `true` when the event was created via the Log Past Seizure flow rather than a live recording. Shown as an indigo "Manual Entry" badge on `EventCard`. Included in CSV and JSON exports so clinicians can identify retrospective entries.
+**`isManualEntry`** — A boolean flag on an event record set to `true` when the event was created via the Log Past Seizure flow rather than a live recording. Shown as an indigo "Manual Entry" badge on `EventCard`. Included in CSV and report/export data so clinicians can identify retrospective entries.
 
 **Manual Entry** — A seizure event logged after the fact, not during a live recording. Created via the "Log Past Seizure" button on the home screen. The user specifies the date, time, and duration manually, then completes the standard symptom/trigger/notes wizard.
 

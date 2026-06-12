@@ -6,7 +6,10 @@ import {
 } from './importSanitizer';
 
 const QR_SYNC_CODEC_TIMEOUT_MS = 2500;
-const SETTINGS_SKIP_KEYS = new Set(['lastAutoBackupAt']);
+const SETTINGS_SKIP_KEYS = new Set([
+  'lastSuccessfulBackupAt',
+  'lastBackupReminderDismissedAt',
+]);
 
 const startOfDay = (value) => {
   const date = new Date(value);
@@ -120,7 +123,7 @@ export async function mergeRemoteData(parsed) {
     eegActivities: 0,
     conflicts: [],
     rules: [
-      'Settings: incoming values replace local values except lastAutoBackupAt.',
+      'Settings: incoming values replace local values except local backup reminder timestamps.',
       'Medications: match by UUID first, then by name+dose+unit+schedule fingerprint; local record is preserved on field conflicts.',
       'Dose logs: match by UUID first; otherwise scheduled doses reconcile by medication/day/time and prefer taken or late over missed placeholders.',
     ],

@@ -10,7 +10,7 @@ import { EEGDiaryTab } from '../components/EEGDiaryTab';
 import ExportView from './ExportView';
 import { ScrollFade } from '../components/ScrollFade';
 
-export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, historyPageSize = 10, settings = {}, initialTab = 'seizures', eeg = null, events = [] }) {
+export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, historyPageSize = 10, settings = {}, initialTab = 'seizures', eeg = null, events = [], onBackupSuccess = null }) {
   const { t } = useTranslation();
   const { durationFormat = 'seconds', dateFormat = 'locale', timeFormat = '12h' } = settings;
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -198,7 +198,7 @@ export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, hi
       {/* ── EXPORT TAB ── */}
       {activeTab === 'export' && (
         <ScrollFade wrapperClassName="flex-1">
-          <ExportView isEmbedded settings={settings} eeg={eeg} />
+          <ExportView isEmbedded settings={settings} eeg={eeg} onBackupSuccess={onBackupSuccess} />
         </ScrollFade>
       )}
 

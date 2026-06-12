@@ -96,8 +96,8 @@
     "from": "Frå",
     "to": "Til",
     "raw_data": "Rådata",
-    "backup_json_label": "Tryggleikskopiering JSON",
-    "backup_json_desc": "Full dataeksport — alle felt inkludert medisinar og doseringslogg. Bruk til tryggingskopi eller overføring til ny eining.",
+    "backup_json_label": "Encrypted Backup",
+    "backup_json_desc": "Full encrypted data snapshot for backup and device migration. AuraTrack encrypts the file before it is saved.",
     "csv_label": "Rekneark CSV",
     "csv_desc": "Hendingar, medisinar og doseringslogg i kommaseparert format. Opnar i Excel / Rekneark.",
     "pdf_label": "PDF-rapporteksport",
@@ -226,7 +226,8 @@
     },
     "eeg_title": "EEG Diary",
     "eeg_label": "EEG Clinical Table",
-    "eeg_desc": "Export the most recent EEG session as a table-first clinical PDF."
+    "eeg_desc": "Export the most recent EEG session as a table-first clinical PDF.",
+    "privacy_notice_body": "Encrypted backups are protected with your passphrase before they are saved. CSV, PDF, and video exports are still regular files, so treat them like medical documents."
   },
   "event_detail": {
     "title": "Hendingsdetaljar",
@@ -301,7 +302,7 @@
         "steps": [
           "Opne HISTORIKK for å bla, søkje og filtrere alle registrerte hendingar.",
           "Trykk på ei hending for å sjå full detalj eller redigere henne.",
-          "Bruk EKSPORTER (frå Historikk) for å generere ein PDF-nevrolograpport, CSV eller JSON-tryggleikskopi."
+          "Use EXPORT (from History) to generate a PDF neurologist report, CSV, or encrypted backup."
         ]
       },
       "settings": {
@@ -340,7 +341,11 @@
       "display": "Visning",
       "recording": "Opptak",
       "reports": "Rapportar",
-      "data": "Data"
+      "data": "Data",
+      "identity": "Identity",
+      "appearance": "Appearance",
+      "clinician": "Clinician & Reports",
+      "data_backup": "Data & Backup"
     },
     "identity": {
       "section": "Identitet",
@@ -436,7 +441,7 @@
       "removed": "Medisin fjerna."
     },
     "reports": {
-      "section": "Rapportar og nevrolog",
+      "section": "Clinician & Reports",
       "section_desc": "Informasjon brukt til å generere kliniske nevrolograpportar.",
       "neuro_name": "Nevrolog / klinikarnamn",
       "neuro_name_placeholder": "Dr. Namn",
@@ -455,15 +460,10 @@
       "storage_help": "Omtrentleg nettlesar IndexedDB-bruk",
       "storage_value": "{{kb}} KB",
       "storage_quota": " / {{mb}} MB",
-      "auto_backup": "Automatisk tryggingskopi",
-      "auto_backup_never": "Aldri",
-      "auto_backup_weekly": "Kvar veke",
-      "auto_backup_help": "Manuell utløysar er alltid tilgjengeleg via eksportskjermen.",
-      "scheduled_backup": "Planlagd tryggingskopi kvar {{days}}",
-      "export_backup": "Eksporter tryggingskopi",
-      "export_sub": "JSON-nedlasting",
-      "import_data": "Importer data",
-      "import_sub": "JSON-fil",
+      "export_backup": "Create Encrypted Backup",
+      "export_sub": "Encrypted file",
+      "import_data": "Import Data",
+      "import_sub": "Encrypted or legacy file",
       "danger_zone": "Faresone",
       "clear_confirm": "Dette slettar permanent registrerte hendingar, medisinar og doseringsloggar. Kan ikkje angrast.",
       "clear_yes": "Ja, slett alt",
@@ -481,7 +481,33 @@
       "no_data_in_file": "Ingen data funne i fila.",
       "imported": "Importerte {{summary}} vellykka.",
       "imported_nothing": "ingenting",
-      "import_failed": "Import mislykkast — ugyldig eller øydelagd fil."
+      "import_failed": "Import mislykkast — ugyldig eller øydelagd fil.",
+      "persistence_status": "Storage Protection",
+      "persistence_checking": "Checking storage protection…",
+      "persistence_granted": "Persistent storage enabled",
+      "persistence_denied": "Best-effort storage only",
+      "persistence_unsupported": "Persistent storage not supported",
+      "persistence_error": "Persistent storage request failed",
+      "persistence_help_checking": "AuraTrack is checking whether the browser will protect this PWA storage from eviction.",
+      "persistence_help_granted": "Browser-managed storage has been marked persistent. Data should not be evicted except by explicit user action.",
+      "persistence_help_denied": "The browser did not grant persistent storage. Backups remain the main protection against data loss.",
+      "persistence_help_unsupported": "This browser does not expose persistent storage controls. Backups remain the main protection against data loss.",
+      "persistence_help_error": "AuraTrack could not confirm persistent storage protection on this device. Backups remain the main protection against data loss.",
+      "last_backup": "Last Successful Backup",
+      "last_backup_help": "Updated when an encrypted backup file is saved successfully.",
+      "backup_never": "Never",
+      "backup_reminders": "Backup Reminders",
+      "backup_reminders_help": "Reminders appear when no successful backup has been created within the chosen interval.",
+      "backup_interval": "Reminder Interval",
+      "backup_interval_7": "7 days",
+      "backup_interval_14": "14 days",
+      "backup_interval_30": "30 days",
+      "security_title": "Privacy & Export Security",
+      "security_current": "AuraTrack backups are exported as encrypted files protected by your chosen passphrase.",
+      "security_exports": "CSV, PDF, and video exports are not encrypted by AuraTrack. Anyone who can open those files can read their contents.",
+      "security_sync": "Device-to-device sync uses browser-encrypted transport, but sync setup can still expose connection metadata depending on whether you use PeerJS signaling or local-network QR exchange.",
+      "security_recommendation": "Keep your backup passphrase somewhere safe. AuraTrack cannot recover forgotten backup passphrases.",
+      "persistence_retry": "Try again"
     },
     "about_section": {
       "section": "Om",
