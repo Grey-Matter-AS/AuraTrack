@@ -4,7 +4,20 @@ import jsQR from 'jsqr';
 import { useP2PSync } from '../hooks/useP2PSync';
 import { useLANSync } from '../hooks/useLANSync';
 import { BackupTransferModal } from './BackupTransferModal';
-import { CloseIcon, DownloadIcon, UploadIcon } from './AppIcons';
+import {
+  CalendarIcon,
+  CheckIcon,
+  ClipboardListIcon,
+  CloseIcon,
+  DownloadIcon,
+  GlobeIcon,
+  LoaderIcon,
+  PillIcon,
+  ShieldIcon,
+  UploadIcon,
+  WarningIcon,
+  WifiIcon,
+} from './AppIcons';
 import { assertImportFileSafe } from '../utils/importSanitizer';
 import { parseBackupFileText } from '../utils/backupFiles';
 
@@ -45,7 +58,7 @@ function PinDisplay({ pin, label }) {
 function StatusRow({ icon, text }) {
   return (
     <div className="flex items-center gap-3 py-2">
-      <span className="text-lg shrink-0">{icon}</span>
+      <span className="shrink-0 inline-flex items-center justify-center w-5 h-5">{icon}</span>
       <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{text}</p>
     </div>
   );
@@ -109,14 +122,14 @@ function DonePanel({ result, onClose }) {
   const total = (result?.events || 0) + (result?.medications || 0) + (result?.logs || 0);
   return (
     <div className="space-y-4 text-center">
-      <div className="text-5xl mb-2">✓</div>
+      <CheckIcon className="w-12 h-12 mx-auto mb-2 text-green-400" />
       <p className="text-lg font-black" style={{ color: 'var(--text-primary)' }}>Sync complete</p>
       {total === 0
         ? <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Both devices were already up to date — no new records added.</p>
         : <div className="space-y-1">
-            {result.events > 0 && <StatusRow icon="📋" text={`${result.events} new event(s) added`} />}
-            {result.medications > 0 && <StatusRow icon="💊" text={`${result.medications} new medication(s) added`} />}
-            {result.logs > 0 && <StatusRow icon="🗓" text={`${result.logs} new dose log(s) added`} />}
+            {result.events > 0 && <StatusRow icon={<ClipboardListIcon className="w-5 h-5" />} text={`${result.events} new event(s) added`} />}
+            {result.medications > 0 && <StatusRow icon={<PillIcon className="w-5 h-5" />} text={`${result.medications} new medication(s) added`} />}
+            {result.logs > 0 && <StatusRow icon={<CalendarIcon className="w-5 h-5" />} text={`${result.logs} new dose log(s) added`} />}
           </div>
       }
       <button onClick={onClose}
@@ -131,7 +144,7 @@ function DonePanel({ result, onClose }) {
 function ErrorPanel({ error, onRetry, onClose }) {
   return (
     <div className="space-y-4 text-center">
-      <div className="text-4xl mb-2">⚠</div>
+      <WarningIcon className="w-10 h-10 mx-auto mb-2" />
       <p className="text-sm font-bold" style={{ color: 'var(--status-missed-text)' }}>{error}</p>
       <div className="flex gap-3">
         {onRetry && (
@@ -273,8 +286,8 @@ function EasySyncPanel({ connectToken, role, onDone, onScanSenderQR }) {
           ? 'This device will send its AuraTrack data to another device over the internet. Start here, then let the receiving device scan the QR code.'
           : 'This device will receive AuraTrack data from another device over the internet. On the sender device, open Easy Sync and scan its QR code with this device.'}
       </p>
-      <StatusRow icon="🔒" text="Data travels peer-to-peer over a browser-encrypted connection. A PIN confirms both devices are yours." />
-      <StatusRow icon="🌐" text="PeerJS is used for connection signaling only; sync still shares metadata such as connection IDs." />
+      <StatusRow icon={<ShieldIcon className="w-5 h-5" />} text="Data travels peer-to-peer over a browser-encrypted connection. A PIN confirms both devices are yours." />
+      <StatusRow icon={<GlobeIcon className="w-5 h-5" />} text="PeerJS is used for connection signaling only; sync still shares metadata such as connection IDs." />
       {role === 'sender' ? (
         <button onClick={p2p.startAsHost}
           className="w-full py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest active:scale-95 transition-all"
@@ -310,7 +323,7 @@ function EasySyncPanel({ connectToken, role, onDone, onScanSenderQR }) {
   if (phase === 'generating') return (
     <div className="space-y-3">
       <RoleBadge role={role} />
-      <StatusRow icon="⏳" text="Connecting to relay server…" />
+      <StatusRow icon={<LoaderIcon className="w-5 h-5 animate-spin" />} text="Connecting to relay server…" />
     </div>
   );
 
@@ -319,14 +332,14 @@ function EasySyncPanel({ connectToken, role, onDone, onScanSenderQR }) {
       <RoleBadge role={role} />
       <QRImg dataUrl={qrUrl} label="Receiver: scan this QR code" />
       <PinDisplay pin={p2p.pin} label="Security PIN — verify on both screens" />
-      <StatusRow icon="⏳" text="Waiting for the receiver device to connect… (90s)" />
+      <StatusRow icon={<LoaderIcon className="w-5 h-5 animate-spin" />} text="Waiting for the receiver device to connect… (90s)" />
     </div>
   );
 
   if (phase === 'connecting') return (
     <div className="space-y-3">
       <RoleBadge role={role} />
-      <StatusRow icon="⏳" text="Connecting to the sender device…" />
+      <StatusRow icon={<LoaderIcon className="w-5 h-5 animate-spin" />} text="Connecting to the sender device…" />
     </div>
   );
 
@@ -342,7 +355,7 @@ function EasySyncPanel({ connectToken, role, onDone, onScanSenderQR }) {
         <button onClick={p2p.confirmPin}
           className="w-full py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest active:scale-95 transition-all"
           style={{ backgroundColor: 'var(--accent)', color: '#fff' }}>
-          ✓ PINs Match — Start Sync
+          <CheckIcon className="w-4 h-4 inline-block mr-2 align-[-2px]" /> PINs Match — Start Sync
         </button>
         <button onClick={p2p.reset}
           className="w-full py-2 text-[10px] font-black uppercase tracking-widest"
@@ -356,7 +369,7 @@ function EasySyncPanel({ connectToken, role, onDone, onScanSenderQR }) {
       <div className="space-y-4">
         <RoleBadge role="sender" />
         <PinDisplay pin={p2p.pin} label="Verify this PIN on the receiver device" />
-        <StatusRow icon="⏳" text="Waiting for the receiver device to confirm the PIN…" />
+        <StatusRow icon={<LoaderIcon className="w-5 h-5 animate-spin" />} text="Waiting for the receiver device to confirm the PIN…" />
       </div>
     );
   }
@@ -364,7 +377,7 @@ function EasySyncPanel({ connectToken, role, onDone, onScanSenderQR }) {
   if (phase === 'transferring' || phase === 'merging') return (
     <div className="space-y-3">
       <RoleBadge role={role} />
-      <StatusRow icon="⏳" text={phase === 'merging' ? 'Merging records…' : 'Transferring data…'} />
+      <StatusRow icon={<LoaderIcon className="w-5 h-5 animate-spin" />} text={phase === 'merging' ? 'Merging records…' : 'Transferring data…'} />
     </div>
   );
 
@@ -416,8 +429,8 @@ function PrivateSyncPanel({ offerSDP, role, onDone, onScanSenderQR }) {
           ? 'This device will send its AuraTrack data directly over the same WiFi network. No relay server is used after setup.'
           : 'This device will receive AuraTrack data directly over the same WiFi network. Start on the sender device, then scan its connection QR from this device.'}
       </p>
-      <StatusRow icon="🔒" text="Signaling travels via QR codes only — no relay server. Your data and metadata stay on your local network." />
-      <StatusRow icon="📶" text="Requires two QR scans: receiver scans sender offer QR, then sender scans receiver answer QR." />
+      <StatusRow icon={<ShieldIcon className="w-5 h-5" />} text="Signaling travels via QR codes only — no relay server. Your data and metadata stay on your local network." />
+      <StatusRow icon={<WifiIcon className="w-5 h-5" />} text="Requires two QR scans: receiver scans sender offer QR, then sender scans receiver answer QR." />
       {role === 'sender' ? (
         <button onClick={lan.startAsHost}
           className="w-full py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest active:scale-95 transition-all"
@@ -450,8 +463,8 @@ function PrivateSyncPanel({ offerSDP, role, onDone, onScanSenderQR }) {
     </div>
   );
 
-  if (phase === 'generating_offer') return <div className="space-y-3"><RoleBadge role="sender" /><StatusRow icon="⏳" text="Generating secure connection code…" /></div>;
-  if (phase === 'generating_answer') return <div className="space-y-3"><RoleBadge role="receiver" /><StatusRow icon="⏳" text="Processing sender connection code…" /></div>;
+  if (phase === 'generating_offer') return <div className="space-y-3"><RoleBadge role="sender" /><StatusRow icon={<LoaderIcon className="w-5 h-5 animate-spin" />} text="Generating secure connection code…" /></div>;
+  if (phase === 'generating_answer') return <div className="space-y-3"><RoleBadge role="receiver" /><StatusRow icon={<LoaderIcon className="w-5 h-5 animate-spin" />} text="Processing sender connection code…" /></div>;
 
   if (phase === 'waiting_scan') return (
     <div className="space-y-4">
@@ -473,11 +486,11 @@ function PrivateSyncPanel({ offerSDP, role, onDone, onScanSenderQR }) {
     <div className="space-y-4">
       <RoleBadge role="receiver" />
       <QRImg dataUrl={lan.answerQR} label="Show this to the sender device to scan" />
-      <StatusRow icon="⏳" text="Waiting for the sender device to scan this QR code…" />
+      <StatusRow icon={<LoaderIcon className="w-5 h-5 animate-spin" />} text="Waiting for the sender device to scan this QR code…" />
     </div>
   );
 
-  if (phase === 'connecting') return <div className="space-y-3"><RoleBadge role={lan.isHost ? 'sender' : 'receiver'} /><StatusRow icon="⏳" text="Establishing direct connection…" /></div>;
+  if (phase === 'connecting') return <div className="space-y-3"><RoleBadge role={lan.isHost ? 'sender' : 'receiver'} /><StatusRow icon={<LoaderIcon className="w-5 h-5 animate-spin" />} text="Establishing direct connection…" /></div>;
 
   if (phase === 'pin_confirm') return (
     <div className="space-y-4">
@@ -491,7 +504,7 @@ function PrivateSyncPanel({ offerSDP, role, onDone, onScanSenderQR }) {
           <button onClick={lan.confirmPin}
             className="w-full py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest active:scale-95 transition-all"
             style={{ backgroundColor: 'var(--accent)', color: '#fff' }}>
-            ✓ PINs Match — Start Sync
+            <CheckIcon className="w-4 h-4 inline-block mr-2 align-[-2px]" /> PINs Match — Start Sync
           </button>
           <button onClick={lan.reset}
             className="w-full py-2 text-[10px] font-black uppercase tracking-widest"
@@ -500,14 +513,14 @@ function PrivateSyncPanel({ offerSDP, role, onDone, onScanSenderQR }) {
           </button>
         </>
       )}
-      {lan.isHost && <StatusRow icon="⏳" text="Waiting for the receiver device to confirm the PIN…" />}
+      {lan.isHost && <StatusRow icon={<LoaderIcon className="w-5 h-5 animate-spin" />} text="Waiting for the receiver device to confirm the PIN…" />}
     </div>
   );
 
   if (phase === 'transferring' || phase === 'merging') return (
     <div className="space-y-3">
       <RoleBadge role={lan.isHost ? 'sender' : 'receiver'} />
-      <StatusRow icon="⏳" text={phase === 'merging' ? 'Merging records…' : 'Transferring data…'} />
+      <StatusRow icon={<LoaderIcon className="w-5 h-5 animate-spin" />} text={phase === 'merging' ? 'Merging records…' : 'Transferring data…'} />
     </div>
   );
 

@@ -7,7 +7,19 @@ import { useMedications } from '../hooks/useMedications';
 import { BackupTransferModal } from './BackupTransferModal';
 import { parseBackupFileText } from '../utils/backupFiles';
 import { defaultScheduledTimes, scheduledDaysLabel } from '../utils/medicationSchedule';
-import { CloseIcon, DownloadIcon, EditIcon, InstallIcon, ResetIcon, SyncIcon, TrashIcon, UploadIcon } from './AppIcons';
+import {
+  BellIcon,
+  BellOffIcon,
+  CloseIcon,
+  DownloadIcon,
+  EditIcon,
+  InstallIcon,
+  ResetIcon,
+  SirenIcon,
+  SyncIcon,
+  TrashIcon,
+  UploadIcon,
+} from './AppIcons';
 import pkg from '../../package.json';
 import i18n from '../i18n';
 
@@ -156,6 +168,7 @@ const FREQ_OPTIONS = [
 ];
 const UNIT_OPTIONS = ['mg', 'g', 'mcg', 'ml', 'IU'];
 const FREQ_SHORT = { OD: 'Once daily', BD: 'Twice daily', TDS: 'Three times daily', QDS: 'Four times daily', PRN: 'As needed' };
+const stripLeadingEmoji = (text) => String(text || '').replace(/^[^\p{Letter}\p{Number}]+/u, '').trim();
 
 function getSlotLabel(index, frequency, t) {
   if (frequency === 'BD') return index === 0 ? t('settings.medications.slot_morning') : t('settings.medications.slot_evening');
@@ -405,17 +418,24 @@ function MedicationSection({ flash, notificationPermission, onRequestNotificatio
     }
   };
 
-  const handleDelete = async (id) => {
-    try {
-      await deleteMedication(id);
+	  const handleDelete = async (id) => {
+	    try {
+	      await deleteMedication(id);
       setDeleteConfirm(null);
       flash(t('settings.medications.removed'));
     } catch {
       flash(t('settings.data.delete_failed'));
-    }
-  };
+	    }
+	  };
 
-  return (
+	  const reminderStatusLabel = notificationPermission === 'granted'
+	    ? t('settings.medications.reminder_granted')
+	    : notificationPermission === 'denied'
+	    ? t('settings.medications.reminder_denied')
+	    : t('settings.medications.reminder_off');
+	  const ReminderStatusIcon = notificationPermission === 'granted' ? BellIcon : BellOffIcon;
+
+	  return (
     <Section title={t('settings.medications.section')}>
       <p className="text-[11px] text-[var(--text-dim)] -mt-2">{t('settings.medications.section_desc')}</p>
 
@@ -441,16 +461,20 @@ function MedicationSection({ flash, notificationPermission, onRequestNotificatio
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-black" style={{ color: 'var(--text-primary)' }}>
-                      {m.name}
-                      {m.showInEmergency && <span className="ml-2 text-[9px] font-black text-red-500 uppercase">{t('settings.medications.emergency_badge')}</span>}
+	                      {m.name}
+	                      {m.showInEmergency && (
+	                        <span className="inline-flex items-center gap-1 ml-2 text-[9px] font-black text-red-500 uppercase">
+	                          <SirenIcon className="w-3 h-3" /> {stripLeadingEmoji(t('settings.medications.emergency_badge'))}
+	                        </span>
+	                      )}
                     </p>
                     <p className="text-[11px]" style={{ color: 'var(--text-dim)' }}>
                       {m.dose}{m.unit} · {m.frequency} — {FREQ_SHORT[m.frequency] || m.frequency}
                     </p>
                     {m.scheduledTimes && m.scheduledTimes.length > 0 && (
                       <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-faint)' }}>
-                        {m.scheduledTimes.join(' · ')}
-                        {m.reminderEnabled && <span className="ml-1.5">🔔</span>}
+	                        {m.scheduledTimes.join(' · ')}
+	                        {m.reminderEnabled && <BellIcon className="inline-block ml-1.5 w-3 h-3 align-[-2px]" />}
                       </p>
                     )}
                     {scheduledDaysLabel(m.scheduledDays) && (
@@ -512,11 +536,10 @@ function MedicationSection({ flash, notificationPermission, onRequestNotificatio
         <FieldLabel>{t('settings.medications.reminder_section')}</FieldLabel>
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
-              {notificationPermission === 'granted' ? t('settings.medications.reminder_granted') :
-               notificationPermission === 'denied'  ? t('settings.medications.reminder_denied') :
-               t('settings.medications.reminder_off')}
-            </p>
+	            <p className="inline-flex items-center gap-2 text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
+	              <ReminderStatusIcon className="w-4 h-4" />
+	              {stripLeadingEmoji(reminderStatusLabel)}
+	            </p>
             <p className="text-[11px]" style={{ color: 'var(--text-dim)' }}>
               {notificationPermission === 'granted' ? t('settings.medications.reminder_granted_help') :
                notificationPermission === 'denied'  ? t('settings.medications.reminder_denied_help') :

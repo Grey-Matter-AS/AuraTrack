@@ -4,6 +4,7 @@ import { db } from '../data/db';
 import { formatDuration, formatEventDate, formatEventTime } from '../utils/formatters';
 import { ScrollFade } from '../components/ScrollFade';
 import { computeDangerFlags } from '../utils/dangerFlags';
+import { WarningIcon } from '../components/AppIcons';
 
 const CLUSTER_WINDOW_MS = 8 * 60 * 1000;
 
@@ -18,7 +19,7 @@ function DangerAlert({ dangerFlags }) {
           className="flex items-start gap-3 p-4 rounded-2xl"
           style={{ backgroundColor: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.4)' }}
         >
-          <span className="text-amber-500 text-xl shrink-0">⚠</span>
+          <WarningIcon className="w-5 h-5 text-amber-500 shrink-0" />
           <div>
             <p className="text-amber-500 font-black text-xs uppercase tracking-widest">{t('event_detail.danger_prolonged_title')}</p>
             <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-secondary)' }}>
@@ -32,7 +33,7 @@ function DangerAlert({ dangerFlags }) {
           className="flex items-start gap-3 p-4 rounded-2xl"
           style={{ backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.5)' }}
         >
-          <span className="text-red-500 text-xl shrink-0">⚠</span>
+          <WarningIcon className="w-5 h-5 text-red-500 shrink-0" />
           <div>
             <p className="text-red-500 font-black text-xs uppercase tracking-widest">{t('event_detail.danger_cluster_title', { count: dangerFlags.clusterCount })}</p>
             <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-secondary)' }}>

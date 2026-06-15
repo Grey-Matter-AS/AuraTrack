@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useMedications } from '../hooks/useMedications';
 import { getScheduledDosesForDay, getDoseStatus } from '../utils/medicationSchedule';
+import { EditIcon } from './AppIcons';
 
 function parseHHMM(hhMM) {
   const [h, m] = hhMM.split(':').map(Number);
@@ -175,7 +176,9 @@ export function MedicationHistoryTab({ settings = {} }) {
             <span className="text-[9px] font-bold" style={{ color: 'var(--text-dim)' }}>{s.label}</span>
           </div>
         ))}
-        <span className="text-[9px] font-bold" style={{ color: 'var(--text-dim)' }}>✎ = edited</span>
+        <span className="inline-flex items-center gap-1 text-[9px] font-bold" style={{ color: 'var(--text-dim)' }}>
+          <EditIcon className="w-3 h-3" /> = edited
+        </span>
       </div>
 
       {/* Day sections */}
@@ -225,7 +228,7 @@ export function MedicationHistoryTab({ settings = {} }) {
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-black leading-tight" style={{ color: 'var(--text-primary)' }}>
                         {medicationName}
-                        {log?.isEdited && <span className="ml-1.5 text-[9px] text-amber-400">✎</span>}
+                        {log?.isEdited && <EditIcon className="inline-block ml-1.5 w-3 h-3 text-amber-400 align-[-2px]" />}
                       </p>
                       <p className="text-[10px]" style={{ color: 'var(--text-faint)' }}>
                         {dose}{unit} · Due {scheduledHHMM}
@@ -257,7 +260,7 @@ export function MedicationHistoryTab({ settings = {} }) {
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-black leading-tight" style={{ color: 'var(--text-primary)' }}>
                         {med.name}
-                        {log.isEdited && <span className="ml-1.5 text-[9px] text-amber-400">✎</span>}
+                        {log.isEdited && <EditIcon className="inline-block ml-1.5 w-3 h-3 text-amber-400 align-[-2px]" />}
                       </p>
 	                      <p className="text-[10px]" style={{ color: 'var(--text-faint)' }}>
 	                        {med.dose}{med.unit} · Extra dose · {fmtTime(log.takenAt)}

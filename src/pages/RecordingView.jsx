@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatDuration } from '../utils/formatters';
-import { CloseIcon } from '../components/AppIcons';
+import { CheckIcon, CloseIcon, WarningIcon } from '../components/AppIcons';
 
 const ALERT_THRESHOLD = 300;  // 5 minutes
 const AUTO_STOP_AT    = 720;  // 12 minutes
+const stripTrailingCheck = (text) => String(text || '').replace(/\s*\u2713\s*$/u, '');
 
 function RedAlert({ elapsed, onClose, emergencyMedications = [], neurologistName, neurologistContact, emergencyContact }) {
   const { t } = useTranslation();
@@ -27,7 +28,7 @@ function RedAlert({ elapsed, onClose, emergencyMedications = [], neurologistName
       {/* Content */}
       <p className="text-[10px] font-black tracking-[0.5em] text-red-200 uppercase mb-4">{t('alert.medical_alert')}</p>
 
-      <div className="text-7xl mb-3">⚠</div>
+      <WarningIcon className="w-20 h-20 mb-3 text-white" />
 
       <h1 className="text-4xl font-black text-white uppercase tracking-tight text-center mb-1">
         {t('alert.unresponsive')}
@@ -269,7 +270,10 @@ function RecordingView({
                   <span className="app-action-tile__eyebrow" style={{ color: laps.aura ? 'var(--text-faint)' : 'rgba(255,255,255,0.82)' }}>
                     {t('recording.aura')}
                   </span>
-                  <span className="app-action-tile__title">{laps.aura ? t('recording.aura_ended') : t('recording.end_aura')}</span>
+	                  <span className="app-action-tile__title inline-flex items-center justify-center gap-2">
+	                    {laps.aura && <CheckIcon className="w-5 h-5" />}
+	                    {laps.aura ? stripTrailingCheck(t('recording.aura_ended')) : t('recording.end_aura')}
+	                  </span>
                   <span className="app-action-tile__detail" style={{ color: laps.aura ? 'var(--text-faint)' : 'rgba(255,255,255,0.88)' }}>
                     {fmtDur(auraDuration)}
                   </span>
@@ -288,7 +292,10 @@ function RecordingView({
                   <span className="app-action-tile__eyebrow" style={{ color: laps.seizure ? 'var(--text-faint)' : (!laps.aura ? 'var(--text-faint)' : 'rgba(255,255,255,0.82)') }}>
                     {t('recording.seizure')}
                   </span>
-                  <span className="app-action-tile__title">{laps.seizure ? t('recording.seizure_ended') : t('recording.end_seizure')}</span>
+	                  <span className="app-action-tile__title inline-flex items-center justify-center gap-2">
+	                    {laps.seizure && <CheckIcon className="w-5 h-5" />}
+	                    {laps.seizure ? stripTrailingCheck(t('recording.seizure_ended')) : t('recording.end_seizure')}
+	                  </span>
                   <span className="app-action-tile__detail" style={{ color: laps.seizure ? 'var(--text-faint)' : (!laps.aura ? 'var(--text-faint)' : 'rgba(255,255,255,0.88)') }}>
                     {fmtDur(seizureDuration)}
                   </span>

@@ -10,7 +10,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { TRIGGERS } from '../data/constants';
-import { CloseIcon, GripIcon } from './AppIcons';
+import { CheckIcon, CloseIcon, GripIcon } from './AppIcons';
 
 const POST_ICTAL_FINDINGS = [
   'Confusion',
@@ -146,12 +146,12 @@ function EditableTimer({ phase, label, color, calcValue, manualDurations, edited
           <span className="text-xs font-bold" style={{ color: 'var(--text-dim)' }}>s</span>
           <button onClick={saveEdit}
             className="min-w-[40px] min-h-[40px] px-2 rounded-lg bg-green-600 text-white font-black text-xs active:scale-95 transition-transform">
-            ✓
+            <CheckIcon className="w-4 h-4" />
           </button>
           <button onClick={cancelEdit}
             className="min-w-[40px] min-h-[40px] px-2 rounded-lg font-black text-xs active:scale-95 transition-transform"
             style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)' }}>
-            ✗
+            <CloseIcon className="w-4 h-4" />
           </button>
         </div>
       )}
@@ -235,12 +235,12 @@ function EditableTotalTimer({ calcValue, manualDurations, editedTimers, onSetMan
           <span className="text-lg font-bold" style={{ color: 'var(--text-dim)' }}>s</span>
           <button onClick={saveEdit}
             className="min-h-[44px] px-4 rounded-xl text-sm font-black uppercase bg-green-600 text-white active:scale-95 transition-transform">
-            ✓ SAVE
+            <CheckIcon className="w-4 h-4 inline-block mr-1.5 align-[-3px]" /> SAVE
           </button>
           <button onClick={cancelEdit}
             className="min-h-[44px] px-4 rounded-xl text-sm font-black uppercase active:scale-95 transition-transform"
             style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)' }}>
-            ✗
+            <CloseIcon className="w-4 h-4" />
           </button>
         </div>
       )}

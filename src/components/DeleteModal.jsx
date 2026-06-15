@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { WarningIcon } from './AppIcons';
 
 export function DeleteModal({ onConfirm, onCancel }) {
   const { t } = useTranslation();
@@ -6,7 +7,7 @@ export function DeleteModal({ onConfirm, onCancel }) {
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-[#0f172a]/95 backdrop-blur-md animate-in fade-in duration-200">
       <div className="bg-[#1e293b] w-full max-w-sm p-10 rounded-[3rem] border border-slate-700 shadow-2xl text-center">
         <div className="w-20 h-20 bg-red-900/20 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
-          <span className="text-4xl font-black italic">!</span>
+          <WarningIcon className="w-10 h-10" />
         </div>
         <h3 className="text-white text-2xl font-black mb-3 tracking-tight">{t('delete_modal.title')}</h3>
         <p className="text-slate-400 text-sm mb-10 leading-relaxed font-medium px-2">

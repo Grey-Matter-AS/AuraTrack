@@ -5,7 +5,7 @@ import { ScrollFade } from '../components/ScrollFade';
 import { ExportCard } from '../components/ExportCard';
 import { PrintPreviewOverlay } from '../components/PrintPreviewOverlay';
 import { BackupTransferModal } from '../components/BackupTransferModal';
-import { ActivityIcon, CalendarIcon, DownloadIcon, EyeIcon, FileStackIcon, ReportIcon, StethoscopeIcon, TableIcon } from '../components/AppIcons';
+import { ActivityIcon, CalendarIcon, DownloadIcon, EyeIcon, FileStackIcon, ReportIcon, StethoscopeIcon, TableIcon, WarningIcon } from '../components/AppIcons';
 import {
   exportToCSV,
   buildEventTablePreview,
@@ -242,11 +242,12 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false, 
               <p className="text-xs mt-1" style={{ color: 'var(--text-dim)' }}>
                 {t('export.neuro_report_desc')}
               </p>
-              {!settings.personName && (
-                <p className="text-[10px] mt-2 font-bold" style={{ color: 'var(--accent)' }}>
-                  {t('export.neuro_report_warning')}
-                </p>
-              )}
+	              {!settings.personName && (
+	                <p className="inline-flex items-center gap-1.5 text-[10px] mt-2 font-bold" style={{ color: 'var(--accent)' }}>
+	                  <WarningIcon className="w-3.5 h-3.5" />
+	                  {String(t('export.neuro_report_warning')).replace(/^[^\p{Letter}\p{Number}]+/u, '').trim()}
+	                </p>
+	              )}
             </div>
           </div>
           <div className="flex flex-wrap gap-2">

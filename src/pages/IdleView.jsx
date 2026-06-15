@@ -246,7 +246,7 @@ export default function IdleView({
             borderColor: '#1e293b',
           }}
         >
-          <span className="max-w-[72%] leading-[0.9]">{t('idle.start')}</span>
+          {t('idle.start')}
         </button>
         {onManualEntry && (
           <button

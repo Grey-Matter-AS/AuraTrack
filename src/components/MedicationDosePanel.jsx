@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { slotLabel, scheduledTimestampForDay } from '../utils/medicationSchedule';
+import { CheckIcon } from './AppIcons';
 
 export function MedicationDosePanel({ medicationGroups, allActiveMedications, onSaveDoses }) {
   const [nowMs] = useState(() => Date.now());
@@ -54,7 +55,9 @@ export function MedicationDosePanel({ medicationGroups, allActiveMedications, on
           Medication Dosage Tracker
         </h3>
         {saved ? (
-          <span className="text-[10px] font-black text-green-400 uppercase tracking-widest">✓ Saved</span>
+          <span className="inline-flex items-center gap-1 text-[10px] font-black text-green-400 uppercase tracking-widest">
+            <CheckIcon className="w-3 h-3" /> Saved
+          </span>
         ) : (
           <button
             onClick={handleSave}
@@ -73,7 +76,11 @@ export function MedicationDosePanel({ medicationGroups, allActiveMedications, on
       >
         {timeSlots.length === 0 ? (
           <p className="text-xs italic text-center py-1" style={{ color: allDoneToday ? '#16a34a' : 'var(--text-faint)' }}>
-            {allDoneToday ? '✓ All doses for today are up to date' : 'No scheduled doses today. Add medications in Settings → Medications.'}
+            {allDoneToday ? (
+              <span className="inline-flex items-center justify-center gap-1.5">
+                <CheckIcon className="w-3.5 h-3.5" /> All doses for today are up to date
+              </span>
+            ) : 'No scheduled doses today. Add medications in Settings → Medications.'}
           </p>
         ) : (
           timeSlots.map(hhMM => {

@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { formatDuration, formatEventDate, formatEventTime } from '../utils/formatters';
+import { WarningIcon } from './AppIcons';
 
 function DangerBadge({ dangerFlags }) {
   const flags = dangerFlags?.flags;
@@ -15,7 +16,7 @@ function DangerBadge({ dangerFlags }) {
           style={{ backgroundColor: 'rgba(245,158,11,0.15)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.4)' }}
           title="Seizure lasted more than 5 minutes"
         >
-          ⚠ &gt;5 MIN
+          <WarningIcon className="w-3 h-3" /> &gt;5 MIN
         </span>
       )}
       {isCluster && (
@@ -24,7 +25,7 @@ function DangerBadge({ dangerFlags }) {
           style={{ backgroundColor: 'rgba(239,68,68,0.15)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.4)' }}
           title={`Cluster seizures / Status Epilepticus risk — ${dangerFlags.clusterCount} events within 8 minutes`}
         >
-          ⚠ CLUSTER ×{dangerFlags.clusterCount}
+          <WarningIcon className="w-3 h-3" /> CLUSTER ×{dangerFlags.clusterCount}
         </span>
       )}
     </div>
