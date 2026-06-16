@@ -270,38 +270,6 @@ export default function IdleView({
             {t('idle.log_past')}
           </button>
         )}
-        {wellbeingEnabled && wellbeing && (
-          <div
-            className="w-full rounded-2xl p-3 flex items-center justify-between gap-3"
-            style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
-          >
-            <div className="min-w-0 flex items-center gap-3">
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--accent)' }}
-              >
-                <ActivityIcon className="w-5 h-5" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-black" style={{ color: 'var(--text-primary)' }}>
-                  {wellbeing.todayEntries.length ? t('wellbeing.logged_today', 'Wellbeing logged today') : t('wellbeing.daily_checkin', 'Daily wellbeing check-in')}
-                </p>
-                <p className="text-[11px] leading-snug" style={{ color: 'var(--text-dim)' }}>
-                  {wellbeing.todayEntries.length
-                    ? t('wellbeing.entries_today', { count: wellbeing.todayEntries.length, defaultValue: '{{count}} entries today' })
-                    : t('wellbeing.idle_hint', 'Mood and context are optional, but help with pattern spotting.')}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => setShowWellbeingSheet(true)}
-              className="rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all shrink-0"
-              style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
-            >
-              {t('wellbeing.log_action', 'Log')}
-            </button>
-          </div>
-        )}
         {!eegSession && eegDiaryEnabled && (
           <button
             onClick={() => setShowSessionSheet(true)}
@@ -316,6 +284,39 @@ export default function IdleView({
       {/* Zone 2: medication panel + recent events — unified scrollable section */}
       <div className="w-full flex-1 min-h-0 flex flex-col overflow-hidden">
         <ScrollFade className="space-y-3" wrapperClassName="flex-1">
+          {wellbeingEnabled && wellbeing && (
+            <div
+              className="w-full rounded-2xl p-3 flex items-center justify-between gap-3"
+              style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
+            >
+              <div className="min-w-0 flex items-center gap-3">
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--accent)' }}
+                >
+                  <ActivityIcon className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                    {wellbeing.todayEntries.length ? t('wellbeing.logged_today', 'Wellbeing Logged Today') : t('wellbeing.daily_checkin', 'Daily Wellbeing Check-In')}
+                  </p>
+                  <p className="text-[11px] leading-snug" style={{ color: 'var(--text-dim)' }}>
+                    {wellbeing.todayEntries.length
+                      ? t('wellbeing.entries_today', { count: wellbeing.todayEntries.length, defaultValue: '{{count}} entries today' })
+                      : t('wellbeing.idle_hint', 'Mood and context are optional, but help with pattern spotting.')}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowWellbeingSheet(true)}
+                className="rounded-xl px-3 py-2 text-[10px] font-medium uppercase tracking-widest active:scale-95 transition-all shrink-0"
+                style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
+              >
+                {t('wellbeing.log_action', 'Log')}
+              </button>
+            </div>
+          )}
+
           {eegSession && (
             <div className="rounded-[2rem] p-5 space-y-4" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid color-mix(in srgb, var(--accent) 40%, transparent)' }}>
               <div className="flex items-center justify-between gap-3">

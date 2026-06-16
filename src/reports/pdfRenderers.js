@@ -246,8 +246,8 @@ export async function downloadNeurologistReportPdf(data) {
   cursorY = ensurePageRoom(doc, cursorY, 160);
   cursorY = await drawChartBlock(doc, margin, cursorY, pageWidth - margin * 2, durationChart, 150);
   cursorY += 10;
-  cursorY = ensurePageRoom(doc, cursorY, 196);
-  cursorY = await drawChartBlock(doc, margin, cursorY, pageWidth - margin * 2, wellbeingChart, 185);
+  cursorY = ensurePageRoom(doc, cursorY, 230);
+  cursorY = await drawChartBlock(doc, margin, cursorY, pageWidth - margin * 2, wellbeingChart, 220);
   cursorY += 10;
   cursorY = ensurePageRoom(doc, cursorY, 170);
   const halfWidth = (pageWidth - margin * 2 - 10) / 2;
@@ -630,7 +630,10 @@ function drawWellbeingContext(doc, data, t, margin, cursorY, pageWidth) {
   const cards = [
     [String(wellbeing.entriesCount || 0), t('export.docs.wellbeing_entries', 'Wellbeing entries')],
     [String(wellbeing.daysCovered || 0), t('export.docs.wellbeing_days', 'Days covered')],
-    [wellbeing.avgIntensityLabel || '-', t('export.docs.wellbeing_avg_intensity', 'Average mood intensity')],
+    [
+      wellbeing.topMoods?.length ? wellbeing.topMoods.map(item => `${item.label} (${item.count}x)`).join(', ') : t('export.docs.not_recorded'),
+      t('export.docs.wellbeing_top_moods', 'Top moods'),
+    ],
     [
       wellbeing.topFactors?.length ? wellbeing.topFactors.map(item => `${item.label} (${item.count}x)`).join(', ') : t('export.docs.not_recorded'),
       t('export.docs.wellbeing_top_factors', 'Top context factors'),

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { slotLabel, scheduledTimestampForDay } from '../utils/medicationSchedule';
-import { CheckIcon } from './AppIcons';
+import { CheckIcon, PillIcon } from './AppIcons';
 
 export function MedicationDosePanel({ medicationGroups, allActiveMedications, onSaveDoses }) {
   const { t } = useTranslation();
@@ -51,21 +51,31 @@ export function MedicationDosePanel({ medicationGroups, allActiveMedications, on
   const translatedSlotLabel = (hhMM) => t(`medication_panel.slots.${slotLabel(hhMM).toLowerCase()}`, slotLabel(hhMM));
 
   return (
-    <div className="w-full mb-4">
-      {/* Section header row */}
-      <div className="flex justify-between items-center mb-3 px-1">
-        <h3 className="text-slate-500 text-[10px] font-black uppercase tracking-widest">
-          {t('medication_panel.title')}
-        </h3>
+    <div
+      className="w-full rounded-2xl p-3 space-y-3"
+      style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
+    >
+      <div className="flex justify-between items-center gap-3">
+        <div className="min-w-0 flex items-center gap-3">
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+            style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--accent)' }}
+          >
+            <PillIcon className="w-5 h-5" />
+          </div>
+          <h3 className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+            {t('medication_panel.title')}
+          </h3>
+        </div>
         {saved ? (
-          <span className="inline-flex items-center gap-1 text-[10px] font-black text-green-400 uppercase tracking-widest">
+          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-green-400 uppercase tracking-widest">
             <CheckIcon className="w-3 h-3" /> {t('medication_panel.saved')}
           </span>
         ) : (
           <button
             onClick={handleSave}
             disabled={toggledKeys.size === 0}
-            className="px-4 py-1.5 rounded-full font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-30"
+            className="rounded-xl px-3 py-2 text-[10px] font-medium uppercase tracking-widest active:scale-95 transition-all disabled:opacity-30"
             style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
           >
             {t('medication_panel.save')}
@@ -73,10 +83,7 @@ export function MedicationDosePanel({ medicationGroups, allActiveMedications, on
         )}
       </div>
 
-      <div
-        className="rounded-[1.5rem] p-4 space-y-4"
-        style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
-      >
+      <div className="space-y-4">
         {timeSlots.length === 0 ? (
           <p className="text-xs italic text-center py-1" style={{ color: allDoneToday ? '#16a34a' : 'var(--text-faint)' }}>
             {allDoneToday ? (
@@ -95,7 +102,7 @@ export function MedicationDosePanel({ medicationGroups, allActiveMedications, on
             const slotTag = slotIsMissed ? ` · ${t('medication_panel.missed')}` : slotIsLate ? ` · ${t('medication_panel.late')}` : '';
             return (
               <div key={hhMM}>
-                <p className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: slotColor }}>
+                <p className="text-[9px] font-semibold uppercase tracking-widest mb-2" style={{ color: slotColor }}>
                   {translatedSlotLabel(hhMM)} · {hhMM}{slotTag}
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -113,7 +120,7 @@ export function MedicationDosePanel({ medicationGroups, allActiveMedications, on
                       <button
                         key={key}
                         onClick={() => toggle(med.id, hhMM)}
-                        className="px-4 py-2 rounded-full font-black text-xs transition-all active:scale-95"
+                        className="px-4 py-2 rounded-full font-medium text-xs transition-all active:scale-95"
                         style={btnStyle}
                       >
                         {med.name} {med.dose}{med.unit}
@@ -128,7 +135,7 @@ export function MedicationDosePanel({ medicationGroups, allActiveMedications, on
 
         <button
           onClick={() => setShowAdHoc(true)}
-          className="w-full rounded-2xl px-4 py-3 text-[10px] font-black uppercase tracking-widest active:scale-[0.98] transition-all"
+          className="w-full rounded-2xl px-4 py-3 text-[10px] font-medium uppercase tracking-widest active:scale-[0.98] transition-all"
           style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
         >
           {t('medication_panel.extra_dose')}
@@ -146,7 +153,7 @@ export function MedicationDosePanel({ medicationGroups, allActiveMedications, on
             className="w-full max-w-md rounded-[2rem] p-6 space-y-4"
             style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
           >
-            <p className="text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: 'var(--text-dim)' }}>
+            <p className="text-[10px] font-medium uppercase tracking-[0.3em]" style={{ color: 'var(--text-dim)' }}>
               {t('medication_panel.log_extra_dose')}
             </p>
             <p className="text-xs" style={{ color: 'var(--text-faint)' }}>
@@ -169,7 +176,7 @@ export function MedicationDosePanel({ medicationGroups, allActiveMedications, on
                   className="w-full py-3 px-4 rounded-2xl text-left transition-all active:scale-[0.98]"
                   style={{ backgroundColor: 'var(--bg-raised)', border: '1px solid var(--border)' }}
                 >
-                  <span className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>{med.name}</span>
+                  <span className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>{med.name}</span>
                   <span className="ml-2 text-xs" style={{ color: 'var(--text-dim)' }}>
                     {med.dose}{med.unit} · {med.frequency}
                     {med.isRescue && <span className="ml-1 text-amber-500">· {t('medication_panel.rescue')}</span>}
@@ -179,7 +186,7 @@ export function MedicationDosePanel({ medicationGroups, allActiveMedications, on
             </div>
             <button
               onClick={() => setShowAdHoc(false)}
-              className="w-full py-3 rounded-2xl font-black text-xs uppercase tracking-widest"
+              className="w-full py-3 rounded-2xl font-medium text-xs uppercase tracking-widest"
               style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)', border: '1px solid var(--border)' }}
             >
               {t('medication_panel.cancel')}

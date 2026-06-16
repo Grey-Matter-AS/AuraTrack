@@ -51,7 +51,7 @@ function FactorControl({ definition, value, onChange, t }) {
           className="mt-1"
         />
         <span className="min-w-0">
-          <span className="block text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{label}</span>
+          <span className="block text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{label}</span>
           {help && <span className="block text-[11px] leading-snug mt-0.5" style={{ color: 'var(--text-dim)' }}>{help}</span>}
         </span>
       </label>
@@ -68,7 +68,7 @@ function FactorControl({ definition, value, onChange, t }) {
         title={help}
       >
         <div>
-          <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{label}</p>
+          <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{label}</p>
           {help && <p className="text-[11px] leading-snug mt-0.5" style={{ color: 'var(--text-dim)' }}>{help}</p>}
         </div>
         <div className="grid grid-cols-4 gap-1">
@@ -77,7 +77,7 @@ function FactorControl({ definition, value, onChange, t }) {
               key={scaleValue}
               type="button"
               onClick={() => onChange(scaleValue)}
-              className="rounded-xl px-1 py-2 text-[10px] font-black uppercase tracking-widest"
+              className="rounded-xl px-1 py-2 text-[10px] font-medium uppercase tracking-widest"
               style={{
                 backgroundColor: numeric === scaleValue ? 'var(--accent)' : 'var(--bg-card)',
                 color: numeric === scaleValue ? '#fff' : 'var(--text-dim)',
@@ -99,7 +99,7 @@ function FactorControl({ definition, value, onChange, t }) {
       title={help}
     >
       <div>
-        <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{label}</p>
+        <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{label}</p>
         {help && <p className="text-[11px] leading-snug mt-0.5" style={{ color: 'var(--text-dim)' }}>{help}</p>}
       </div>
       <div className="flex items-center gap-2">
@@ -112,7 +112,7 @@ function FactorControl({ definition, value, onChange, t }) {
           className="min-w-0 flex-1 rounded-xl px-3 py-2 text-sm outline-none"
           style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
         />
-        {definition.unit && <span className="text-xs font-bold" style={{ color: 'var(--text-dim)' }}>{definition.unit}</span>}
+        {definition.unit && <span className="text-xs font-medium" style={{ color: 'var(--text-dim)' }}>{definition.unit}</span>}
       </div>
     </div>
   );
@@ -172,14 +172,14 @@ export function WellbeingEntrySheet({ entry = null, factorDefinitions = [], onSa
       >
         <div className="p-5 pb-3 flex items-center justify-between gap-3 shrink-0" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--text-dim)' }}>
+            <p className="text-[10px] font-medium uppercase tracking-widest" style={{ color: 'var(--text-dim)' }}>
               {t('wellbeing.eyebrow', 'Wellbeing')}
             </p>
-            <h3 className="text-base font-black" style={{ color: 'var(--text-primary)' }}>
-              {entry ? t('wellbeing.edit_entry', 'Edit wellbeing entry') : t('wellbeing.new_entry', 'Log wellbeing')}
+            <h3 className="text-base font-medium" style={{ color: 'var(--text-primary)' }}>
+              {entry ? t('wellbeing.edit_entry', 'Edit Wellbeing Entry') : t('wellbeing.new_entry', 'Log Wellbeing')}
             </h3>
           </div>
-          <button onClick={onClose} className="text-xs font-black uppercase tracking-widest" style={{ color: 'var(--text-dim)' }}>
+          <button onClick={onClose} className="text-xs font-medium uppercase tracking-widest" style={{ color: 'var(--text-dim)' }}>
             {t('eeg.close', 'Close')}
           </button>
         </div>
@@ -194,7 +194,7 @@ export function WellbeingEntrySheet({ entry = null, factorDefinitions = [], onSa
           />
 
           <div>
-          <p className="text-[11px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--text-dim)' }}>
+          <p className="text-[11px] font-medium uppercase tracking-widest mb-2" style={{ color: 'var(--text-dim)' }}>
             {t('wellbeing.mood', 'Mood')}
           </p>
           <div className="grid grid-cols-2 gap-2">
@@ -208,7 +208,7 @@ export function WellbeingEntrySheet({ entry = null, factorDefinitions = [], onSa
                   type="button"
                   title={help}
                   onClick={() => setPrimaryMood(option.label)}
-                  className="rounded-xl px-3 py-2 text-xs font-black text-left"
+                  className="rounded-xl px-3 py-2 text-xs font-medium text-left"
                   style={{
                     backgroundColor: active ? 'var(--accent)' : 'var(--bg-raised)',
                     color: active ? '#fff' : 'var(--text-primary)',
@@ -228,7 +228,7 @@ export function WellbeingEntrySheet({ entry = null, factorDefinitions = [], onSa
           </div>
 
           <div>
-          <p className="text-[11px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--text-dim)' }}>
+          <p className="text-[11px] font-medium uppercase tracking-widest mb-2" style={{ color: 'var(--text-dim)' }}>
             {t('wellbeing.intensity', 'Intensity')}
           </p>
           <div className="grid grid-cols-3 gap-2">
@@ -237,7 +237,7 @@ export function WellbeingEntrySheet({ entry = null, factorDefinitions = [], onSa
                 key={option.value}
                 type="button"
                 onClick={() => setIntensity(option.value)}
-                className="rounded-xl py-2 text-[10px] font-black uppercase tracking-widest"
+                className="rounded-xl py-2 text-[10px] font-medium uppercase tracking-widest"
                 style={{
                   backgroundColor: intensity === option.value ? 'var(--accent)' : 'var(--bg-raised)',
                   color: intensity === option.value ? '#fff' : 'var(--text-dim)',
@@ -251,7 +251,7 @@ export function WellbeingEntrySheet({ entry = null, factorDefinitions = [], onSa
           </div>
 
           <div className="space-y-2">
-          <p className="text-[11px] font-black uppercase tracking-widest" style={{ color: 'var(--text-dim)' }}>
+          <p className="text-[11px] font-medium uppercase tracking-widest" style={{ color: 'var(--text-dim)' }}>
             {t('wellbeing.context', 'Context')}
           </p>
           {activeDefinitions.map(definition => (
@@ -275,19 +275,19 @@ export function WellbeingEntrySheet({ entry = null, factorDefinitions = [], onSa
           />
         </div>
 
-        {error && <p className="mx-5 mt-3 text-xs font-bold text-red-400">{error}</p>}
+        {error && <p className="mx-5 mt-3 text-xs font-medium text-red-400">{error}</p>}
 
         <div className="p-5 pt-3 flex gap-2 shrink-0" style={{ borderTop: '1px solid var(--border-subtle)' }}>
           <button
             onClick={submit}
-            className="flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest"
+            className="flex-1 py-3 rounded-xl text-xs font-medium uppercase tracking-widest"
             style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
           >
             {t('wellbeing.save', 'Save')}
           </button>
           <button
             onClick={onClose}
-            className="flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest"
+            className="flex-1 py-3 rounded-xl text-xs font-medium uppercase tracking-widest"
             style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
           >
             {t('eeg.cancel', 'Cancel')}

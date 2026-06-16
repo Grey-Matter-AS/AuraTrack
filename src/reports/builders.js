@@ -313,10 +313,6 @@ export function buildNeurologistReportData(events, settings = {}, medications = 
 
   const freqPerDay = { OD: 1, BD: 2, TDS: 3, QDS: 4, PRN: 0 };
   const expectedDoses = medications.reduce((sum, medication) => sum + (freqPerDay[medication.frequency] || 0) * periodDays, 0);
-  const wellbeingIntensityValues = periodWellbeingEntries.map(entry => Number(entry.intensity)).filter(Number.isFinite);
-  const wellbeingAvgIntensity = wellbeingIntensityValues.length
-    ? wellbeingIntensityValues.reduce((sum, value) => sum + value, 0) / wellbeingIntensityValues.length
-    : 0;
   const wellbeingMoodCounts = {};
   const wellbeingFactorCounts = {};
   periodWellbeingEntries.forEach(entry => {
@@ -382,8 +378,6 @@ export function buildNeurologistReportData(events, settings = {}, medications = 
     wellbeing: {
       entriesCount: periodWellbeingEntries.length,
       daysCovered: wellbeingDaysCovered,
-      avgIntensity: wellbeingAvgIntensity,
-      avgIntensityLabel: wellbeingIntensityValues.length ? wellbeingAvgIntensity.toFixed(1) : '-',
       topMoods: wellbeingTopMoods.map(([label, count]) => ({ label, count })),
       topFactors: wellbeingTopFactors.map(([label, count]) => ({ label, count })),
       recentEntries: periodWellbeingEntries.slice(0, 6).map(entry => ({

@@ -5,7 +5,9 @@ import { esc } from './htmlEscape';
 import { phaseDurs } from './phaseCalculations';
 import i18n from '../i18n';
 
-const NO_DATA = (title) => `<svg viewBox="0 0 520 140" xmlns="http://www.w3.org/2000/svg">
+const SVG_FONT_ATTR = `font-family="Helvetica Neue, Arial, sans-serif"`;
+
+const NO_DATA = (title) => `<svg viewBox="0 0 520 140" xmlns="http://www.w3.org/2000/svg" ${SVG_FONT_ATTR}>
   <rect width="520" height="140" fill="#f9fafb" rx="6"/>
   <text x="260" y="58" text-anchor="middle" font-size="10" font-weight="bold" fill="#374151">${esc(title)}</text>
   <text x="260" y="76" text-anchor="middle" font-size="9" fill="#9ca3af">${esc(i18n.t('export.docs.no_data_available'))}</text>
@@ -55,7 +57,7 @@ export function freqBarChartSVG(events, days = 30, endMs = Date.now()) {
            `<text x="${ml - 3}" y="${(+y + 3).toFixed(1)}" text-anchor="end" font-size="7" fill="#9ca3af">${v}</text>`;
   }).join('');
 
-  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" ${SVG_FONT_ATTR}>
   <rect width="${W}" height="${H}" fill="white"/>
   <text x="${W / 2}" y="11" text-anchor="middle" font-size="9" font-weight="bold" fill="#374151">${esc(i18n.t('export.docs.chart_seizure_frequency', { count: days }))}</text>
   ${yLines}${bars}${xLbls}
@@ -105,7 +107,7 @@ export function durationLineSVG(events, days = events.length) {
     ? `<text x="${px(i)}" y="${H - 5}" text-anchor="middle" font-size="7" fill="#9ca3af">${esc(e.date || '')}</text>`
     : '').join('');
 
-  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" ${SVG_FONT_ATTR}>
   <rect width="${W}" height="${H}" fill="white"/>
   <text x="${W / 2}" y="11" text-anchor="middle" font-size="9" font-weight="bold" fill="#374151">${esc(i18n.t('export.docs.chart_duration_trend', { count: days }))}</text>
   ${yTicks}${thresh}
@@ -133,7 +135,7 @@ export function typeBarSVG(byType, total) {
            `<text x="${(lblW + +bw + 5).toFixed(1)}" y="${y + 17}" font-size="9" fill="#6b7280">${count} (${Math.round(pct * 100)}%)</text>`;
   }).join('');
 
-  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" ${SVG_FONT_ATTR}>
   <rect width="${W}" height="${H}" fill="white"/>
   <text x="${W / 2}" y="14" text-anchor="middle" font-size="9" font-weight="bold" fill="#374151">${esc(i18n.t('export.docs.chart_type_distribution'))}</text>
   ${rows}
@@ -187,7 +189,7 @@ export function phaseStackSVG(events, last = 10) {
     `<rect x="${cx - 20}" y="${ly}" width="9" height="9" fill="#3b82f6" rx="1"/><text x="${cx - 8}" y="${ly + 8}" font-size="8" fill="#374151">Recovery</text>` +
     `<rect x="${cx + 50}" y="${ly}" width="9" height="9" fill="#94a3b8" rx="1"/><text x="${cx + 62}" y="${ly + 8}" font-size="8" fill="#374151">${esc(i18n.t('export.docs.no_phase_data'))}</text>`;
 
-  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" ${SVG_FONT_ATTR}>
   <rect width="${W}" height="${H}" fill="white"/>
   <text x="${W / 2}" y="11" text-anchor="middle" font-size="9" font-weight="bold" fill="#374151">${esc(i18n.t('export.docs.chart_phase_breakdown', { count: slice.length }))}</text>
   ${yTicks}${bars}${legend}
@@ -213,13 +215,26 @@ function chartFactorHasSignal(factor) {
   return value !== undefined && value !== null && value !== '' && value !== false;
 }
 
+function chartFactorNumericValue(factor) {
+  const value = Number(chartFactorValue(factor));
+  if (!Number.isFinite(value)) return null;
+  if (factor?.type === 'scale' || factor?.type === 'number') return value;
+  return null;
+}
+
+function normalizeSeriesValue(value, min, max) {
+  if (!Number.isFinite(value)) return null;
+  if (max <= min) return 0.5;
+  return (value - min) / (max - min);
+}
+
 // ── E. Wellbeing correlation overview ────────────────────────
 export function wellbeingCorrelationSVG(events = [], wellbeingEntries = [], days = 30, endMs = Date.now()) {
   const locale = i18n.resolvedLanguage || i18n.language || 'en';
   const title = i18n.t('export.docs.chart_wellbeing_correlation', { count: days });
   if (!wellbeingEntries.length) return NO_DATA(title);
 
-  const W = 520, H = 185, ml = 36, mr = 18, mt = 20, mb = 46;
+  const W = 520, H = 220, ml = 42, mr = 18, mt = 40, mb = 42;
   const cw = W - ml - mr, ch = H - mt - mb;
   const buckets = Array.from({ length: days }, (_, i) => {
     const d = new Date(endMs - (days - 1 - i) * 86400000);
@@ -230,7 +245,7 @@ export function wellbeingCorrelationSVG(events = [], wellbeingEntries = [], days
       end: d.getTime() + 86399999,
       seizures: 0,
       moodValues: [],
-      factors: new Set(),
+      factorValues: {},
     };
   });
 
@@ -241,6 +256,7 @@ export function wellbeingCorrelationSVG(events = [], wellbeingEntries = [], days
   });
 
   const factorCounts = {};
+  const factorMeta = {};
   wellbeingEntries.forEach(entry => {
     const t = entry.recordedAt || 0;
     const bucket = buckets.find(day => t >= day.start && t <= day.end);
@@ -249,17 +265,50 @@ export function wellbeingCorrelationSVG(events = [], wellbeingEntries = [], days
     if (Number.isFinite(intensity)) bucket.moodValues.push(intensity);
     Object.entries(entry.factors || {}).forEach(([id, factor]) => {
       if (!chartFactorHasSignal(factor)) return;
+      const numericValue = chartFactorNumericValue(factor);
+      if (numericValue === null) return;
       const label = chartFactorLabel(factor, id);
-      bucket.factors.add(label);
+      bucket.factorValues[label] = bucket.factorValues[label] || [];
+      bucket.factorValues[label].push(numericValue);
       factorCounts[label] = (factorCounts[label] || 0) + 1;
+      factorMeta[label] = factor;
     });
   });
 
-  const topFactors = Object.entries(factorCounts).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([label]) => label);
+  const colors = ['#0284c7', '#7c3aed', '#16a34a', '#f59e0b', '#be123c'];
+  const series = [];
+  const moodValues = buckets.map(day => {
+    if (!day.moodValues.length) return null;
+    return day.moodValues.reduce((sum, value) => sum + value, 0) / day.moodValues.length;
+  });
+  if (moodValues.some(value => value !== null)) {
+    series.push({
+      label: i18n.t('export.docs.mood_intensity', 'Mood intensity'),
+      values: moodValues,
+      color: colors[0],
+    });
+  }
+
+  Object.entries(factorCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 4)
+    .forEach(([label], index) => {
+      series.push({
+        label,
+        values: buckets.map(day => {
+          const values = day.factorValues[label] || [];
+          return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
+        }),
+        color: colors[(index + 1) % colors.length],
+        unit: factorMeta[label]?.unit || '',
+      });
+    });
+
   const maxSeizures = Math.max(1, ...buckets.map(day => day.seizures));
   const bw = cw / days;
-  const showEvery = Math.ceil(days / 7);
-  const moodY = value => mt + ch - ((Math.max(1, Math.min(3, value)) - 1) / 2) * ch;
+  const showEvery = Math.ceil(days / 6);
+  const px = i => ml + i * bw + bw / 2;
+  const lineY = normalizedValue => mt + ch - Math.max(0, Math.min(1, normalizedValue)) * ch;
 
   const bars = buckets.map((day, i) => {
     const bh = (day.seizures / maxSeizures) * (ch * 0.62);
@@ -268,44 +317,79 @@ export function wellbeingCorrelationSVG(events = [], wellbeingEntries = [], days
     return `<rect x="${x}" y="${y}" width="${Math.max(bw - 1.6, 1).toFixed(1)}" height="${Math.max(bh, day.seizures ? 1 : 0).toFixed(1)}" fill="${day.seizures ? '#dc2626' : '#eef2f7'}" rx="1"/>`;
   }).join('');
 
-  const moodPoints = buckets.map((day, i) => {
-    if (!day.moodValues.length) return null;
-    const avg = day.moodValues.reduce((sum, value) => sum + value, 0) / day.moodValues.length;
-    return { x: ml + i * bw + bw / 2, y: moodY(avg), avg };
-  }).filter(Boolean);
-  const moodLine = moodPoints.length > 1
-    ? `<polyline points="${moodPoints.map(point => `${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(' ')}" fill="none" stroke="#0284c7" stroke-width="1.8" stroke-linejoin="round"/>`
-    : '';
-  const moodDots = moodPoints.map(point => `<circle cx="${point.x.toFixed(1)}" cy="${point.y.toFixed(1)}" r="2.6" fill="#0284c7"/>`).join('');
-
-  const factorRows = topFactors.map((factor, rowIndex) => {
-    const y = mt + ch + 13 + rowIndex * 10;
-    const dots = buckets.map((day, i) => day.factors.has(factor)
-      ? `<circle cx="${(ml + i * bw + bw / 2).toFixed(1)}" cy="${y}" r="2.3" fill="${['#f59e0b', '#16a34a', '#7c3aed'][rowIndex]}"/>`
+  const lineSeries = series.map(item => {
+    const presentValues = item.values.filter(value => value !== null);
+    if (!presentValues.length) return '';
+    const min = Math.min(...presentValues);
+    const max = Math.max(...presentValues);
+    const points = item.values.map((value, index) => {
+      const normalized = normalizeSeriesValue(value, min, max);
+      return normalized === null ? null : { x: px(index), y: lineY(normalized) };
+    });
+    const polylines = [];
+    let segment = [];
+    points.forEach(point => {
+      if (point) {
+        segment.push(point);
+        return;
+      }
+      if (segment.length > 1) polylines.push(segment);
+      segment = [];
+    });
+    if (segment.length > 1) polylines.push(segment);
+    const lines = polylines.map(segmentPoints =>
+      `<polyline points="${segmentPoints.map(point => `${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(' ')}" fill="none" stroke="${item.color}" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>`
+    ).join('');
+    const dots = points.map(point => point
+      ? `<circle cx="${point.x.toFixed(1)}" cy="${point.y.toFixed(1)}" r="2.4" fill="${item.color}" stroke="white" stroke-width="0.6"/>`
       : '').join('');
-    return `<text x="${ml}" y="${y + 2.5}" font-size="7" fill="#6b7280">${esc(factor.slice(0, 18))}</text>${dots}`;
+    return `${lines}${dots}`;
   }).join('');
 
   const xLbls = buckets.map((day, i) => i % showEvery === 0
-    ? `<text x="${(ml + i * bw + bw / 2).toFixed(1)}" y="${H - 4}" text-anchor="middle" font-size="7" fill="#9ca3af">${esc(day.label)}</text>`
+    ? `<text x="${px(i).toFixed(1)}" y="${H - 7}" text-anchor="end" font-size="7" fill="#9ca3af" transform="rotate(-28 ${px(i).toFixed(1)} ${H - 7})">${esc(day.label)}</text>`
     : '').join('');
 
-  const yLines = [1, 2, 3].map(value => {
-    const y = moodY(value).toFixed(1);
+  const yLines = [0, 0.5, 1].map(value => {
+    const y = lineY(value).toFixed(1);
+    const label = value === 0 ? i18n.t('export.docs.low', 'Low') : value === 1 ? i18n.t('export.docs.high', 'High') : i18n.t('export.docs.mid', 'Mid');
     return `<line x1="${ml}" y1="${y}" x2="${ml + cw}" y2="${y}" stroke="#e5e7eb" stroke-width="0.5"/>` +
-      `<text x="${ml - 4}" y="${(+y + 3).toFixed(1)}" text-anchor="end" font-size="7" fill="#9ca3af">${value}</text>`;
+      `<text x="${ml - 4}" y="${(+y + 3).toFixed(1)}" text-anchor="end" font-size="7" fill="#9ca3af">${esc(label)}</text>`;
   }).join('');
 
-  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+  const legendItems = [
+    { label: i18n.t('export.docs.seizure_count', 'Seizures'), color: '#dc2626', kind: 'bar' },
+    ...series,
+  ];
+  let legendX = ml;
+  let legendY = 24;
+  const legend = legendItems.map(item => {
+    const label = item.label.length > 22 ? `${item.label.slice(0, 20)}...` : item.label;
+    const itemWidth = 18 + label.length * 4.2;
+    if (legendX + itemWidth > W - mr) {
+      legendX = ml;
+      legendY += 11;
+    }
+    const x = legendX;
+    const y = legendY;
+    legendX += itemWidth + 8;
+    const marker = item.kind === 'bar'
+      ? `<rect x="${x}" y="${y - 7}" width="8" height="8" fill="${item.color}" rx="1"/>`
+      : `<line x1="${x}" y1="${y - 3}" x2="${x + 10}" y2="${y - 3}" stroke="${item.color}" stroke-width="2"/><circle cx="${x + 5}" cy="${y - 3}" r="2" fill="${item.color}"/>`;
+    return `${marker}<text x="${x + 13}" y="${y}" font-size="7" fill="#6b7280">${esc(label)}</text>`;
+  }).join('');
+
+  const noLineSeries = series.length
+    ? ''
+    : `<text x="${W / 2}" y="${mt + ch / 2}" text-anchor="middle" font-size="8" fill="#9ca3af">${esc(i18n.t('export.docs.no_data_available'))}</text>`;
+
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" ${SVG_FONT_ATTR}>
   <rect width="${W}" height="${H}" fill="white"/>
   <text x="${W / 2}" y="12" text-anchor="middle" font-size="9" font-weight="bold" fill="#374151">${esc(title)}</text>
-  ${yLines}${bars}${moodLine}${moodDots}${factorRows}${xLbls}
+  ${legend}
+  ${yLines}${bars}${lineSeries}${noLineSeries}${xLbls}
   <line x1="${ml}" y1="${mt}" x2="${ml}" y2="${mt + ch}" stroke="#d1d5db" stroke-width="1"/>
   <line x1="${ml}" y1="${mt + ch}" x2="${ml + cw}" y2="${mt + ch}" stroke="#d1d5db" stroke-width="1"/>
-  <rect x="${W - 185}" y="20" width="8" height="8" fill="#dc2626"/>
-  <text x="${W - 174}" y="27" font-size="7" fill="#6b7280">${esc(i18n.t('export.docs.seizure_count', 'Seizures'))}</text>
-  <line x1="${W - 115}" y1="24" x2="${W - 99}" y2="24" stroke="#0284c7" stroke-width="2"/>
-  <text x="${W - 94}" y="27" font-size="7" fill="#6b7280">${esc(i18n.t('export.docs.mood_intensity', 'Mood intensity'))}</text>
-  <text x="${ml + cw}" y="${mt + ch + 41}" text-anchor="end" font-size="7" fill="#9ca3af">${esc(i18n.t('export.docs.context_factors', 'Context factors'))}</text>
+  <text x="${ml + cw}" y="${mt + ch + 14}" text-anchor="end" font-size="7" fill="#9ca3af">${esc(i18n.t('export.docs.relative_daily_level', 'Relative daily level'))}</text>
 </svg>`;
 }

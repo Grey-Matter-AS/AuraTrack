@@ -585,8 +585,8 @@ function renderWellbeingSection(data) {
           <div class="ctx-value">${esc(String(wellbeing.daysCovered || 0))}</div>
         </div>
         <div class="ctx-item">
-          <div class="ctx-label">${esc(t('export.docs.wellbeing_avg_intensity', 'Average mood intensity'))}</div>
-          <div class="ctx-value">${esc(wellbeing.avgIntensityLabel || '-')}</div>
+          <div class="ctx-label">${esc(t('export.docs.wellbeing_top_moods', 'Top moods'))}</div>
+          <div class="ctx-value">${wellbeing.topMoods?.length ? esc(wellbeing.topMoods.map(item => `${item.label} (${item.count}x)`).join(', ')) : esc(t('export.docs.not_recorded'))}</div>
         </div>
         <div class="ctx-item">
           <div class="ctx-label">${esc(t('export.docs.wellbeing_top_factors', 'Top context factors'))}</div>
