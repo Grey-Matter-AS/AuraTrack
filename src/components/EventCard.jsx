@@ -3,6 +3,7 @@ import { formatDuration, formatEventDate, formatEventTime } from '../utils/forma
 import { WarningIcon } from './AppIcons';
 
 function DangerBadge({ dangerFlags }) {
+  const { t } = useTranslation();
   const flags = dangerFlags?.flags;
   if (!flags?.length) return null;
   const isCluster = flags.includes('cluster');
@@ -14,18 +15,18 @@ function DangerBadge({ dangerFlags }) {
         <span
           className="inline-flex items-center gap-1 text-[9px] font-black uppercase px-1.5 py-0.5 rounded"
           style={{ backgroundColor: 'rgba(245,158,11,0.15)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.4)' }}
-          title="Seizure lasted more than 5 minutes"
+          title={t('event_card.long_duration_title')}
         >
-          <WarningIcon className="w-3 h-3" /> &gt;5 MIN
+          <WarningIcon className="w-3 h-3" /> {t('event_card.long_duration_badge')}
         </span>
       )}
       {isCluster && (
         <span
           className="inline-flex items-center gap-1 text-[9px] font-black uppercase px-1.5 py-0.5 rounded"
           style={{ backgroundColor: 'rgba(239,68,68,0.15)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.4)' }}
-          title={`Cluster seizures / Status Epilepticus risk — ${dangerFlags.clusterCount} events within 8 minutes`}
+          title={t('event_card.cluster_title', { count: dangerFlags.clusterCount })}
         >
-          <WarningIcon className="w-3 h-3" /> CLUSTER ×{dangerFlags.clusterCount}
+          <WarningIcon className="w-3 h-3" /> {t('event_card.cluster_badge', { count: dangerFlags.clusterCount })}
         </span>
       )}
     </div>
@@ -52,7 +53,7 @@ export function EventCard({ event, onEdit, onDelete, onViewDetail, dangerFlags, 
       <div className="flex justify-between items-start gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-            <p className="font-bold" style={{ color: 'var(--text-primary)' }}>{event.type || 'Unknown'}</p>
+            <p className="font-bold" style={{ color: 'var(--text-primary)' }}>{event.type || t('event_card.unknown')}</p>
             {event.isEdited && (
               <span
                 className="text-[9px] px-1.5 py-0.5 rounded uppercase font-bold"

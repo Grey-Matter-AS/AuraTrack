@@ -1,7 +1,9 @@
 
+import { useTranslation } from 'react-i18next';
 import { CloseIcon, InstallIcon } from './AppIcons';
 
 export function PWAInstallBanner({ isVisible, isIOS, install, dismiss, showManualInstructions, dismissManual }) {
+  const { t } = useTranslation();
   if (!isVisible) return null;
 
   return (
@@ -28,28 +30,28 @@ export function PWAInstallBanner({ isVisible, isIOS, install, dismiss, showManua
           {showManualInstructions ? (
             <>
               <p className="text-[11px] font-black uppercase tracking-wide" style={{ color: 'var(--text-primary)' }}>
-                Add to Home Screen
+                {t('install.add_to_home')}
               </p>
               <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-dim)' }}>
-                Tap <strong style={{ color: 'var(--text-primary)' }}>⋮</strong> in your browser, then select <strong style={{ color: 'var(--text-primary)' }}>"Add to Home screen"</strong>
+                {t('install.manual_prefix')} <strong style={{ color: 'var(--text-primary)' }}>...</strong> {t('install.manual_suffix')}
               </p>
             </>
           ) : isIOS ? (
             <>
               <p className="text-[11px] font-black uppercase tracking-wide" style={{ color: 'var(--text-primary)' }}>
-                Add to Home Screen
+                {t('install.add_to_home')}
               </p>
               <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-dim)' }}>
-                Tap the Share menu (□↑) then "Add to Home Screen"
+                {t('install.ios_hint')}
               </p>
             </>
           ) : (
             <>
               <p className="text-[11px] font-black uppercase tracking-wide" style={{ color: 'var(--text-primary)' }}>
-                Install AuraTrack
+                {t('install.title')}
               </p>
               <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-dim)' }}>
-                Add to your home screen for offline access
+                {t('install.offline_hint')}
               </p>
             </>
           )}
@@ -62,7 +64,7 @@ export function PWAInstallBanner({ isVisible, isIOS, install, dismiss, showManua
             style={{ backgroundColor: 'var(--accent)' }}
           >
             <InstallIcon className="w-4 h-4" />
-            Install
+            {t('install.install')}
           </button>
         )}
 
@@ -70,7 +72,7 @@ export function PWAInstallBanner({ isVisible, isIOS, install, dismiss, showManua
           onClick={showManualInstructions ? dismissManual : dismiss}
           className="shrink-0 w-7 h-7 flex items-center justify-center rounded-full text-[11px] font-black active:scale-95 transition-transform"
           style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)' }}
-          aria-label="Dismiss"
+          aria-label={t('install.dismiss')}
         >
           <CloseIcon className="w-3.5 h-3.5" />
         </button>

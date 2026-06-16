@@ -161,15 +161,15 @@ function ActionBtn({ label, sub, onClick, icon, variant = 'default' }) {
 }
 
 const FREQ_OPTIONS = [
-  { value: 'OD',  label: 'OD — Once daily' },
-  { value: 'BD',  label: 'BD — Twice daily' },
-  { value: 'TDS', label: 'TDS — Three times daily' },
-  { value: 'QDS', label: 'QDS — Four times daily' },
-  { value: 'PRN', label: 'PRN — As needed (rescue)' },
+  { value: 'OD',  labelKey: 'settings.medications.frequency_od' },
+  { value: 'BD',  labelKey: 'settings.medications.frequency_bd' },
+  { value: 'TDS', labelKey: 'settings.medications.frequency_tds' },
+  { value: 'QDS', labelKey: 'settings.medications.frequency_qds' },
+  { value: 'PRN', labelKey: 'settings.medications.frequency_prn' },
 ];
 const UNIT_OPTIONS = ['mg', 'g', 'mcg', 'ml', 'IU'];
-const FREQ_SHORT = { OD: 'Once daily', BD: 'Twice daily', TDS: 'Three times daily', QDS: 'Four times daily', PRN: 'As needed' };
 const stripLeadingEmoji = (text) => String(text || '').replace(/^[^\p{Letter}\p{Number}]+/u, '').trim();
+const frequencyShortLabel = (frequency, t) => t(`settings.medications.frequency_short_${String(frequency || '').toLowerCase()}`, frequency);
 
 function getSlotLabel(index, frequency, t) {
   if (frequency === 'BD') return index === 0 ? t('settings.medications.slot_morning') : t('settings.medications.slot_evening');
@@ -179,11 +179,19 @@ function getSlotLabel(index, frequency, t) {
 }
 
 const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6];
-const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const DAY_LABEL_KEYS = [
+  'settings.medications.day_sun',
+  'settings.medications.day_mon',
+  'settings.medications.day_tue',
+  'settings.medications.day_wed',
+  'settings.medications.day_thu',
+  'settings.medications.day_fri',
+  'settings.medications.day_sat',
+];
 
 const EMPTY_MED = { name: '', dose: '', unit: 'mg', frequency: 'BD', isRescue: false, scheduledTimes: ['08:00', '20:00'], scheduledDays: ALL_DAYS, reminderEnabled: false, showInEmergency: false };
 
-function MedForm({ form, setForm, onSave, onCancel, saveLabel = 'Save' }) {
+function MedForm({ form, setForm, onSave, onCancel, saveLabel = 'Save', formTitle = null }) {
   const { t } = useTranslation();
   const selectStyle = { backgroundColor: 'var(--bg-input)', border: '1px solid var(--border)', color: 'var(--text-primary)' };
   const isPRN = form.frequency === 'PRN';
@@ -217,7 +225,7 @@ function MedForm({ form, setForm, onSave, onCancel, saveLabel = 'Save' }) {
 
   return (
     <div className="space-y-3 p-4 rounded-2xl" style={{ backgroundColor: 'var(--bg-raised)', border: '1px solid var(--border)' }}>
-      <FieldLabel>{saveLabel === 'Save' ? t('settings.medications.add_form_title') : t('settings.medications.edit_form_title')}</FieldLabel>
+      <FieldLabel>{formTitle || t('settings.medications.add_form_title')}</FieldLabel>
       <input
         type="text"
         value={form.name}
@@ -251,7 +259,7 @@ function MedForm({ form, setForm, onSave, onCancel, saveLabel = 'Save' }) {
         className="w-full rounded-xl px-4 py-3 text-sm outline-none"
         style={selectStyle}
       >
-        {FREQ_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+        {FREQ_OPTIONS.map(o => <option key={o.value} value={o.value}>{t(o.labelKey)}</option>)}
       </select>
 
       {/* Scheduled times — one per dose slot */}
@@ -289,7 +297,7 @@ function MedForm({ form, setForm, onSave, onCancel, saveLabel = 'Save' }) {
             >
               {t('settings.medications.daily')}
             </button>
-            {DAY_LABELS.map((label, day) => {
+            {DAY_LABEL_KEYS.map((labelKey, day) => {
               const active = scheduledDays.includes(day);
               return (
                 <button
@@ -302,7 +310,7 @@ function MedForm({ form, setForm, onSave, onCancel, saveLabel = 'Save' }) {
                     border: active ? '1px solid transparent' : '1px solid var(--border)',
                   }}
                 >
-                  {label}
+                  {t(labelKey)}
                 </button>
               );
             })}
@@ -378,7 +386,7 @@ function MedicationSection({ flash, notificationPermission, onRequestNotificatio
       setShowForm(false);
       flash(t('settings.medications.added'));
     } catch {
-      flash('Failed to add medication.');
+      flash(t('settings.medications.add_failed'));
     }
   };
 
@@ -415,7 +423,7 @@ function MedicationSection({ flash, notificationPermission, onRequestNotificatio
       setEditForm(null);
       flash(t('settings.medications.updated'));
     } catch {
-      flash('Failed to update medication.');
+      flash(t('settings.medications.update_failed'));
     }
   };
 
@@ -448,7 +456,7 @@ function MedicationSection({ flash, notificationPermission, onRequestNotificatio
         {medications.map(m => (
           <div key={m.id}>
             {editingId === m.id ? (
-              <MedForm form={editForm} setForm={setEditForm} onSave={handleUpdate} onCancel={() => { setEditingId(null); setEditForm(null); }} saveLabel={t('settings.medications.update')} />
+              <MedForm form={editForm} setForm={setEditForm} onSave={handleUpdate} onCancel={() => { setEditingId(null); setEditForm(null); }} saveLabel={t('settings.medications.update')} formTitle={t('settings.medications.edit_form_title')} />
             ) : deleteConfirm === m.id ? (
               <div className="rounded-2xl p-3 space-y-2" style={{ backgroundColor: 'rgba(185,28,28,0.1)', border: '1px solid rgba(185,28,28,0.3)' }}>
                 <p className="text-red-400 text-xs font-bold">{t('settings.medications.remove_confirm', { name: m.name })}</p>
@@ -470,7 +478,7 @@ function MedicationSection({ flash, notificationPermission, onRequestNotificatio
 	                      )}
                     </p>
                     <p className="text-[11px]" style={{ color: 'var(--text-dim)' }}>
-                      {m.dose}{m.unit} · {m.frequency} — {FREQ_SHORT[m.frequency] || m.frequency}
+                      {m.dose}{m.unit} · {m.frequency} — {frequencyShortLabel(m.frequency, t)}
                     </p>
                     {m.scheduledTimes && m.scheduledTimes.length > 0 && (
                       <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-faint)' }}>
@@ -489,13 +497,13 @@ function MedicationSection({ flash, notificationPermission, onRequestNotificatio
                       onClick={() => startEdit(m)}
                       className="min-w-[32px] min-h-[32px] flex items-center justify-center rounded-xl text-[11px] font-black transition-all active:scale-95"
                       style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-dim)', border: '1px solid var(--border)' }}
-                      aria-label={`Edit ${m.name}`}
+                      aria-label={t('settings.medications.edit_label', { name: m.name })}
                     ><EditIcon className="w-4 h-4" /></button>
                     <button
                       onClick={() => setDeleteConfirm(m.id)}
                       className="min-w-[32px] min-h-[32px] flex items-center justify-center rounded-xl text-[11px] font-black text-red-500 active:bg-red-600 active:text-white transition-all"
                       style={{ backgroundColor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)' }}
-                      aria-label={`Remove ${m.name}`}
+                      aria-label={t('settings.medications.remove_label', { name: m.name })}
                     ><CloseIcon className="w-4 h-4" /></button>
                   </div>
                 </div>
@@ -506,7 +514,7 @@ function MedicationSection({ flash, notificationPermission, onRequestNotificatio
       </div>
 
       {showForm ? (
-        <MedForm form={form} setForm={setForm} onSave={handleAdd} onCancel={() => { setShowForm(false); setForm(EMPTY_MED); }} saveLabel={t('settings.medications.add')} />
+        <MedForm form={form} setForm={setForm} onSave={handleAdd} onCancel={() => { setShowForm(false); setForm(EMPTY_MED); }} saveLabel={t('settings.medications.add')} formTitle={t('settings.medications.add_form_title')} />
       ) : (
         <button
           onClick={() => setShowForm(true)}
@@ -592,15 +600,15 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
   const flash = (msg) => { setStatusMsg(msg); setTimeout(() => setStatusMsg(''), 4000); };
   const summarizeImportResult = (result) => {
     const parts = [];
-    if (result.settings) parts.push(`${result.settings} setting(s)`);
-    if (result.events) parts.push(`${result.events} event(s)`);
-    if (result.medications) parts.push(`${result.medications} medication(s)`);
-    if (result.logs) parts.push(`${result.logs} dose log(s)`);
-    if (result.eegSessions) parts.push(`${result.eegSessions} EEG session(s)`);
-    if (result.eegActivities) parts.push(`${result.eegActivities} EEG activity record(s)`);
+    if (result.settings) parts.push(t('settings.data.import_summary_settings', { count: result.settings }));
+    if (result.events) parts.push(t('settings.data.import_summary_events', { count: result.events }));
+    if (result.medications) parts.push(t('settings.data.import_summary_medications', { count: result.medications }));
+    if (result.logs) parts.push(t('settings.data.import_summary_logs', { count: result.logs }));
+    if (result.eegSessions) parts.push(t('settings.data.import_summary_eeg_sessions', { count: result.eegSessions }));
+    if (result.eegActivities) parts.push(t('settings.data.import_summary_eeg_activities', { count: result.eegActivities }));
     if (result.wellbeingEntries) parts.push(t('settings.data.import_summary_wellbeing', { count: result.wellbeingEntries, defaultValue: '{{count}} wellbeing entries' }));
     const conflicts = result.conflicts?.length
-      ? ` ${result.conflicts.length} conflict(s) kept local data intact.`
+      ? ` ${t('settings.data.import_summary_conflicts', { count: result.conflicts.length })}`
       : '';
     return `${parts.join(', ') || t('settings.data.imported_nothing')}.${conflicts}`;
   };
@@ -833,7 +841,7 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
           <Segments
             options={[
               { value: 'small',  label: 'S'      },
-              { value: 'normal', label: 'Normal' },
+              { value: 'normal', label: t('settings.appearance.text_size_normal', 'Normal') },
               { value: 'large',  label: 'L'      },
               { value: 'xlarge', label: 'XL'     },
             ]}
@@ -1126,7 +1134,7 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
           <ActionBtn label={t('settings.data.import_data')}   sub={t('settings.data.import_sub')}    icon={<DownloadIcon className="w-5 h-5" />} onClick={handleImportClick} />
         </div>
         {onSync && (
-          <ActionBtn label="Sync to Another Device" sub="QR · WiFi · File" icon={<SyncIcon className="w-5 h-5" />} onClick={onSync} />
+          <ActionBtn label={t('settings.data.sync_device')} sub={t('settings.data.sync_sub')} icon={<SyncIcon className="w-5 h-5" />} onClick={onSync} />
         )}
 
         <div

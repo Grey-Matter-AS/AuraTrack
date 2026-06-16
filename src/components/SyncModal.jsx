@@ -47,12 +47,12 @@ function QRImg({ dataUrl, label }) {
     <div className="w-[280px] h-[280px] rounded-2xl flex items-center justify-center mx-auto"
       style={{ backgroundColor: 'var(--bg-raised)' }}>
       <span className="text-[10px] font-black uppercase tracking-widest animate-pulse"
-        style={{ color: 'var(--text-on-raised-muted)' }}>Generating…</span>
+        style={{ color: 'var(--text-on-raised-muted)' }}>{i18n.t('sync.generating')}</span>
     </div>
   );
   return (
     <div className="mx-auto w-fit">
-      <img src={dataUrl} alt="QR Code" className="rounded-2xl w-[280px] h-[280px] max-w-full" />
+      <img src={dataUrl} alt={i18n.t('sync.qr_code_alt')} className="rounded-2xl w-[280px] h-[280px] max-w-full" />
       {label && (
         <p className="text-center text-[9px] font-black uppercase tracking-widest mt-2"
           style={{ color: 'var(--text-dim)' }}>{label}</p>
@@ -66,7 +66,7 @@ function PinDisplay({ pin, label }) {
     <div className="rounded-2xl px-6 py-3 mx-auto w-fit text-center"
       style={{ backgroundColor: 'var(--bg-raised)' }}>
       <p className="text-[9px] font-black uppercase tracking-widest mb-1"
-        style={{ color: 'var(--text-on-raised-muted)' }}>{label || 'Security PIN'}</p>
+        style={{ color: 'var(--text-on-raised-muted)' }}>{label || i18n.t('sync.security_pin')}</p>
       <p className="text-4xl font-black tracking-[0.25em]" style={{ color: 'var(--text-on-raised)' }}>
         {pin}
       </p>
@@ -88,7 +88,7 @@ function RoleBadge({ role }) {
     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full"
       style={{ backgroundColor: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.3)' }}>
       <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: '#60a5fa' }}>
-        {role === 'sender' ? 'Sender Profile' : 'Receiver Profile'}
+        {role === 'sender' ? i18n.t('sync.sender_profile') : i18n.t('sync.receiver_profile')}
       </span>
     </div>
   );
@@ -96,14 +96,14 @@ function RoleBadge({ role }) {
 
 function RoleSelector({ role, onChange, locked = false }) {
   const options = [
-    { id: 'sender', label: 'Sender', sub: 'This device sends data out' },
-    { id: 'receiver', label: 'Receiver', sub: 'This device receives data in' },
+    { id: 'sender', label: i18n.t('sync.sender'), sub: i18n.t('sync.sender_sub') },
+    { id: 'receiver', label: i18n.t('sync.receiver'), sub: i18n.t('sync.receiver_sub') },
   ];
 
   return (
     <div className="space-y-2">
       <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--text-dim)' }}>
-        Device Role
+        {i18n.t('sync.device_role')}
       </p>
       <div className="grid grid-cols-2 gap-2">
         {options.map(option => {
@@ -130,7 +130,7 @@ function RoleSelector({ role, onChange, locked = false }) {
       </div>
       {locked && (
         <p className="text-[10px]" style={{ color: 'var(--text-dim)' }}>
-          Role locked because this page was opened from a sync QR code.
+          {i18n.t('sync.role_locked')}
         </p>
       )}
     </div>
@@ -142,22 +142,22 @@ function DonePanel({ result, onClose }) {
   return (
     <div className="space-y-4 text-center">
       <CheckIcon className="w-12 h-12 mx-auto mb-2 text-green-400" />
-      <p className="text-lg font-black" style={{ color: 'var(--text-primary)' }}>Sync complete</p>
+      <p className="text-lg font-black" style={{ color: 'var(--text-primary)' }}>{i18n.t('sync.complete')}</p>
       {total === 0
-        ? <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Both devices were already up to date — no new records added.</p>
+        ? <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{i18n.t('sync.already_up_to_date')}</p>
         : <div className="space-y-1">
-            {result.events > 0 && <StatusRow icon={<ClipboardListIcon className="w-5 h-5" />} text={`${result.events} new event(s) added`} />}
-            {result.medications > 0 && <StatusRow icon={<PillIcon className="w-5 h-5" />} text={`${result.medications} new medication(s) added`} />}
-            {result.logs > 0 && <StatusRow icon={<CalendarIcon className="w-5 h-5" />} text={`${result.logs} new dose log(s) added`} />}
-            {result.eegSessions > 0 && <StatusRow icon={<ActivityIcon className="w-5 h-5" />} text={`${result.eegSessions} new EEG session(s) added`} />}
-            {result.eegActivities > 0 && <StatusRow icon={<ActivityIcon className="w-5 h-5" />} text={`${result.eegActivities} new EEG activity record(s) added`} />}
+            {result.events > 0 && <StatusRow icon={<ClipboardListIcon className="w-5 h-5" />} text={i18n.t('sync.events_added', { count: result.events })} />}
+            {result.medications > 0 && <StatusRow icon={<PillIcon className="w-5 h-5" />} text={i18n.t('sync.medications_added', { count: result.medications })} />}
+            {result.logs > 0 && <StatusRow icon={<CalendarIcon className="w-5 h-5" />} text={i18n.t('sync.logs_added', { count: result.logs })} />}
+            {result.eegSessions > 0 && <StatusRow icon={<ActivityIcon className="w-5 h-5" />} text={i18n.t('sync.eeg_sessions_added', { count: result.eegSessions })} />}
+            {result.eegActivities > 0 && <StatusRow icon={<ActivityIcon className="w-5 h-5" />} text={i18n.t('sync.eeg_activities_added', { count: result.eegActivities })} />}
             {result.wellbeingEntries > 0 && <StatusRow icon={<ActivityIcon className="w-5 h-5" />} text={wellbeingEntriesAdded(result.wellbeingEntries)} />}
           </div>
       }
       <button onClick={onClose}
         className="w-full py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest active:scale-95 transition-all"
         style={{ backgroundColor: 'var(--accent)', color: '#fff' }}>
-        Close
+        {i18n.t('backup.modal.close')}
       </button>
     </div>
   );
@@ -173,13 +173,13 @@ function ErrorPanel({ error, onRetry, onClose }) {
           <button onClick={onRetry}
             className="flex-1 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest active:scale-95 transition-all"
             style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)' }}>
-            Try again
+            {i18n.t('settings.data.persistence_retry')}
           </button>
         )}
         <button onClick={onClose}
           className="flex-1 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest active:scale-95 transition-all"
           style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised-muted)' }}>
-          Close
+          {i18n.t('backup.modal.close')}
         </button>
       </div>
     </div>
@@ -188,7 +188,7 @@ function ErrorPanel({ error, onRetry, onClose }) {
 
 // ─── In-app QR scanner (for Phase 3 answer scan) ─────────────
 
-function QRScanner({ onScan, onCancel, prompt = "Point camera at the QR code" }) {
+function QRScanner({ onScan, onCancel, prompt = i18n.t('sync.scan_qr_prompt') }) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
@@ -231,8 +231,8 @@ function QRScanner({ onScan, onCancel, prompt = "Point camera at the QR code" })
         rafRef.current = requestAnimationFrame(scan);
       } catch (e) {
         if (mounted) setCamError(e.name === 'NotAllowedError'
-          ? 'Camera access denied. Allow camera permission and try again.'
-          : `Camera error: ${e.message}`);
+          ? i18n.t('sync.camera_denied')
+          : i18n.t('sync.camera_error', { message: e.message }));
       }
     })();
     return () => { mounted = false; stopCamera(); };
@@ -244,7 +244,7 @@ function QRScanner({ onScan, onCancel, prompt = "Point camera at the QR code" })
       <button onClick={onCancel}
         className="w-full py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest"
         style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)' }}>
-        Go back
+        {i18n.t('nav.back').replace(/^[^\p{Letter}\p{Number}]+/u, '').trim()}
       </button>
     </div>
   );
@@ -263,7 +263,7 @@ function QRScanner({ onScan, onCancel, prompt = "Point camera at the QR code" })
       <button onClick={onCancel}
         className="w-full py-2 rounded-xl text-[10px] font-black uppercase tracking-widest"
         style={{ color: 'var(--text-dim)' }}>
-        Cancel
+        {i18n.t('backup.modal.cancel')}
       </button>
     </div>
   );
@@ -305,36 +305,36 @@ function EasySyncPanel({ connectToken, role, onDone, onScanSenderQR }) {
       <RoleBadge role={role} />
       <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
         {role === 'sender'
-          ? 'This device will send its AuraTrack data to another device over the internet. Start here, then let the receiving device scan the QR code.'
-          : 'This device will receive AuraTrack data from another device over the internet. On the sender device, open Easy Sync and scan its QR code with this device.'}
+          ? i18n.t('sync.easy_sender_intro')
+          : i18n.t('sync.easy_receiver_intro')}
       </p>
-      <StatusRow icon={<ShieldIcon className="w-5 h-5" />} text="Data travels peer-to-peer over a browser-encrypted connection. A PIN confirms both devices are yours." />
-      <StatusRow icon={<GlobeIcon className="w-5 h-5" />} text="PeerJS is used for connection signaling only; sync still shares metadata such as connection IDs." />
+      <StatusRow icon={<ShieldIcon className="w-5 h-5" />} text={i18n.t('sync.easy_security')} />
+      <StatusRow icon={<GlobeIcon className="w-5 h-5" />} text={i18n.t('sync.easy_metadata')} />
       {role === 'sender' ? (
         <button onClick={p2p.startAsHost}
           className="w-full py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest active:scale-95 transition-all"
           style={{ backgroundColor: 'var(--accent)', color: '#fff' }}>
-          Start Sender Setup
+          {i18n.t('sync.start_sender_setup')}
         </button>
       ) : (
         <>
           <button onClick={onScanSenderQR}
             className="w-full py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest active:scale-95 transition-all"
             style={{ backgroundColor: 'var(--accent)', color: '#fff' }}>
-            Scan Sender QR in App
+            {i18n.t('sync.scan_sender_qr')}
           </button>
           <div className="rounded-2xl p-4" style={{ backgroundColor: 'var(--bg-raised)', border: '1px solid var(--border)' }}>
             <p className="text-[11px] font-bold" style={{ color: 'var(--text-primary)' }}>
-              Receiver steps
+              {i18n.t('sync.receiver_steps')}
             </p>
             <p className="text-[10px] mt-2" style={{ color: 'var(--text-secondary)' }}>
-              1. Open Easy Sync on the sender device.
+              {i18n.t('sync.easy_step_1')}
             </p>
             <p className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>
-              2. Scan the sender QR with this device.
+              {i18n.t('sync.easy_step_2')}
             </p>
             <p className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>
-              3. Compare the PINs and press Start Sync on this receiving device.
+              {i18n.t('sync.easy_step_3')}
             </p>
           </div>
         </>
@@ -345,23 +345,23 @@ function EasySyncPanel({ connectToken, role, onDone, onScanSenderQR }) {
   if (phase === 'generating') return (
     <div className="space-y-3">
       <RoleBadge role={role} />
-      <StatusRow icon={<LoaderIcon className="w-5 h-5 animate-spin" />} text="Connecting to relay server…" />
+      <StatusRow icon={<LoaderIcon className="w-5 h-5 animate-spin" />} text={i18n.t('sync.connecting_relay')} />
     </div>
   );
 
   if (phase === 'waiting') return (
     <div className="space-y-4">
       <RoleBadge role={role} />
-      <QRImg dataUrl={qrUrl} label="Receiver: scan this QR code" />
-      <PinDisplay pin={p2p.pin} label="Security PIN — verify on both screens" />
-      <StatusRow icon={<LoaderIcon className="w-5 h-5 animate-spin" />} text="Waiting for the receiver device to connect… (90s)" />
+      <QRImg dataUrl={qrUrl} label={i18n.t('sync.receiver_scan_qr')} />
+      <PinDisplay pin={p2p.pin} label={i18n.t('sync.verify_pin_both')} />
+      <StatusRow icon={<LoaderIcon className="w-5 h-5 animate-spin" />} text={i18n.t('sync.waiting_receiver_connect')} />
     </div>
   );
 
   if (phase === 'connecting') return (
     <div className="space-y-3">
       <RoleBadge role={role} />
-      <StatusRow icon={<LoaderIcon className="w-5 h-5 animate-spin" />} text="Connecting to the sender device…" />
+      <StatusRow icon={<LoaderIcon className="w-5 h-5 animate-spin" />} text={i18n.t('sync.connecting_sender')} />
     </div>
   );
 
@@ -371,18 +371,18 @@ function EasySyncPanel({ connectToken, role, onDone, onScanSenderQR }) {
       <div className="space-y-4">
         <RoleBadge role="receiver" />
         <p className="text-sm font-black text-center" style={{ color: 'var(--text-primary)' }}>
-          Does this PIN match the sender device?
+          {i18n.t('sync.pin_match_question')}
         </p>
         <PinDisplay pin={p2p.remotePin} />
         <button onClick={p2p.confirmPin}
           className="w-full py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest active:scale-95 transition-all"
           style={{ backgroundColor: 'var(--accent)', color: '#fff' }}>
-          <CheckIcon className="w-4 h-4 inline-block mr-2 align-[-2px]" /> PINs Match — Start Sync
+          <CheckIcon className="w-4 h-4 inline-block mr-2 align-[-2px]" /> {i18n.t('sync.pins_match_start')}
         </button>
         <button onClick={p2p.reset}
           className="w-full py-2 text-[10px] font-black uppercase tracking-widest"
           style={{ color: 'var(--text-dim)' }}>
-          PINs don't match — Cancel
+          {i18n.t('sync.pins_no_match_cancel')}
         </button>
       </div>
     );
@@ -390,8 +390,8 @@ function EasySyncPanel({ connectToken, role, onDone, onScanSenderQR }) {
     return (
       <div className="space-y-4">
         <RoleBadge role="sender" />
-        <PinDisplay pin={p2p.pin} label="Verify this PIN on the receiver device" />
-        <StatusRow icon={<LoaderIcon className="w-5 h-5 animate-spin" />} text="Waiting for the receiver device to confirm the PIN…" />
+        <PinDisplay pin={p2p.pin} label={i18n.t('sync.verify_pin_receiver')} />
+        <StatusRow icon={<LoaderIcon className="w-5 h-5 animate-spin" />} text={i18n.t('sync.waiting_receiver_confirm')} />
       </div>
     );
   }
@@ -399,7 +399,7 @@ function EasySyncPanel({ connectToken, role, onDone, onScanSenderQR }) {
   if (phase === 'transferring' || phase === 'merging') return (
     <div className="space-y-3">
       <RoleBadge role={role} />
-      <StatusRow icon={<LoaderIcon className="w-5 h-5 animate-spin" />} text={phase === 'merging' ? 'Merging records…' : 'Transferring data…'} />
+      <StatusRow icon={<LoaderIcon className="w-5 h-5 animate-spin" />} text={phase === 'merging' ? i18n.t('sync.merging_records') : i18n.t('sync.transferring_data')} />
     </div>
   );
 
@@ -448,36 +448,36 @@ function PrivateSyncPanel({ offerSDP, role, onDone, onScanSenderQR }) {
       <RoleBadge role={role} />
       <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
         {role === 'sender'
-          ? 'This device will send its AuraTrack data directly over the same WiFi network. No relay server is used after setup.'
-          : 'This device will receive AuraTrack data directly over the same WiFi network. Start on the sender device, then scan its connection QR from this device.'}
+          ? i18n.t('sync.private_sender_intro')
+          : i18n.t('sync.private_receiver_intro')}
       </p>
-      <StatusRow icon={<ShieldIcon className="w-5 h-5" />} text="Signaling travels via QR codes only — no relay server. Your data and metadata stay on your local network." />
-      <StatusRow icon={<WifiIcon className="w-5 h-5" />} text="Requires two QR scans: receiver scans sender offer QR, then sender scans receiver answer QR." />
+      <StatusRow icon={<ShieldIcon className="w-5 h-5" />} text={i18n.t('sync.private_security')} />
+      <StatusRow icon={<WifiIcon className="w-5 h-5" />} text={i18n.t('sync.private_scans')} />
       {role === 'sender' ? (
         <button onClick={lan.startAsHost}
           className="w-full py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest active:scale-95 transition-all"
           style={{ backgroundColor: 'var(--accent)', color: '#fff' }}>
-          Start Sender Setup
+          {i18n.t('sync.start_sender_setup')}
         </button>
       ) : (
         <>
           <button onClick={onScanSenderQR}
             className="w-full py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest active:scale-95 transition-all"
             style={{ backgroundColor: 'var(--accent)', color: '#fff' }}>
-            Scan Sender QR in App
+            {i18n.t('sync.scan_sender_qr')}
           </button>
           <div className="rounded-2xl p-4" style={{ backgroundColor: 'var(--bg-raised)', border: '1px solid var(--border)' }}>
             <p className="text-[11px] font-bold" style={{ color: 'var(--text-primary)' }}>
-              Receiver steps
+              {i18n.t('sync.receiver_steps')}
             </p>
             <p className="text-[10px] mt-2" style={{ color: 'var(--text-secondary)' }}>
-              1. Open Private Sync on the sender device.
+              {i18n.t('sync.private_step_1')}
             </p>
             <p className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>
-              2. Scan the sender connection QR with this device.
+              {i18n.t('sync.private_step_2')}
             </p>
             <p className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>
-              3. Show the answer QR back to the sender device.
+              {i18n.t('sync.private_step_3')}
             </p>
           </div>
         </>
@@ -485,21 +485,21 @@ function PrivateSyncPanel({ offerSDP, role, onDone, onScanSenderQR }) {
     </div>
   );
 
-  if (phase === 'generating_offer') return <div className="space-y-3"><RoleBadge role="sender" /><StatusRow icon={<LoaderIcon className="w-5 h-5 animate-spin" />} text="Generating secure connection code…" /></div>;
-  if (phase === 'generating_answer') return <div className="space-y-3"><RoleBadge role="receiver" /><StatusRow icon={<LoaderIcon className="w-5 h-5 animate-spin" />} text="Processing sender connection code…" /></div>;
+  if (phase === 'generating_offer') return <div className="space-y-3"><RoleBadge role="sender" /><StatusRow icon={<LoaderIcon className="w-5 h-5 animate-spin" />} text={i18n.t('sync.generating_connection_code')} /></div>;
+  if (phase === 'generating_answer') return <div className="space-y-3"><RoleBadge role="receiver" /><StatusRow icon={<LoaderIcon className="w-5 h-5 animate-spin" />} text={i18n.t('sync.processing_connection_code')} /></div>;
 
   if (phase === 'waiting_scan') return (
     <div className="space-y-4">
       <RoleBadge role="sender" />
-      <QRImg dataUrl={lan.offerQR} label="Step 1: Receiver scans this QR code" />
-      <PinDisplay pin={lan.pin} label="Security PIN — verify on both screens" />
+      <QRImg dataUrl={lan.offerQR} label={i18n.t('sync.step1_receiver_scans')} />
+      <PinDisplay pin={lan.pin} label={i18n.t('sync.verify_pin_both')} />
       <p className="text-[10px] text-center" style={{ color: 'var(--text-dim)' }}>
-        After the receiver scans this, it will show an answer QR
+        {i18n.t('sync.after_receiver_scan')}
       </p>
       <button onClick={() => setScanning(true)}
         className="w-full py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest active:scale-95 transition-all"
         style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)' }}>
-        Step 2: Scan Receiver Answer QR
+        {i18n.t('sync.scan_receiver_answer_qr')}
       </button>
     </div>
   );
@@ -507,18 +507,18 @@ function PrivateSyncPanel({ offerSDP, role, onDone, onScanSenderQR }) {
   if (phase === 'waiting_answer') return (
     <div className="space-y-4">
       <RoleBadge role="receiver" />
-      <QRImg dataUrl={lan.answerQR} label="Show this to the sender device to scan" />
-      <StatusRow icon={<LoaderIcon className="w-5 h-5 animate-spin" />} text="Waiting for the sender device to scan this QR code…" />
+      <QRImg dataUrl={lan.answerQR} label={i18n.t('sync.show_to_sender')} />
+      <StatusRow icon={<LoaderIcon className="w-5 h-5 animate-spin" />} text={i18n.t('sync.waiting_sender_scan')} />
     </div>
   );
 
-  if (phase === 'connecting') return <div className="space-y-3"><RoleBadge role={lan.isHost ? 'sender' : 'receiver'} /><StatusRow icon={<LoaderIcon className="w-5 h-5 animate-spin" />} text="Establishing direct connection…" /></div>;
+  if (phase === 'connecting') return <div className="space-y-3"><RoleBadge role={lan.isHost ? 'sender' : 'receiver'} /><StatusRow icon={<LoaderIcon className="w-5 h-5 animate-spin" />} text={i18n.t('sync.establishing_direct')} /></div>;
 
   if (phase === 'pin_confirm') return (
     <div className="space-y-4">
       <RoleBadge role={lan.isHost ? 'sender' : 'receiver'} />
       <p className="text-sm font-black text-center" style={{ color: 'var(--text-primary)' }}>
-        {lan.isHost ? 'Verify this PIN on the receiver device' : 'Does this PIN match the sender device?'}
+        {lan.isHost ? i18n.t('sync.verify_pin_receiver') : i18n.t('sync.pin_match_question')}
       </p>
       <PinDisplay pin={lan.isHost ? lan.pin : lan.remotePin} />
       {!lan.isHost && (
@@ -526,23 +526,23 @@ function PrivateSyncPanel({ offerSDP, role, onDone, onScanSenderQR }) {
           <button onClick={lan.confirmPin}
             className="w-full py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest active:scale-95 transition-all"
             style={{ backgroundColor: 'var(--accent)', color: '#fff' }}>
-            <CheckIcon className="w-4 h-4 inline-block mr-2 align-[-2px]" /> PINs Match — Start Sync
+            <CheckIcon className="w-4 h-4 inline-block mr-2 align-[-2px]" /> {i18n.t('sync.pins_match_start')}
           </button>
           <button onClick={lan.reset}
             className="w-full py-2 text-[10px] font-black uppercase tracking-widest"
             style={{ color: 'var(--text-dim)' }}>
-            PINs don't match — Cancel
+            {i18n.t('sync.pins_no_match_cancel')}
           </button>
         </>
       )}
-      {lan.isHost && <StatusRow icon={<LoaderIcon className="w-5 h-5 animate-spin" />} text="Waiting for the receiver device to confirm the PIN…" />}
+      {lan.isHost && <StatusRow icon={<LoaderIcon className="w-5 h-5 animate-spin" />} text={i18n.t('sync.waiting_receiver_confirm')} />}
     </div>
   );
 
   if (phase === 'transferring' || phase === 'merging') return (
     <div className="space-y-3">
       <RoleBadge role={lan.isHost ? 'sender' : 'receiver'} />
-      <StatusRow icon={<LoaderIcon className="w-5 h-5 animate-spin" />} text={phase === 'merging' ? 'Merging records…' : 'Transferring data…'} />
+      <StatusRow icon={<LoaderIcon className="w-5 h-5 animate-spin" />} text={phase === 'merging' ? i18n.t('sync.merging_records') : i18n.t('sync.transferring_data')} />
     </div>
   );
 
@@ -573,8 +573,8 @@ function ManualFilePanel({ role, onDone, onBackupSuccess }) {
       const total = r.settings + r.events + r.medications + r.logs + r.eegSessions + r.eegActivities + (r.wellbeingEntries || 0);
       setStatus(total
         ? `${syncImportSummary(r)}${r.conflicts?.length ? ` ${i18n.t('sync.conflicts_kept_local', { count: r.conflicts.length, defaultValue: '{{count}} conflict(s) kept local records.' })}` : ''}`
-        : 'Already up to date — no new records.');
-    } catch { setStatus('Import failed — invalid or corrupted file.'); }
+        : i18n.t('sync.already_up_to_date_short'));
+    } catch { setStatus(i18n.t('settings.data.import_failed')); }
     e.target.value = '';
   };
 
@@ -604,7 +604,7 @@ function ManualFilePanel({ role, onDone, onBackupSuccess }) {
           onClose={() => setBackupModal({ mode: null, fileName: '', fileText: '' })}
           onExportSuccess={async (summary) => {
             await onBackupSuccess?.(summary);
-            setStatus(`Exported ${summary.events} event(s).`);
+            setStatus(i18n.t('sync.exported_events', { count: summary.events }));
           }}
         />
       )}
@@ -620,15 +620,15 @@ function ManualFilePanel({ role, onDone, onBackupSuccess }) {
             const total = r.settings + r.events + r.medications + r.logs + r.eegSessions + r.eegActivities + (r.wellbeingEntries || 0);
             setStatus(total
               ? `${syncImportSummary(r)}${r.conflicts?.length ? ` ${i18n.t('sync.conflicts_kept_local', { count: r.conflicts.length, defaultValue: '{{count}} conflict(s) kept local records.' })}` : ''}`
-              : 'Already up to date — no new records.');
+              : i18n.t('sync.already_up_to_date_short'));
           }}
         />
       )}
       <RoleBadge role={role} />
       <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
         {role === 'sender'
-          ? 'Create an encrypted AuraTrack backup on this device and send that file to the receiving device by AirDrop, Files, email, or cloud storage.'
-          : 'Import an encrypted AuraTrack backup from another device. Safe to repeat — duplicates are automatically skipped.'}
+          ? i18n.t('sync.manual_sender_intro')
+          : i18n.t('sync.manual_receiver_intro')}
       </p>
       <div className="space-y-2">
         <button onClick={() => setBackupModal({ mode: 'export', fileName: '', fileText: '' })}
@@ -636,14 +636,14 @@ function ManualFilePanel({ role, onDone, onBackupSuccess }) {
           style={role === 'sender'
             ? { backgroundColor: 'var(--accent)', color: '#fff' }
             : { backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)' }}>
-          <DownloadIcon className="w-4 h-4" /> Create Encrypted Backup
+          <DownloadIcon className="w-4 h-4" /> {i18n.t('backup.modal.export_cta')}
         </button>
         <button onClick={handleImportClick}
           className="w-full py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2"
           style={role === 'receiver'
             ? { backgroundColor: 'var(--accent)', color: '#fff' }
             : { backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)' }}>
-          <UploadIcon className="w-4 h-4" /> Import Backup File
+          <UploadIcon className="w-4 h-4" /> {i18n.t('sync.import_backup_file')}
         </button>
         <input ref={fileRef} type="file" accept=".atbak,.json,application/json" className="hidden" onChange={handleImport} />
       </div>
@@ -655,7 +655,7 @@ function ManualFilePanel({ role, onDone, onBackupSuccess }) {
       <button onClick={onDone}
         className="w-full py-2 text-[10px] font-black uppercase tracking-widest"
         style={{ color: 'var(--text-dim)' }}>
-        Done
+        {i18n.t('sync.done')}
       </button>
     </div>
   );
@@ -664,9 +664,9 @@ function ManualFilePanel({ role, onDone, onBackupSuccess }) {
 // ─── Root SyncModal ───────────────────────────────────────────
 
 const MODES = [
-  { id: 'easy',    label: 'Easy Sync',     sub: 'Internet' },
-  { id: 'private', label: 'Private Sync',  sub: 'Same WiFi' },
-  { id: 'manual',  label: 'Manual File',   sub: 'Export / Import' },
+  { id: 'easy',    labelKey: 'sync.easy_sync',    subKey: 'sync.internet' },
+  { id: 'private', labelKey: 'sync.private_sync', subKey: 'sync.same_wifi' },
+  { id: 'manual',  labelKey: 'sync.manual_file',  subKey: 'sync.export_import' },
 ];
 
 export default function SyncModal({ isOpen, onClose, connectToken, offerSDP, onBackupSuccess }) {
@@ -738,7 +738,7 @@ export default function SyncModal({ isOpen, onClose, connectToken, offerSDP, onB
       return;
     }
 
-    setScanError('That QR code is not a valid AuraTrack sync code.');
+    setScanError(i18n.t('sync.invalid_qr'));
   }, [clearScannedRouting]);
 
   if (!isOpen) return null;
@@ -754,7 +754,7 @@ export default function SyncModal({ isOpen, onClose, connectToken, offerSDP, onB
           style={{ borderBottom: '1px solid var(--border-subtle)' }}>
           <div>
             <h2 className="text-[11px] font-black uppercase tracking-widest"
-              style={{ color: 'var(--text-primary)' }}>Sync to Another Device</h2>
+              style={{ color: 'var(--text-primary)' }}>{i18n.t('sync.title')}</h2>
             {mode && !isLinked && (
               <button onClick={() => {
                 setMode(null);
@@ -763,7 +763,7 @@ export default function SyncModal({ isOpen, onClose, connectToken, offerSDP, onB
               }}
                 className="text-[10px] font-bold mt-0.5"
                 style={{ color: 'var(--text-dim)' }}>
-                ← Back
+                {i18n.t('nav.back')}
               </button>
             )}
           </div>
@@ -782,7 +782,7 @@ export default function SyncModal({ isOpen, onClose, connectToken, offerSDP, onB
               <button onClick={startReceiverScan}
                 className="w-full py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest active:scale-95 transition-all"
                 style={{ backgroundColor: 'var(--accent)', color: '#fff' }}>
-                Scan Sender QR in App
+                {i18n.t('sync.scan_sender_qr')}
               </button>
             )}
             {scanError && (
@@ -796,8 +796,8 @@ export default function SyncModal({ isOpen, onClose, connectToken, offerSDP, onB
                 style={{ backgroundColor: 'var(--bg-raised)', border: '1px solid var(--border)' }}>
                 <div className="text-left">
                   <p className="text-[11px] font-black uppercase tracking-widest"
-                    style={{ color: 'var(--text-on-raised)' }}>{m.label}</p>
-                  <p className="text-[10px]" style={{ color: 'var(--text-on-raised-muted)' }}>{m.sub}</p>
+                    style={{ color: 'var(--text-on-raised)' }}>{i18n.t(m.labelKey)}</p>
+                  <p className="text-[10px]" style={{ color: 'var(--text-on-raised-muted)' }}>{i18n.t(m.subKey)}</p>
                 </div>
                 <span style={{ color: 'var(--text-on-raised-muted)' }}>›</span>
               </button>
@@ -811,7 +811,7 @@ export default function SyncModal({ isOpen, onClose, connectToken, offerSDP, onB
             <QRScanner
               onScan={handleReceiverScan}
               onCancel={() => setScanningReceiverQR(false)}
-              prompt="Point camera at the sender device QR code"
+              prompt={i18n.t('sync.scan_sender_prompt')}
             />
           </div>
         )}

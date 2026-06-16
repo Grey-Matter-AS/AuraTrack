@@ -21,12 +21,13 @@ const POST_ICTAL_FINDINGS = [
 
 // ─── Drag handle ───────────────────────────────────────────────
 function DragHandle(props) {
+  const { t } = useTranslation();
   return (
     <div
       {...props}
       className="flex flex-col items-center justify-center shrink-0 cursor-grab active:cursor-grabbing min-w-[44px] min-h-[44px] rounded-lg"
       style={{ touchAction: 'none', color: 'var(--text-dim)', gap: '1px' }}
-      aria-label="Drag to reorder"
+      aria-label={t('summary.drag_to_reorder')}
     >
       <GripIcon className="w-4 h-4" />
     </div>
@@ -161,6 +162,7 @@ function EditableTimer({ phase, label, color, calcValue, manualDurations, edited
 
 // ─── Editable total duration (larger display) ─────────────────
 function EditableTotalTimer({ calcValue, manualDurations, editedTimers, onSetManualDuration, durationFormat = 'seconds' }) {
+  const { t } = useTranslation();
   const fmtDur = (s) => durationFormat === 'human' ? formatDuration(s) : `${s}s`;
   const [stage, setStage] = useState('idle');
   const [inputVal, setInputVal] = useState('');
@@ -235,7 +237,7 @@ function EditableTotalTimer({ calcValue, manualDurations, editedTimers, onSetMan
           <span className="text-lg font-bold" style={{ color: 'var(--text-dim)' }}>s</span>
           <button onClick={saveEdit}
             className="min-h-[44px] px-4 rounded-xl text-sm font-black uppercase bg-green-600 text-white active:scale-95 transition-transform">
-            <CheckIcon className="w-4 h-4 inline-block mr-1.5 align-[-3px]" /> SAVE
+            <CheckIcon className="w-4 h-4 inline-block mr-1.5 align-[-3px]" /> {t('summary.save')}
           </button>
           <button onClick={cancelEdit}
             className="min-h-[44px] px-4 rounded-xl text-sm font-black uppercase active:scale-95 transition-transform"
@@ -250,6 +252,7 @@ function EditableTotalTimer({ calcValue, manualDurations, editedTimers, onSetMan
 
 // ─── Inline date/time editor for edit-mode / manual entries ──
 function DateTimeOverrideRow({ startTime, overrideDateTime, onSetEventDateTime }) {
+  const { t } = useTranslation();
   const [fallbackStartTime] = useState(() => Date.now());
   const d   = new Date(startTime || fallbackStartTime);
   const pad = n => String(n).padStart(2, '0');
@@ -261,7 +264,7 @@ function DateTimeOverrideRow({ startTime, overrideDateTime, onSetEventDateTime }
   return (
     <div className="mb-4 pb-4" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
       <p className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--text-faint)' }}>
-        Event Date &amp; Time
+        {t('summary.event_datetime')}
       </p>
       <div className="flex gap-2 date-time-row">
         <input

@@ -252,7 +252,8 @@ export default function IdleView({
           style={{
             width: 'min(15rem, 38vmin)',
             height: 'min(15rem, 38vmin)',
-            fontSize: 'min(1.95rem, 6.9vmin)',
+            fontSize: 'min(1.75rem, 5.6vmin)',
+            lineHeight: 0.95,
             borderWidth: 'min(12px, 2vmin)',
             borderStyle: 'solid',
             borderColor: '#1e293b',

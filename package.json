@@ -8,6 +8,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
+    "test:i18n": "node scripts/audit-locales.mjs",
     "preview": "vite preview",
     "test:e2e": "npm run build && sh -c 'vite preview --host 127.0.0.1 --port 4173 >/tmp/auratrack-cypress.log 2>&1 & CYPRESS_SERVER_PID=$!; cypress run; CYPRESS_STATUS=$?; kill $CYPRESS_SERVER_PID; wait $CYPRESS_SERVER_PID 2>/dev/null; exit $CYPRESS_STATUS'",
     "test:e2e:headed": "npm run build && sh -c 'vite preview --host 127.0.0.1 --port 4173 >/tmp/auratrack-cypress.log 2>&1 & CYPRESS_SERVER_PID=$!; cypress run --headed; CYPRESS_STATUS=$?; kill $CYPRESS_SERVER_PID; wait $CYPRESS_SERVER_PID 2>/dev/null; exit $CYPRESS_STATUS'",

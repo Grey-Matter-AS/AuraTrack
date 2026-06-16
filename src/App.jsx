@@ -37,12 +37,12 @@ function Header({ onSettings, onHistory, onHelp }) {
       <div className="app-header__top">
         <div className="app-header__top-spacer" aria-hidden="true" />
         <div className="app-header__brand text-center">
-          <h1 className="text-[10px] font-black tracking-[0.4em] text-[var(--text-faint)] uppercase opacity-50">AURATRACK</h1>
+          <h1 className="app-header__brand-title text-[10px] font-black tracking-[0.4em] uppercase">AURATRACK</h1>
           <div className="h-1 w-4 bg-[var(--accent)] mx-auto mt-1 rounded-full opacity-60" />
         </div>
         <button
           onClick={onHelp}
-          className="app-toolbar-btn app-header__help aspect-square px-0 text-[12px] font-black active:scale-95 transition-all"
+          className="app-toolbar-btn app-header__help text-[12px] font-black active:scale-95 transition-all"
           style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
           aria-label={t('nav.help_label')}
         >
@@ -72,6 +72,7 @@ function Header({ onSettings, onHistory, onHelp }) {
 }
 
 function App() {
+  const { t } = useTranslation();
   const [status, setStatus] = useState('IDLE');
   const [previousStatus, setPreviousStatus] = useState('IDLE');
   const [itemToDelete, setItemToDelete] = useState(null);
@@ -158,14 +159,14 @@ function App() {
     if (status === 'IDLE') {
       loadHistory().catch((err) => console.error('Failed to refresh history:', err));
       loadAll().then(setFullHistory).catch((err) => console.error('Failed to refresh full history:', err));
-      meds.load().catch(() => showToast('Failed to load medications.'));
-      meds.markMissedDoses().catch(() => showToast('Failed to record missed doses. Please review medication history.'));
-      meds.getLogsForDay(Date.now()).then(setTodayLogs).catch(() => showToast('Failed to load today\'s medication logs.'));
-      db.medicationLogs.toArray().then(setAllMedLogs).catch(() => showToast('Failed to load medication history.'));
-      wellbeing.load().catch(() => showToast('Failed to load wellbeing history.'));
+      meds.load().catch(() => showToast(t('toast.load_medications_failed')));
+      meds.markMissedDoses().catch(() => showToast(t('toast.record_missed_doses_failed')));
+      meds.getLogsForDay(Date.now()).then(setTodayLogs).catch(() => showToast(t('toast.load_today_doses_failed')));
+      db.medicationLogs.toArray().then(setAllMedLogs).catch(() => showToast(t('toast.load_medication_history_failed')));
+      wellbeing.load().catch(() => showToast(t('toast.load_wellbeing_failed')));
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, loadHistory, loadAll]);
+  }, [status, loadHistory, loadAll, t]);
 
   useEffect(() => {
     if (!settingsError) return;
@@ -194,8 +195,8 @@ function App() {
   const handleBackupSuccess = useCallback(async () => {
     await updateSettings('lastSuccessfulBackupAt', Date.now());
     await updateSettings('lastBackupReminderDismissedAt', 0);
-    showToast('Encrypted backup saved to device storage.');
-  }, [showToast, updateSettings]);
+    showToast(t('toast.encrypted_backup_saved'));
+  }, [showToast, t, updateSettings]);
 
   useEffect(() => {
     if (settings.backupReminderEnabled === false) return;
@@ -299,7 +300,7 @@ function App() {
       setStatus('TAGGING');
     } catch (err) {
       console.error('Failed to create manual entry:', err);
-      showToast('Failed to create entry. Please try again.');
+      showToast(t('toast.create_entry_failed'));
     }
   };
 
@@ -327,7 +328,7 @@ function App() {
       setStatus('TAGGING');
     } catch (err) {
       console.error('Failed to save event:', err);
-      showToast('Failed to save event. Please try again.');
+      showToast(t('toast.save_event_failed'));
     } finally {
       stoppingRef.current = false;
     }
@@ -347,7 +348,7 @@ function App() {
       setStatus('IDLE');
     } catch (err) {
       console.error('Save failed:', err);
-      showToast('Save failed. Please try again.');
+      showToast(t('toast.save_failed'));
     }
   };
 
@@ -363,7 +364,7 @@ function App() {
       setStatus('IDLE');
     } catch (err) {
       console.error('Deferred save failed:', err);
-      showToast('Save failed. Please try again.');
+      showToast(t('toast.save_failed'));
     }
   };
 
@@ -383,7 +384,7 @@ function App() {
       await refreshEvents();
     } catch (err) {
       console.error('Delete failed:', err);
-      showToast('Delete failed. Please try again.');
+      showToast(t('toast.delete_failed'));
     } finally {
       setItemToDelete(null);
     }
@@ -416,7 +417,7 @@ function App() {
       setStatus('IDLE');
     } catch (err) {
       console.error('Emergency stop save failed:', err);
-      showToast('⚠ Failed to save event. Please check History and re-enter if missing.');
+      showToast(t('toast.emergency_save_failed'));
       setStatus('IDLE');
     } finally {
       stoppingRef.current = false;
@@ -449,10 +450,10 @@ function App() {
         const med = meds.medications.find(m => m.id === d.medicationId);
         return med ? med.name : '';
       }).filter(Boolean);
-      showToast(`Logged: ${names.join(', ')}`);
+      showToast(t('toast.doses_logged', { names: names.join(', ') }));
     } catch (err) {
       console.error('Failed to save dose logs:', err);
-      showToast('Failed to save dose logs. Please try again.');
+      showToast(t('toast.save_dose_logs_failed'));
     }
   };
 
@@ -469,7 +470,7 @@ function App() {
       {status === 'RECORDING' && wakeLockUnsupported && (
         <div className="shrink-0 text-xs text-center px-4 py-2"
           style={{ background: 'var(--bg-raised)', color: 'var(--text-on-raised-muted)', borderBottom: '1px solid var(--border)' }}>
-          Screen may sleep — increase screen timeout in device settings
+          {t('toast.screen_may_sleep')}
         </div>
       )}
 
@@ -478,7 +479,7 @@ function App() {
         className={`flex-1 flex flex-col items-center px-3 pb-8 ${status === 'RECORDING' ? 'overflow-y-auto' : 'overflow-hidden'}`}
       >
         {status === 'IDLE'         && <IdleView history={recentHistory} fullHistory={fullHistory} onStart={handleStart} onManualEntry={() => setShowManualEntry(true)} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail} medicationGroups={medicationGroups} allActiveMedications={allActiveMedications} onSaveDoses={handleSaveDoses} durationFormat={settings.durationFormat} dateFormat={settings.dateFormat} timeFormat={settings.timeFormat} eegSession={eeg.activeSession} eegCurrentActivity={eeg.currentActivity} onStartEegSession={eeg.startSession} onEndEegSession={eeg.endSession} onStartEegActivity={eeg.startActivity} onStopEegActivity={eeg.stopActivity} onOpenEegDiary={() => { setHistoryInitialTab('eeg'); setStatus('HISTORY'); }} eegDiaryEnabled={settings.eegDiaryEnabled} wellbeing={wellbeing} wellbeingEnabled={settings.wellbeingEnabled} />}
-        {status === 'RECORDING'    && <RecordingView elapsed={timer.elapsed} startTime={timer.startTime} laps={timer.laps} onLap={timer.recordLap} onStop={handleStop} onEmergencyStop={handleEmergencyStop} onQuickNote={l => wizard.addQuickNote(l, timer.elapsed)} userMode={settings.userMode} quickNoteLabels={activeQuickNoteLabels} emergencyMedications={emergencyMedications} neurologistName={settings.neurologistName} neurologistContact={settings.neurologistContact} emergencyContact={settings.emergencyContact} durationFormat={settings.durationFormat} onStartVideo={async () => { const result = await video.start({ seizureStartTime: timer.startTime, seizureStartLabel: timer.startTime ? new Date(timer.startTime).toLocaleString() : new Date().toLocaleString(), preferredFacingMode: settings.userMode === 'CARETAKER' ? 'environment' : 'user' }); if (!result?.ok) showToast(video.error || 'Unable to start video recording.'); }} onStopVideo={async () => { await video.stop(); }} onSwitchCamera={async () => { const result = await video.switchCamera(); if (!result?.ok && result?.reason !== 'single_camera') showToast(video.error || 'Unable to switch camera.'); }} videoRecording={video.isRecording} videoSupported={video.isSupported} videoError={video.error} previewStream={video.previewStream} canSwitchCamera={video.canSwitchCamera} />}
+        {status === 'RECORDING'    && <RecordingView elapsed={timer.elapsed} startTime={timer.startTime} laps={timer.laps} onLap={timer.recordLap} onStop={handleStop} onEmergencyStop={handleEmergencyStop} onQuickNote={l => wizard.addQuickNote(l, timer.elapsed)} userMode={settings.userMode} quickNoteLabels={activeQuickNoteLabels} emergencyMedications={emergencyMedications} neurologistName={settings.neurologistName} neurologistContact={settings.neurologistContact} emergencyContact={settings.emergencyContact} durationFormat={settings.durationFormat} onStartVideo={async () => { const result = await video.start({ seizureStartTime: timer.startTime, seizureStartLabel: timer.startTime ? new Date(timer.startTime).toLocaleString() : new Date().toLocaleString(), preferredFacingMode: settings.userMode === 'CARETAKER' ? 'environment' : 'user' }); if (!result?.ok) showToast(video.error || t('toast.video_start_failed')); }} onStopVideo={async () => { await video.stop(); }} onSwitchCamera={async () => { const result = await video.switchCamera(); if (!result?.ok && result?.reason !== 'single_camera') showToast(video.error || t('toast.video_switch_failed')); }} videoRecording={video.isRecording} videoSupported={video.isSupported} videoError={video.error} previewStream={video.previewStream} canSwitchCamera={video.canSwitchCamera} />}
         {status === 'TAGGING'      && <TaggingView {...wizard} elapsed={timer.elapsed} laps={timer.laps} startTime={timer.startTime} onSave={handleSave} onSkip={handleSkipTagging} onCancel={handleCancel} durationFormat={settings.durationFormat} />}
         {status === 'HISTORY'      && <HistoryView onBack={() => setStatus('IDLE')} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail} historyPageSize={settings.historyPageSize} settings={settings} initialTab={historyInitialTab} eeg={eeg} wellbeing={wellbeing} events={fullHistory} onBackupSuccess={handleBackupSuccess} />}
         {status === 'SETTINGS'     && <SettingsView key={settingsInitialTab} settings={settings} onUpdate={updateSettings} onReset={resetSettings} onBack={() => setStatus('IDLE')} pwa={pwa} notificationPermission={notifications.permission} onRequestNotificationPermission={async () => { const p = await notifications.requestPermission(); if (p === 'granted') notifications.scheduleForToday(meds.medications, { enabled: settings.wellbeingDailyReminderEnabled, time: settings.wellbeingReminderTime, hasTodayEntry: wellbeing.todayEntries.length > 0 }); return p; }} onSync={() => setSyncModal({ open: true, connectToken: null, offerSDP: null })} initialTab={settingsInitialTab} storagePersistence={storagePersistence} onBackupSuccess={handleBackupSuccess} />}
