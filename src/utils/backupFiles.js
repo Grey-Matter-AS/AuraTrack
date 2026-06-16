@@ -72,12 +72,13 @@ async function deriveEncryptionKey(passphrase, salt, iterations) {
 
 export async function collectCanonicalBackupPayload(settingsSource = null) {
   const events = await db.events.toArray();
-  const [settingsRows, medications, medicationLogs, eegSessions, eegActivities] = await Promise.all([
+  const [settingsRows, medications, medicationLogs, eegSessions, eegActivities, wellbeingEntries] = await Promise.all([
     db.settings.toArray().catch(() => []),
     db.medications.toArray().catch(() => []),
     db.medicationLogs.toArray().catch(() => []),
     db.eegSessions?.toArray?.().catch(() => []) ?? [],
     db.eegActivities?.toArray?.().catch(() => []) ?? [],
+    db.wellbeingEntries?.toArray?.().catch(() => []) ?? [],
   ]);
 
   return buildCanonicalBackupPayload({
@@ -87,6 +88,7 @@ export async function collectCanonicalBackupPayload(settingsSource = null) {
     medicationLogs,
     eegSessions,
     eegActivities,
+    wellbeingEntries,
   });
 }
 
@@ -98,6 +100,7 @@ export function summarizeBackupPayload(payload) {
     medicationLogs: data.medicationLogs.length,
     eegSessions: data.eegSessions.length,
     eegActivities: data.eegActivities.length,
+    wellbeingEntries: data.wellbeingEntries.length,
   };
 }
 

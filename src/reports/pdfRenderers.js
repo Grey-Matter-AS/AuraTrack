@@ -1,7 +1,7 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import i18n from '../i18n';
-import { durationLineSVG, freqBarChartSVG, phaseStackSVG, typeBarSVG } from '../utils/pdfCharts';
+import { durationLineSVG, freqBarChartSVG, phaseStackSVG, typeBarSVG, wellbeingCorrelationSVG } from '../utils/pdfCharts';
 
 const COLORS = {
   ink: [17, 24, 39],
@@ -68,11 +68,12 @@ export async function downloadNeurologistReportPdf(data) {
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 40;
   let cursorY = 42;
-  const [freqChart, durationChart, typeChart, phaseChart] = await Promise.all([
+  const [freqChart, durationChart, typeChart, phaseChart, wellbeingChart] = await Promise.all([
     renderSvgChart(freqBarChartSVG(data.charts.periodEvents, data.periodDays, data.charts.periodEndMs)),
     renderSvgChart(durationLineSVG(data.charts.periodEvents, data.periodDays)),
     renderSvgChart(typeBarSVG(data.charts.byType, data.charts.totalEvents)),
     renderSvgChart(phaseStackSVG(data.charts.periodEvents, 10)),
+    renderSvgChart(wellbeingCorrelationSVG(data.charts.periodEvents, data.charts.wellbeingEntries, data.periodDays, data.charts.periodEndMs)),
   ]);
 
   cursorY = drawBrandHeader(doc, {
@@ -224,6 +225,8 @@ export async function downloadNeurologistReportPdf(data) {
   });
   cursorY += contextHeight * 2 + contextGap + 16;
 
+  cursorY = drawWellbeingContext(doc, data, t, margin, cursorY, pageWidth);
+
   if (data.flags.length) {
     cursorY = ensurePageRoom(doc, cursorY, 90 + data.flags.length * 44);
     drawSectionTitle(doc, t('export.docs.clinical_flags'), margin, cursorY, pageWidth - margin);
@@ -242,6 +245,9 @@ export async function downloadNeurologistReportPdf(data) {
   cursorY += 10;
   cursorY = ensurePageRoom(doc, cursorY, 160);
   cursorY = await drawChartBlock(doc, margin, cursorY, pageWidth - margin * 2, durationChart, 150);
+  cursorY += 10;
+  cursorY = ensurePageRoom(doc, cursorY, 196);
+  cursorY = await drawChartBlock(doc, margin, cursorY, pageWidth - margin * 2, wellbeingChart, 185);
   cursorY += 10;
   cursorY = ensurePageRoom(doc, cursorY, 170);
   const halfWidth = (pageWidth - margin * 2 - 10) / 2;
@@ -611,6 +617,64 @@ function drawContextCard(doc, x, y, width, height, label, value) {
   doc.setFontSize(9);
   doc.setTextColor(...COLORS.ink);
   doc.text(doc.splitTextToSize(value || '-', width - 20), x + 10, y + 30);
+}
+
+function drawWellbeingContext(doc, data, t, margin, cursorY, pageWidth) {
+  const wellbeing = data.wellbeing || {};
+  cursorY = ensurePageRoom(doc, cursorY, wellbeing.recentEntries?.length ? 180 : 92);
+  drawSectionTitle(doc, t('export.docs.wellbeing_context', 'Wellbeing Context'), margin, cursorY, pageWidth - margin);
+  cursorY += 10;
+
+  const gap = 8;
+  const cardWidth = (pageWidth - margin * 2 - gap * 3) / 4;
+  const cards = [
+    [String(wellbeing.entriesCount || 0), t('export.docs.wellbeing_entries', 'Wellbeing entries')],
+    [String(wellbeing.daysCovered || 0), t('export.docs.wellbeing_days', 'Days covered')],
+    [wellbeing.avgIntensityLabel || '-', t('export.docs.wellbeing_avg_intensity', 'Average mood intensity')],
+    [
+      wellbeing.topFactors?.length ? wellbeing.topFactors.map(item => `${item.label} (${item.count}x)`).join(', ') : t('export.docs.not_recorded'),
+      t('export.docs.wellbeing_top_factors', 'Top context factors'),
+    ],
+  ];
+
+  cards.forEach(([value, label], index) => {
+    drawContextCard(doc, margin + index * (cardWidth + gap), cursorY, cardWidth, 56, label, value);
+  });
+  cursorY += 70;
+
+  if (wellbeing.recentEntries?.length) {
+    autoTable(doc, {
+      startY: cursorY,
+      margin: { left: margin, right: margin },
+      theme: 'grid',
+      styles: { fontSize: 7, cellPadding: 5, overflow: 'linebreak', valign: 'top', textColor: COLORS.ink },
+      alternateRowStyles: { fillColor: [252, 252, 253] },
+      headStyles: { fillColor: COLORS.slate, textColor: 255, fontStyle: 'bold' },
+      head: [[
+        t('export.docs.date'),
+        t('export.docs.time'),
+        t('wellbeing.mood', 'Mood'),
+        t('wellbeing.intensity', 'Intensity'),
+        t('wellbeing.context', 'Context'),
+      ]],
+      body: wellbeing.recentEntries.map(entry => [
+        entry.date,
+        entry.time,
+        entry.primaryMood,
+        entry.intensityLabel,
+        entry.factors?.length ? entry.factors.join('; ') : '-',
+      ]),
+    });
+    cursorY = doc.lastAutoTable.finalY + 16;
+  } else {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(...COLORS.muted);
+    doc.text(t('export.docs.no_wellbeing_entries', 'No wellbeing entries recorded in this period.'), margin, cursorY);
+    cursorY += 16;
+  }
+
+  return cursorY;
 }
 
 function drawFlagCard(doc, x, y, width, flag) {

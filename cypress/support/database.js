@@ -1,7 +1,7 @@
 /* global Cypress, cy */
 
 const DB_NAME = 'AuraTrackDB';
-const DB_VERSION = 90;
+const DB_VERSION = 100;
 
 const STORE_DEFINITIONS = {
   events: {
@@ -27,6 +27,10 @@ const STORE_DEFINITIONS = {
   eegActivities: {
     options: { keyPath: 'id', autoIncrement: true },
     indexes: ['uuid', 'sessionId', 'kind', 'startTime', 'endTime', 'linkedEventId', 'isEdited'],
+  },
+  wellbeingEntries: {
+    options: { keyPath: 'id', autoIncrement: true },
+    indexes: ['uuid', 'recordedAt', 'dayKey', 'primaryMood', 'intensity', 'isEdited'],
   },
 };
 
@@ -60,6 +64,7 @@ export function clearAndSeedDatabase(win, seed) {
       medicationLogs: seed.medicationLogs ?? [],
       eegSessions: seed.eegSessions ?? [],
       eegActivities: seed.eegActivities ?? [],
+      wellbeingEntries: seed.wellbeingEntries ?? [],
     };
 
     return new Cypress.Promise((resolve, reject) => {

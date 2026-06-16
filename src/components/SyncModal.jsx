@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import QRCode from 'qrcode';
 import jsQR from 'jsqr';
+import i18n from '../i18n';
 import { useP2PSync } from '../hooks/useP2PSync';
 import { useLANSync } from '../hooks/useLANSync';
 import { BackupTransferModal } from './BackupTransferModal';
 import {
+  ActivityIcon,
   CalendarIcon,
   CheckIcon,
   ClipboardListIcon,
@@ -20,6 +22,23 @@ import {
 } from './AppIcons';
 import { assertImportFileSafe } from '../utils/importSanitizer';
 import { parseBackupFileText } from '../utils/backupFiles';
+
+function wellbeingEntriesAdded(count) {
+  return i18n.t('sync.wellbeing_entries_added', { count, defaultValue: '{{count}} new wellbeing entries added' });
+}
+
+function syncImportSummary(r) {
+  return i18n.t('sync.import_summary_with_wellbeing', {
+    events: r.events,
+    medications: r.medications,
+    logs: r.logs,
+    eegSessions: r.eegSessions,
+    eegActivities: r.eegActivities,
+    wellbeingEntries: r.wellbeingEntries || 0,
+    conflicts: r.conflicts?.length || 0,
+    defaultValue: 'Added {{events}} event(s), {{medications}} medication(s), {{logs}} dose log(s), {{eegSessions}} EEG session(s), {{eegActivities}} EEG activity record(s), and {{wellbeingEntries}} wellbeing entries.',
+  });
+}
 
 // ─── Shared sub-components ───────────────────────────────────
 
@@ -119,7 +138,7 @@ function RoleSelector({ role, onChange, locked = false }) {
 }
 
 function DonePanel({ result, onClose }) {
-  const total = (result?.events || 0) + (result?.medications || 0) + (result?.logs || 0);
+  const total = (result?.events || 0) + (result?.medications || 0) + (result?.logs || 0) + (result?.eegSessions || 0) + (result?.eegActivities || 0) + (result?.wellbeingEntries || 0);
   return (
     <div className="space-y-4 text-center">
       <CheckIcon className="w-12 h-12 mx-auto mb-2 text-green-400" />
@@ -130,6 +149,9 @@ function DonePanel({ result, onClose }) {
             {result.events > 0 && <StatusRow icon={<ClipboardListIcon className="w-5 h-5" />} text={`${result.events} new event(s) added`} />}
             {result.medications > 0 && <StatusRow icon={<PillIcon className="w-5 h-5" />} text={`${result.medications} new medication(s) added`} />}
             {result.logs > 0 && <StatusRow icon={<CalendarIcon className="w-5 h-5" />} text={`${result.logs} new dose log(s) added`} />}
+            {result.eegSessions > 0 && <StatusRow icon={<ActivityIcon className="w-5 h-5" />} text={`${result.eegSessions} new EEG session(s) added`} />}
+            {result.eegActivities > 0 && <StatusRow icon={<ActivityIcon className="w-5 h-5" />} text={`${result.eegActivities} new EEG activity record(s) added`} />}
+            {result.wellbeingEntries > 0 && <StatusRow icon={<ActivityIcon className="w-5 h-5" />} text={wellbeingEntriesAdded(result.wellbeingEntries)} />}
           </div>
       }
       <button onClick={onClose}
@@ -548,9 +570,9 @@ function ManualFilePanel({ role, onDone, onBackupSuccess }) {
         return;
       }
       const r = await mergeRemoteData(parsed.parsed);
-      const total = r.settings + r.events + r.medications + r.logs + r.eegSessions + r.eegActivities;
+      const total = r.settings + r.events + r.medications + r.logs + r.eegSessions + r.eegActivities + (r.wellbeingEntries || 0);
       setStatus(total
-        ? `Added ${r.events} event(s), ${r.medications} medication(s), ${r.logs} dose log(s), ${r.eegSessions} EEG session(s), and ${r.eegActivities} EEG activity record(s).${r.conflicts?.length ? ` ${r.conflicts.length} conflict(s) kept local records.` : ''}`
+        ? `${syncImportSummary(r)}${r.conflicts?.length ? ` ${i18n.t('sync.conflicts_kept_local', { count: r.conflicts.length, defaultValue: '{{count}} conflict(s) kept local records.' })}` : ''}`
         : 'Already up to date — no new records.');
     } catch { setStatus('Import failed — invalid or corrupted file.'); }
     e.target.value = '';
@@ -595,9 +617,9 @@ function ManualFilePanel({ role, onDone, onBackupSuccess }) {
           fileText={backupModal.fileText}
           onClose={() => setBackupModal({ mode: null, fileName: '', fileText: '' })}
           onImportSuccess={(r) => {
-            const total = r.settings + r.events + r.medications + r.logs + r.eegSessions + r.eegActivities;
+            const total = r.settings + r.events + r.medications + r.logs + r.eegSessions + r.eegActivities + (r.wellbeingEntries || 0);
             setStatus(total
-              ? `Added ${r.events} event(s), ${r.medications} medication(s), ${r.logs} dose log(s), ${r.eegSessions} EEG session(s), and ${r.eegActivities} EEG activity record(s).${r.conflicts?.length ? ` ${r.conflicts.length} conflict(s) kept local records.` : ''}`
+              ? `${syncImportSummary(r)}${r.conflicts?.length ? ` ${i18n.t('sync.conflicts_kept_local', { count: r.conflicts.length, defaultValue: '{{count}} conflict(s) kept local records.' })}` : ''}`
               : 'Already up to date — no new records.');
           }}
         />

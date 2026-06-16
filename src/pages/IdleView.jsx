@@ -6,6 +6,8 @@ import { buildDangerMap } from '../utils/dangerFlags';
 import { ScrollFade } from '../components/ScrollFade';
 import { EEG_ACTIVITY_OPTIONS, EEG_MOOD_OPTIONS } from '../data/constants';
 import { formatDuration } from '../utils/formatters';
+import { WellbeingEntrySheet } from '../components/WellbeingEntrySheet';
+import { ActivityIcon } from '../components/AppIcons';
 
 function EegSessionSheet({ onClose, onStart }) {
   const { t } = useTranslation();
@@ -195,12 +197,15 @@ export default function IdleView({
   onStopEegActivity,
   onOpenEegDiary,
   eegDiaryEnabled = false,
+  wellbeing = null,
+  wellbeingEnabled = true,
 }) {
   const { t } = useTranslation();
   const dangerMap = useMemo(() => buildDangerMap(fullHistory?.length ? fullHistory : history), [fullHistory, history]);
   const hasMedications = Object.keys(medicationGroups ?? {}).length > 0 || (allActiveMedications?.length ?? 0) > 0;
   const [showSessionSheet, setShowSessionSheet] = useState(false);
   const [showActivitySheet, setShowActivitySheet] = useState(false);
+  const [showWellbeingSheet, setShowWellbeingSheet] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   const eegElapsed = eegSession ? Math.floor((now - eegSession.startTime) / 1000) : 0;
   const currentActivityElapsed = eegCurrentActivity ? Math.floor((now - eegCurrentActivity.startTime) / 1000) : 0;
@@ -231,9 +236,16 @@ export default function IdleView({
           }}
         />
       )}
+      {showWellbeingSheet && wellbeing && (
+        <WellbeingEntrySheet
+          factorDefinitions={wellbeing.factorDefinitions}
+          onSave={wellbeing.saveEntry}
+          onClose={() => setShowWellbeingSheet(false)}
+        />
+      )}
 
       {/* Zone 1: START button — viewport-relative size, decoupled from font-size scaling */}
-      <div className="py-3 sm:py-6 shrink-0 flex flex-col items-center gap-4">
+      <div className="w-full py-3 sm:py-6 shrink-0 flex flex-col items-center gap-4">
         <button
           onClick={onStart}
           className="bg-red-600 active:scale-95 active:bg-red-500 transition-all rounded-full shadow-[0_0_60px_rgba(225,29,72,0.4)] flex items-center justify-center text-white font-black ring-4 ring-red-900/20 text-center px-3"
@@ -251,11 +263,43 @@ export default function IdleView({
         {onManualEntry && (
           <button
             onClick={onManualEntry}
-            className="text-[10px] font-black uppercase tracking-widest active:opacity-50 transition-opacity"
-            style={{ color: 'var(--text-faint)' }}
+            className="rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
+            style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
           >
             {t('idle.log_past')}
           </button>
+        )}
+        {wellbeingEnabled && wellbeing && (
+          <div
+            className="w-full rounded-2xl p-3 flex items-center justify-between gap-3"
+            style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
+          >
+            <div className="min-w-0 flex items-center gap-3">
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--accent)' }}
+              >
+                <ActivityIcon className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-black" style={{ color: 'var(--text-primary)' }}>
+                  {wellbeing.todayEntries.length ? t('wellbeing.logged_today', 'Wellbeing logged today') : t('wellbeing.daily_checkin', 'Daily wellbeing check-in')}
+                </p>
+                <p className="text-[11px] leading-snug" style={{ color: 'var(--text-dim)' }}>
+                  {wellbeing.todayEntries.length
+                    ? t('wellbeing.entries_today', { count: wellbeing.todayEntries.length, defaultValue: '{{count}} entries today' })
+                    : t('wellbeing.idle_hint', 'Mood and context are optional, but help with pattern spotting.')}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowWellbeingSheet(true)}
+              className="rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all shrink-0"
+              style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
+            >
+              {t('wellbeing.log_action', 'Log')}
+            </button>
+          </div>
         )}
         {!eegSession && eegDiaryEnabled && (
           <button
@@ -301,7 +345,7 @@ export default function IdleView({
                           <p className="text-[11px]" style={{ color: 'var(--text-secondary)' }}>{eegCurrentActivity.customActivityText}</p>
                         )}
                         {eegCurrentActivity.moodLabel && (
-                          <p className="text-[11px] mt-1" style={{ color: 'var(--text-dim)' }}>Mood: {eegCurrentActivity.moodLabel}</p>
+                          <p className="text-[11px] mt-1" style={{ color: 'var(--text-dim)' }}>{t('eeg.mood_label', 'Mood')}: {eegCurrentActivity.moodLabel}</p>
                         )}
                       </div>
                       <div className="text-right">

@@ -79,6 +79,36 @@ export function describePostIctal(postIctal = {}, t = getTranslator()) {
   };
 }
 
+function wellbeingIntensityLabel(value, t) {
+  return ['', t('wellbeing.mild', 'Mild'), t('wellbeing.moderate', 'Moderate'), t('wellbeing.strong', 'Strong')][value] || String(value || '-');
+}
+
+function wellbeingFactorLabel(factor, fallback, t) {
+  return factor?.labelKey ? t(factor.labelKey, factor.label || fallback) : (factor?.label || fallback);
+}
+
+function wellbeingFactorValue(factor, t) {
+  const value = factor?.value;
+  if (factor?.type === 'boolean') return value ? t('wellbeing.yes', 'Yes') : t('wellbeing.no', 'No');
+  if (factor?.type === 'scale') {
+    const labels = Array.isArray(factor.scaleLabelKeys) && factor.scaleLabelKeys.length === 4
+      ? factor.scaleLabelKeys.map((key, index) => t(key, factor.scaleLabels?.[index] || ''))
+      : Array.isArray(factor.scaleLabels) && factor.scaleLabels.length === 4
+        ? factor.scaleLabels
+        : [t('wellbeing.none', 'None'), t('wellbeing.mild', 'Mild'), t('wellbeing.moderate', 'Moderate'), t('wellbeing.severe', 'Severe')];
+    return labels[Number(value) || 0] || String(value);
+  }
+  return `${value ?? ''}${factor?.unit ? ` ${factor.unit}` : ''}`.trim();
+}
+
+function factorHasSignal(factor) {
+  const value = factor?.value;
+  if (factor?.type === 'boolean') return value === true;
+  if (factor?.type === 'scale') return Number(value) > 0 || factor.saveZero === true;
+  if (factor?.type === 'number') return Number.isFinite(Number(value)) && Number(value) > 0;
+  return value !== undefined && value !== null && value !== '' && value !== false;
+}
+
 export function buildEventLogData(events) {
   const locale = getCurrentLocale();
   const t = getTranslator();
@@ -108,7 +138,7 @@ export function buildEventLogData(events) {
   };
 }
 
-export function buildNeurologistReportData(events, settings = {}, medications = [], medicationLogs = [], reportRange = {}) {
+export function buildNeurologistReportData(events, settings = {}, medications = [], medicationLogs = [], reportRange = {}, wellbeingEntries = []) {
   const locale = getCurrentLocale();
   const t = getTranslator();
   const now = Date.now();
@@ -137,6 +167,12 @@ export function buildNeurologistReportData(events, settings = {}, medications = 
     const startTime = event.startTime || 0;
     return startTime >= selectedFromMs && startTime <= selectedToMs;
   });
+  const periodWellbeingEntries = [...wellbeingEntries]
+    .filter(entry => {
+      const recordedAt = Number(entry.recordedAt || 0);
+      return recordedAt >= selectedFromMs && recordedAt <= selectedToMs;
+    })
+    .sort((a, b) => (b.recordedAt || 0) - (a.recordedAt || 0));
   const last10Events = allSorted.slice(0, 10);
   const recentWindowDays = Math.min(10, periodDays);
   const recentWindowStart = selectedToMs - (recentWindowDays - 1) * DAY_MS;
@@ -277,6 +313,23 @@ export function buildNeurologistReportData(events, settings = {}, medications = 
 
   const freqPerDay = { OD: 1, BD: 2, TDS: 3, QDS: 4, PRN: 0 };
   const expectedDoses = medications.reduce((sum, medication) => sum + (freqPerDay[medication.frequency] || 0) * periodDays, 0);
+  const wellbeingIntensityValues = periodWellbeingEntries.map(entry => Number(entry.intensity)).filter(Number.isFinite);
+  const wellbeingAvgIntensity = wellbeingIntensityValues.length
+    ? wellbeingIntensityValues.reduce((sum, value) => sum + value, 0) / wellbeingIntensityValues.length
+    : 0;
+  const wellbeingMoodCounts = {};
+  const wellbeingFactorCounts = {};
+  periodWellbeingEntries.forEach(entry => {
+    if (entry.primaryMood) wellbeingMoodCounts[entry.primaryMood] = (wellbeingMoodCounts[entry.primaryMood] || 0) + 1;
+    Object.entries(entry.factors || {}).forEach(([id, factor]) => {
+      if (!factorHasSignal(factor)) return;
+      const label = wellbeingFactorLabel(factor, id, t);
+      wellbeingFactorCounts[label] = (wellbeingFactorCounts[label] || 0) + 1;
+    });
+  });
+  const wellbeingTopMoods = Object.entries(wellbeingMoodCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const wellbeingTopFactors = Object.entries(wellbeingFactorCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const wellbeingDaysCovered = new Set(periodWellbeingEntries.map(entry => entry.dayKey || new Date(entry.recordedAt || 0).toISOString().slice(0, 10))).size;
 
   return {
     locale,
@@ -326,6 +379,27 @@ export function buildNeurologistReportData(events, settings = {}, medications = 
       frequencyLabel: FREQ_SHORT[medication.frequency] || medication.frequency,
     })),
     flags,
+    wellbeing: {
+      entriesCount: periodWellbeingEntries.length,
+      daysCovered: wellbeingDaysCovered,
+      avgIntensity: wellbeingAvgIntensity,
+      avgIntensityLabel: wellbeingIntensityValues.length ? wellbeingAvgIntensity.toFixed(1) : '-',
+      topMoods: wellbeingTopMoods.map(([label, count]) => ({ label, count })),
+      topFactors: wellbeingTopFactors.map(([label, count]) => ({ label, count })),
+      recentEntries: periodWellbeingEntries.slice(0, 6).map(entry => ({
+        recordedAt: entry.recordedAt || 0,
+        date: entry.recordedAt ? new Date(entry.recordedAt).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' }) : '-',
+        time: entry.recordedAt ? new Date(entry.recordedAt).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }) : '-',
+        primaryMood: entry.primaryMood || '-',
+        intensity: entry.intensity || '',
+        intensityLabel: wellbeingIntensityLabel(entry.intensity, t),
+        factors: Object.entries(entry.factors || {})
+          .filter(([, factor]) => factorHasSignal(factor))
+          .slice(0, 4)
+          .map(([id, factor]) => `${wellbeingFactorLabel(factor, id, t)}: ${wellbeingFactorValue(factor, t)}`),
+        notes: entry.notes || '',
+      })),
+    },
     reportNotes,
     recentEvents: recentEvents.map((event, index) => {
       const phase = phaseDurs(event);
@@ -398,6 +472,7 @@ export function buildNeurologistReportData(events, settings = {}, medications = 
       periodDays,
       periodStartMs: selectedFromMs,
       periodEndMs: selectedToMs,
+      wellbeingEntries: periodWellbeingEntries,
       byType,
       totalEvents,
     },

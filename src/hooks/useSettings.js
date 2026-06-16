@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { db } from '../data/db';
 import i18n from '../i18n';
+import { DEFAULT_WELLBEING_FACTORS } from '../data/constants';
 
 const DEFAULTS = {
   // Identity & Mode
@@ -31,6 +32,10 @@ const DEFAULTS = {
   // Recording
   hapticFeedback: true,
   eegDiaryEnabled: false,
+  wellbeingEnabled: true,
+  wellbeingDailyReminderEnabled: false,
+  wellbeingReminderTime: '20:00',
+  wellbeingFactorDefinitions: DEFAULT_WELLBEING_FACTORS,
   quickNoteLabels: ['FELL', 'RESCUE MED', 'NOT RESPONDING', 'FULL BODY', 'LEFT SIDE', 'RIGHT SIDE'],
 
   // Data & Backup

@@ -1,5 +1,7 @@
 import { useState, useCallback } from 'react';
+import i18n from '../i18n';
 import { defaultScheduledTimes, scheduledTimestampForToday } from '../utils/medicationSchedule';
+import { localDayKey } from './useWellbeing';
 
 // Module-level timer store so timers survive component re-renders
 const pendingTimers = new Map();
@@ -26,6 +28,23 @@ async function fireNotification(med, hhMM) {
   }
 }
 
+async function fireWellbeingNotification() {
+  if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+  const title = i18n.t('wellbeing.notification_title', "Log today's wellbeing");
+  const body = i18n.t('wellbeing.notification_body', 'Add mood and context while it is still fresh.');
+  const tag = `wellbeing-${localDayKey()}`;
+  try {
+    const sw = await navigator.serviceWorker?.ready;
+    if (sw?.showNotification) {
+      await sw.showNotification(title, { body, tag, icon: '/favicon.svg', badge: '/favicon.svg' });
+    } else {
+      new Notification(title, { body, tag });
+    }
+  } catch {
+    try { new Notification(title, { body, tag }); } catch { /* not supported */ }
+  }
+}
+
 export function useNotifications() {
   const [permission, setPermission] = useState(
     typeof Notification !== 'undefined' ? Notification.permission : 'denied'
@@ -38,7 +57,7 @@ export function useNotifications() {
     return result;
   }, []);
 
-  const scheduleForToday = useCallback((medications) => {
+  const scheduleForToday = useCallback((medications, wellbeingReminder = null) => {
     clearAllTimers();
     if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
 
@@ -53,6 +72,15 @@ export function useNotifications() {
         const key = `${med.id}-${hhMM}`;
         const timerId = setTimeout(() => fireNotification(med, hhMM), delay);
         pendingTimers.set(key, timerId);
+      }
+    }
+
+    if (wellbeingReminder?.enabled && !wellbeingReminder.hasTodayEntry && wellbeingReminder.time) {
+      const targetMs = scheduledTimestampForToday(wellbeingReminder.time);
+      const delay = targetMs - now;
+      if (delay >= 60_000) {
+        const timerId = setTimeout(() => fireWellbeingNotification(), delay);
+        pendingTimers.set(`wellbeing-${wellbeingReminder.time}`, timerId);
       }
     }
   }, []);

@@ -63,6 +63,12 @@ const eegActivityIdentityKey = (activity, sessionUuid = '') => [
   activity.linkedEventUuid || '',
 ].join('|');
 
+const wellbeingIdentityKey = (entry) => [
+  Number(entry.recordedAt || 0),
+  entry.primaryMood || '',
+  Number(entry.intensity || 0),
+].join('|');
+
 function describeConflict(type, message, meta = {}) {
   return { type, message, ...meta };
 }
@@ -94,12 +100,13 @@ function withTimeout(promise, ms, label) {
 
 export async function exportLocalData() {
   const events = await db.events.toArray();
-  const [settingsRows, medications, medicationLogs, eegSessions, eegActivities] = await Promise.all([
+  const [settingsRows, medications, medicationLogs, eegSessions, eegActivities, wellbeingEntries] = await Promise.all([
     db.settings.toArray().catch(() => []),
     db.medications.toArray().catch(() => []),
     db.medicationLogs.toArray().catch(() => []),
     db.eegSessions?.toArray?.().catch(() => []) ?? [],
     db.eegActivities?.toArray?.().catch(() => []) ?? [],
+    db.wellbeingEntries?.toArray?.().catch(() => []) ?? [],
   ]);
 
   return buildCanonicalBackupPayload({
@@ -109,6 +116,7 @@ export async function exportLocalData() {
     medicationLogs,
     eegSessions,
     eegActivities,
+    wellbeingEntries,
   });
 }
 
@@ -121,6 +129,7 @@ export async function mergeRemoteData(parsed) {
     logs: 0,
     eegSessions: 0,
     eegActivities: 0,
+    wellbeingEntries: 0,
     conflicts: [],
     rules: [
       'Settings: incoming values replace local values except local backup reminder timestamps.',
@@ -137,6 +146,7 @@ export async function mergeRemoteData(parsed) {
     db.medicationLogs,
     db.eegSessions,
     db.eegActivities,
+    db.wellbeingEntries,
     async () => {
       const [
         localSettingsRows,
@@ -145,6 +155,7 @@ export async function mergeRemoteData(parsed) {
         localLogs,
         localSessions,
         localActivities,
+        localWellbeingEntries,
       ] = await Promise.all([
         db.settings.toArray().catch(() => []),
         db.events.toArray(),
@@ -152,6 +163,7 @@ export async function mergeRemoteData(parsed) {
         db.medicationLogs.toArray().catch(() => []),
         db.eegSessions?.toArray?.().catch(() => []) ?? [],
         db.eegActivities?.toArray?.().catch(() => []) ?? [],
+        db.wellbeingEntries?.toArray?.().catch(() => []) ?? [],
       ]);
 
       const localSettings = new Map(localSettingsRows.map(row => [row.key, row.value]));
@@ -166,6 +178,8 @@ export async function mergeRemoteData(parsed) {
       const sessionByKey = new Map(localSessions.map(session => [eegSessionIdentityKey(session), session]));
       const activityByUuid = new Map(localActivities.map(activity => [activity.uuid, activity]).filter(([uuid]) => Boolean(uuid)));
       const activityByKey = new Map();
+      const wellbeingByUuid = new Map(localWellbeingEntries.map(entry => [entry.uuid, entry]).filter(([uuid]) => Boolean(uuid)));
+      const wellbeingByKey = new Set(localWellbeingEntries.map(wellbeingIdentityKey));
       const eventIdByUuid = new Map(localEvents.map(event => [event.uuid, event.id]).filter(([uuid]) => Boolean(uuid)));
 
       localLogs.forEach((log) => {
@@ -378,6 +392,16 @@ export async function mergeRemoteData(parsed) {
         };
         await db.eegActivities.add(inserted);
         results.eegActivities += 1;
+      }
+
+      for (const entry of incoming.wellbeingEntries) {
+        const key = wellbeingIdentityKey(entry);
+        if ((entry.uuid && wellbeingByUuid.has(entry.uuid)) || wellbeingByKey.has(key)) continue;
+        const id = await db.wellbeingEntries.add(entry);
+        const inserted = { ...entry, id };
+        if (entry.uuid) wellbeingByUuid.set(entry.uuid, inserted);
+        wellbeingByKey.add(key);
+        results.wellbeingEntries += 1;
       }
     }
   );

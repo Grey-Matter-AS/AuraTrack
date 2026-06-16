@@ -186,5 +186,42 @@ export function richCaretakerScenario() {
         updatedAt: at(7, 43),
       },
     ],
+    wellbeingEntries: [
+      {
+        id: 1,
+        uuid: 'wellbeing-1',
+        recordedAt: at(21, 0),
+        dayKey: '2026-06-07',
+        primaryMood: 'Calm',
+        intensity: 1,
+        factors: {
+          sleepQuality: {
+            id: 'sleepQuality',
+            label: 'Sleep quality',
+            type: 'scale',
+            unit: '',
+            help: 'How restful the sleep seemed.',
+            scaleLabels: ['Poor', 'Fair', 'Good', 'Restful'],
+            saveZero: true,
+            active: true,
+            value: 3,
+          },
+          stress: {
+            id: 'stress',
+            label: 'Stress',
+            type: 'scale',
+            unit: '',
+            help: 'Pressure, overload, conflict, or demanding events.',
+            active: true,
+            value: 1,
+          },
+        },
+        notes: 'Settled evening after normal routine.',
+        isEdited: false,
+        editLog: [],
+        createdAt: at(21, 0),
+        updatedAt: at(21, 0),
+      },
+    ],
   };
 }

@@ -8,6 +8,7 @@ const MAX_MEDICATIONS = 500;
 const MAX_LOGS = 20000;
 const MAX_EEG_SESSIONS = 1000;
 const MAX_EEG_ACTIVITIES = 20000;
+const MAX_WELLBEING_ENTRIES = 20000;
 const MAX_SETTINGS_KEYS = 200;
 const MAX_TEXT = 120;
 const MAX_NOTES = 5000;
@@ -251,6 +252,57 @@ export function sanitizeEegActivity(raw) {
   };
 }
 
+function sanitizeWellbeingFactors(raw) {
+  if (!raw || typeof raw !== 'object') return {};
+  const out = {};
+  Object.entries(raw).slice(0, MAX_JSON_KEYS).forEach(([rawKey, rawFactor]) => {
+    const key = asString(rawKey, 80);
+    if (!key) return;
+    if (rawFactor && typeof rawFactor === 'object' && 'value' in rawFactor) {
+      const type = ['boolean', 'scale', 'number'].includes(rawFactor.type) ? rawFactor.type : 'boolean';
+      let value = rawFactor.value;
+      if (type === 'boolean') value = value === true;
+      if (type === 'scale') value = asNonNegativeInt(value, 0, 3);
+      if (type === 'number') value = Math.max(0, asFiniteNumber(value, 0));
+      out[key] = {
+        label: asString(rawFactor.label, 120) || key,
+        type,
+        unit: asString(rawFactor.unit, 16),
+        help: asString(rawFactor.help, 240),
+        active: asBool(rawFactor.active, true),
+        value,
+      };
+      return;
+    }
+    if (typeof rawFactor === 'boolean') out[key] = { label: key, type: 'boolean', unit: '', help: '', active: true, value: rawFactor };
+    if (typeof rawFactor === 'number' && Number.isFinite(rawFactor)) out[key] = { label: key, type: 'number', unit: '', help: '', active: true, value: Math.max(0, rawFactor) };
+  });
+  return out;
+}
+
+export function sanitizeWellbeingEntry(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const recordedAt = asFiniteNumber(raw.recordedAt);
+  const primaryMood = asString(raw.primaryMood, 120);
+  if (recordedAt == null || !primaryMood) return null;
+  const recordedDate = new Date(recordedAt);
+  if (Number.isNaN(recordedDate.getTime())) return null;
+  const dayKey = asString(raw.dayKey, 20) || recordedDate.toISOString().slice(0, 10);
+  return {
+    ...(asString(raw.uuid, 100) ? { uuid: asString(raw.uuid, 100) } : {}),
+    recordedAt,
+    dayKey,
+    primaryMood,
+    intensity: Math.min(3, Math.max(1, asNonNegativeInt(raw.intensity, 1, 3))),
+    factors: sanitizeWellbeingFactors(raw.factors),
+    notes: asString(raw.notes, MAX_NOTES),
+    isEdited: asBool(raw.isEdited),
+    editLog: sanitizeEditLog(raw.editLog),
+    createdAt: asFiniteNumber(raw.createdAt, recordedAt),
+    updatedAt: asFiniteNumber(raw.updatedAt, recordedAt),
+  };
+}
+
 function coercePayloadData(parsed) {
   if (Array.isArray(parsed)) return { events: parsed };
   if (parsed?.schema === CANONICAL_BACKUP_SCHEMA && parsed?.data && typeof parsed.data === 'object') {
@@ -277,9 +329,12 @@ export function sanitizeImportPayload(parsed) {
   const eegActivities = Array.isArray(data?.eegActivities)
     ? data.eegActivities.map(sanitizeEegActivity).filter(Boolean).slice(0, MAX_EEG_ACTIVITIES)
     : [];
+  const wellbeingEntries = Array.isArray(data?.wellbeingEntries)
+    ? data.wellbeingEntries.map(sanitizeWellbeingEntry).filter(Boolean).slice(0, MAX_WELLBEING_ENTRIES)
+    : [];
   const settings = sanitizeSettingsPayload(data?.settings);
 
-  return { settings, events, medications, medicationLogs, eegSessions, eegActivities };
+  return { settings, events, medications, medicationLogs, eegSessions, eegActivities, wellbeingEntries };
 }
 
 export function buildCanonicalBackupPayload(snapshot = {}) {
@@ -290,6 +345,7 @@ export function buildCanonicalBackupPayload(snapshot = {}) {
     medicationLogs = [],
     eegSessions = [],
     eegActivities = [],
+    wellbeingEntries = [],
   } = sanitizeImportPayload({
     schema: CANONICAL_BACKUP_SCHEMA,
     data: snapshot,
@@ -306,6 +362,7 @@ export function buildCanonicalBackupPayload(snapshot = {}) {
       medicationLogs,
       eegSessions,
       eegActivities,
+      wellbeingEntries,
     },
   };
 }

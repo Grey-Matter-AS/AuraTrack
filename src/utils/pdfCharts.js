@@ -195,3 +195,117 @@ export function phaseStackSVG(events, last = 10) {
   <line x1="${ml}" y1="${mt + ch}" x2="${ml + cw}" y2="${mt + ch}" stroke="#d1d5db" stroke-width="1"/>
 </svg>`;
 }
+
+function chartFactorValue(factor) {
+  if (factor && typeof factor === 'object' && 'value' in factor) return factor.value;
+  return factor;
+}
+
+function chartFactorLabel(factor, fallback) {
+  return factor?.labelKey ? i18n.t(factor.labelKey, factor.label || fallback) : (factor?.label || fallback);
+}
+
+function chartFactorHasSignal(factor) {
+  const value = chartFactorValue(factor);
+  if (factor?.type === 'boolean') return value === true;
+  if (factor?.type === 'scale') return Number(value) > 0 || factor.saveZero === true;
+  if (factor?.type === 'number') return Number.isFinite(Number(value)) && Number(value) > 0;
+  return value !== undefined && value !== null && value !== '' && value !== false;
+}
+
+// ── E. Wellbeing correlation overview ────────────────────────
+export function wellbeingCorrelationSVG(events = [], wellbeingEntries = [], days = 30, endMs = Date.now()) {
+  const locale = i18n.resolvedLanguage || i18n.language || 'en';
+  const title = i18n.t('export.docs.chart_wellbeing_correlation', { count: days });
+  if (!wellbeingEntries.length) return NO_DATA(title);
+
+  const W = 520, H = 185, ml = 36, mr = 18, mt = 20, mb = 46;
+  const cw = W - ml - mr, ch = H - mt - mb;
+  const buckets = Array.from({ length: days }, (_, i) => {
+    const d = new Date(endMs - (days - 1 - i) * 86400000);
+    d.setHours(0, 0, 0, 0);
+    return {
+      label: d.toLocaleDateString(locale, { month: 'short', day: 'numeric' }),
+      start: d.getTime(),
+      end: d.getTime() + 86399999,
+      seizures: 0,
+      moodValues: [],
+      factors: new Set(),
+    };
+  });
+
+  events.forEach(event => {
+    const t = event.startTime || 0;
+    const bucket = buckets.find(day => t >= day.start && t <= day.end);
+    if (bucket) bucket.seizures += 1;
+  });
+
+  const factorCounts = {};
+  wellbeingEntries.forEach(entry => {
+    const t = entry.recordedAt || 0;
+    const bucket = buckets.find(day => t >= day.start && t <= day.end);
+    if (!bucket) return;
+    const intensity = Number(entry.intensity);
+    if (Number.isFinite(intensity)) bucket.moodValues.push(intensity);
+    Object.entries(entry.factors || {}).forEach(([id, factor]) => {
+      if (!chartFactorHasSignal(factor)) return;
+      const label = chartFactorLabel(factor, id);
+      bucket.factors.add(label);
+      factorCounts[label] = (factorCounts[label] || 0) + 1;
+    });
+  });
+
+  const topFactors = Object.entries(factorCounts).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([label]) => label);
+  const maxSeizures = Math.max(1, ...buckets.map(day => day.seizures));
+  const bw = cw / days;
+  const showEvery = Math.ceil(days / 7);
+  const moodY = value => mt + ch - ((Math.max(1, Math.min(3, value)) - 1) / 2) * ch;
+
+  const bars = buckets.map((day, i) => {
+    const bh = (day.seizures / maxSeizures) * (ch * 0.62);
+    const x = (ml + i * bw + 0.8).toFixed(1);
+    const y = (mt + ch - bh).toFixed(1);
+    return `<rect x="${x}" y="${y}" width="${Math.max(bw - 1.6, 1).toFixed(1)}" height="${Math.max(bh, day.seizures ? 1 : 0).toFixed(1)}" fill="${day.seizures ? '#dc2626' : '#eef2f7'}" rx="1"/>`;
+  }).join('');
+
+  const moodPoints = buckets.map((day, i) => {
+    if (!day.moodValues.length) return null;
+    const avg = day.moodValues.reduce((sum, value) => sum + value, 0) / day.moodValues.length;
+    return { x: ml + i * bw + bw / 2, y: moodY(avg), avg };
+  }).filter(Boolean);
+  const moodLine = moodPoints.length > 1
+    ? `<polyline points="${moodPoints.map(point => `${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(' ')}" fill="none" stroke="#0284c7" stroke-width="1.8" stroke-linejoin="round"/>`
+    : '';
+  const moodDots = moodPoints.map(point => `<circle cx="${point.x.toFixed(1)}" cy="${point.y.toFixed(1)}" r="2.6" fill="#0284c7"/>`).join('');
+
+  const factorRows = topFactors.map((factor, rowIndex) => {
+    const y = mt + ch + 13 + rowIndex * 10;
+    const dots = buckets.map((day, i) => day.factors.has(factor)
+      ? `<circle cx="${(ml + i * bw + bw / 2).toFixed(1)}" cy="${y}" r="2.3" fill="${['#f59e0b', '#16a34a', '#7c3aed'][rowIndex]}"/>`
+      : '').join('');
+    return `<text x="${ml}" y="${y + 2.5}" font-size="7" fill="#6b7280">${esc(factor.slice(0, 18))}</text>${dots}`;
+  }).join('');
+
+  const xLbls = buckets.map((day, i) => i % showEvery === 0
+    ? `<text x="${(ml + i * bw + bw / 2).toFixed(1)}" y="${H - 4}" text-anchor="middle" font-size="7" fill="#9ca3af">${esc(day.label)}</text>`
+    : '').join('');
+
+  const yLines = [1, 2, 3].map(value => {
+    const y = moodY(value).toFixed(1);
+    return `<line x1="${ml}" y1="${y}" x2="${ml + cw}" y2="${y}" stroke="#e5e7eb" stroke-width="0.5"/>` +
+      `<text x="${ml - 4}" y="${(+y + 3).toFixed(1)}" text-anchor="end" font-size="7" fill="#9ca3af">${value}</text>`;
+  }).join('');
+
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+  <rect width="${W}" height="${H}" fill="white"/>
+  <text x="${W / 2}" y="12" text-anchor="middle" font-size="9" font-weight="bold" fill="#374151">${esc(title)}</text>
+  ${yLines}${bars}${moodLine}${moodDots}${factorRows}${xLbls}
+  <line x1="${ml}" y1="${mt}" x2="${ml}" y2="${mt + ch}" stroke="#d1d5db" stroke-width="1"/>
+  <line x1="${ml}" y1="${mt + ch}" x2="${ml + cw}" y2="${mt + ch}" stroke="#d1d5db" stroke-width="1"/>
+  <rect x="${W - 185}" y="20" width="8" height="8" fill="#dc2626"/>
+  <text x="${W - 174}" y="27" font-size="7" fill="#6b7280">${esc(i18n.t('export.docs.seizure_count', 'Seizures'))}</text>
+  <line x1="${W - 115}" y1="24" x2="${W - 99}" y2="24" stroke="#0284c7" stroke-width="2"/>
+  <text x="${W - 94}" y="27" font-size="7" fill="#6b7280">${esc(i18n.t('export.docs.mood_intensity', 'Mood intensity'))}</text>
+  <text x="${ml + cw}" y="${mt + ch + 41}" text-anchor="end" font-size="7" fill="#9ca3af">${esc(i18n.t('export.docs.context_factors', 'Context factors'))}</text>
+</svg>`;
+}

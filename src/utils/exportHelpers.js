@@ -9,7 +9,15 @@ export const filterEventsByDateRange = (events, fromDateStr, toDateStr) => {
   return events.filter(event => event.startTime >= from && event.startTime <= to);
 };
 
-export const exportToCSV = async (events, medications = [], medicationLogs = [], eegSessions = [], eegActivities = []) => {
+function formatWellbeingFactors(factors = {}) {
+  return Object.values(factors).map(factor => {
+    const value = factor?.value ?? '';
+    const suffix = factor?.unit ? ` ${factor.unit}` : '';
+    return `${factor?.label || 'Factor'}=${value}${suffix}`;
+  }).join('|');
+}
+
+export const exportToCSV = async (events, medications = [], medicationLogs = [], eegSessions = [], eegActivities = [], wellbeingEntries = []) => {
   const header = 'id,date,time,type,duration,notes,postIctalFindings,postIctalParalysisLocations';
   const rows = events.map(formatCSVRow).join('\n');
 
@@ -83,22 +91,38 @@ export const exportToCSV = async (events, medications = [], medicationLogs = [],
     ).join('\n');
   }
 
+  if (wellbeingEntries.length > 0) {
+    csv += '\n\nWELLBEING_ENTRIES\nid,recordedAt,dayKey,primaryMood,intensity,factors,notes,isEdited\n';
+    csv += wellbeingEntries.map(entry =>
+      [
+        entry.id,
+        entry.recordedAt,
+        entry.dayKey ?? '',
+        entry.primaryMood ?? '',
+        entry.intensity ?? '',
+        formatWellbeingFactors(entry.factors),
+        entry.notes ?? '',
+        entry.isEdited ? 1 : 0,
+      ].map(formatCSVField).join(',')
+    ).join('\n');
+  }
+
   const blob = new Blob([csv], { type: 'text/csv' });
   return saveFileBlob(blob, `auratrack-events-${dateStamp()}.csv`, 'AuraTrack CSV Export', ['.csv']);
 };
 
 export const buildEventTablePreview = (events) => renderEventLogHtml(buildEventLogData(events));
 
-export const buildNeurologistReportPreview = (events, settings = {}, medications = [], medicationLogs = [], reportRange = {}) =>
-  renderNeurologistReportHtml(buildNeurologistReportData(events, settings, medications, medicationLogs, reportRange));
+export const buildNeurologistReportPreview = (events, settings = {}, medications = [], medicationLogs = [], reportRange = {}, wellbeingEntries = []) =>
+  renderNeurologistReportHtml(buildNeurologistReportData(events, settings, medications, medicationLogs, reportRange, wellbeingEntries));
 
 export const buildSeizureDiaryPreview = (allEvents, settings = {}, medications = [], month, year) =>
   renderSeizureDiaryHtml(buildSeizureDiaryData(allEvents, settings, medications, month, year));
 
 export const exportEventLogPDF = async (events) => downloadEventLogPdf(buildEventLogData(events));
 
-export const exportNeurologistReportPDF = async (events, settings = {}, medications = [], medicationLogs = [], reportRange = {}) =>
-  downloadNeurologistReportPdf(buildNeurologistReportData(events, settings, medications, medicationLogs, reportRange));
+export const exportNeurologistReportPDF = async (events, settings = {}, medications = [], medicationLogs = [], reportRange = {}, wellbeingEntries = []) =>
+  downloadNeurologistReportPdf(buildNeurologistReportData(events, settings, medications, medicationLogs, reportRange, wellbeingEntries));
 
 export const exportSeizureDiaryPDF = async (allEvents, settings = {}, medications = [], month, year) =>
   downloadSeizureDiaryPdf(buildSeizureDiaryData(allEvents, settings, medications, month, year));

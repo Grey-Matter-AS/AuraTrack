@@ -51,6 +51,14 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false, 
     return filterEventsByDateRange(all, fromDate, toDate);
   };
 
+  const getWellbeingEntriesForPeriod = async (fromMs, toMs) => (
+    db.wellbeingEntries
+      .where('recordedAt')
+      .between(fromMs, toMs, true, true)
+      .toArray()
+      .catch(() => [])
+  );
+
   const handleSimplePdfReport = async () => {
     const events = await getEvents();
     setPrintPreview(buildEventTablePreview(events));
@@ -78,7 +86,8 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false, 
     const fromMs = new Date(fromDate).setHours(0, 0, 0, 0);
     const toMs   = new Date(toDate).setHours(23, 59, 59, 999);
     const medLogs = await getLogsForPeriod(fromMs, toMs);
-    setPrintPreview(buildNeurologistReportPreview(events, settings, medications, medLogs, { fromDate, toDate, fromMs, toMs }));
+    const wellbeingEntries = await getWellbeingEntriesForPeriod(fromMs, toMs);
+    setPrintPreview(buildNeurologistReportPreview(events, settings, medications, medLogs, { fromDate, toDate, fromMs, toMs }, wellbeingEntries));
   };
 
   const handleNeurologistReportPdf = async () => {
@@ -86,7 +95,8 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false, 
     const fromMs = new Date(fromDate).setHours(0, 0, 0, 0);
     const toMs   = new Date(toDate).setHours(23, 59, 59, 999);
     const medLogs = await getLogsForPeriod(fromMs, toMs);
-    await exportNeurologistReportPDF(events, settings, medications, medLogs, { fromDate, toDate, fromMs, toMs });
+    const wellbeingEntries = await getWellbeingEntriesForPeriod(fromMs, toMs);
+    await exportNeurologistReportPDF(events, settings, medications, medLogs, { fromDate, toDate, fromMs, toMs }, wellbeingEntries);
   };
 
   const ContentWrapper = isEmbedded ? 'div' : ScrollFade;
@@ -193,7 +203,8 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false, 
               const toMs   = new Date(toDate).setHours(23, 59, 59, 999);
               const logs   = await getLogsForPeriod(fromMs, toMs);
               const eegBundle = await getEegBundle();
-              await exportToCSV(events, medications, logs, eegBundle.sessions, eegBundle.allActivities);
+              const wellbeingEntries = await getWellbeingEntriesForPeriod(fromMs, toMs);
+              await exportToCSV(events, medications, logs, eegBundle.sessions, eegBundle.allActivities, wellbeingEntries);
             },
           }]}
         />

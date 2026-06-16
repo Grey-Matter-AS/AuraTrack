@@ -217,6 +217,34 @@ export const EEG_MOOD_OPTIONS = [
   'Emotionally Flat',
 ];
 
+export const WELLBEING_MOOD_OPTIONS = [
+  { label: 'Happy', labelKey: 'wellbeing.moods.happy_label', help: 'Positive mood, cheerful, enjoying things.', helpKey: 'wellbeing.moods.happy_help' },
+  { label: 'Calm', labelKey: 'wellbeing.moods.calm_label', help: 'Settled, peaceful, not tense.', helpKey: 'wellbeing.moods.calm_help' },
+  { label: 'Content', labelKey: 'wellbeing.moods.content_label', help: 'Okay or satisfied, comfortable with things as they are.', helpKey: 'wellbeing.moods.content_help' },
+  { label: 'Sad / Low', labelKey: 'wellbeing.moods.sad_low_label', help: 'Down, unhappy, withdrawn, or less interested than usual.', helpKey: 'wellbeing.moods.sad_low_help' },
+  { label: 'Anxious / Worried', labelKey: 'wellbeing.moods.anxious_worried_label', help: 'Nervous, fearful, or expecting something bad.', helpKey: 'wellbeing.moods.anxious_worried_help' },
+  { label: 'Stressed / Overloaded', labelKey: 'wellbeing.moods.stressed_overloaded_label', help: 'Under pressure, too much happening, hard to cope.', helpKey: 'wellbeing.moods.stressed_overloaded_help' },
+  { label: 'Irritable / Angry', labelKey: 'wellbeing.moods.irritable_angry_label', help: 'Easily annoyed, short-tempered, or angry.', helpKey: 'wellbeing.moods.irritable_angry_help' },
+  { label: 'Restless / Agitated', labelKey: 'wellbeing.moods.restless_agitated_label', help: 'Unable to settle, pacing, keyed up, or visibly activated.', helpKey: 'wellbeing.moods.restless_agitated_help' },
+  { label: 'Tired / Sleepy', labelKey: 'wellbeing.moods.tired_sleepy_label', help: 'Low energy, drowsy, or wanting to sleep.', helpKey: 'wellbeing.moods.tired_sleepy_help' },
+  { label: 'Confused', labelKey: 'wellbeing.moods.confused_label', help: 'Disoriented, unclear, or having trouble following what is happening.', helpKey: 'wellbeing.moods.confused_help' },
+  { label: 'Emotionally Flat', labelKey: 'wellbeing.moods.emotionally_flat_label', help: 'Little visible emotion or reduced response.', helpKey: 'wellbeing.moods.emotionally_flat_help' },
+  { label: 'Very Happy / Euphoric', labelKey: 'wellbeing.moods.very_happy_euphoric_label', help: 'Unusually high, excited, or intensely positive mood.', helpKey: 'wellbeing.moods.very_happy_euphoric_help' },
+];
+
+export const DEFAULT_WELLBEING_FACTORS = [
+  { id: 'sleepHours', label: 'Sleep hours', labelKey: 'wellbeing.factors.sleep_hours_label', type: 'number', unit: 'h', help: 'Approximate hours slept since the last check-in.', helpKey: 'wellbeing.factors.sleep_hours_help', active: true },
+  { id: 'sleepQuality', label: 'Sleep quality', labelKey: 'wellbeing.factors.sleep_quality_label', type: 'scale', unit: '', help: 'How restful the sleep seemed.', helpKey: 'wellbeing.factors.sleep_quality_help', active: true, scaleLabels: ['Poor', 'Fair', 'Good', 'Restful'], scaleLabelKeys: ['wellbeing.factors.sleep_quality_poor', 'wellbeing.factors.sleep_quality_fair', 'wellbeing.factors.sleep_quality_good', 'wellbeing.factors.sleep_quality_restful'], saveZero: true },
+  { id: 'sleeplessness', label: 'Sleeplessness', labelKey: 'wellbeing.factors.sleeplessness_label', type: 'boolean', unit: '', help: 'Long awake periods, very delayed sleep, or very broken sleep.', helpKey: 'wellbeing.factors.sleeplessness_help', active: true },
+  { id: 'missedBowelMovement', label: 'Missed bowel movement', labelKey: 'wellbeing.factors.missed_bowel_movement_label', type: 'boolean', unit: '', help: 'No bowel movement when one was expected for the person.', helpKey: 'wellbeing.factors.missed_bowel_movement_help', active: true },
+  { id: 'stress', label: 'Stress', labelKey: 'wellbeing.factors.stress_label', type: 'scale', unit: '', help: 'Pressure, overload, conflict, or demanding events.', helpKey: 'wellbeing.factors.stress_help', active: true },
+  { id: 'illnessFever', label: 'Illness / fever', labelKey: 'wellbeing.factors.illness_fever_label', type: 'boolean', unit: '', help: 'Signs of illness, infection, fever, or feeling unwell.', helpKey: 'wellbeing.factors.illness_fever_help', active: true },
+  { id: 'missedMedication', label: 'Missed medication', labelKey: 'wellbeing.factors.missed_medication_label', type: 'boolean', unit: '', help: 'Any scheduled medicine was missed or significantly delayed.', helpKey: 'wellbeing.factors.missed_medication_help', active: true },
+  { id: 'hormonalMenstruation', label: 'Hormonal / menstruation', labelKey: 'wellbeing.factors.hormonal_menstruation_label', type: 'boolean', unit: '', help: 'Menstruation, hormonal changes, or suspected cycle-related symptoms.', helpKey: 'wellbeing.factors.hormonal_menstruation_help', active: true },
+  { id: 'unusualActivity', label: 'Unusual activity', labelKey: 'wellbeing.factors.unusual_activity_label', type: 'boolean', unit: '', help: 'A day that was more active, different, or stimulating than usual.', helpKey: 'wellbeing.factors.unusual_activity_help', active: true },
+  { id: 'tearfulCrying', label: 'Tearful / crying', labelKey: 'wellbeing.factors.tearful_crying_label', type: 'boolean', unit: '', help: 'Crying or visibly tearful, whether or not the person could describe why.', helpKey: 'wellbeing.factors.tearful_crying_help', active: true },
+];
+
 export const EEG_ACTIVITY_OPTIONS = [
   'Sleeping',
   'Resting',

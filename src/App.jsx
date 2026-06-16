@@ -13,6 +13,7 @@ import { useWakeLock } from './hooks/useWakeLock';
 import { useMedications } from './hooks/useMedications';
 import { useNotifications } from './hooks/useNotifications';
 import { useEegDiary } from './hooks/useEegDiary';
+import { useWellbeing } from './hooks/useWellbeing';
 import { useVideoRecorder } from './hooks/useVideoRecorder';
 import { getVisibleDosesForPanel } from './utils/medicationSchedule';
 import { BackupReminderModal } from './components/BackupReminderModal';
@@ -100,6 +101,7 @@ function App() {
   const meds = useMedications();
   const notifications = useNotifications();
   const eeg = useEegDiary();
+  const wellbeing = useWellbeing(settings);
   const video = useVideoRecorder();
   const storagePersistence = usePersistentStorage();
   const stoppingRef = useRef(false);
@@ -160,6 +162,7 @@ function App() {
       meds.markMissedDoses().catch(() => showToast('Failed to record missed doses. Please review medication history.'));
       meds.getLogsForDay(Date.now()).then(setTodayLogs).catch(() => showToast('Failed to load today\'s medication logs.'));
       db.medicationLogs.toArray().then(setAllMedLogs).catch(() => showToast('Failed to load medication history.'));
+      wellbeing.load().catch(() => showToast('Failed to load wellbeing history.'));
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, loadHistory, loadAll]);
@@ -197,7 +200,7 @@ function App() {
   useEffect(() => {
     if (settings.backupReminderEnabled === false) return;
     if (settings.lastSuccessfulBackupAt || settings.lastBackupReminderDismissedAt) return;
-    if (!fullHistory.length && !meds.medications.length && !allMedLogs.length && !eeg.activeSession && !eeg.currentActivity) return;
+    if (!fullHistory.length && !meds.medications.length && !allMedLogs.length && !wellbeing.entries.length && !eeg.activeSession && !eeg.currentActivity) return;
     updateSettings('lastBackupReminderDismissedAt', Date.now()).catch(() => {});
   }, [
     allMedLogs.length,
@@ -205,6 +208,7 @@ function App() {
     eeg.currentActivity,
     fullHistory.length,
     meds.medications.length,
+    wellbeing.entries.length,
     settings.backupReminderEnabled,
     settings.lastBackupReminderDismissedAt,
     settings.lastSuccessfulBackupAt,
@@ -212,7 +216,7 @@ function App() {
   ]);
 
   const hasBackupEligibleData =
-    fullHistory.length || meds.medications.length || allMedLogs.length || eeg.activeSession || eeg.currentActivity;
+    fullHistory.length || meds.medications.length || allMedLogs.length || wellbeing.entries.length || eeg.activeSession || eeg.currentActivity;
   const backupReminderBaseline = Math.max(settings.lastSuccessfulBackupAt || 0, settings.lastBackupReminderDismissedAt || 0);
   const shouldShowBackupReminder = Boolean(
     settings.backupReminderEnabled !== false &&
@@ -242,17 +246,25 @@ function App() {
     const handler = () => {
       if (document.visibilityState === 'visible') {
         if (status === 'RECORDING') wakeLock.acquire();
-        notifications.scheduleForToday(meds.medications);
+        notifications.scheduleForToday(meds.medications, {
+          enabled: settings.wellbeingDailyReminderEnabled,
+          time: settings.wellbeingReminderTime,
+          hasTodayEntry: wellbeing.todayEntries.length > 0,
+        });
       }
     };
     document.addEventListener('visibilitychange', handler);
     return () => document.removeEventListener('visibilitychange', handler);
-  }, [status, meds.medications]);
+  }, [status, meds.medications, settings.wellbeingDailyReminderEnabled, settings.wellbeingReminderTime, wellbeing.todayEntries.length]);
 
   // Schedule notifications whenever medication list changes
   useEffect(() => {
-    notifications.scheduleForToday(meds.medications);
-  }, [meds.medications]);
+    notifications.scheduleForToday(meds.medications, {
+      enabled: settings.wellbeingDailyReminderEnabled,
+      time: settings.wellbeingReminderTime,
+      hasTodayEntry: wellbeing.todayEntries.length > 0,
+    });
+  }, [meds.medications, settings.wellbeingDailyReminderEnabled, settings.wellbeingReminderTime, wellbeing.todayEntries.length]);
 
   const handleStart = async () => {
     wizard.reset();
@@ -465,11 +477,11 @@ function App() {
         data-scroll-region={status === 'RECORDING' ? 'recording' : 'app'}
         className={`flex-1 flex flex-col items-center px-3 pb-8 ${status === 'RECORDING' ? 'overflow-y-auto' : 'overflow-hidden'}`}
       >
-        {status === 'IDLE'         && <IdleView history={recentHistory} fullHistory={fullHistory} onStart={handleStart} onManualEntry={() => setShowManualEntry(true)} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail} medicationGroups={medicationGroups} allActiveMedications={allActiveMedications} onSaveDoses={handleSaveDoses} durationFormat={settings.durationFormat} dateFormat={settings.dateFormat} timeFormat={settings.timeFormat} eegSession={eeg.activeSession} eegCurrentActivity={eeg.currentActivity} onStartEegSession={eeg.startSession} onEndEegSession={eeg.endSession} onStartEegActivity={eeg.startActivity} onStopEegActivity={eeg.stopActivity} onOpenEegDiary={() => { setHistoryInitialTab('eeg'); setStatus('HISTORY'); }} eegDiaryEnabled={settings.eegDiaryEnabled} />}
+        {status === 'IDLE'         && <IdleView history={recentHistory} fullHistory={fullHistory} onStart={handleStart} onManualEntry={() => setShowManualEntry(true)} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail} medicationGroups={medicationGroups} allActiveMedications={allActiveMedications} onSaveDoses={handleSaveDoses} durationFormat={settings.durationFormat} dateFormat={settings.dateFormat} timeFormat={settings.timeFormat} eegSession={eeg.activeSession} eegCurrentActivity={eeg.currentActivity} onStartEegSession={eeg.startSession} onEndEegSession={eeg.endSession} onStartEegActivity={eeg.startActivity} onStopEegActivity={eeg.stopActivity} onOpenEegDiary={() => { setHistoryInitialTab('eeg'); setStatus('HISTORY'); }} eegDiaryEnabled={settings.eegDiaryEnabled} wellbeing={wellbeing} wellbeingEnabled={settings.wellbeingEnabled} />}
         {status === 'RECORDING'    && <RecordingView elapsed={timer.elapsed} startTime={timer.startTime} laps={timer.laps} onLap={timer.recordLap} onStop={handleStop} onEmergencyStop={handleEmergencyStop} onQuickNote={l => wizard.addQuickNote(l, timer.elapsed)} userMode={settings.userMode} quickNoteLabels={activeQuickNoteLabels} emergencyMedications={emergencyMedications} neurologistName={settings.neurologistName} neurologistContact={settings.neurologistContact} emergencyContact={settings.emergencyContact} durationFormat={settings.durationFormat} onStartVideo={async () => { const result = await video.start({ seizureStartTime: timer.startTime, seizureStartLabel: timer.startTime ? new Date(timer.startTime).toLocaleString() : new Date().toLocaleString(), preferredFacingMode: settings.userMode === 'CARETAKER' ? 'environment' : 'user' }); if (!result?.ok) showToast(video.error || 'Unable to start video recording.'); }} onStopVideo={async () => { await video.stop(); }} onSwitchCamera={async () => { const result = await video.switchCamera(); if (!result?.ok && result?.reason !== 'single_camera') showToast(video.error || 'Unable to switch camera.'); }} videoRecording={video.isRecording} videoSupported={video.isSupported} videoError={video.error} previewStream={video.previewStream} canSwitchCamera={video.canSwitchCamera} />}
         {status === 'TAGGING'      && <TaggingView {...wizard} elapsed={timer.elapsed} laps={timer.laps} startTime={timer.startTime} onSave={handleSave} onSkip={handleSkipTagging} onCancel={handleCancel} durationFormat={settings.durationFormat} />}
-        {status === 'HISTORY'      && <HistoryView onBack={() => setStatus('IDLE')} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail} historyPageSize={settings.historyPageSize} settings={settings} initialTab={historyInitialTab} eeg={eeg} events={fullHistory} onBackupSuccess={handleBackupSuccess} />}
-        {status === 'SETTINGS'     && <SettingsView key={settingsInitialTab} settings={settings} onUpdate={updateSettings} onReset={resetSettings} onBack={() => setStatus('IDLE')} pwa={pwa} notificationPermission={notifications.permission} onRequestNotificationPermission={async () => { const p = await notifications.requestPermission(); if (p === 'granted') notifications.scheduleForToday(meds.medications); }} onSync={() => setSyncModal({ open: true, connectToken: null, offerSDP: null })} initialTab={settingsInitialTab} storagePersistence={storagePersistence} onBackupSuccess={handleBackupSuccess} />}
+        {status === 'HISTORY'      && <HistoryView onBack={() => setStatus('IDLE')} onEdit={handleEdit} onDelete={setItemToDelete} onViewDetail={goToDetail} historyPageSize={settings.historyPageSize} settings={settings} initialTab={historyInitialTab} eeg={eeg} wellbeing={wellbeing} events={fullHistory} onBackupSuccess={handleBackupSuccess} />}
+        {status === 'SETTINGS'     && <SettingsView key={settingsInitialTab} settings={settings} onUpdate={updateSettings} onReset={resetSettings} onBack={() => setStatus('IDLE')} pwa={pwa} notificationPermission={notifications.permission} onRequestNotificationPermission={async () => { const p = await notifications.requestPermission(); if (p === 'granted') notifications.scheduleForToday(meds.medications, { enabled: settings.wellbeingDailyReminderEnabled, time: settings.wellbeingReminderTime, hasTodayEntry: wellbeing.todayEntries.length > 0 }); return p; }} onSync={() => setSyncModal({ open: true, connectToken: null, offerSDP: null })} initialTab={settingsInitialTab} storagePersistence={storagePersistence} onBackupSuccess={handleBackupSuccess} />}
         {status === 'EVENT_DETAIL' && <EventDetailView eventId={detailEventId} onEdit={handleEdit} onClose={() => setStatus(previousStatus)} durationFormat={settings.durationFormat} dateFormat={settings.dateFormat} timeFormat={settings.timeFormat} />}
         {status === 'HELP'         && <HelpView onBack={() => setStatus('IDLE')} onAbout={goToAbout} />}
         {status === 'ABOUT'        && <AboutView onBack={() => setStatus(previousStatus)} />}

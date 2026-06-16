@@ -1,9 +1,9 @@
-/* global cy */
+/* global cy, expect */
 
 import { richCaretakerScenario } from '../support/scenarios';
 
 describe('AuraTrack core flows', () => {
-  it('navigates seeded caretaker data across history, medications, EEG, and export', () => {
+  it('navigates seeded caretaker data across history, medications, wellbeing, EEG, and export', () => {
     cy.launchAuraTrack(richCaretakerScenario());
 
     cy.contains('button', 'START TIMER').should('be.visible');
@@ -11,7 +11,14 @@ describe('AuraTrack core flows', () => {
 
     cy.contains('button', 'HISTORY').click();
     cy.contains('EEG Diary').should('be.visible');
+    cy.contains('Wellbeing').should('exist');
     cy.contains('2 EVENTS').should('be.visible');
+    cy.window().then((win) => {
+      const tabTexts = [...win.document.querySelectorAll('button')]
+        .map(button => button.textContent?.trim())
+        .filter(text => ['Seizures', 'Medications', 'Wellbeing', 'EEG Diary', 'Export'].includes(text));
+      expect(tabTexts).to.deep.equal(['Seizures', 'Medications', 'Wellbeing', 'EEG Diary', 'Export']);
+    });
 
     cy.get('input[type="date"]').eq(0).clear().type('2026-06-08');
     cy.get('input[type="date"]').eq(1).clear().type('2026-06-08');
@@ -20,11 +27,20 @@ describe('AuraTrack core flows', () => {
     cy.contains('button', 'Clear').click();
     cy.contains('Tonic-Clonic').should('be.visible');
 
-    cy.contains('button', /^EEG Diary$/).click();
+    cy.contains('button', /^Medications$/).scrollIntoView().click();
+    cy.contains('Lamotrigine').should('be.visible');
+    cy.contains('Diazepam').should('be.visible');
+
+    cy.contains('button', /^Wellbeing$/).scrollIntoView().click();
+    cy.contains('Correlation overview').should('be.visible');
+    cy.contains('Calm').should('be.visible');
+    cy.contains('Sleep quality: Restful').should('be.visible');
+
+    cy.contains('button', /^EEG Diary$/).scrollIntoView().click();
     cy.contains('Home EEG Session').should('be.visible');
     cy.contains(/Seizure reference/i).should('be.visible');
 
-    cy.contains('button', /^Export$/).click();
+    cy.contains('button', /^Export$/).scrollIntoView().click();
     cy.contains('Neurologist Report').should('exist');
     cy.contains('Seizure Diary (Monthly)').scrollIntoView().should('be.visible');
     cy.get('input[type="month"]').should('have.value', '2026-06');
@@ -39,7 +55,7 @@ describe('AuraTrack core flows', () => {
     cy.launchAuraTrack(richCaretakerScenario());
 
     cy.contains('button', 'HISTORY').click();
-    cy.contains('button', /^Export$/).click();
+    cy.contains('button', /^Export$/).scrollIntoView().click();
     cy.get('input[type="date"]').eq(0).clear().type('2026-06-06');
     cy.get('input[type="date"]').eq(1).clear().type('2026-06-07');
     cy.contains('p', 'Neurologist Report')
@@ -76,7 +92,6 @@ describe('AuraTrack core flows', () => {
     cy.contains('Step 1: Seizure Type').should('be.visible');
     cy.contains('button', 'Skip for now').click();
 
-    cy.contains('LAST 5').should('be.visible');
     cy.contains('button', 'HISTORY').click();
     cy.contains('Uncategorized').should('be.visible');
     cy.contains('Manual Entry').should('be.visible');

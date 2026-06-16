@@ -82,3 +82,13 @@ db.version(9).stores({
     if (Object.keys(updates).length) await eventTable.update(event.id, updates);
   }
 });
+
+db.version(10).stores({
+  events: '++id, uuid, startTime, date, type, isComplete, isEdited, notes, eegSessionId, videoAttached',
+  settings: 'key',
+  medications: '++id, uuid',
+  medicationLogs: '++id, uuid, medicationId, medicationUuid, takenAt, scheduledTime',
+  eegSessions: '++id, uuid, startTime, status, actualEndTime',
+  eegActivities: '++id, uuid, sessionId, kind, startTime, endTime, linkedEventId, isEdited',
+  wellbeingEntries: '++id, uuid, recordedAt, dayKey, primaryMood, intensity, isEdited'
+});

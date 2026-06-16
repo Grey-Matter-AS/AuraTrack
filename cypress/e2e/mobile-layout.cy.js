@@ -12,8 +12,7 @@ describe('AuraTrack mobile layout', () => {
         .find((button) => button.textContent?.includes('HISTORY'));
       const settingsButton = [...win.document.querySelectorAll('button')]
         .find((button) => button.textContent?.includes('SETTINGS'));
-      const helpButton = [...win.document.querySelectorAll('button')]
-        .find((button) => button.getAttribute('aria-label') === 'Help');
+      const helpButton = win.document.querySelector('.app-header__help');
 
       expect(historyButton).to.not.equal(undefined);
       expect(settingsButton).to.not.equal(undefined);
@@ -34,7 +33,7 @@ describe('AuraTrack mobile layout', () => {
     cy.viewport(320, 568);
     cy.launchAuraTrack(richCaretakerScenario());
     cy.contains('button', 'HISTORY').click();
-    cy.contains('button', /^Export$/).click();
+    cy.contains('button', /^Export$/).scrollIntoView().click();
 
     cy.window().then((win) => {
       const stacks = [...win.document.querySelectorAll('.date-selector-stack')].map((stack) => {

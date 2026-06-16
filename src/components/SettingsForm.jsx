@@ -7,6 +7,7 @@ import { useMedications } from '../hooks/useMedications';
 import { BackupTransferModal } from './BackupTransferModal';
 import { parseBackupFileText } from '../utils/backupFiles';
 import { defaultScheduledTimes, scheduledDaysLabel } from '../utils/medicationSchedule';
+import { DEFAULT_WELLBEING_FACTORS } from '../data/constants';
 import {
   BellIcon,
   BellOffIcon,
@@ -574,6 +575,9 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [backupModal, setBackupModal] = useState({ mode: null, fileName: '', fileText: '' });
+  const wellbeingFactors = Array.isArray(settings.wellbeingFactorDefinitions) && settings.wellbeingFactorDefinitions.length
+    ? settings.wellbeingFactorDefinitions
+    : DEFAULT_WELLBEING_FACTORS;
 
   useEffect(() => {
     if ('storage' in navigator) {
@@ -594,6 +598,7 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
     if (result.logs) parts.push(`${result.logs} dose log(s)`);
     if (result.eegSessions) parts.push(`${result.eegSessions} EEG session(s)`);
     if (result.eegActivities) parts.push(`${result.eegActivities} EEG activity record(s)`);
+    if (result.wellbeingEntries) parts.push(t('settings.data.import_summary_wellbeing', { count: result.wellbeingEntries, defaultValue: '{{count}} wellbeing entries' }));
     const conflicts = result.conflicts?.length
       ? ` ${result.conflicts.length} conflict(s) kept local data intact.`
       : '';
@@ -649,6 +654,7 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
         db.events.clear(),
         db.medications.clear().catch(() => {}),
         db.medicationLogs.clear().catch(() => {}),
+        db.wellbeingEntries?.clear?.().catch(() => {}),
       ]);
       setShowClearConfirm(false);
       flash(t('settings.data.all_deleted'));
@@ -671,6 +677,23 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
   const handleEncryptedExportSuccess = async (summary) => {
     await onBackupSuccess?.(summary);
     flash(t('settings.data.exported', { events: summary.events, meds: summary.medications }));
+  };
+
+  const updateWellbeingFactor = (index, changes) => {
+    const next = wellbeingFactors.map((factor, i) => i === index ? { ...factor, ...changes } : factor);
+    onUpdate('wellbeingFactorDefinitions', next);
+  };
+
+  const addWellbeingFactor = () => {
+    const id = `custom-${Date.now()}`;
+    onUpdate('wellbeingFactorDefinitions', [
+      ...wellbeingFactors,
+      { id, label: t('settings.recording.custom_factor', 'Custom factor'), type: 'boolean', unit: '', help: '', active: true },
+    ]);
+  };
+
+  const removeWellbeingFactor = (index) => {
+    onUpdate('wellbeingFactorDefinitions', wellbeingFactors.filter((_, i) => i !== index));
   };
 
   const persistenceStatusLabel = {
@@ -883,6 +906,118 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
         <Row label={t('settings.recording.eeg_diary')} help={t('settings.recording.eeg_diary_help')}>
           <Toggle value={settings.eegDiaryEnabled} onChange={v => onUpdate('eegDiaryEnabled', v)} label={t('settings.recording.eeg_diary')} />
         </Row>
+        <Row
+          label={t('settings.recording.wellbeing', 'Wellbeing tracking')}
+          help={t('settings.recording.wellbeing_help', 'Optional mood and context logging for pattern spotting.')}
+        >
+          <Toggle value={settings.wellbeingEnabled !== false} onChange={v => onUpdate('wellbeingEnabled', v)} label={t('settings.recording.wellbeing', 'Wellbeing tracking')} />
+        </Row>
+        {settings.wellbeingEnabled !== false && (
+          <div className="space-y-4">
+            <Row
+              label={t('settings.recording.wellbeing_reminder', 'Daily wellbeing reminder')}
+              help={t('settings.recording.wellbeing_reminder_help', 'Optional reminder. It is skipped after a wellbeing entry is saved for the day.')}
+            >
+              <Toggle
+                value={settings.wellbeingDailyReminderEnabled === true}
+                onChange={async value => {
+                  if (value && notificationPermission !== 'granted') {
+                    const permission = await onRequestNotificationPermission?.();
+                    if (permission !== 'granted') return;
+                  }
+                  onUpdate('wellbeingDailyReminderEnabled', value);
+                }}
+                label={t('settings.recording.wellbeing_reminder', 'Daily wellbeing reminder')}
+              />
+            </Row>
+            {settings.wellbeingDailyReminderEnabled && (
+              <TextField
+                label={t('settings.recording.wellbeing_reminder_time', 'Reminder time')}
+                value={settings.wellbeingReminderTime || '20:00'}
+                onChange={v => onUpdate('wellbeingReminderTime', v)}
+                type="time"
+              />
+            )}
+            <div>
+              <FieldLabel>{t('settings.recording.wellbeing_factors', 'Wellbeing factors')}</FieldLabel>
+              <p className="text-[11px] text-[var(--text-dim)] mb-3">
+                {t('settings.recording.wellbeing_factors_help', 'Choose the context fields shown in the wellbeing sheet. Existing diary entries keep their saved labels.')}
+              </p>
+              <div className="space-y-3">
+                {wellbeingFactors.map((factor, index) => (
+                  <div
+                    key={factor.id || index}
+                    className="rounded-2xl p-3 space-y-2"
+                    style={{ backgroundColor: 'var(--bg-raised)', border: '1px solid var(--border)' }}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <input
+                        value={factor.label || ''}
+                        onChange={e => updateWellbeingFactor(index, { label: e.target.value })}
+                        className="min-w-0 flex-1 rounded-xl px-3 py-2 text-xs font-bold outline-none"
+                        style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                      />
+                      <Toggle
+                        value={factor.active !== false}
+                        onChange={value => updateWellbeingFactor(index, { active: value })}
+                        label={factor.label || t('settings.recording.factor_active', 'Factor active')}
+                      />
+                    </div>
+                    <div className="grid grid-cols-[1fr_auto] gap-2">
+                      <select
+                        value={factor.type || 'boolean'}
+                        onChange={e => updateWellbeingFactor(index, { type: e.target.value })}
+                        className="rounded-xl px-3 py-2 text-xs outline-none"
+                        style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                      >
+                        <option value="boolean">{t('settings.recording.factor_type_boolean', 'Present / absent')}</option>
+                        <option value="scale">{t('settings.recording.factor_type_scale', 'Scale 0-3')}</option>
+                        <option value="number">{t('settings.recording.factor_type_number', 'Number')}</option>
+                      </select>
+                      <input
+                        value={factor.unit || ''}
+                        onChange={e => updateWellbeingFactor(index, { unit: e.target.value })}
+                        placeholder={t('settings.recording.factor_unit_placeholder', 'Unit')}
+                        className="w-20 rounded-xl px-3 py-2 text-xs outline-none"
+                        style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                      />
+                    </div>
+                    <textarea
+                      value={factor.help || ''}
+                      onChange={e => updateWellbeingFactor(index, { help: e.target.value })}
+                      placeholder={t('settings.recording.factor_help_placeholder', 'Tooltip/helper text')}
+                      rows={2}
+                      className="w-full rounded-xl px-3 py-2 text-xs outline-none resize-none"
+                      style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                    />
+                    <button
+                      onClick={() => removeWellbeingFactor(index)}
+                      className="text-[10px] font-black uppercase tracking-widest text-red-400"
+                    >
+                      {t('settings.recording.remove_factor', 'Remove factor')}
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div className="grid grid-cols-2 gap-2 mt-3">
+                <button
+                  onClick={addWellbeingFactor}
+                  className="rounded-xl py-3 text-[10px] font-black uppercase tracking-widest"
+                  style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
+                >
+                  {t('settings.recording.add_factor', 'Add factor')}
+                </button>
+                <button
+                  onClick={() => onUpdate('wellbeingFactorDefinitions', DEFAULT_WELLBEING_FACTORS)}
+                  className="rounded-xl py-3 text-[10px] font-black uppercase tracking-widest"
+                  style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
+                >
+                  {t('settings.recording.reset_factors', 'Reset factors')}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         <div>
           <FieldLabel>{t('settings.recording.quick_labels')}</FieldLabel>
           <p className="text-[11px] text-[var(--text-dim)] mb-3">{t('settings.recording.quick_labels_help')}</p>

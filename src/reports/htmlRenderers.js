@@ -1,5 +1,5 @@
 import i18n from '../i18n';
-import { freqBarChartSVG, durationLineSVG, typeBarSVG, phaseStackSVG } from '../utils/pdfCharts';
+import { freqBarChartSVG, durationLineSVG, typeBarSVG, phaseStackSVG, wellbeingCorrelationSVG } from '../utils/pdfCharts';
 import { esc } from '../utils/htmlEscape';
 
 export function renderEventLogHtml(data) {
@@ -76,6 +76,7 @@ export function renderNeurologistReportHtml(data) {
   const chart2 = durationLineSVG(data.charts.periodEvents, data.periodDays);
   const chart3 = typeBarSVG(data.charts.byType, data.charts.totalEvents);
   const chart4 = phaseStackSVG(data.charts.periodEvents, 10);
+  const chart5 = wellbeingCorrelationSVG(data.charts.periodEvents, data.charts.wellbeingEntries, data.periodDays, data.charts.periodEndMs);
 
   const styles = buildPreviewStyles(`
     .auratrack-neuro-report,
@@ -178,6 +179,7 @@ export function renderNeurologistReportHtml(data) {
       </div>
 
       ${renderMedicationSection(data)}
+      ${renderWellbeingSection(data)}
 
       <div class="section">
         <h2>${esc(t('export.docs.recent_events', { count: data.recentEvents.length }))}</h2>
@@ -239,6 +241,7 @@ export function renderNeurologistReportHtml(data) {
         <h2>${esc(t('export.docs.trend_analysis'))}</h2>
         <div class="chart-wrap">${chart1}</div>
         <div class="chart-wrap">${chart2}</div>
+        <div class="chart-wrap">${chart5}</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
           <div class="chart-wrap">${chart3}</div>
           <div class="chart-wrap">${chart4}</div>
@@ -562,6 +565,52 @@ function renderMedicationSection(data) {
       ${data.stats.medicationLogsCount > 0
         ? `<p style="font-size:10px;color:#374151;margin-top:8px"><strong>${esc(t('export.docs.doses_logged', { count: data.stats.medicationLogsCount }))}</strong>${data.stats.expectedDoses > 0 ? ` ${esc(t('export.docs.expected_doses', { count: data.stats.expectedDoses }))}` : ''}.</p>`
         : `<p style="font-size:10px;color:#9ca3af;margin-top:8px">${esc(t('export.docs.no_dose_logs'))}</p>`}
+    </div>
+  `;
+}
+
+function renderWellbeingSection(data) {
+  const t = translator();
+  const wellbeing = data.wellbeing || {};
+  return `
+    <div class="section">
+      <h2>${esc(t('export.docs.wellbeing_context', 'Wellbeing Context'))}</h2>
+      <div class="ctx-grid">
+        <div class="ctx-item">
+          <div class="ctx-label">${esc(t('export.docs.wellbeing_entries', 'Wellbeing entries'))}</div>
+          <div class="ctx-value">${esc(String(wellbeing.entriesCount || 0))}</div>
+        </div>
+        <div class="ctx-item">
+          <div class="ctx-label">${esc(t('export.docs.wellbeing_days', 'Days covered'))}</div>
+          <div class="ctx-value">${esc(String(wellbeing.daysCovered || 0))}</div>
+        </div>
+        <div class="ctx-item">
+          <div class="ctx-label">${esc(t('export.docs.wellbeing_avg_intensity', 'Average mood intensity'))}</div>
+          <div class="ctx-value">${esc(wellbeing.avgIntensityLabel || '-')}</div>
+        </div>
+        <div class="ctx-item">
+          <div class="ctx-label">${esc(t('export.docs.wellbeing_top_factors', 'Top context factors'))}</div>
+          <div class="ctx-value">${wellbeing.topFactors?.length ? esc(wellbeing.topFactors.map(item => `${item.label} (${item.count}x)`).join(', ')) : esc(t('export.docs.not_recorded'))}</div>
+        </div>
+      </div>
+      ${wellbeing.recentEntries?.length ? `
+        <table style="margin-top:10px">
+          <thead><tr>
+            <th>${esc(t('export.docs.date'))}</th>
+            <th>${esc(t('export.docs.time'))}</th>
+            <th>${esc(t('wellbeing.mood', 'Mood'))}</th>
+            <th>${esc(t('wellbeing.intensity', 'Intensity'))}</th>
+            <th>${esc(t('wellbeing.context', 'Context'))}</th>
+          </tr></thead>
+          <tbody>${wellbeing.recentEntries.map(entry => `<tr>
+            <td>${esc(entry.date)}</td>
+            <td>${esc(entry.time)}</td>
+            <td style="font-weight:700">${esc(entry.primaryMood)}</td>
+            <td>${esc(entry.intensityLabel)}</td>
+            <td>${esc(entry.factors?.length ? entry.factors.join('; ') : '-')}</td>
+          </tr>`).join('')}</tbody>
+        </table>
+      ` : `<p style="font-size:10px;color:#9ca3af;margin:8px 0 0">${esc(t('export.docs.no_wellbeing_entries', 'No wellbeing entries recorded in this period.'))}</p>`}
     </div>
   `;
 }

@@ -7,10 +7,11 @@ import { buildDangerMap } from '../utils/dangerFlags';
 import { Tabs } from '../components/Tabs';
 import { MedicationHistoryTab } from '../components/MedicationHistoryTab';
 import { EEGDiaryTab } from '../components/EEGDiaryTab';
+import { WellbeingTab } from '../components/WellbeingTab';
 import ExportView from './ExportView';
 import { ScrollFade } from '../components/ScrollFade';
 
-export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, historyPageSize = 10, settings = {}, initialTab = 'seizures', eeg = null, events = [], onBackupSuccess = null }) {
+export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, historyPageSize = 10, settings = {}, initialTab = 'seizures', eeg = null, wellbeing = null, events = [], onBackupSuccess = null }) {
   const { t } = useTranslation();
   const { durationFormat = 'seconds', dateFormat = 'locale', timeFormat = '12h' } = settings;
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -22,8 +23,9 @@ export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, hi
 
   const HISTORY_TABS = [
     { id: 'seizures',    label: t('history.tab_seizures')    },
-    { id: 'eeg',         label: t('history.tab_eeg', 'EEG Diary') },
     { id: 'medications', label: t('history.tab_medications') },
+    { id: 'wellbeing',   label: t('history.tab_wellbeing', 'Wellbeing') },
+    { id: 'eeg',         label: t('history.tab_eeg', 'EEG Diary') },
     { id: 'export',      label: t('history.tab_export')      },
   ];
 
@@ -179,6 +181,12 @@ export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, hi
       {activeTab === 'medications' && (
         <ScrollFade wrapperClassName="flex-1">
           <MedicationHistoryTab settings={settings} />
+        </ScrollFade>
+      )}
+
+      {activeTab === 'wellbeing' && wellbeing && (
+        <ScrollFade wrapperClassName="flex-1">
+          <WellbeingTab events={allEvents} wellbeing={wellbeing} settings={settings} />
         </ScrollFade>
       )}
 
