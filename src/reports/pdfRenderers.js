@@ -246,8 +246,8 @@ export async function downloadNeurologistReportPdf(data) {
   cursorY = ensurePageRoom(doc, cursorY, 160);
   cursorY = await drawChartBlock(doc, margin, cursorY, pageWidth - margin * 2, durationChart, 150);
   cursorY += 10;
-  cursorY = ensurePageRoom(doc, cursorY, 230);
-  cursorY = await drawChartBlock(doc, margin, cursorY, pageWidth - margin * 2, wellbeingChart, 220);
+  cursorY = ensurePageRoom(doc, cursorY, 245);
+  cursorY = await drawChartBlock(doc, margin, cursorY, pageWidth - margin * 2, wellbeingChart, 235);
   cursorY += 10;
   cursorY = ensurePageRoom(doc, cursorY, 170);
   const halfWidth = (pageWidth - margin * 2 - 10) / 2;
@@ -261,7 +261,7 @@ export async function downloadNeurologistReportPdf(data) {
     drawSectionTitle(doc, t('export.docs.condensed_event_details'), margin, cursorY, pageWidth - margin);
     cursorY += 12;
     data.detailEvents.forEach(event => {
-      cursorY = ensurePageRoom(doc, cursorY, 108);
+      cursorY = ensurePageRoom(doc, cursorY, estimateDetailEventCardHeight(doc, pageWidth - margin * 2, event, t) + 10);
       cursorY = drawDetailEventCard(doc, margin, cursorY, pageWidth - margin * 2, event, t) + 10;
     });
   }
@@ -272,11 +272,11 @@ export async function downloadNeurologistReportPdf(data) {
     cursorY += 12;
     data.symptomLogGroups.forEach(group => {
       const groupRows = group.symptoms.map(symptom => [symptom.path || '-', symptom.med || '-', symptom.location || '-']);
-      const estimatedHeight = 44 + groupRows.length * 22;
+      const estimatedHeight = estimateSymptomGroupHeight(groupRows);
       cursorY = ensurePageRoom(doc, cursorY, estimatedHeight);
       drawSymptomGroupHeader(doc, margin, cursorY, pageWidth - margin * 2, group, t);
       autoTable(doc, {
-        startY: cursorY + 32,
+        startY: cursorY + 44,
         margin: { left: margin + 8, right: margin + 8 },
         theme: 'grid',
         styles: { fontSize: 7, cellPadding: 4, overflow: 'linebreak', valign: 'top', textColor: COLORS.ink },
@@ -289,6 +289,8 @@ export async function downloadNeurologistReportPdf(data) {
         ]],
         body: groupRows,
         tableWidth: pageWidth - margin * 2 - 16,
+        pageBreak: groupRows.length <= 8 ? 'avoid' : 'auto',
+        rowPageBreak: 'avoid',
       });
       cursorY = doc.lastAutoTable.finalY + 14;
     });
@@ -525,10 +527,6 @@ function ensurePageRoom(doc, currentY, neededHeight) {
 
 function drawBrandHeader(doc, { margin, top, title, subtitleLines = [], rightTitle = '', rightValue = '', rightMeta = [] }) {
   const pageWidth = doc.internal.pageSize.getWidth();
-  doc.setDrawColor(...COLORS.accent);
-  doc.setLineWidth(2);
-  doc.line(margin, top + 48, pageWidth - margin, top + 48);
-
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10);
   doc.setTextColor(...COLORS.accent);
@@ -544,6 +542,11 @@ function drawBrandHeader(doc, { margin, top, title, subtitleLines = [], rightTit
   subtitleLines.forEach((line, index) => {
     doc.text(line, margin, top + 44 + index * 11);
   });
+
+  const ruleY = top + 50 + Math.max(0, subtitleLines.length - 1) * 11;
+  doc.setDrawColor(...COLORS.accent);
+  doc.setLineWidth(2);
+  doc.line(margin, ruleY, pageWidth - margin, ruleY);
 
   if (rightTitle || rightValue || rightMeta.length) {
     const rightX = pageWidth - margin;
@@ -567,7 +570,7 @@ function drawBrandHeader(doc, { margin, top, title, subtitleLines = [], rightTit
     });
   }
 
-  return top + 66 + Math.max(0, subtitleLines.length - 1) * 11;
+  return ruleY + 18;
 }
 
 function drawMetaCard(doc, { x, y, width, height, label, value, lines = [] }) {
@@ -704,11 +707,17 @@ function drawFlagCard(doc, x, y, width, flag) {
   return y + height;
 }
 
-function drawDetailEventCard(doc, x, y, width, event, t) {
+function estimateDetailEventCardHeight(doc, width, event, t) {
   const notesLines = event.notes ? doc.splitTextToSize(event.notes, width - 24) : [];
   const postIctalLines = event.postIctal?.summary ? doc.splitTextToSize(`${t('export.docs.post_ictal_summary', 'After-seizure summary')}: ${event.postIctal.summary}`, width - 24) : [];
   const extraLines = notesLines.length + postIctalLines.length;
-  const height = extraLines ? Math.max(104, 84 + extraLines * 9) : 96;
+  return extraLines ? Math.max(104, 84 + extraLines * 9) : 96;
+}
+
+function drawDetailEventCard(doc, x, y, width, event, t) {
+  const notesLines = event.notes ? doc.splitTextToSize(event.notes, width - 24) : [];
+  const postIctalLines = event.postIctal?.summary ? doc.splitTextToSize(`${t('export.docs.post_ictal_summary', 'After-seizure summary')}: ${event.postIctal.summary}`, width - 24) : [];
+  const height = estimateDetailEventCardHeight(doc, width, event, t);
   doc.setDrawColor(...COLORS.line);
   doc.roundedRect(x, y, width, height, 8, 8, 'S');
   doc.setFont('helvetica', 'bold');
@@ -819,6 +828,16 @@ function drawSymptomGroupHeader(doc, x, y, width, group, t) {
   doc.setFontSize(8);
   doc.setTextColor(...COLORS.muted);
   doc.text(`${t('export.docs.total')}: ${group.totalLabel}`, x + width - 10, y + 21, { align: 'right' });
+}
+
+function estimateSymptomGroupHeight(groupRows) {
+  const headerHeight = 44;
+  const tableHeaderHeight = 18;
+  const estimatedRows = groupRows.reduce((sum, row) => {
+    const longest = Math.max(...row.map(cell => String(cell || '').length));
+    return sum + (longest > 70 ? 34 : longest > 36 ? 28 : 22);
+  }, 0);
+  return headerHeight + tableHeaderHeight + estimatedRows + 12;
 }
 
 async function drawChartBlock(doc, x, y, width, chart, fallbackHeight = 150) {
