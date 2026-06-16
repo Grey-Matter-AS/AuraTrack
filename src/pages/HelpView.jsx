@@ -2,7 +2,18 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollFade } from '../components/ScrollFade';
 
-const SECTION_IDS = ['recording', 'tagging', 'manual', 'medications', 'history', 'settings'];
+const SECTION_IDS = [
+  'recording',
+  'tagging',
+  'manual',
+  'medications',
+  'wellbeing',
+  'eeg',
+  'history',
+  'reports',
+  'sync_backup',
+  'settings',
+];
 
 export default function HelpView({ onBack, onAbout }) {
   const { t } = useTranslation();

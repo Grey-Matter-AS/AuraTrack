@@ -165,6 +165,8 @@ AuraTrack/
 ├── Containerfile               ← Recipe for building a Docker container (for running in isolated environment).
 ├── .gitignore                  ← Tells Git which files to ignore (e.g., node_modules).
 ├── README.md                   ← Brief project description.
+├── scripts/                    ← Developer/test utilities.
+│   └── seed-browser-db-100.js   ← Browser-console IndexedDB seeder for randomized 100-record test data.
 │
 ├── public/                     ← Files served directly to the browser, unchanged.
 │   ├── manifest.json           ← PWA "ID card" — app name, icon, colors for installation.
@@ -1364,7 +1366,7 @@ This tabbed structure matters because it keeps all retrospective workflows toget
 | Encrypted Backup | A portable `.atbak` file with encrypted AuraTrack data |
 | Spreadsheet CSV | Comma-separated event, medication, dose-log, and EEG data for Excel/Sheets |
 | Simple Print / PDF | A printable table preview or downloaded PDF |
-| Neurologist Report | Detailed clinical PDF with charts, medications, and trigger analysis |
+| Neurologist Report | Detailed clinical PDF with charts, medications, wellbeing context, pagination-safe event details, and clinical flags |
 | Monthly Seizure Diary | Single-page A4 calendar grid for bring-to-appointment use |
 | EEG Diary PDF | Printable/exportable EEG session summary |
 
@@ -1874,11 +1876,12 @@ Each row: # · Date · Time · Type · Total Duration · Aura · Seizure · Reco
 
 Trigger tags are shown as small inline badges in each row (e.g. a purple "Sleep Deprivation" chip next to an event's notes).
 
-**Section 5: Trend Analysis — 4 SVG Charts**
+**Section 5: Trend Analysis — 5 SVG Charts**
 1. Frequency bar chart (events per day over the period)
 2. Duration line chart
 3. Type distribution
 4. Phase breakdown stacks
+5. Wellbeing correlation chart, with seizure counts as bars and mood/numeric wellbeing variables as separate line series
 
 **Section 6: Condensed Event Details**
 Full breakdown of the last 3 events plus any events over 5 minutes or that were edited. Each event shows trigger tags as coloured chips.
@@ -2187,22 +2190,36 @@ Manual overrides (`manualDurations`) take precedence over lap-derived values —
 
 #### `src/utils/pdfCharts.js`
 
-**What it is:** Generates SVG chart markup for use inside the neurologist report HTML document.
+**What it is:** Generates SVG chart markup for use inside the neurologist report HTML document and the direct jsPDF report.
 
-**Four chart generators:**
+**Chart generators:**
 
-1. **`freqBarChart(days)`** — Vertical bar chart of events per day over the reporting period
-2. **`durationLineChart(events)`** — Line chart of event duration over time
-3. **`typeDistribution(events)`** — Horizontal bar chart of seizure type breakdown
-4. **`phaseStackChart(events)`** — Stacked bar showing aura/seizure/recovery proportions per event
+1. **`freqBarChartSVG(events, days, endMs)`** — Vertical bar chart of events per day over the reporting period.
+2. **`durationLineSVG(events)`** — Line chart of event duration over time.
+3. **`typeBarSVG(events)`** — Horizontal bar chart of seizure type breakdown.
+4. **`phaseStackSVG(events)`** — Stacked bar showing aura/seizure/recovery proportions per event.
+5. **`wellbeingCorrelationSVG(events, wellbeingEntries, days, endMs)`** — Combined seizure/wellbeing chart. Seizures stay visually distinct as bars; mood intensity and each numeric or scale wellbeing factor are drawn as separate line series with a legend.
 
 SVG (Scalable Vector Graphics) is a way to describe shapes using mathematical coordinates rather than pixels. This means charts look sharp when printed at any resolution.
+
+All report SVGs set `font-family="Helvetica Neue, Arial, sans-serif"` on the root `<svg>`. This prevents browser or PDF engines from falling back to serif defaults in titles, legends, axes, and value labels.
+
+**Readable value labels:**
+
+- Line charts label a maximum of 5 points by default.
+- The selected labels prioritize the global maximum, local maxima, clinically important threshold values such as seizure durations over 5 minutes, and the final point when it adds useful context without clutter.
+- Bar charts label nonzero bars when the chart is sparse. Dense bar charts label at most the top 5 nonzero bars.
+- Bar labels are placed inside the bar when the bar is large enough for good contrast, otherwise just above or beside the bar.
+- Phase-stack charts label only larger readable segments and skip tiny segments.
+- The wellbeing chart uses normalized vertical positioning so mixed units can share one chart, but the labels still show the actual source values such as `4.8`, `2.1 h`, or `3`.
 
 ```javascript
 // A simple bar in SVG:
 // x, y: top-left corner; width, height: size; fill: color
 `<rect x="${x}" y="${y}" width="${barW}" height="${barH}" fill="#1e3a5f" rx="2"/>`
 ```
+
+**Wellbeing context rule:** The report does not calculate or display an "average mood intensity" index. Mood intensity is useful as a plotted daily value, but averaging it into one clinical score is misleading. The wellbeing report context instead focuses on entries count, days covered, top moods, top context factors, and recent entries.
 
 ---
 
@@ -2326,13 +2343,14 @@ A thin, minimal scrollbar that blends with the dark theme.
 5. App:
    → Fetches all events in the date range
    → Fetches medication logs for the same date range
+   → Fetches wellbeing entries for the same date range
    → Calls exportNeurologistReport(events, settings, medications, medLogs)
 6. A new browser tab opens with the complete report:
    → Patient name and neurologist details
    → Structured medications table with adherence count
    → Statistics grid
    → Events table with trigger badges
-   → Four SVG charts
+   → Five SVG charts, including wellbeing correlation when data exists
    → Condensed event details (with triggers highlighted)
    → Clinical flags including trigger aggregate
    → Data quality confidence score
@@ -2752,11 +2770,12 @@ The encrypted backup flow uses the same save mechanism, but the bytes written to
 
 Trigger tags appear as small inline chips next to each event.
 
-**Section 5: Trend Analysis — 4 SVG Charts**
+**Section 5: Trend Analysis — 5 SVG Charts**
 1. Frequency bar chart
 2. Duration line chart
 3. Type distribution
 4. Phase breakdown stacks
+5. Wellbeing correlation chart, using seizure bars plus separate mood/context line series
 
 **Section 6: Condensed Event Details**
 Full breakdown of the last 3 events plus any events over 5 minutes or that were edited. Each event shows trigger badges.
@@ -2802,6 +2821,24 @@ The chart functions calculate where each bar should go:
 const bh = (count / maxCount) * chartHeight;
 // If maxCount is 5 and this bar has count 3: bh = (3/5) * 100 = 60px
 ```
+
+---
+
+### Testing Heavy Reports with Seed Data
+
+The file `scripts/seed-browser-db-100.js` is a development/testing helper for creating realistic load in the browser database. AuraTrack stores app data in IndexedDB, so the script is designed to be pasted into the browser DevTools console while AuraTrack is open.
+
+**What it creates:**
+
+- 100 plausible randomized seizure events spread across the last 90 days.
+- Medication records, scheduled doses, and randomized medication logs.
+- Daily wellbeing entries with moods and allowed context factors such as sleep quality, stress, hydration, screen time, and missed meals.
+- EEG diary data, including one monitoring session and random activities.
+- Settings that make report generation and stress testing easier.
+
+**Safety rule:** The script only clears old seeded records whose UUID starts with `seed100-`. It does not intentionally delete real user records, but it is still meant for test browsers or development profiles, not live patient data.
+
+This script is especially useful when checking report pagination, symptom-log spacing, graph label density, and whether the neurologist report remains readable with 50 to 100 records.
 
 ---
 

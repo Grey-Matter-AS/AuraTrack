@@ -236,7 +236,6 @@
       "wellbeing_context": "Trivselskontekst",
       "wellbeing_entries": "Trivselsnotater",
       "wellbeing_days": "Dage dækket",
-      "wellbeing_avg_intensity": "Gennemsnitlig humørintensitet",
       "wellbeing_top_moods": "Hyppigste humør",
       "wellbeing_top_factors": "Hyppigste kontekstfaktorer",
       "wellbeing_recent_entries": "Seneste trivselsnotater",
@@ -333,6 +332,42 @@
           "Skift mellem Selv- og Pårørendetilstand under Indstillinger for at tilpasse grænsefladen.",
           "Skift tema, skriftstørrelse og accentfarve efter dine præferencer.",
           "Tilføj din neurologs navn og nødkontakter til hurtig adgang under et anfald."
+        ]
+      },
+      "wellbeing": {
+        "title": "Daily Wellbeing",
+        "steps": [
+          "Use the Daily Wellbeing Check-In to record mood, intensity, notes, and context factors for the day.",
+          "Configure wellbeing factors in Settings → Wellbeing. Scale, number, and boolean factors can be enabled or hidden without changing old entries.",
+          "The Wellbeing history tab helps compare entries with seizure timing. These patterns are for discussion and do not prove a trigger caused a seizure.",
+          "Neurologist reports can chart mood and numeric wellbeing factors as separate lines, with seizures kept visually distinct as bars."
+        ]
+      },
+      "eeg": {
+        "title": "EEG Diary",
+        "steps": [
+          "Turn on EEG diary controls in Settings → Recording when long-term EEG monitoring is needed.",
+          "Start an EEG session, then log activities, symptoms, medication changes, sleep, meals, and other clinically useful observations during the session.",
+          "Link seizure records when a seizure occurs during the EEG period so the report can connect the diary context to the event.",
+          "Export the EEG diary from History → Export when you need a printable session summary."
+        ]
+      },
+      "reports": {
+        "title": "Reports & Exports",
+        "steps": [
+          "Use History → Export to create encrypted backups, CSV files, printable event logs, neurologist reports, monthly seizure diaries, and EEG diary PDFs.",
+          "The neurologist report includes medications, adherence counts, event tables, clinical flags, data-quality notes, and charted seizure trends.",
+          "Report charts use sans-serif text and strict value-label limits so dense reports stay readable. The wellbeing chart uses seizure bars plus separate mood and numeric/context lines.",
+          "AuraTrack does not calculate an average mood intensity score; wellbeing summaries focus on entries, days covered, top moods, top context factors, and recent entries."
+        ]
+      },
+      "sync_backup": {
+        "title": "Sync & Backup",
+        "steps": [
+          "Use encrypted backups for recovery or device migration. The passphrase is required to restore and is not stored by AuraTrack.",
+          "Use Easy Sync, Private Sync, or manual encrypted transfer when moving data between devices.",
+          "Settings → Data & Backup shows storage protection status, backup reminders, import/export tools, and destructive data actions.",
+          "CSV, PDF, video, and backup files are sensitive medical files. Store and share them carefully."
         ]
       }
     }

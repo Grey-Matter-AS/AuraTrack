@@ -32,6 +32,13 @@ AuraTrack is a privacy-first seizure tracking PWA for people with epilepsy and t
 - Medication history grid with corrections and edited markers
 - Browser notification reminders for scheduled doses
 
+### Daily wellbeing tracking
+
+- Optional Daily Wellbeing Check-In for mood and context factors
+- Configurable wellbeing factors such as sleep, stress, hydration, missed meals, and other observed context
+- Wellbeing history tab for reviewing entries alongside seizure history
+- Daily wellbeing reminder that is skipped once an entry has already been logged for the day
+
 ### EEG diary
 
 - Optional EEG session tracking
@@ -43,9 +50,12 @@ AuraTrack is a privacy-first seizure tracking PWA for people with epilepsy and t
 
 - Encrypted backup export using a user-supplied passphrase
 - Encrypted backup import for restore or device migration
-- CSV export for spreadsheet analysis
+- CSV export for spreadsheet analysis, including seizure, medication, EEG, and wellbeing data
 - Printable event log / PDF export
-- Neurologist report with charts, medication summary, and clinical flags
+- Neurologist report with medication summary, clinical flags, data-quality notes, event details, and charted trends
+- Report charts use a consistent sans-serif font and capped value labels so dense reports remain readable
+- Wellbeing correlation chart keeps seizures as bars and plots mood/numeric wellbeing factors as separate labelled line series
+- Wellbeing report summaries focus on entries, days covered, top moods, top context factors, and recent entries; AuraTrack does not calculate an "average mood intensity" index
 - Monthly seizure diary
 - EEG diary preview / PDF export
 
@@ -80,6 +90,7 @@ AuraTrack is a privacy-first seizure tracking PWA for people with epilepsy and t
 | Medications | Medication setup, schedules, reminders, emergency visibility |
 | Appearance | Theme, accent color, font size, language |
 | Recording | Haptics, EEG diary toggle, quick-note labels |
+| Wellbeing | Optional check-in, reminder time, custom wellbeing factor definitions |
 | Clinician | Neurologist details, report notes, DOB inclusion |
 | Data & Backup | Storage protection, encrypted backup/import, reminder interval, destructive data actions |
 
@@ -111,6 +122,13 @@ npm run dev
 | `npm run build` | Build production bundle |
 | `npm run preview` | Preview production build |
 | `npm run lint` | Run ESLint |
+| `npm run test:i18n` | Check locale key coverage |
+
+### Test data seeding
+
+For report and UI stress testing, `scripts/seed-browser-db-100.js` can be pasted into the browser DevTools console while AuraTrack is open. It creates plausible randomized test data directly in the app's IndexedDB: 100 seizure events, medication schedules and dose logs, wellbeing entries, EEG diary data, and relevant settings.
+
+The script only removes earlier records whose UUIDs start with its own `seed100-` prefix before inserting a new randomized set. It is meant for test browsers and development profiles, not real patient data.
 
 ## Documentation
 
