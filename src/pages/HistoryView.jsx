@@ -50,7 +50,7 @@ export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, hi
   const dangerMap = useMemo(() => buildDangerMap(allEvents), [allEvents]);
 
   return (
-    <div className="flex-1 flex flex-col w-full max-w-md sm:max-w-xl md:max-w-2xl overflow-hidden">
+    <div className="app-page-shell flex-1 flex flex-col w-full overflow-hidden mx-auto">
 
       {/* Header */}
       <div className="flex items-center gap-4 mb-4 shrink-0">
@@ -63,7 +63,7 @@ export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, hi
         </button>
         <h2 className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--text-dim)' }}>{t('history.title')}</h2>
         {activeTab === 'seizures' && (
-          <span className="ml-auto text-[9px] font-bold px-2 py-1 rounded" style={{ color: 'var(--text-faint)', backgroundColor: 'var(--bg-card)' }}>
+          <span className="app-status-badge app-status-badge--neutral ml-auto">
             {t('history.events_count', { count: filtered.length })}
           </span>
         )}
@@ -95,7 +95,7 @@ export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, hi
                 className="px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all shrink-0"
                 style={{
                   backgroundColor: completionFilter === 'needs_details' ? 'var(--accent)' : 'var(--bg-raised)',
-                  color: completionFilter === 'needs_details' ? '#fff' : 'var(--text-secondary)',
+                  color: completionFilter === 'needs_details' ? '#fff' : 'var(--text-on-raised)',
                   border: completionFilter === 'needs_details' ? '1px solid transparent' : '1px solid var(--border)',
                 }}
               >
@@ -105,7 +105,7 @@ export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, hi
                 <button
                   onClick={() => { setFromDate(''); setToDate(''); setCompletionFilter('all'); setPage(0); }}
                   className="px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all shrink-0"
-                  style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+                  style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
                 >
                   {t('history.clear')}
                 </button>
@@ -157,7 +157,7 @@ export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, hi
                 disabled={page === 0}
                 onClick={() => setPage(p => Math.max(0, p - 1))}
                 className="px-4 py-2 rounded-xl text-xs font-black uppercase disabled:opacity-30 transition-all"
-                style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-secondary)' }}
+                style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)' }}
               >
                 {t('history.prev')}
               </button>
@@ -168,7 +168,7 @@ export default function HistoryView({ onBack, onEdit, onDelete, onViewDetail, hi
                 disabled={currentPage >= totalPages - 1}
                 onClick={() => setPage(p => Math.min(Math.max(0, totalPages - 1), p + 1))}
                 className="px-4 py-2 rounded-xl text-xs font-black uppercase disabled:opacity-30 transition-all"
-                style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-secondary)' }}
+                style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)' }}
               >
                 {t('history.next')}
               </button>

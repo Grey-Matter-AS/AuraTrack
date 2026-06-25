@@ -33,23 +33,12 @@ import { HelpIcon, HistoryIcon, SettingsIcon } from './components/AppIcons';
 function Header({ onSettings, onHistory, onHelp }) {
   const { t } = useTranslation();
   return (
-    <div className="app-header pt-4 pb-3 shrink-0 px-4 sm:px-6">
-      <div className="app-header__top">
-        <div className="app-header__top-spacer" aria-hidden="true" />
-        <div className="app-header__brand text-center">
-          <h1 className="app-header__brand-title text-[10px] font-black tracking-[0.4em] uppercase">AURATRACK</h1>
-          <div className="h-1 w-4 bg-[var(--accent)] mx-auto mt-1 rounded-full opacity-60" />
-        </div>
-        <button
-          onClick={onHelp}
-          className="app-toolbar-btn app-header__help text-[12px] font-black active:scale-95 transition-all"
-          style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
-          aria-label={t('nav.help_label')}
-        >
-          <HelpIcon className="w-4.5 h-4.5" />
-        </button>
+    <div className="app-header app-width-shell pt-4 pb-3 shrink-0">
+      <div className="app-header__brand text-center">
+        <h1 className="app-header__brand-title text-[10px] font-black tracking-[0.4em] uppercase">AURATRACK</h1>
+        <div className="h-1 w-4 bg-[var(--accent)] mx-auto mt-1 rounded-full opacity-60" />
       </div>
-      <div className="app-header__bottom">
+      <div className="app-header__nav">
         <button
           onClick={onHistory}
           className="app-toolbar-btn app-header__nav-btn app-header__history gap-2 text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
@@ -58,14 +47,24 @@ function Header({ onSettings, onHistory, onHelp }) {
           <HistoryIcon className="w-4 h-4 shrink-0" />
           {t('nav.history')}
         </button>
-        <button
-          onClick={onSettings}
-          className="app-toolbar-btn app-header__nav-btn app-header__settings gap-2 text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
-          style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
-        >
-          <SettingsIcon className="w-4 h-4 shrink-0" />
-          {t('nav.settings')}
-        </button>
+        <div className="app-header__actions">
+          <button
+            onClick={onSettings}
+            className="app-toolbar-btn app-header__nav-btn app-header__settings gap-2 text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
+            style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
+          >
+            <SettingsIcon className="w-4 h-4 shrink-0" />
+            {t('nav.settings')}
+          </button>
+          <button
+            onClick={onHelp}
+            className="app-toolbar-btn app-header__help text-[12px] font-black active:scale-95 transition-all"
+            style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
+            aria-label={t('nav.help_label')}
+          >
+            <HelpIcon className="w-4.5 h-4.5" />
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -524,7 +523,7 @@ function App() {
       {pwa.needRefresh && (
         <div
           className="fixed top-0 left-0 right-0 z-50 py-2 px-4 flex items-center justify-between text-xs font-bold"
-          style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
+          style={{ backgroundColor: 'var(--action-blue)', color: '#fff' }}
         >
           <span>App update available</span>
           <button onClick={() => pwa.updateServiceWorker()} className="underline">Reload</button>

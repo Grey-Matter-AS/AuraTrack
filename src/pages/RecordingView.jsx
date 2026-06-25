@@ -157,24 +157,24 @@ function RecordingView({
       {/* RED ALERT — fullscreen overlay, stays on top of everything */}
       {showAlert && <RedAlert elapsed={elapsed} onClose={dismissAlert} emergencyMedications={emergencyMedications} neurologistName={neurologistName} neurologistContact={neurologistContact} emergencyContact={emergencyContact} />}
 
-      <div data-recording-screen className="app-page-shell flex-1 min-h-full flex flex-col items-center mx-auto px-3 py-6 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] animate-in fade-in gap-4">
+      <div data-recording-screen className="app-page-shell flex-1 min-h-full flex flex-col items-center mx-auto py-6 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] animate-in fade-in gap-4">
 
         {/* 1. TOP: Phase Breakdown */}
         {userMode === 'CARETAKER' && (
           <div className="grid grid-cols-3 gap-3 w-full mb-2 shrink-0">
             <div className="py-3 rounded-2xl text-center" style={{ backgroundColor: 'var(--bg-raised)', border: '1px solid var(--border)' }}>
-              <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-1">{t('recording.aura')}</p>
+              <p className="app-status-badge app-status-badge--warning !text-[9px] !px-2 !py-0.5 !mb-1 mx-auto">{t('recording.aura')}</p>
               <p className="text-2xl font-mono font-bold leading-none" style={{ color: 'var(--text-primary)' }}>{fmtDur(auraDuration)}</p>
             </div>
             <div className="py-3 rounded-2xl text-center" style={{ backgroundColor: 'var(--bg-raised)', border: '1px solid var(--border)' }}>
-              <p className="text-[10px] font-black text-red-500 uppercase tracking-widest mb-1">{t('recording.seizure')}</p>
+              <p className="app-status-badge app-status-badge--danger !text-[9px] !px-2 !py-0.5 !mb-1 mx-auto">{t('recording.seizure')}</p>
               <p className="text-2xl font-mono font-bold leading-none"
                 style={{ color: laps.aura && !laps.seizure && seizureDuration >= 240 ? '#ef4444' : 'var(--text-primary)' }}>
                 {fmtDur(seizureDuration)}
               </p>
             </div>
             <div className="py-3 rounded-2xl text-center" style={{ backgroundColor: 'var(--bg-raised)', border: '1px solid var(--border)' }}>
-              <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1">{t('recording.recovery')}</p>
+              <p className="app-status-badge app-status-badge--info !text-[9px] !px-2 !py-0.5 !mb-1 mx-auto">{t('recording.recovery')}</p>
               <p className="text-2xl font-mono font-bold leading-none" style={{ color: 'var(--text-primary)' }}>{fmtDur(recoveryDuration)}</p>
             </div>
           </div>
@@ -218,7 +218,7 @@ function RecordingView({
           </div>
           {/* Warning ring at 4 min (1 min before alert) */}
           {elapsed >= 240 && elapsed < ALERT_THRESHOLD && (
-            <p className="text-red-500 text-[10px] font-black uppercase tracking-widest mt-2 animate-pulse">
+            <p className="app-status-badge app-status-badge--danger mt-2 animate-pulse">
               {userMode === 'CARETAKER' ? t('recording.long_seizure_warning') : t('recording.approaching_threshold')}
             </p>
           )}
@@ -228,9 +228,9 @@ function RecordingView({
               disabled={!videoSupported && !videoRecording}
               className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest disabled:opacity-40"
               style={{
-                backgroundColor: videoRecording ? 'rgba(185,28,28,0.12)' : 'var(--bg-raised)',
-                color: videoRecording ? '#ef4444' : 'var(--text-secondary)',
-                border: `1px solid ${videoRecording ? 'rgba(185,28,28,0.25)' : 'var(--border)'}`,
+                backgroundColor: videoRecording ? '#dc2626' : 'var(--bg-raised)',
+                color: videoRecording ? '#fff' : 'var(--text-on-raised)',
+                border: `1px solid ${videoRecording ? '#991b1b' : 'var(--border)'}`,
               }}
             >
               {videoRecording ? t('recording.stop_video', 'Stop Video') : t('recording.start_video', 'Start Video')}
@@ -241,7 +241,7 @@ function RecordingView({
                 className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest"
                 style={{
                   backgroundColor: 'var(--bg-raised)',
-                  color: 'var(--text-secondary)',
+                  color: 'var(--text-on-raised)',
                   border: '1px solid var(--border)',
                 }}
               >
@@ -250,7 +250,7 @@ function RecordingView({
             )}
           </div>
           {videoError && (
-            <p className="text-[11px] mt-2" style={{ color: '#fca5a5' }}>{videoError}</p>
+            <p className="app-alert app-alert--danger rounded-xl px-4 py-2 text-[11px] mt-2">{videoError}</p>
           )}
         </div>
 
@@ -264,17 +264,17 @@ function RecordingView({
                   onClick={() => onLap('aura')}
                   className="app-action-tile border-[2px] transition-all active:scale-95 disabled:active:scale-100"
                   style={laps.aura
-                    ? { backgroundColor: 'rgba(15,23,42,0.82)', borderColor: 'rgba(51,65,85,0.75)', color: 'var(--text-dim)' }
+                    ? { backgroundColor: '#334155', borderColor: '#64748b', color: '#fff' }
                     : { backgroundColor: '#d97706', borderColor: '#fbbf24', color: '#fff', boxShadow: '0 18px 34px rgba(180,83,9,0.28)' }}
                 >
-                  <span className="app-action-tile__eyebrow" style={{ color: laps.aura ? 'var(--text-faint)' : 'rgba(255,255,255,0.82)' }}>
+                  <span className="app-action-tile__eyebrow" style={{ color: laps.aura ? '#fff' : 'rgba(255,255,255,0.82)' }}>
                     {t('recording.aura')}
                   </span>
 	                  <span className="app-action-tile__title inline-flex items-center justify-center gap-2">
 	                    {laps.aura && <CheckIcon className="w-5 h-5" />}
 	                    {laps.aura ? stripTrailingCheck(t('recording.aura_ended')) : t('recording.end_aura')}
 	                  </span>
-                  <span className="app-action-tile__detail" style={{ color: laps.aura ? 'var(--text-faint)' : 'rgba(255,255,255,0.88)' }}>
+                  <span className="app-action-tile__detail" style={{ color: laps.aura ? '#fff' : 'rgba(255,255,255,0.88)' }}>
                     {fmtDur(auraDuration)}
                   </span>
                 </button>
@@ -284,19 +284,19 @@ function RecordingView({
                   onClick={() => onLap('seizure')}
                   className="app-action-tile border-[2px] transition-all active:scale-95 disabled:active:scale-100"
                   style={laps.seizure
-                    ? { backgroundColor: 'rgba(15,23,42,0.82)', borderColor: 'rgba(51,65,85,0.75)', color: 'var(--text-dim)' }
+                    ? { backgroundColor: '#334155', borderColor: '#64748b', color: '#fff' }
                     : (!laps.aura
                         ? { backgroundColor: 'var(--bg-card)', borderColor: 'var(--border)', color: 'var(--text-faint)', opacity: 0.58 }
                         : { backgroundColor: '#dc2626', borderColor: '#f87171', color: '#fff', boxShadow: '0 18px 34px rgba(127,29,29,0.3)' })}
                 >
-                  <span className="app-action-tile__eyebrow" style={{ color: laps.seizure ? 'var(--text-faint)' : (!laps.aura ? 'var(--text-faint)' : 'rgba(255,255,255,0.82)') }}>
+                  <span className="app-action-tile__eyebrow" style={{ color: laps.seizure ? '#fff' : (!laps.aura ? 'var(--text-faint)' : 'rgba(255,255,255,0.82)') }}>
                     {t('recording.seizure')}
                   </span>
 	                  <span className="app-action-tile__title inline-flex items-center justify-center gap-2">
 	                    {laps.seizure && <CheckIcon className="w-5 h-5" />}
 	                    {laps.seizure ? stripTrailingCheck(t('recording.seizure_ended')) : t('recording.end_seizure')}
 	                  </span>
-                  <span className="app-action-tile__detail" style={{ color: laps.seizure ? 'var(--text-faint)' : (!laps.aura ? 'var(--text-faint)' : 'rgba(255,255,255,0.88)') }}>
+                  <span className="app-action-tile__detail" style={{ color: laps.seizure ? '#fff' : (!laps.aura ? 'var(--text-faint)' : 'rgba(255,255,255,0.88)') }}>
                     {fmtDur(seizureDuration)}
                   </span>
                 </button>
@@ -307,7 +307,7 @@ function RecordingView({
               onClick={() => setShowMarkers(!showMarkers)}
               className="app-action-tile app-action-tile--center border-[2px] transition-all active:scale-95"
               style={showMarkers
-                ? { backgroundColor: 'var(--accent)', borderColor: 'var(--accent)', color: '#fff' }
+                ? { backgroundColor: 'var(--action-blue)', borderColor: 'var(--action-blue-border)', color: '#fff' }
                 : { backgroundColor: 'var(--bg-raised)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
             >
               <span className="app-action-tile__eyebrow" style={{ color: showMarkers ? 'rgba(255,255,255,0.82)' : 'var(--text-faint)' }}>
@@ -329,7 +329,7 @@ function RecordingView({
                       className="app-action-tile app-action-tile--compact app-action-tile--center text-[11px] font-black tracking-tight uppercase transition-all active:scale-95"
                       style={{ backgroundColor: 'var(--bg-raised)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
                     >
-                      <span className="leading-tight">{label}</span>
+                      <span className="app-chip-text">{label}</span>
                     </button>
                   ))}
                 </div>

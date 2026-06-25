@@ -22,8 +22,7 @@ export function WizardMenu({
         {onBack ? (
           <button
             onClick={onBack}
-            className="px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
-            style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+            className="app-icon-action app-icon-action--primary !px-5 !py-3"
           >
             ← BACK
           </button>
@@ -40,13 +39,13 @@ export function WizardMenu({
             onClick={() => (multiSelect ? onToggleOption?.(opt) : onPick?.(opt))}
             className="app-action-tile border-[2px] text-sm font-black uppercase tracking-widest active:scale-[0.97] transition-all shadow-lg"
             style={multiSelect && selectedOptions.includes(opt)
-              ? { backgroundColor: 'color-mix(in srgb, var(--accent) 18%, var(--bg-raised))', color: 'var(--text-primary)', border: '2px solid var(--accent)' }
+              ? { backgroundColor: 'var(--action-blue)', color: '#fff', border: '2px solid var(--action-blue-border)' }
               : { backgroundColor: 'var(--bg-raised)', color: 'var(--text-primary)', border: '2px solid var(--border)' }}
           >
-            <span className="flex items-center justify-between gap-4">
-              <span>{opt}</span>
+            <span className="flex items-center justify-between gap-4 flex-wrap">
+              <span className="app-chip-text flex-1 min-w-[7rem]">{opt}</span>
               {multiSelect && (
-                <span className="text-xs" style={{ color: selectedOptions.includes(opt) ? 'var(--accent)' : 'var(--text-faint)' }}>
+                <span className="text-xs shrink-0" style={{ color: selectedOptions.includes(opt) ? '#fff' : 'var(--text-secondary)' }}>
                   {selectedOptions.includes(opt) ? 'SELECTED' : 'TAP TO ADD'}
                 </span>
               )}
@@ -59,7 +58,7 @@ export function WizardMenu({
             onClick={onConfirmSelection}
             disabled={selectedOptions.length === 0}
             className="w-full mt-4 py-5 px-8 text-center rounded-[2rem] text-xs font-black uppercase tracking-widest active:scale-[0.97] transition-all shadow-lg disabled:opacity-50 disabled:active:scale-100"
-            style={{ backgroundColor: 'var(--accent)', color: '#fff', border: '2px solid color-mix(in srgb, var(--accent) 65%, white 0%)' }}
+            style={{ backgroundColor: '#16a34a', color: '#fff', border: '2px solid #15803d' }}
           >
             {confirmLabel}
           </button>
@@ -68,21 +67,17 @@ export function WizardMenu({
           <button
             onClick={onPrimaryAction}
             className="w-full mt-4 py-5 px-8 text-center rounded-[2rem] text-xs font-black uppercase tracking-widest active:scale-[0.97] transition-all shadow-lg inline-flex items-center justify-center gap-2"
-            style={{
-              backgroundColor: 'color-mix(in srgb, var(--accent) 18%, var(--bg-card))',
-              color: 'var(--accent)',
-              border: '2px solid color-mix(in srgb, var(--accent) 55%, transparent)',
-            }}
+            style={{ backgroundColor: 'var(--action-blue)', color: '#fff', border: '2px solid var(--action-blue-border)' }}
           >
             {primaryActionIcon}
-            {primaryActionLabel}
+            <span className="app-chip-text">{primaryActionLabel}</span>
           </button>
         )}
         {onSkip && (
           <button
             onClick={onSkip}
             className="w-full mt-4 py-5 px-8 text-center rounded-[2rem] text-xs font-black uppercase tracking-widest active:scale-[0.97] transition-all shadow-lg"
-            style={{ backgroundColor: 'rgba(245,158,11,0.16)', color: '#f59e0b', border: '2px solid rgba(245,158,11,0.45)' }}
+            style={{ backgroundColor: '#334155', color: '#facc15', border: '2px solid #f59e0b' }}
           >
             {skipLabel}
           </button>

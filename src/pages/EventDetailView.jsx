@@ -4,7 +4,7 @@ import { db } from '../data/db';
 import { formatDuration, formatEventDate, formatEventTime } from '../utils/formatters';
 import { ScrollFade } from '../components/ScrollFade';
 import { computeDangerFlags } from '../utils/dangerFlags';
-import { WarningIcon } from '../components/AppIcons';
+import { EditIcon, WarningIcon } from '../components/AppIcons';
 
 const CLUSTER_WINDOW_MS = 8 * 60 * 1000;
 
@@ -16,13 +16,12 @@ function DangerAlert({ dangerFlags }) {
     <div className="space-y-2 mb-2">
       {flags.includes('long_duration') && (
         <div
-          className="flex items-start gap-3 p-4 rounded-2xl"
-          style={{ backgroundColor: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.4)' }}
+          className="app-alert app-alert--warning flex items-start gap-3 p-4 rounded-2xl"
         >
-          <WarningIcon className="w-5 h-5 text-amber-500 shrink-0" />
+          <WarningIcon className="w-5 h-5 shrink-0" />
           <div>
-            <p className="text-amber-500 font-black text-xs uppercase tracking-widest">{t('event_detail.danger_prolonged_title')}</p>
-            <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+            <p className="font-black text-xs uppercase tracking-widest">{t('event_detail.danger_prolonged_title')}</p>
+            <p className="app-alert__muted text-[11px] mt-0.5">
               {t('event_detail.danger_prolonged_desc')}
             </p>
           </div>
@@ -30,13 +29,12 @@ function DangerAlert({ dangerFlags }) {
       )}
       {flags.includes('cluster') && (
         <div
-          className="flex items-start gap-3 p-4 rounded-2xl"
-          style={{ backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.5)' }}
+          className="app-alert app-alert--danger flex items-start gap-3 p-4 rounded-2xl"
         >
-          <WarningIcon className="w-5 h-5 text-red-500 shrink-0" />
+          <WarningIcon className="w-5 h-5 shrink-0" />
           <div>
-            <p className="text-red-500 font-black text-xs uppercase tracking-widest">{t('event_detail.danger_cluster_title', { count: dangerFlags.clusterCount })}</p>
-            <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+            <p className="font-black text-xs uppercase tracking-widest">{t('event_detail.danger_cluster_title', { count: dangerFlags.clusterCount })}</p>
+            <p className="app-alert__muted text-[11px] mt-0.5">
               {t('event_detail.danger_cluster_desc', { count: dangerFlags.clusterCount })}
             </p>
           </div>
@@ -103,23 +101,23 @@ export default function EventDetailView({ eventId, onEdit, onClose, durationForm
   const recoveryDur = m.recovery ?? (event.laps?.seizure && event.laps?.recovery ? Math.floor((event.laps.recovery - event.laps.seizure) / 1000) : 0);
 
   return (
-    <div className="flex-1 flex flex-col w-full max-w-md sm:max-w-xl md:max-w-2xl overflow-hidden">
+    <div className="app-page-shell flex-1 flex flex-col w-full overflow-hidden mx-auto">
 
       {/* Header */}
-      <div className="flex items-center gap-4 mb-4 shrink-0">
+      <div className="flex items-center gap-2 sm:gap-4 mb-4 shrink-0">
         <button
           onClick={onClose}
-          className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
-          style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
+          className="app-icon-action app-icon-action--primary"
         >
           {t('nav.back')}
         </button>
-        <h2 className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--text-dim)' }}>{t('event_detail.title')}</h2>
+        <h2 className="flex-1 min-w-0 text-center text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--text-dim)' }}>{t('event_detail.title')}</h2>
         <button
           onClick={() => onEdit(event)}
-          className="ml-auto min-h-[40px] px-4 text-[10px] font-bold text-blue-400 border border-blue-900/50 rounded-xl tracking-wider uppercase active:bg-blue-600 active:text-white transition-all"
+          className="app-icon-action app-icon-action--accent"
         >
-          {t('event_detail.edit')}
+          <EditIcon className="w-4 h-4 shrink-0" />
+          <span className="app-chip-text">{t('event_detail.edit')}</span>
         </button>
       </div>
 
@@ -150,15 +148,15 @@ export default function EventDetailView({ eventId, onEdit, onClose, durationForm
           </div>
           <div className="grid grid-cols-3 gap-3 pt-4" style={{ borderTop: '1px solid var(--border-subtle)' }}>
             <div className="text-center">
-              <p className="text-[9px] text-amber-500 font-black uppercase mb-1">{t('event_detail.aura')}</p>
+              <p className="app-status-badge app-status-badge--warning !text-[9px] !px-2 !py-0.5 !mb-1 mx-auto">{t('event_detail.aura')}</p>
               <p className="text-lg font-mono font-black" style={{ color: 'var(--text-primary)' }}>{fmtDur(auraDur)}</p>
             </div>
             <div className="text-center">
-              <p className="text-[9px] text-red-500 font-black uppercase mb-1">{t('event_detail.seizure')}</p>
+              <p className="app-status-badge app-status-badge--danger !text-[9px] !px-2 !py-0.5 !mb-1 mx-auto">{t('event_detail.seizure')}</p>
               <p className="text-lg font-mono font-black" style={{ color: 'var(--text-primary)' }}>{fmtDur(seizureDur)}</p>
             </div>
             <div className="text-center">
-              <p className="text-[9px] text-blue-400 font-black uppercase mb-1">{t('event_detail.recovery')}</p>
+              <p className="app-status-badge app-status-badge--info !text-[9px] !px-2 !py-0.5 !mb-1 mx-auto">{t('event_detail.recovery')}</p>
               <p className="text-lg font-mono font-black" style={{ color: 'var(--text-primary)' }}>{fmtDur(recoveryDur)}</p>
             </div>
           </div>
@@ -189,13 +187,13 @@ export default function EventDetailView({ eventId, onEdit, onClose, durationForm
 	            {event.isEdited && (
 	              <div className="flex justify-between">
 	                <span style={{ color: 'var(--text-dim)' }}>{t('event_detail.status')}</span>
-	                <span className="font-medium text-xs uppercase" style={{ color: 'var(--text-secondary)' }}>{t('event_detail.edited')}</span>
+	                <span className="app-status-badge app-status-badge--info">{t('event_detail.edited')}</span>
 	              </div>
 	            )}
 	            {!event.isComplete && (
 	              <div className="flex justify-between">
 	                <span style={{ color: 'var(--text-dim)' }}>{t('event_detail.status')}</span>
-	                <span className="font-medium text-xs uppercase" style={{ color: 'var(--accent)' }}>{t('event_detail.needs_details', 'Needs details')}</span>
+	                <span className="app-status-badge app-status-badge--warning">{t('event_detail.needs_details', 'Needs details')}</span>
 	              </div>
 	            )}
 	          </div>
@@ -229,7 +227,7 @@ export default function EventDetailView({ eventId, onEdit, onClose, durationForm
             <div className="space-y-3">
               {event.symptoms.map((s, i) => (
                 <div key={i} className="pb-3 last:pb-0" style={{ borderBottom: i < event.symptoms.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
-                  <p className="text-blue-400 font-black text-sm uppercase tracking-tight leading-none mb-1">{s.symptom}</p>
+                  <p className="text-sm uppercase tracking-tight leading-none mb-1" style={{ color: 'var(--action-blue)' }}>{s.symptom}</p>
                   <p className="text-[11px] font-medium" style={{ color: 'var(--text-secondary)' }}>{s.region} › {s.specificPart}</p>
                 </div>
               ))}
@@ -245,8 +243,7 @@ export default function EventDetailView({ eventId, onEdit, onClose, durationForm
               {event.triggers.map(trigger => (
                 <span
                   key={trigger}
-                  className="px-3 py-1.5 rounded-full text-[11px] font-black uppercase tracking-wide"
-                  style={{ backgroundColor: 'color-mix(in srgb, var(--accent) 15%, transparent)', color: 'var(--accent)', border: '1.5px solid color-mix(in srgb, var(--accent) 40%, transparent)' }}
+                  className="app-status-badge app-status-badge--info"
                 >
                   {trigger}
                 </span>
@@ -267,8 +264,7 @@ export default function EventDetailView({ eventId, onEdit, onClose, durationForm
                 {event.postIctal.findings.map((finding) => (
                   <span
                     key={finding}
-                    className="px-3 py-1.5 rounded-full text-[11px] font-black uppercase tracking-wide"
-                    style={{ backgroundColor: 'rgba(96,165,250,0.12)', color: '#93c5fd', border: '1.5px solid rgba(96,165,250,0.35)' }}
+                    className="app-status-badge app-status-badge--info"
                   >
                     {finding}
                   </span>
@@ -280,7 +276,7 @@ export default function EventDetailView({ eventId, onEdit, onClose, durationForm
               <div className="space-y-2">
                 {event.postIctal.paralysisLocations.map((location, index) => (
                   <div key={`${location.region}-${location.subRegion}-${location.specificPart}-${index}`} className="rounded-2xl px-3 py-2" style={{ backgroundColor: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.25)' }}>
-                    <p className="text-[11px] font-black uppercase tracking-wide" style={{ color: '#93c5fd' }}>
+                    <p className="text-[11px] font-black uppercase tracking-wide" style={{ color: 'var(--action-blue)' }}>
                       {t('tagging.todds_paralysis', "Todd's paralysis")}
                     </p>
                     <p className="text-[11px]" style={{ color: 'var(--text-secondary)' }}>

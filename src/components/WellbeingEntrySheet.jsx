@@ -80,7 +80,7 @@ function FactorControl({ definition, value, onChange, t }) {
               className="rounded-xl px-1 py-2 text-[10px] font-medium uppercase tracking-widest"
               style={{
                 backgroundColor: numeric === scaleValue ? 'var(--accent)' : 'var(--bg-card)',
-                color: numeric === scaleValue ? '#fff' : 'var(--text-dim)',
+                color: numeric === scaleValue ? '#fff' : 'var(--text-primary)',
                 border: numeric === scaleValue ? '1px solid transparent' : '1px solid var(--border)',
               }}
             >
@@ -179,7 +179,7 @@ export function WellbeingEntrySheet({ entry = null, factorDefinitions = [], onSa
               {entry ? t('wellbeing.edit_entry', 'Edit Wellbeing Entry') : t('wellbeing.new_entry', 'Log Wellbeing')}
             </h3>
           </div>
-          <button onClick={onClose} className="text-xs font-medium uppercase tracking-widest" style={{ color: 'var(--text-dim)' }}>
+          <button onClick={onClose} className="app-icon-action app-icon-action--primary !min-h-[36px] !px-3">
             {t('eeg.close', 'Close')}
           </button>
         </div>
@@ -210,8 +210,8 @@ export function WellbeingEntrySheet({ entry = null, factorDefinitions = [], onSa
                   onClick={() => setPrimaryMood(option.label)}
                   className="rounded-xl px-3 py-2 text-xs font-medium text-left"
                   style={{
-                    backgroundColor: active ? 'var(--accent)' : 'var(--bg-raised)',
-                    color: active ? '#fff' : 'var(--text-primary)',
+                  backgroundColor: active ? 'var(--accent)' : 'var(--bg-raised)',
+                    color: active ? '#fff' : 'var(--text-on-raised)',
                     border: active ? '1px solid transparent' : '1px solid var(--border)',
                   }}
                 >
@@ -240,7 +240,7 @@ export function WellbeingEntrySheet({ entry = null, factorDefinitions = [], onSa
                 className="rounded-xl py-2 text-[10px] font-medium uppercase tracking-widest"
                 style={{
                   backgroundColor: intensity === option.value ? 'var(--accent)' : 'var(--bg-raised)',
-                  color: intensity === option.value ? '#fff' : 'var(--text-dim)',
+                  color: intensity === option.value ? '#fff' : 'var(--text-on-raised)',
                   border: intensity === option.value ? '1px solid transparent' : '1px solid var(--border)',
                 }}
               >
@@ -275,20 +275,20 @@ export function WellbeingEntrySheet({ entry = null, factorDefinitions = [], onSa
           />
         </div>
 
-        {error && <p className="mx-5 mt-3 text-xs font-medium text-red-400">{error}</p>}
+        {error && <p className="app-alert app-alert--danger mx-5 mt-3 rounded-xl px-4 py-3 text-xs font-medium">{error}</p>}
 
         <div className="p-5 pt-3 flex gap-2 shrink-0" style={{ borderTop: '1px solid var(--border-subtle)' }}>
           <button
             onClick={submit}
             className="flex-1 py-3 rounded-xl text-xs font-medium uppercase tracking-widest"
-            style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
+            style={{ backgroundColor: '#16a34a', color: '#fff', border: '1px solid #15803d' }}
           >
             {t('wellbeing.save', 'Save')}
           </button>
           <button
             onClick={onClose}
             className="flex-1 py-3 rounded-xl text-xs font-medium uppercase tracking-widest"
-            style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+            style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
           >
             {t('eeg.cancel', 'Cancel')}
           </button>

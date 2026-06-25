@@ -28,7 +28,7 @@ export default function HelpView({ onBack, onAbout }) {
   }));
 
   return (
-    <div className="flex-1 flex flex-col w-full max-w-md sm:max-w-xl md:max-w-2xl overflow-hidden">
+    <div className="app-page-shell flex-1 flex flex-col w-full overflow-hidden mx-auto">
 
       <div className="flex items-center gap-4 mb-6 shrink-0">
         <button
@@ -69,7 +69,7 @@ export default function HelpView({ onBack, onAbout }) {
                   <div key={i} className="flex gap-3">
                     <span
                       className="shrink-0 text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center mt-0.5"
-                      style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
+                      style={{ backgroundColor: 'var(--action-blue)', color: '#fff' }}
                     >
                       {i + 1}
                     </span>

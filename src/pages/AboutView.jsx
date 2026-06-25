@@ -14,7 +14,7 @@ export default function AboutView({ onBack }) {
   }));
 
   return (
-    <div className="flex-1 flex flex-col w-full max-w-md sm:max-w-xl md:max-w-2xl overflow-hidden">
+    <div className="app-page-shell flex-1 flex flex-col w-full overflow-hidden mx-auto">
 
       <div className="flex items-center gap-4 mb-6 shrink-0">
         <button
@@ -37,8 +37,7 @@ export default function AboutView({ onBack }) {
           </h1>
           <div className="h-1 w-8 bg-[var(--accent)] mx-auto mt-2 rounded-full" />
           <span
-            className="inline-block mt-3 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest"
-            style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)', border: '1px solid var(--border)' }}
+            className="app-status-badge app-status-badge--neutral mt-3"
           >
             v{pkg.version}
           </span>
@@ -103,7 +102,7 @@ export default function AboutView({ onBack }) {
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1 text-center text-[11px] font-bold py-2.5 rounded-xl active:scale-95 transition-all"
-              style={{ backgroundColor: 'var(--bg-base)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+              style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
             >
               {t('about.license')}
             </a>
@@ -112,7 +111,7 @@ export default function AboutView({ onBack }) {
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1 text-center text-[11px] font-bold py-2.5 rounded-xl active:scale-95 transition-all"
-              style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
+              style={{ backgroundColor: 'var(--action-blue)', color: '#fff', border: '1px solid var(--action-blue-border)' }}
             >
               {t('about.report_issue')}
             </a>

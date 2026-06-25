@@ -68,7 +68,7 @@ export function MedicationDosePanel({ medicationGroups, allActiveMedications, on
           </h3>
         </div>
         {saved ? (
-          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-green-400 uppercase tracking-widest">
+          <span className="app-status-badge app-status-badge--success">
             <CheckIcon className="w-3 h-3" /> {t('medication_panel.saved')}
           </span>
         ) : (
@@ -76,7 +76,7 @@ export function MedicationDosePanel({ medicationGroups, allActiveMedications, on
             onClick={handleSave}
             disabled={toggledKeys.size === 0}
             className="rounded-xl px-3 py-2 text-[10px] font-medium uppercase tracking-widest active:scale-95 transition-all disabled:opacity-30"
-            style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
+            style={{ backgroundColor: '#16a34a', color: '#fff', border: '1px solid #15803d' }}
           >
             {t('medication_panel.save')}
           </button>
@@ -85,9 +85,9 @@ export function MedicationDosePanel({ medicationGroups, allActiveMedications, on
 
       <div className="space-y-4">
         {timeSlots.length === 0 ? (
-          <p className="text-xs italic text-center py-1" style={{ color: allDoneToday ? '#16a34a' : 'var(--text-faint)' }}>
+          <p className="text-xs italic text-center py-1" style={{ color: allDoneToday ? 'inherit' : 'var(--text-faint)' }}>
             {allDoneToday ? (
-              <span className="inline-flex items-center justify-center gap-1.5">
+              <span className="app-status-badge app-status-badge--success">
                 <CheckIcon className="w-3.5 h-3.5" /> {t('medication_panel.all_done_today')}
               </span>
             ) : t('medication_panel.no_scheduled_today')}
@@ -110,12 +110,12 @@ export function MedicationDosePanel({ medicationGroups, allActiveMedications, on
                     const key = `${med.id}|${hhMM}`;
                     const active = toggledKeys.has(key);
                     const btnStyle = active
-                      ? { backgroundColor: 'var(--accent)', color: '#fff', border: '1px solid transparent' }
+                      ? { backgroundColor: '#16a34a', color: '#fff', border: '1px solid #15803d' }
                       : slotIsMissed
-                      ? { backgroundColor: 'var(--status-missed-bg)', color: 'var(--status-missed-text)', border: '1px solid var(--status-missed-border)' }
+                      ? { backgroundColor: '#dc2626', color: '#fff', border: '1px solid #991b1b' }
                       : slotIsLate
-                      ? { backgroundColor: 'var(--status-late-bg)', color: 'var(--status-late-text)', border: '1px solid var(--status-late-border)' }
-                      : { backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)', border: '1px solid var(--border)' };
+                      ? { backgroundColor: '#334155', color: '#facc15', border: '1px solid #f59e0b' }
+                      : { backgroundColor: '#334155', color: '#fff', border: '1px solid #64748b' };
                     return (
                       <button
                         key={key}
@@ -187,7 +187,7 @@ export function MedicationDosePanel({ medicationGroups, allActiveMedications, on
             <button
               onClick={() => setShowAdHoc(false)}
               className="w-full py-3 rounded-2xl font-medium text-xs uppercase tracking-widest"
-              style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)', border: '1px solid var(--border)' }}
+              style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
             >
               {t('medication_panel.cancel')}
             </button>

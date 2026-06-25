@@ -23,8 +23,7 @@ export function BackupReminderModal({ isOpen, overdueDays = 7, onBackupNow, onSn
           </div>
           <button
             onClick={onSnooze}
-            className="rounded-full p-2 transition-all active:scale-95"
-            style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)', border: '1px solid var(--border)' }}
+            className="app-icon-action app-icon-action--primary !rounded-full !p-2"
             aria-label={t('backup.reminder.dismiss', 'Dismiss')}
           >
             <CloseIcon className="w-4 h-4" />
@@ -52,7 +51,7 @@ export function BackupReminderModal({ isOpen, overdueDays = 7, onBackupNow, onSn
           <button
             onClick={onBackupNow}
             className="w-full rounded-2xl py-3 text-[11px] font-black uppercase tracking-widest transition-all active:scale-95"
-            style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
+            style={{ backgroundColor: 'var(--action-blue)', color: '#fff', border: '1px solid var(--action-blue-border)' }}
           >
             {t('backup.reminder.backup_now', 'Back up now')}
           </button>
@@ -65,8 +64,8 @@ export function BackupReminderModal({ isOpen, overdueDays = 7, onBackupNow, onSn
           </button>
           <button
             onClick={onDisable}
-            className="w-full py-2 text-[10px] font-black uppercase tracking-widest transition-all active:opacity-70"
-            style={{ color: 'var(--text-dim)' }}
+            className="w-full rounded-2xl py-3 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95"
+            style={{ backgroundColor: '#334155', color: '#facc15', border: '1px solid #f59e0b' }}
           >
             {t('backup.reminder.turn_off', 'Turn off backup reminders')}
           </button>

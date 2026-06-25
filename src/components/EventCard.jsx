@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { formatDuration, formatEventDate, formatEventTime } from '../utils/formatters';
-import { WarningIcon } from './AppIcons';
+import { EyeIcon, TrashIcon, WarningIcon } from './AppIcons';
 
 function DangerBadge({ dangerFlags }) {
   const { t } = useTranslation();
@@ -13,8 +13,7 @@ function DangerBadge({ dangerFlags }) {
     <div className="flex flex-wrap gap-1 mt-1">
       {isLong && (
         <span
-          className="inline-flex items-center gap-1 text-[9px] font-black uppercase px-1.5 py-0.5 rounded"
-          style={{ backgroundColor: 'rgba(245,158,11,0.15)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.4)' }}
+          className="app-status-badge app-status-badge--warning"
           title={t('event_card.long_duration_title')}
         >
           <WarningIcon className="w-3 h-3" /> {t('event_card.long_duration_badge')}
@@ -22,8 +21,7 @@ function DangerBadge({ dangerFlags }) {
       )}
       {isCluster && (
         <span
-          className="inline-flex items-center gap-1 text-[9px] font-black uppercase px-1.5 py-0.5 rounded"
-          style={{ backgroundColor: 'rgba(239,68,68,0.15)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.4)' }}
+          className="app-status-badge app-status-badge--danger"
           title={t('event_card.cluster_title', { count: dangerFlags.clusterCount })}
         >
           <WarningIcon className="w-3 h-3" /> {t('event_card.cluster_badge', { count: dangerFlags.clusterCount })}
@@ -56,32 +54,27 @@ export function EventCard({ event, onEdit, onDelete, onViewDetail, dangerFlags, 
             <p className="font-bold" style={{ color: 'var(--text-primary)' }}>{event.type || t('event_card.unknown')}</p>
             {event.isEdited && (
               <span
-                className="text-[9px] px-1.5 py-0.5 rounded uppercase font-bold"
-                style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)' }}
+                className="app-status-badge app-status-badge--info"
               >{t('event_card.edited')}</span>
             )}
             {event.isManualEntry && (
               <span
-                className="text-[9px] px-1.5 py-0.5 rounded uppercase font-bold"
-                style={{ backgroundColor: 'rgba(99,102,241,0.15)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.3)' }}
+                className="app-status-badge app-status-badge--info"
               >{t('event_card.manual_entry')}</span>
             )}
             {event.videoAttached && (
               <span
-                className="text-[9px] px-1.5 py-0.5 rounded uppercase font-bold"
-                style={{ backgroundColor: 'rgba(14,165,233,0.15)', color: '#38bdf8', border: '1px solid rgba(56,189,248,0.3)' }}
+                className="app-status-badge app-status-badge--info"
               >{t('recording.video_badge', 'Video')}</span>
             )}
             {event.eegSessionId && (
               <span
-                className="text-[9px] px-1.5 py-0.5 rounded uppercase font-bold"
-                style={{ backgroundColor: 'rgba(234,179,8,0.15)', color: '#facc15', border: '1px solid rgba(250,204,21,0.25)' }}
+                className="app-status-badge app-status-badge--warning"
               >{t('eeg.badge', 'EEG')}</span>
             )}
             {!event.isComplete && (
               <span
-                className="text-[9px] px-1.5 py-0.5 rounded uppercase font-bold"
-                style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-faint)', border: '1px solid var(--border)' }}
+                className="app-status-badge app-status-badge--warning"
               >{t('event_card.untagged', 'Untagged')}</span>
             )}
           </div>
@@ -110,15 +103,17 @@ export function EventCard({ event, onEdit, onDelete, onViewDetail, dangerFlags, 
       <div className="flex gap-2 mt-3">
         <button
           onClick={handleView}
-          className="flex-1 min-h-[40px] text-[10px] font-bold text-blue-400 uppercase px-2 py-2 border border-blue-900/50 rounded-xl tracking-wider active:bg-blue-600 active:text-white transition-all"
+          className="app-icon-action app-icon-action--accent flex-1"
         >
-          {t('event_card.view_edit')}
+          <EyeIcon className="w-4 h-4 shrink-0" />
+          <span className="app-chip-text">{t('event_card.view_edit')}</span>
         </button>
         <button
           onClick={() => onDelete(event.id)}
-          className="min-h-[40px] text-[10px] font-bold text-red-500 uppercase px-3 py-2 border border-red-900/50 rounded-xl tracking-wider active:bg-red-600 active:text-white transition-all"
+          className="app-icon-action app-icon-action--danger"
         >
-          {t('event_card.delete')}
+          <TrashIcon className="w-4 h-4 shrink-0" />
+          <span className="app-chip-text">{t('event_card.delete')}</span>
         </button>
       </div>
     </div>

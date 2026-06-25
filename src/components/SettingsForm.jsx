@@ -101,7 +101,7 @@ function Segments({ options, value, onChange }) {
             onClick={() => onChange(v)}
             className="flex-1 min-w-[56px] py-2.5 rounded-xl font-black text-[11px] uppercase tracking-widest transition-all"
             style={{
-              backgroundColor: active ? 'var(--accent)' : 'var(--bg-raised)',
+              backgroundColor: active ? 'var(--action-blue)' : 'var(--bg-raised)',
               color: 'var(--text-on-raised)',
               border: active ? '2px solid transparent' : '2px solid var(--border)',
               opacity: active ? 1 : 0.7,
@@ -290,9 +290,9 @@ function MedForm({ form, setForm, onSave, onCancel, saveLabel = 'Save', formTitl
               onClick={setDaily}
               className="px-3 py-1.5 rounded-full font-black text-[10px] uppercase tracking-widest transition-all active:scale-95"
               style={{
-                backgroundColor: isDaily ? 'var(--accent)' : 'var(--bg-raised)',
-                color: isDaily ? '#fff' : 'var(--text-dim)',
-                border: isDaily ? '1px solid transparent' : '1px solid var(--border)',
+                backgroundColor: isDaily ? 'var(--action-blue)' : 'var(--bg-raised)',
+                color: isDaily ? '#fff' : 'var(--text-on-raised)',
+                border: isDaily ? '1px solid var(--action-blue-border)' : '1px solid var(--border)',
               }}
             >
               {t('settings.medications.daily')}
@@ -305,9 +305,9 @@ function MedForm({ form, setForm, onSave, onCancel, saveLabel = 'Save', formTitl
                   onClick={() => toggleDay(day)}
                   className="px-3 py-1.5 rounded-full font-black text-[10px] uppercase tracking-widest transition-all active:scale-95"
                   style={{
-                    backgroundColor: active ? 'var(--accent)' : 'var(--bg-raised)',
-                    color: active ? '#fff' : 'var(--text-dim)',
-                    border: active ? '1px solid transparent' : '1px solid var(--border)',
+                    backgroundColor: active ? 'var(--action-blue)' : 'var(--bg-raised)',
+                    color: active ? '#fff' : 'var(--text-on-raised)',
+                    border: active ? '1px solid var(--action-blue-border)' : '1px solid var(--border)',
                   }}
                 >
                   {t(labelKey)}
@@ -343,14 +343,14 @@ function MedForm({ form, setForm, onSave, onCancel, saveLabel = 'Save', formTitl
           onClick={onSave}
           disabled={!form.name.trim() || !form.dose}
           className="flex-1 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all active:scale-95 disabled:opacity-40"
-          style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
+          style={{ backgroundColor: '#16a34a', color: '#fff', border: '1px solid #15803d' }}
         >
           {saveLabel}
         </button>
         <button
           onClick={onCancel}
           className="flex-1 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all active:scale-95"
-          style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-dim)', border: '1px solid var(--border)' }}
+          style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
         >
           {t('settings.medications.cancel')}
         </button>
@@ -458,8 +458,8 @@ function MedicationSection({ flash, notificationPermission, onRequestNotificatio
             {editingId === m.id ? (
               <MedForm form={editForm} setForm={setEditForm} onSave={handleUpdate} onCancel={() => { setEditingId(null); setEditForm(null); }} saveLabel={t('settings.medications.update')} formTitle={t('settings.medications.edit_form_title')} />
             ) : deleteConfirm === m.id ? (
-              <div className="rounded-2xl p-3 space-y-2" style={{ backgroundColor: 'rgba(185,28,28,0.1)', border: '1px solid rgba(185,28,28,0.3)' }}>
-                <p className="text-red-400 text-xs font-bold">{t('settings.medications.remove_confirm', { name: m.name })}</p>
+              <div className="rounded-2xl p-3 space-y-2" style={{ backgroundColor: '#7f1d1d', border: '1px solid #dc2626' }}>
+                <p className="text-white text-xs font-bold">{t('settings.medications.remove_confirm', { name: m.name })}</p>
                 <div className="flex gap-2">
                   <button onClick={() => handleDelete(m.id)} className="flex-1 py-2 bg-red-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest">{t('settings.medications.remove')}</button>
                   <button onClick={() => setDeleteConfirm(null)} className="flex-1 py-2 rounded-xl text-xs font-bold" style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)' }}>{t('settings.medications.cancel')}</button>
@@ -472,7 +472,7 @@ function MedicationSection({ flash, notificationPermission, onRequestNotificatio
                     <p className="text-sm font-black" style={{ color: 'var(--text-primary)' }}>
 	                      {m.name}
 	                      {m.showInEmergency && (
-	                        <span className="inline-flex items-center gap-1 ml-2 text-[9px] font-black text-red-500 uppercase">
+	                        <span className="app-status-badge app-status-badge--danger ml-2">
 	                          <SirenIcon className="w-3 h-3" /> {stripLeadingEmoji(t('settings.medications.emergency_badge'))}
 	                        </span>
 	                      )}
@@ -495,14 +495,12 @@ function MedicationSection({ flash, notificationPermission, onRequestNotificatio
                   <div className="flex gap-1.5 ml-2 shrink-0">
                     <button
                       onClick={() => startEdit(m)}
-                      className="min-w-[32px] min-h-[32px] flex items-center justify-center rounded-xl text-[11px] font-black transition-all active:scale-95"
-                      style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-dim)', border: '1px solid var(--border)' }}
+                      className="app-icon-action app-icon-action--accent !min-w-[32px] !min-h-[32px] !p-0"
                       aria-label={t('settings.medications.edit_label', { name: m.name })}
                     ><EditIcon className="w-4 h-4" /></button>
                     <button
                       onClick={() => setDeleteConfirm(m.id)}
-                      className="min-w-[32px] min-h-[32px] flex items-center justify-center rounded-xl text-[11px] font-black text-red-500 active:bg-red-600 active:text-white transition-all"
-                      style={{ backgroundColor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)' }}
+                      className="app-icon-action app-icon-action--danger !min-w-[32px] !min-h-[32px] !p-0"
                       aria-label={t('settings.medications.remove_label', { name: m.name })}
                     ><CloseIcon className="w-4 h-4" /></button>
                   </div>
@@ -519,7 +517,7 @@ function MedicationSection({ flash, notificationPermission, onRequestNotificatio
         <button
           onClick={() => setShowForm(true)}
           className="w-full py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95"
-          style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
+          style={{ backgroundColor: 'var(--action-blue)', color: '#fff', border: '1px solid var(--action-blue-border)' }}
         >
           {t('settings.medications.add_btn')}
         </button>
@@ -559,7 +557,7 @@ function MedicationSection({ flash, notificationPermission, onRequestNotificatio
             <button
               onClick={onRequestNotificationPermission}
               className="ml-3 px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 shrink-0"
-              style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
+              style={{ backgroundColor: 'var(--action-blue)', color: '#fff', border: '1px solid var(--action-blue-border)' }}
             >
               {t('settings.medications.reminder_enable')}
             </button>
@@ -815,7 +813,7 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
           <div className="flex gap-4 flex-wrap pt-1">
             {[
               { key: 'red',    hex: '#dc2626', label: t('settings.appearance.accent_red')    },
-              { key: 'blue',   hex: '#3b82f6', label: t('settings.appearance.accent_blue')   },
+              { key: 'blue',   hex: '#5b8def', label: t('settings.appearance.accent_blue')   },
               { key: 'green',  hex: '#16a34a', label: t('settings.appearance.accent_green')  },
               { key: 'purple', hex: '#9333ea', label: t('settings.appearance.accent_purple') },
               { key: 'amber',  hex: '#d97706', label: t('settings.appearance.accent_amber')  },
@@ -1000,7 +998,7 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
                     />
                     <button
                       onClick={() => removeWellbeingFactor(index)}
-                      className="text-[10px] font-black uppercase tracking-widest text-red-400"
+                      className="app-icon-action app-icon-action--danger !min-h-[36px] !px-3 !text-[10px]"
                     >
                       {t('settings.recording.remove_factor', 'Remove factor')}
                     </button>
@@ -1161,18 +1159,20 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
         <input ref={fileInputRef} type="file" accept=".atbak,.json,application/json" className="hidden" onChange={handleImport} />
 
         {statusMsg && (
-          <p className="text-center text-xs py-2 font-bold" style={{ color: statusMsg.includes('fail') || statusMsg.includes('No') || statusMsg.includes('mislyk') || statusMsg.includes('Ingen') ? '#ef4444' : '#4ade80' }}>
+          <p
+            className={`text-center text-xs py-2 font-bold rounded-xl ${statusMsg.includes('fail') || statusMsg.includes('No') || statusMsg.includes('mislyk') || statusMsg.includes('Ingen') ? 'app-alert app-alert--danger' : 'app-status-badge app-status-badge--success w-full'}`}
+          >
             {statusMsg}
           </p>
         )}
 
         {/* Danger Zone */}
         <div className="border-t mt-2 pt-5 space-y-3" style={{ borderColor: 'rgba(185,28,28,0.3)' }}>
-          <p className="text-[10px] font-black uppercase tracking-widest text-red-500">{t('settings.data.danger_zone')}</p>
+          <p className="app-status-badge app-status-badge--danger">{t('settings.data.danger_zone')}</p>
 
           {showClearConfirm ? (
-            <div className="rounded-2xl p-4 space-y-3" style={{ backgroundColor: 'rgba(185,28,28,0.1)', border: '1px solid rgba(185,28,28,0.3)' }}>
-              <p className="text-red-400 text-sm font-bold">{t('settings.data.clear_confirm')}</p>
+            <div className="rounded-2xl p-4 space-y-3" style={{ backgroundColor: '#7f1d1d', border: '1px solid #dc2626' }}>
+              <p className="text-white text-sm font-bold">{t('settings.data.clear_confirm')}</p>
               <div className="flex gap-3">
                 <button onClick={handleClearAllData} className="flex-1 py-3 bg-red-600 text-white rounded-xl font-black uppercase text-[10px] tracking-widest">
                   {t('settings.data.clear_yes')}
@@ -1229,8 +1229,8 @@ export function SettingsForm({ settings, onUpdate, onReset, pwa, activeTab, noti
         )}
         <div className="pt-1">
           {showResetConfirm ? (
-            <div className="rounded-2xl p-4 space-y-3" style={{ backgroundColor: 'rgba(185,28,28,0.1)', border: '1px solid rgba(185,28,28,0.3)' }}>
-              <p className="text-red-400 text-sm font-bold">{t('settings.data.reset_confirm')}</p>
+            <div className="rounded-2xl p-4 space-y-3" style={{ backgroundColor: '#7f1d1d', border: '1px solid #dc2626' }}>
+              <p className="text-white text-sm font-bold">{t('settings.data.reset_confirm')}</p>
               <div className="flex gap-3">
                 <button onClick={handleResetSettings} className="flex-1 py-3 bg-red-600 text-white rounded-xl font-black uppercase text-[10px] tracking-widest">
                   {t('settings.data.reset_yes')}

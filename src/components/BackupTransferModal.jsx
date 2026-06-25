@@ -163,8 +163,7 @@ export function BackupTransferModal({
           </div>
           <button
             onClick={onClose}
-            className="rounded-full p-2 transition-all active:scale-95"
-            style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)', border: '1px solid var(--border)' }}
+            className="app-icon-action app-icon-action--primary !rounded-full !p-2"
             aria-label={t('backup.modal.close', 'Close')}
           >
             <CloseIcon className="h-4 w-4" />
@@ -236,7 +235,7 @@ export function BackupTransferModal({
           </div>
 
           {error && (
-            <p className="rounded-xl px-4 py-3 text-sm font-bold" style={{ backgroundColor: 'rgba(185,28,28,0.12)', color: '#f87171', border: '1px solid rgba(239,68,68,0.25)' }}>
+            <p className="app-alert app-alert--danger rounded-xl px-4 py-3 text-sm font-bold">
               {error}
             </p>
           )}
@@ -246,7 +245,7 @@ export function BackupTransferModal({
               onClick={isExport ? handleExport : handleImport}
               disabled={busy}
               className="flex-1 rounded-2xl py-3 text-[11px] font-black uppercase tracking-widest transition-all active:scale-95 disabled:opacity-60"
-              style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
+              style={{ backgroundColor: 'var(--action-blue)', color: '#fff', border: '1px solid var(--action-blue-border)' }}
             >
               {busy ? t('backup.modal.working', 'Working...') : submitLabel}
             </button>

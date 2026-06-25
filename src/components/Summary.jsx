@@ -10,7 +10,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { TRIGGERS } from '../data/constants';
-import { CheckIcon, CloseIcon, GripIcon } from './AppIcons';
+import { CheckIcon, CloseIcon, EditIcon, GripIcon, TrashIcon } from './AppIcons';
 
 const POST_ICTAL_FINDINGS = [
   'Confusion',
@@ -55,7 +55,7 @@ function SortableSymptomRow({ symptom, index, onRemove }) {
       <DragHandle {...listeners} />
 
       <div className="flex-1 min-w-0">
-        <p className="text-blue-400 font-black text-sm uppercase tracking-tight leading-none mb-1 truncate">
+        <p className="text-sm uppercase tracking-tight leading-none mb-1 truncate" style={{ color: 'var(--action-blue)' }}>
           {symptom.symptom}
         </p>
         <p className="text-[11px] font-medium truncate" style={{ color: 'var(--text-secondary)' }}>
@@ -65,10 +65,10 @@ function SortableSymptomRow({ symptom, index, onRemove }) {
 
       <button
         onClick={() => onRemove(index)}
-        className="shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center text-[10px] font-black text-red-500 uppercase rounded-xl border transition-all active:bg-red-600 active:text-white"
-        style={{ backgroundColor: 'rgba(239,68,68,0.08)', borderColor: 'rgba(239,68,68,0.3)' }}
+        className="app-icon-action app-icon-action--danger shrink-0"
+        aria-label="Remove symptom"
       >
-        <CloseIcon className="w-4 h-4" />
+        <TrashIcon className="w-4 h-4" />
       </button>
     </div>
   );
@@ -99,17 +99,16 @@ function EditableTimer({ phase, label, color, calcValue, manualDurations, edited
           <p className="text-lg font-mono font-black" style={{ color: 'var(--text-primary)' }}>
             {displayValue}s
             {isEdited && (
-              <span className="text-[8px] font-black uppercase ml-1.5 px-1 py-0.5 rounded align-middle"
-                style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)' }}>
+              <span className="app-status-badge app-status-badge--info ml-1.5 align-middle !px-1.5 !py-0.5 !text-[8px]">
                 edited
               </span>
             )}
           </p>
           <button
             onClick={() => setStage('confirm')}
-            className="min-h-[36px] px-3 rounded-lg text-[9px] font-black uppercase tracking-wider active:scale-95 transition-all"
-            style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)', border: '1px solid var(--border)' }}
+            className="app-icon-action app-icon-action--accent !min-h-[36px] !min-w-0 !px-3 !text-[9px]"
           >
+            <EditIcon className="w-3.5 h-3.5 shrink-0" />
             EDIT
           </button>
         </div>
@@ -151,7 +150,7 @@ function EditableTimer({ phase, label, color, calcValue, manualDurations, edited
           </button>
           <button onClick={cancelEdit}
             className="min-w-[40px] min-h-[40px] px-2 rounded-lg font-black text-xs active:scale-95 transition-transform"
-            style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)' }}>
+            style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}>
             <CloseIcon className="w-4 h-4" />
           </button>
         </div>
@@ -190,16 +189,15 @@ function EditableTotalTimer({ calcValue, manualDurations, editedTimers, onSetMan
             {fmtDur(displayValue)}
           </p>
           {isEdited && (
-            <span className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded"
-              style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)' }}>
+            <span className="app-status-badge app-status-badge--info !px-1.5 !py-0.5 !text-[8px]">
               edited
             </span>
           )}
           <button
             onClick={() => setStage('confirm')}
-            className="min-h-[36px] px-3 rounded-lg text-[9px] font-black uppercase tracking-wider active:scale-95 transition-all"
-            style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)', border: '1px solid var(--border)' }}
+            className="app-icon-action app-icon-action--accent !min-h-[36px] !min-w-0 !px-3 !text-[9px]"
           >
+            <EditIcon className="w-3.5 h-3.5 shrink-0" />
             EDIT
           </button>
         </div>
@@ -241,7 +239,7 @@ function EditableTotalTimer({ calcValue, manualDurations, editedTimers, onSetMan
           </button>
           <button onClick={cancelEdit}
             className="min-h-[44px] px-4 rounded-xl text-sm font-black uppercase active:scale-95 transition-transform"
-            style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)' }}>
+            style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}>
             <CloseIcon className="w-4 h-4" />
           </button>
         </div>
@@ -381,7 +379,7 @@ function Summary({
           />
           <div className="text-right shrink-0">
             <p className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: 'var(--text-dim)' }}>LOG STATUS</p>
-            <p className="text-xs font-black text-green-500 uppercase tracking-tighter">VERIFIED</p>
+            <p className="app-status-badge app-status-badge--success">VERIFIED</p>
           </div>
         </div>
 
@@ -390,7 +388,7 @@ function Summary({
             calcValue={auraDur}     manualDurations={manualDurations} editedTimers={editedTimers} onSetManualDuration={handleSetManualDuration} />
           <EditableTimer phase="seizure"  label="SEIZURE"  color="#ef4444"
             calcValue={seizureDur}  manualDurations={manualDurations} editedTimers={editedTimers} onSetManualDuration={handleSetManualDuration} />
-          <EditableTimer phase="recovery" label="RECOVERY" color="#60a5fa"
+          <EditableTimer phase="recovery" label="RECOVERY" color="var(--action-blue)"
             calcValue={recoveryDur} manualDurations={manualDurations} editedTimers={editedTimers} onSetManualDuration={handleSetManualDuration} />
         </div>
       </div>
@@ -440,7 +438,7 @@ function Summary({
                     style={{ backgroundColor: 'var(--bg-raised)', borderColor: 'var(--accent)' }}>
                     <DragHandle />
                     <div className="flex-1 min-w-0">
-                      <p className="text-blue-400 font-black text-sm uppercase tracking-tight leading-none truncate">
+                      <p className="text-sm uppercase tracking-tight leading-none truncate" style={{ color: 'var(--action-blue)' }}>
                         {activeSymptom.symptom}
                       </p>
                       <p className="text-[11px] font-medium truncate" style={{ color: 'var(--text-secondary)' }}>
@@ -452,6 +450,26 @@ function Summary({
               </DragOverlay>
             </DndContext>
           )}
+
+          <div className="app-balanced-grid mt-4 pt-4" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+            <button
+              onClick={onAddAnother}
+              className="app-action-tile app-action-tile--compact app-action-tile--center font-black uppercase text-xs tracking-widest active:scale-95 transition-all"
+              style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
+            >
+              <span className="app-chip-text">+ ADD ANOTHER SYMPTOM</span>
+            </button>
+
+            {onSaveFavorite && tempSymptomList.length > 0 && (
+              <button
+                onClick={onSaveFavorite}
+                className="app-action-tile app-action-tile--compact app-action-tile--center font-black uppercase text-[11px] tracking-widest active:scale-95 transition-all"
+                style={{ backgroundColor: 'var(--action-blue)', color: '#fff', border: '1px solid var(--action-blue-border)' }}
+              >
+                <span className="app-chip-text">Save Current Symptoms as Favorite Set</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Post-ictal findings */}
@@ -468,10 +486,10 @@ function Summary({
                   onClick={() => onTogglePostIctalFinding?.(finding)}
                   className="app-action-tile app-action-tile--compact app-action-tile--center text-[11px] font-black tracking-wide transition-all active:scale-95"
                   style={selected
-                    ? { backgroundColor: '#60a5fa', color: '#0f172a', border: '1.5px solid #60a5fa' }
-                    : { backgroundColor: 'transparent', color: 'var(--text-dim)', border: '1.5px solid var(--border)' }}
+                    ? { backgroundColor: 'var(--action-blue)', color: '#fff', border: '1.5px solid var(--action-blue-border)' }
+                    : { backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1.5px solid var(--border)' }}
                 >
-                  <span className="leading-tight">{finding}</span>
+                  <span className="app-chip-text">{finding}</span>
                 </button>
               );
             })}
@@ -500,7 +518,7 @@ function Summary({
                 {postIctal.paralysisLocations.map((location, index) => (
                   <div key={`${location.region}-${location.subRegion}-${location.specificPart}-${index}`} className="flex items-center gap-3 rounded-2xl px-3 py-2" style={{ backgroundColor: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.25)' }}>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[11px] font-black uppercase tracking-wide" style={{ color: '#93c5fd' }}>
+                      <p className="text-[11px] font-black uppercase tracking-wide" style={{ color: 'var(--action-blue)' }}>
                         {t('tagging.todds_paralysis', "Todd's paralysis")}
                       </p>
                       <p className="text-[11px] leading-snug break-words" style={{ color: 'var(--text-secondary)' }}>
@@ -509,10 +527,10 @@ function Summary({
                     </div>
                     <button
                       onClick={() => onRemovePostIctalParalysisLocation?.(index)}
-                      className="shrink-0 min-w-[40px] min-h-[40px] flex items-center justify-center text-[10px] font-black uppercase rounded-xl border transition-all active:bg-red-600 active:text-white"
-                      style={{ backgroundColor: 'rgba(239,68,68,0.08)', borderColor: 'rgba(239,68,68,0.3)', color: '#ef4444' }}
+                      className="app-icon-action app-icon-action--danger shrink-0"
+                      aria-label={t('tagging.remove_area', 'Remove area')}
                     >
-                      <CloseIcon className="w-4 h-4" />
+                      <TrashIcon className="w-4 h-4" />
                     </button>
                   </div>
                 ))}
@@ -539,11 +557,11 @@ function Summary({
                   onClick={() => onTriggerToggle?.(t)}
                   className="app-action-tile app-action-tile--compact app-action-tile--center text-[11px] font-black uppercase tracking-wide transition-all active:scale-95"
                   style={selected
-                    ? { backgroundColor: 'var(--accent)', color: '#fff', border: '1.5px solid var(--accent)' }
-                    : { backgroundColor: 'transparent', color: 'var(--text-dim)', border: '1.5px solid var(--border)' }
+                    ? { backgroundColor: 'var(--action-blue)', color: '#fff', border: '1.5px solid var(--action-blue-border)' }
+                    : { backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1.5px solid var(--border)' }
                   }
                 >
-                  <span className="leading-tight">{t}</span>
+                  <span className="app-chip-text">{t}</span>
                 </button>
               );
             })}
@@ -567,29 +585,9 @@ function Summary({
 
       {/* 3. BOTTOM ACTIONS */}
       <div className="app-section-card mt-2">
-        <div className="app-balanced-grid">
-          <button
-            onClick={onAddAnother}
-            className="app-action-tile app-action-tile--compact app-action-tile--center font-black uppercase text-xs tracking-widest active:scale-95 transition-all"
-            style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
-          >
-            + ADD ANOTHER SYMPTOM
-          </button>
-
-          {onSaveFavorite && tempSymptomList.length > 0 && (
-            <button
-              onClick={onSaveFavorite}
-              className="app-action-tile app-action-tile--compact app-action-tile--center font-black uppercase text-[11px] tracking-widest active:scale-95 transition-all"
-              style={{ backgroundColor: 'rgba(59,130,246,0.12)', color: '#60a5fa', border: '1px solid rgba(59,130,246,0.35)' }}
-            >
-              Save Current Symptoms as Favorite Set
-            </button>
-          )}
-        </div>
-
         <button
           onClick={onSave}
-          className="w-full mt-3 min-h-[4.75rem] px-5 bg-green-600 text-white rounded-[1.85rem] font-black uppercase text-sm tracking-[0.2em] shadow-xl active:scale-95 transition-transform"
+          className="w-full min-h-[4.75rem] px-5 bg-green-600 text-white rounded-[1.85rem] font-black uppercase text-sm tracking-[0.2em] shadow-xl active:scale-95 transition-transform"
         >
           FINISH & SAVE LOG
         </button>
@@ -599,7 +597,7 @@ function Summary({
             <button
               onClick={onSkip}
               className="app-action-tile app-action-tile--compact app-action-tile--center font-black uppercase text-[10px] tracking-widest active:scale-95 transition-all"
-              style={{ backgroundColor: 'rgba(245,158,11,0.16)', border: '2px solid rgba(245,158,11,0.45)', color: '#f59e0b' }}
+              style={{ backgroundColor: '#334155', border: '2px solid #f59e0b', color: '#facc15' }}
             >
               {t('tagging.save_timing_only')}
             </button>
@@ -607,8 +605,8 @@ function Summary({
 
           <button
             onClick={onCancel}
-            className="app-action-tile app-action-tile--compact app-action-tile--center font-black uppercase text-[10px] tracking-widest active:bg-red-600 active:text-white transition-all"
-            style={{ backgroundColor: 'rgba(239,68,68,0.08)', border: '2px solid rgba(239,68,68,0.4)', color: '#ef4444' }}
+            className="app-action-tile app-action-tile--compact app-action-tile--center font-black uppercase text-[10px] tracking-widest active:scale-95 transition-all"
+            style={{ backgroundColor: '#dc2626', border: '2px solid #991b1b', color: '#fff' }}
           >
             CANCEL & DISCARD
           </button>

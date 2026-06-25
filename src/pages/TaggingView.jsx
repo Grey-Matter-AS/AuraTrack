@@ -56,7 +56,7 @@ function TextEntryStep({
           onClick={onSubmit}
           disabled={!value.trim()}
           className="w-full py-5 rounded-[2rem] text-xs font-black uppercase tracking-widest transition-all disabled:opacity-50"
-          style={{ backgroundColor: 'var(--accent)', color: '#fff', border: '2px solid color-mix(in srgb, var(--accent) 65%, white 0%)' }}
+          style={{ backgroundColor: 'var(--action-blue)', color: '#fff', border: '2px solid var(--action-blue-border)' }}
         >
           {submitLabel}
         </button>

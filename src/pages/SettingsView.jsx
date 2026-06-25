@@ -18,7 +18,7 @@ export default function SettingsView({ settings, onUpdate, onReset, onBack, pwa,
   ];
 
   return (
-    <div className="flex-1 flex flex-col w-full max-w-md sm:max-w-xl md:max-w-2xl overflow-hidden">
+    <div className="app-page-shell flex-1 flex flex-col w-full overflow-hidden mx-auto">
 
       {/* Header */}
       <div className="flex items-center gap-4 mb-4 shrink-0">
@@ -32,7 +32,7 @@ export default function SettingsView({ settings, onUpdate, onReset, onBack, pwa,
         <h2 className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--text-dim)' }}>
           {t('settings.title')}
         </h2>
-        <span className="ml-auto text-[9px] font-bold px-2 py-1 rounded" style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)' }}>
+        <span className="app-status-badge app-status-badge--neutral ml-auto">
           {settings.userMode === 'CARETAKER' ? t('settings.badge_caretaker') : t('settings.badge_self')}
         </span>
       </div>

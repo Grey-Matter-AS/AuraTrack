@@ -3,6 +3,38 @@ import { useTranslation } from 'react-i18next';
 import { formatDuration, formatEventDate, formatEventTime } from '../utils/formatters';
 import { EEG_ACTIVITY_OPTIONS, EEG_MOOD_OPTIONS } from '../data/constants';
 
+const EEG_SESSION_STATUS_STYLES = {
+  COMPLETED: {
+    backgroundColor: '#16a34a',
+    color: '#fff',
+    border: '1px solid #15803d',
+  },
+  ACTIVE: {
+    backgroundColor: '#d97706',
+    color: '#fff',
+    border: '1px solid #b45309',
+  },
+  ERROR: {
+    backgroundColor: '#dc2626',
+    color: '#fff',
+    border: '1px solid #991b1b',
+  },
+};
+
+function getEegSessionStatusStyle(status) {
+  const normalizedStatus = String(status || '').toUpperCase();
+
+  if (normalizedStatus.includes('ERROR') || normalizedStatus.includes('FAIL')) {
+    return EEG_SESSION_STATUS_STYLES.ERROR;
+  }
+
+  if (normalizedStatus === 'COMPLETED') {
+    return EEG_SESSION_STATUS_STYLES.COMPLETED;
+  }
+
+  return EEG_SESSION_STATUS_STYLES.ACTIVE;
+}
+
 function ActivityEditor({ activity, onSave, onDelete, onClose }) {
   const { t } = useTranslation();
   const [activityLabel, setActivityLabel] = useState(activity.activityLabel || '');
@@ -20,7 +52,9 @@ function ActivityEditor({ activity, onSave, onDelete, onClose }) {
           <h3 className="text-sm font-black uppercase tracking-widest" style={{ color: 'var(--text-primary)' }}>
             {activity.kind === 'SEIZURE_REFERENCE' ? t('eeg.edit_seizure_reference', 'EEG Seizure Reference') : t('eeg.edit_activity', 'Edit EEG Activity')}
           </h3>
-          <button onClick={onClose} className="text-xs font-black uppercase tracking-widest" style={{ color: 'var(--text-dim)' }}>{t('eeg.close', 'Close')}</button>
+          <button onClick={onClose} className="app-icon-action app-icon-action--primary !min-h-[36px] !px-3">
+            {t('eeg.close', 'Close')}
+          </button>
         </div>
         {activity.kind === 'SEIZURE_REFERENCE' ? (
           <div className="space-y-3">
@@ -39,7 +73,7 @@ function ActivityEditor({ activity, onSave, onDelete, onClose }) {
               <button
                 onClick={() => onSave({ notes })}
                 className="flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest"
-                style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
+                style={{ backgroundColor: '#16a34a', color: '#fff', border: '1px solid #15803d' }}
               >
                 {t('eeg.save', 'Save')}
               </button>
@@ -116,14 +150,13 @@ function ActivityEditor({ activity, onSave, onDelete, onClose }) {
                   durationSec: Number(durationSec || 0),
                 })}
                 className="flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest"
-                style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
+                style={{ backgroundColor: '#16a34a', color: '#fff', border: '1px solid #15803d' }}
               >
                 {t('eeg.save', 'Save')}
               </button>
               <button
                 onClick={() => onDelete(activity.id)}
-                className="px-4 py-3 rounded-xl text-xs font-black uppercase tracking-widest"
-                style={{ backgroundColor: 'rgba(185,28,28,0.12)', color: '#ef4444', border: '1px solid rgba(185,28,28,0.25)' }}
+                className="app-icon-action app-icon-action--danger"
               >
                 {t('eeg.delete', 'Delete')}
               </button>
@@ -197,8 +230,7 @@ export function EEGDiaryTab({
           {activeSession && (
             <button
               onClick={() => onEndSession(activeSession.id)}
-              className="px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shrink-0"
-              style={{ backgroundColor: 'rgba(185,28,28,0.12)', color: '#ef4444', border: '1px solid rgba(185,28,28,0.25)' }}
+              className="app-icon-action app-icon-action--danger shrink-0"
             >
               {t('eeg.end_active', 'End Active EEG')}
             </button>
@@ -231,7 +263,12 @@ export function EEGDiaryTab({
             </div>
             <div>
               <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--text-faint)' }}>{t('event_detail.status')}</p>
-              <p style={{ color: 'var(--text-primary)' }}>{selectedSession.status}</p>
+              <p
+                className="app-status-badge mt-1"
+                style={getEegSessionStatusStyle(selectedSession.status)}
+              >
+                {selectedSession.status}
+              </p>
             </div>
           </div>
           {selectedSession.notes && (
@@ -249,7 +286,7 @@ export function EEGDiaryTab({
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: activity.kind === 'SEIZURE_REFERENCE' ? '#ef4444' : 'var(--text-faint)' }}>
+                    <p className={activity.kind === 'SEIZURE_REFERENCE' ? 'app-status-badge app-status-badge--danger' : 'app-status-badge app-status-badge--neutral'}>
                       {activity.kind === 'SEIZURE_REFERENCE' ? t('eeg.seizure_reference', 'Seizure reference') : t('eeg.activity', 'Activity')}
                     </p>
                     <p className="text-sm font-black mt-1" style={{ color: 'var(--text-primary)' }}>{activity.activityLabel}</p>

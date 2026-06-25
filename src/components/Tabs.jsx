@@ -38,7 +38,7 @@ export function Tabs({ tabs, activeTab, onTabChange }) {
               className="whitespace-nowrap px-4 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 shrink-0"
               style={{
                 backgroundColor: active ? 'var(--accent)' : 'var(--bg-raised)',
-                color: active ? '#fff' : 'var(--text-dim)',
+                color: active ? '#fff' : 'var(--text-on-raised)',
                 border: active ? '1px solid transparent' : '1px solid var(--border)',
               }}
             >

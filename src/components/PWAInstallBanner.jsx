@@ -61,7 +61,7 @@ export function PWAInstallBanner({ isVisible, isIOS, install, dismiss, showManua
           <button
             onClick={install}
             className="shrink-0 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider text-white active:scale-95 transition-transform"
-            style={{ backgroundColor: 'var(--accent)' }}
+            style={{ backgroundColor: 'var(--action-blue)', border: '1px solid var(--action-blue-border)' }}
           >
             <InstallIcon className="w-4 h-4" />
             {t('install.install')}
@@ -70,8 +70,7 @@ export function PWAInstallBanner({ isVisible, isIOS, install, dismiss, showManua
 
         <button
           onClick={showManualInstructions ? dismissManual : dismiss}
-          className="shrink-0 w-7 h-7 flex items-center justify-center rounded-full text-[11px] font-black active:scale-95 transition-transform"
-          style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)' }}
+          className="app-icon-action app-icon-action--primary shrink-0 !w-7 !h-7 !min-w-0 !min-h-0 !p-0 !rounded-full"
           aria-label={t('install.dismiss')}
         >
           <CloseIcon className="w-3.5 h-3.5" />

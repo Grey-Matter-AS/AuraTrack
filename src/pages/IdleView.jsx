@@ -21,7 +21,9 @@ function EegSessionSheet({ onClose, onStart }) {
       <div className="w-full max-w-md rounded-[2rem] p-5 space-y-4" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-black uppercase tracking-widest" style={{ color: 'var(--text-primary)' }}>{t('eeg.start_session', 'Start EEG Diary')}</h3>
-          <button onClick={onClose} className="text-xs font-black uppercase tracking-widest" style={{ color: 'var(--text-dim)' }}>{t('eeg.close', 'Close')}</button>
+          <button onClick={onClose} className="app-icon-action app-icon-action--primary !min-h-[36px] !px-3">
+            {t('eeg.close', 'Close')}
+          </button>
         </div>
         <div className="flex gap-2">
           {['24h', '72h', 'custom'].map(option => {
@@ -32,8 +34,8 @@ function EegSessionSheet({ onClose, onStart }) {
                 onClick={() => setDurationPreset(option)}
                 className="flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest"
                 style={{
-                  backgroundColor: active ? 'var(--accent)' : 'var(--bg-raised)',
-                  color: active ? '#fff' : 'var(--text-secondary)',
+                  backgroundColor: active ? 'var(--action-blue)' : 'var(--bg-raised)',
+                  color: active ? '#fff' : 'var(--text-on-raised)',
                   border: active ? '1px solid transparent' : '1px solid var(--border)',
                 }}
               >
@@ -73,14 +75,14 @@ function EegSessionSheet({ onClose, onStart }) {
           <button
             onClick={() => onStart({ durationPreset, customHours, title, notes })}
             className="flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest"
-            style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
+            style={{ backgroundColor: 'var(--action-blue)', color: '#fff', border: '1px solid var(--action-blue-border)' }}
           >
             {t('eeg.start', 'Start')}
           </button>
           <button
             onClick={onClose}
             className="flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest"
-            style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+            style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
           >
             {t('eeg.cancel', 'Cancel')}
           </button>
@@ -104,7 +106,9 @@ function EegActivitySheet({ onClose, onStart }) {
       <div className="w-full max-w-md rounded-[2rem] p-5 space-y-4" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-black uppercase tracking-widest" style={{ color: 'var(--text-primary)' }}>{t('eeg.start_activity', 'Start EEG Activity')}</h3>
-          <button onClick={onClose} className="text-xs font-black uppercase tracking-widest" style={{ color: 'var(--text-dim)' }}>{t('eeg.close', 'Close')}</button>
+          <button onClick={onClose} className="app-icon-action app-icon-action--primary !min-h-[36px] !px-3">
+            {t('eeg.close', 'Close')}
+          </button>
         </div>
         <input
           type="text"
@@ -122,7 +126,11 @@ function EegActivitySheet({ onClose, onStart }) {
                 key={activity}
                 onClick={() => setSelected(activity)}
                 className="w-full rounded-xl px-3 py-2 text-left text-sm font-bold"
-                style={{ backgroundColor: active ? 'color-mix(in srgb, var(--accent) 16%, transparent)' : 'transparent', color: 'var(--text-primary)' }}
+                style={{
+                  backgroundColor: active ? 'var(--action-blue)' : 'var(--bg-card)',
+                  color: active ? '#fff' : 'var(--text-primary)',
+                  border: active ? '1px solid var(--action-blue-border)' : '1px solid transparent',
+                }}
               >
                 {activity}
               </button>
@@ -158,14 +166,14 @@ function EegActivitySheet({ onClose, onStart }) {
           <button
             onClick={() => onStart({ activityLabel: selected, customActivityText, moodLabel, notes })}
             className="flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest"
-            style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
+            style={{ backgroundColor: 'var(--action-blue)', color: '#fff', border: '1px solid var(--action-blue-border)' }}
           >
             {t('eeg.start', 'Start')}
           </button>
           <button
             onClick={onClose}
             className="flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest"
-            style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+            style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
           >
             {t('eeg.cancel', 'Cancel')}
           </button>
@@ -310,7 +318,7 @@ export default function IdleView({
               <button
                 onClick={() => setShowWellbeingSheet(true)}
                 className="rounded-xl px-3 py-2 text-[10px] font-medium uppercase tracking-widest active:scale-95 transition-all shrink-0"
-                style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
+                style={{ backgroundColor: 'var(--action-blue)', color: '#fff', border: '1px solid var(--action-blue-border)' }}
               >
                 {t('wellbeing.log_action', 'Log')}
               </button>
@@ -329,8 +337,7 @@ export default function IdleView({
                 </div>
                 <button
                   onClick={() => onEndEegSession?.(eegSession.id)}
-                  className="px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest"
-                  style={{ backgroundColor: 'rgba(185,28,28,0.12)', color: '#ef4444', border: '1px solid rgba(185,28,28,0.25)' }}
+                  className="app-icon-action app-icon-action--danger"
                 >
                   {t('idle.end_eeg', 'End EEG')}
                 </button>
@@ -361,14 +368,14 @@ export default function IdleView({
                       <button
                         onClick={() => onStopEegActivity?.(eegCurrentActivity.id)}
                         className="flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest"
-                        style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
+                        style={{ backgroundColor: '#dc2626', color: '#fff', border: '1px solid #991b1b' }}
                       >
                         {t('idle.stop_activity', 'Stop Activity')}
                       </button>
                       <button
                         onClick={onOpenEegDiary}
                         className="flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest"
-                        style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+                        style={{ backgroundColor: 'var(--action-blue)', color: '#fff', border: '1px solid var(--action-blue-border)' }}
                       >
                         {t('idle.view_log', 'View Log')}
                       </button>
@@ -381,14 +388,14 @@ export default function IdleView({
                       <button
                         onClick={() => setShowActivitySheet(true)}
                         className="flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest"
-                        style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
+                        style={{ backgroundColor: 'var(--action-blue)', color: '#fff', border: '1px solid var(--action-blue-border)' }}
                       >
                         {t('idle.start_activity', 'Start Activity')}
                       </button>
                       <button
                         onClick={onOpenEegDiary}
                         className="flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest"
-                        style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+                        style={{ backgroundColor: 'var(--action-blue)', color: '#fff', border: '1px solid var(--action-blue-border)' }}
                       >
                         {t('idle.view_log', 'View Log')}
                       </button>
@@ -411,15 +418,15 @@ export default function IdleView({
           )}
 
           <div className="flex justify-between items-center mb-1 px-2">
-            <h3 className="text-slate-500 text-[10px] font-black uppercase tracking-widest">{t('idle.recent_events')}</h3>
+            <h3 className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--text-secondary)' }}>{t('idle.recent_events')}</h3>
             {history.length > 0 && (
-              <span className="text-[9px] text-slate-600 font-bold bg-slate-900 px-2 py-1 rounded">{t('idle.last_5')}</span>
+              <span className="app-status-badge app-status-badge--neutral">{t('idle.last_5')}</span>
             )}
           </div>
 
           {history.length === 0 ? (
             <div className="border-2 border-dashed border-slate-800 rounded-3xl py-8 text-center">
-              <p className="text-slate-600 italic text-sm">{t('idle.no_events')}</p>
+              <p className="italic text-sm" style={{ color: 'var(--text-secondary)' }}>{t('idle.no_events')}</p>
             </div>
           ) : (
             history.map(event => (

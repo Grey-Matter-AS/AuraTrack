@@ -105,7 +105,7 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false, 
     : { className: 'space-y-3', wrapperClassName: 'flex-1' };
 
   return (
-    <div className={isEmbedded ? 'w-full pb-10 space-y-0' : 'flex-1 flex flex-col w-full max-w-md sm:max-w-xl md:max-w-2xl overflow-hidden'}>
+    <div className={isEmbedded ? 'w-full pb-10 space-y-0' : 'app-page-shell flex-1 flex flex-col w-full overflow-hidden mx-auto'}>
       {printPreview && (
         <PrintPreviewOverlay
           title={printPreview.title}
@@ -242,7 +242,7 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false, 
           <div className="flex items-start gap-4">
             <div
               className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0"
-              style={{ backgroundColor: 'color-mix(in srgb, var(--accent) 15%, transparent)' }}
+              style={{ backgroundColor: 'var(--action-blue)', color: '#fff' }}
             >
               <StethoscopeIcon className="w-6 h-6" />
             </div>
@@ -254,7 +254,7 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false, 
                 {t('export.neuro_report_desc')}
               </p>
 	              {!settings.personName && (
-	                <p className="inline-flex items-center gap-1.5 text-[10px] mt-2 font-bold" style={{ color: 'var(--accent)' }}>
+	                <p className="app-status-badge app-status-badge--warning mt-2">
 	                  <WarningIcon className="w-3.5 h-3.5" />
 	                  {String(t('export.neuro_report_warning')).replace(/^[^\p{Letter}\p{Number}]+/u, '').trim()}
 	                </p>
@@ -265,7 +265,7 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false, 
             <button
               onClick={handleNeurologistReport}
               className="flex-1 min-w-[150px] inline-flex items-center justify-center gap-2 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest text-center active:scale-95 transition-all"
-              style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
+              style={{ backgroundColor: 'var(--action-blue)', color: '#fff', border: '1px solid var(--action-blue-border)' }}
             >
               <EyeIcon className="w-4 h-4" />
               {t('export.open_preview')}
@@ -273,7 +273,7 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false, 
             <button
               onClick={handleNeurologistReportPdf}
               className="flex-1 min-w-[150px] inline-flex items-center justify-center gap-2 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest text-center active:scale-95 transition-all"
-              style={{ backgroundColor: 'var(--accent)', color: '#fff', border: '1px solid transparent' }}
+              style={{ backgroundColor: 'var(--action-blue)', color: '#fff', border: '1px solid var(--action-blue-border)' }}
             >
               <DownloadIcon className="w-4 h-4" />
               {t('export.download_pdf')}
@@ -322,7 +322,7 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false, 
               <button
                 onClick={handleSeizureDiary}
                 className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all active:scale-95"
-                style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
+                style={{ backgroundColor: 'var(--action-blue)', color: '#fff', border: '1px solid var(--action-blue-border)' }}
               >
                 <EyeIcon className="w-4 h-4" />
                 {t('export.open_preview')}
@@ -330,7 +330,7 @@ export default function ExportView({ onBack, settings = {}, isEmbedded = false, 
               <button
                 onClick={handleSeizureDiaryPdf}
                 className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all active:scale-95"
-                style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
+                style={{ backgroundColor: 'var(--action-blue)', color: '#fff', border: '1px solid var(--action-blue-border)' }}
               >
                 <DownloadIcon className="w-4 h-4" />
                 {t('export.download_pdf')}

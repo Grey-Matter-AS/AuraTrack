@@ -31,8 +31,8 @@ const STATUS = {
   taken:    { label: 'TAKEN',    bg: '#16a34a', text: '#fff' },
   late:     { label: 'LATE',     bg: '#d97706', text: '#fff' },
   missed:   { label: 'MISSED',   bg: '#dc2626', text: '#fff' },
-  upcoming: { label: 'UPCOMING', bg: 'var(--bg-raised)', text: 'var(--text-dim)', border: '1px solid var(--border)' },
-  nodata:   { label: 'NO DATA',  bg: 'transparent',      text: 'var(--text-faint)', border: '1px solid var(--border)' },
+  upcoming: { label: 'UPCOMING', bg: '#334155', text: '#facc15', border: '1px solid #f59e0b' },
+  nodata:   { label: 'NO DATA',  bg: '#334155', text: '#fff', border: '1px solid #64748b' },
 };
 
 export function MedicationHistoryTab({ settings = {} }) {
@@ -307,7 +307,7 @@ export function MedicationHistoryTab({ settings = {} }) {
             </p>
             <p className="text-xs" style={{ color: 'var(--text-faint)' }}>
               {fmtDay(editCell.dayMs)} · Scheduled {editCell.hhMM}
-              {editCell.log?.isEdited && <span className="ml-2 text-amber-400">Previously edited</span>}
+              {editCell.log?.isEdited && <span className="app-status-badge app-status-badge--info ml-2">Previously edited</span>}
             </p>
 
             <div>
@@ -342,7 +342,7 @@ export function MedicationHistoryTab({ settings = {} }) {
             <button
               onClick={() => setEditCell(null)}
               className="w-full py-3 rounded-2xl font-black text-xs uppercase tracking-widest"
-              style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)', border: '1px solid var(--border)' }}
+              style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
             >
               Cancel
             </button>

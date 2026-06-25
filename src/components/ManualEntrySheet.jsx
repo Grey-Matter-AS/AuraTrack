@@ -106,8 +106,7 @@ export function ManualEntrySheet({ onConfirm, onClose }) {
           </p>
           <button
             onClick={onClose}
-            className="min-w-[36px] min-h-[36px] flex items-center justify-center font-black text-sm active:opacity-60"
-            style={{ color: 'var(--text-faint)' }}
+            className="app-icon-action app-icon-action--primary !min-w-[36px] !min-h-[36px] !p-0"
           >
             <CloseIcon className="w-4 h-4" />
           </button>
@@ -154,8 +153,7 @@ export function ManualEntrySheet({ onConfirm, onClose }) {
           {/* Phase breakdown toggle */}
           <button
             onClick={() => setShowPhases(p => !p)}
-            className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest active:opacity-60 transition-opacity"
-            style={{ color: 'var(--text-faint)' }}
+            className="app-icon-action app-icon-action--primary !min-h-[36px] !px-3"
           >
             <span>{showPhases ? '▾' : '▸'}</span>
             <span>{t('manual_entry.phase_breakdown')}</span>
@@ -170,7 +168,7 @@ export function ManualEntrySheet({ onConfirm, onClose }) {
           )}
 
           {error && (
-            <p className="text-xs font-bold text-red-500">{error}</p>
+            <p className="app-alert app-alert--danger rounded-xl px-4 py-3 text-xs font-bold">{error}</p>
           )}
 
         </ScrollFade>
@@ -180,14 +178,14 @@ export function ManualEntrySheet({ onConfirm, onClose }) {
           <button
             onClick={handleContinue}
             className="w-full py-4 rounded-2xl font-black text-sm uppercase tracking-widest active:scale-95 transition-all shadow-lg"
-            style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
+            style={{ backgroundColor: 'var(--action-blue)', color: '#fff', border: '1px solid var(--action-blue-border)' }}
           >
             {t('manual_entry.continue')}
           </button>
           <button
             onClick={onClose}
             className="w-full py-3 rounded-2xl font-black text-xs uppercase tracking-widest"
-            style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)', border: '1px solid var(--border)' }}
+            style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
           >
             {t('manual_entry.cancel')}
           </button>

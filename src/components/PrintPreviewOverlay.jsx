@@ -28,11 +28,11 @@ export function PrintPreviewOverlay({ title, styles, html, onClose }) {
           {t('nav.back')}
         </button>
         <div className="min-w-0 flex-1 text-center">
-          <p className="truncate text-[10px] font-black uppercase tracking-[0.3em] text-slate-300">
+          <p className="truncate text-[10px] font-black uppercase tracking-[0.3em] text-white">
             {title}
           </p>
           {showAppleMobileHint && (
-            <p className="mt-1 text-[11px] text-slate-400">
+            <p className="mt-1 text-[11px] text-slate-200">
               {t('export.ios_pdf_hint')}
             </p>
           )}
@@ -40,7 +40,7 @@ export function PrintPreviewOverlay({ title, styles, html, onClose }) {
         <button
           onClick={() => window.print()}
           className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
-          style={{ backgroundColor: 'var(--accent)', color: '#fff', border: '1px solid transparent' }}
+          style={{ backgroundColor: 'var(--action-blue)', color: '#fff', border: '1px solid var(--action-blue-border)' }}
         >
           {t('export.print_save_pdf')}
         </button>

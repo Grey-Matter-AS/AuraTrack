@@ -258,7 +258,7 @@ export function renderNeurologistReportHtml(data) {
                   <span style="margin-left:8px;font-size:11px;color:#374151;font-weight:700">${esc(event.type)}</span>
                   ${event.userModeAtTime ? `<span style="margin-left:6px">${esc(shortMode(event.userModeAtTime))}</span>` : ''}
                 </div>
-                <div style="display:flex;gap:4px;flex-wrap:wrap">${event.badges.map(badge => `<span style="background:#eff6ff;color:#1d4ed8;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:700">${esc(badge)}</span>`).join('')}</div>
+                <div style="display:flex;gap:4px;flex-wrap:wrap">${event.badges.map(badge => `<span style="background:#eff6ff;color:#4778d2;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:700">${esc(badge)}</span>`).join('')}</div>
               </div>
               <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px">
                 ${metricCard(t('export.docs.total'), event.totalLabel, '#f9fafb', '#111827')}

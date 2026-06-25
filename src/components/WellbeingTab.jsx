@@ -115,7 +115,7 @@ function WellbeingChart({ events, entries, factorDefinitions, t }) {
               className="rounded-lg px-2 py-1 text-[9px] font-black"
               style={{
                 backgroundColor: index === windowIndex ? 'var(--accent)' : 'var(--bg-raised)',
-                color: index === windowIndex ? '#fff' : 'var(--text-dim)',
+                color: index === windowIndex ? '#fff' : 'var(--text-on-raised)',
               }}
             >
               {option.label}
@@ -162,7 +162,7 @@ function WellbeingChart({ events, entries, factorDefinitions, t }) {
               className="rounded-full px-3 py-1 text-[9px] font-black uppercase tracking-widest"
               style={{
                 backgroundColor: active ? 'var(--accent)' : 'var(--bg-raised)',
-                color: active ? '#fff' : 'var(--text-dim)',
+                color: active ? '#fff' : 'var(--text-on-raised)',
                 border: active ? '1px solid transparent' : '1px solid var(--border)',
               }}
               title={factor.helpKey ? t(factor.helpKey, factor.help || factorLabel(factor, t, factor.id)) : (factor.help || factorLabel(factor, t, factor.id))}
@@ -207,7 +207,7 @@ export function WellbeingTab({ events = [], wellbeing, settings = {} }) {
         <button
           onClick={() => setEditing({})}
           className="w-full rounded-xl py-3 text-xs font-black uppercase tracking-widest active:scale-95 transition-all"
-          style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
+          style={{ backgroundColor: 'var(--action-blue)', color: '#fff', border: '1px solid var(--action-blue-border)' }}
         >
           {t('wellbeing.log_wellbeing', 'Log wellbeing')}
         </button>
@@ -251,11 +251,11 @@ export function WellbeingTab({ events = [], wellbeing, settings = {} }) {
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <p className="font-black" style={{ color: 'var(--text-primary)' }}>{entry.primaryMood}</p>
-                  <span className="text-[9px] px-1.5 py-0.5 rounded uppercase font-bold" style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)' }}>
+                  <span className="app-status-badge app-status-badge--neutral">
                     {['', t('wellbeing.mild', 'mild'), t('wellbeing.moderate', 'moderate'), t('wellbeing.strong', 'strong')][entry.intensity] || entry.intensity}
                   </span>
                   {entry.isEdited && (
-                    <span className="text-[9px] px-1.5 py-0.5 rounded uppercase font-bold" style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)' }}>{t('wellbeing.edited', 'Edited')}</span>
+                    <span className="app-status-badge app-status-badge--info">{t('wellbeing.edited', 'Edited')}</span>
                   )}
                 </div>
                 <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-dim)' }}>
@@ -265,16 +265,14 @@ export function WellbeingTab({ events = [], wellbeing, settings = {} }) {
               <div className="flex gap-2 shrink-0">
                 <button
                   onClick={() => setEditing(entry)}
-                  className="w-10 h-10 rounded-xl flex items-center justify-center active:scale-95"
-                  style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-on-raised)', border: '1px solid var(--border)' }}
+                  className="app-icon-action app-icon-action--accent !w-10 !h-10 !p-0"
                   aria-label={t('wellbeing.edit_entry_label', 'Edit wellbeing entry')}
                 >
                   <EditIcon className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => wellbeing.deleteEntry(entry.id)}
-                  className="w-10 h-10 rounded-xl flex items-center justify-center active:scale-95"
-                  style={{ backgroundColor: 'rgba(239,68,68,0.12)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)' }}
+                  className="app-icon-action app-icon-action--danger !w-10 !h-10 !p-0"
                   aria-label={t('wellbeing.delete_entry_label', 'Delete wellbeing entry')}
                 >
                   <TrashIcon className="w-4 h-4" />
@@ -284,7 +282,7 @@ export function WellbeingTab({ events = [], wellbeing, settings = {} }) {
             {Object.keys(entry.factors || {}).length > 0 && (
               <div className="flex flex-wrap gap-1.5">
                 {Object.entries(entry.factors).map(([id, factor]) => (
-                  <span key={id} className="rounded-full px-2 py-1 text-[10px] font-bold" style={{ backgroundColor: 'var(--bg-raised)', color: 'var(--text-dim)' }}>
+                  <span key={id} className="app-status-badge app-status-badge--neutral">
                     {factorLabel(factor, t, id)}: {factorDisplay(factor, t)}
                   </span>
                 ))}
