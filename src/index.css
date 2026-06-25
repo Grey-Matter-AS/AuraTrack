@@ -221,7 +221,9 @@ input, select, textarea {
   text-align: center;
   line-height: 1.1;
   white-space: normal;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: none;
 }
 
 .app-header {
@@ -354,8 +356,9 @@ input, select, textarea {
   gap: 0.35rem;
   text-align: left;
   min-width: 0;
-  overflow-wrap: anywhere;
-  hyphens: auto;
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: none;
 }
 
 .app-action-tile--compact {
@@ -394,9 +397,11 @@ input, select, textarea {
 .app-chip-text {
   display: block;
   max-width: 100%;
+  text-align: center;
   white-space: normal;
-  overflow-wrap: anywhere;
-  hyphens: auto;
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: none;
   line-height: 1.18;
 }
 
@@ -463,8 +468,9 @@ input, select, textarea {
   line-height: 1.1;
   text-transform: uppercase;
   white-space: normal;
-  overflow-wrap: anywhere;
-  hyphens: auto;
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: none;
 }
 
 .app-status-badge--info {
