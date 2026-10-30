@@ -1,0 +1,120 @@
+/* AuraTrack design tokens: the values carried over from 6.1, defined once.
+   Every colour uses light-dark(): the light value first, the dark value second. Which one applies
+   comes from color-scheme, set by data-theme on the app root (dark, light, or system = follow the
+   phone). No colour is repeated per theme, so a theme can never be forgotten in one place.
+   Requires iOS/Safari 17.5+, Chrome/Edge 123+, Firefox 120+. */
+
+:root {
+  color-scheme: dark;
+
+  /* Surfaces */
+  --bg-base: light-dark(#f8fafc, #0f172a);
+  --bg-base-95: light-dark(rgb(248 250 252 / 0.95), rgb(15 23 42 / 0.95));
+  --bg-card: light-dark(#ffffff, #1e293b);
+  --bg-raised: light-dark(#e2e8f0, #334155);
+  --bg-input: light-dark(#f1f5f9, #0f172a);
+  --inset-bg: color-mix(in srgb, var(--bg-base) 55%, var(--bg-card));
+
+  /* Text */
+  --text-primary: light-dark(#0f172a, #f1f5f9);
+  --text-secondary: light-dark(#334155, #cbd5e1);
+  --text-dim: light-dark(#475569, #b6c3d1);
+  --text-faint: light-dark(#64748b, #94a3b8);
+  --text-on-raised: light-dark(#0f172a, #ffffff);
+  --text-on-raised-muted: light-dark(rgb(15 23 42 / 0.72), rgb(255 255 255 / 0.75));
+
+  /* Borders */
+  --border: light-dark(#cbd5e1, #334155);
+  --border-subtle: light-dark(rgb(226 232 240 / 0.7), rgb(51 65 85 / 0.5));
+
+  /* Meaning colours: fixed (they never follow the accent), with a readable shade per theme */
+  --phase-aura: light-dark(#b45309, #f59e0b);
+  --phase-seizure: light-dark(#b91c1c, #ef4444);
+  --phase-recovery: light-dark(#1d4ed8, #5b8def);
+  --text-warning: light-dark(#b45309, #f59e0b);
+  --text-danger: light-dark(#b91c1c, #ef4444);
+  --text-success: light-dark(#15803d, #4ade80);
+  --status-missed-bg: light-dark(#fee2e2, rgb(220 38 38 / 0.2));
+  --status-missed-text: light-dark(#991b1b, #fca5a5);
+  --status-missed-border: light-dark(#fca5a5, rgb(220 38 38 / 0.45));
+  --status-late-bg: light-dark(#fef3c7, rgb(217 119 6 / 0.2));
+  --status-late-text: light-dark(#92400e, #fcd34d);
+  --status-late-border: light-dark(#fcd34d, rgb(217 119 6 / 0.45));
+
+  /* Actions */
+  --on-action: #ffffff;
+  --on-selected: #ffffff;
+  --success: #16a34a;
+  --success-border: #15803d;
+  --danger: #dc2626;
+  --danger-border: #991b1b;
+  --warning-bg: #334155;
+  --warning-text: #facc15;
+  --warning-border: #f59e0b;
+
+  /* Accent (Settings → Appearance; blue by default). Everything that follows the accent is
+     derived here; danger, success and warning stay fixed. */
+  --accent: #5b8def;
+  --accent-text: light-dark(color-mix(in srgb, var(--accent) 68%, #000), var(--accent));
+  --action: var(--accent);
+  --action-border: color-mix(in srgb, var(--accent) 78%, #000);
+  --action-active: color-mix(in srgb, var(--accent) 85%, #000);
+  --selected: var(--accent);
+
+  /* Sizes */
+  --touch-target-compact: 2.75rem;
+  --touch-target-comfortable: 3.5rem;
+  --touch-target-large: 4.75rem;
+  --panel-radius: 1.75rem;
+  --panel-radius-lg: 2.25rem;
+  --surface-shadow: 0 18px 40px rgb(15 23 42 / 0.18);
+
+  /* Stacking order: sheets < dialogs < toasts < seizure alert */
+  --z-sheet: 50;
+  --z-dialog: 60;
+  --z-toast: 70;
+  --z-alert: 80;
+
+  /* Text size (Settings → Appearance), applied as the root font size */
+  --font-size-root: 16px;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+:root[data-theme='system'] {
+  color-scheme: light dark;
+}
+
+:root[data-accent='red'] {
+  --accent: #dc2626;
+}
+:root[data-accent='blue'] {
+  --accent: #5b8def;
+}
+:root[data-accent='green'] {
+  --accent: #16a34a;
+}
+:root[data-accent='purple'] {
+  --accent: #9333ea;
+}
+:root[data-accent='amber'] {
+  --accent: #d97706;
+}
+
+:root[data-font-size='small'] {
+  --font-size-root: 14px;
+}
+:root[data-font-size='large'] {
+  --font-size-root: 18px;
+}
+:root[data-font-size='xlarge'] {
+  --font-size-root: 21px;
+}
+
+html {
+  font-size: var(--font-size-root);
+  background: var(--bg-base);
+  color: var(--text-primary);
+}

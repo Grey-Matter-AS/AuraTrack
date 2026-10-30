@@ -1,0 +1,13 @@
+node_modules
+dist
+coverage
+*.tsbuildinfo
+.vite
+test-results
+playwright-report
+cypress/screenshots
+cypress/videos
+
+# Never commit real medical data (reports, backups, exports)
+*.atbak
+docs/plan/reports-6.1/real/

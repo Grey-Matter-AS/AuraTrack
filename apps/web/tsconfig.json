@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist-types",
+    "rootDir": ".",
+    "tsBuildInfoFile": "dist-types/.tsbuildinfo",
+    "types": ["vite/client", "vite-plugin-pwa/client"]
+  },
+  "include": ["src", "vite.config.ts"]
+}

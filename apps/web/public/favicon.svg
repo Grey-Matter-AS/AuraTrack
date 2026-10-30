@@ -1,0 +1,75 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">AuraTrack purple glass aura icon</title>
+  <desc id="desc">A circular purple glass app icon with a neon blue aura inside.</desc>
+
+  <defs>
+    <radialGradient id="glassBody" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(91 63) rotate(54) scale(178)">
+      <stop offset="0" stop-color="#F0D8FF" stop-opacity="0.95"/>
+      <stop offset="0.20" stop-color="#B970FF" stop-opacity="0.92"/>
+      <stop offset="0.52" stop-color="#6E2BFF" stop-opacity="0.94"/>
+      <stop offset="0.82" stop-color="#32106F" stop-opacity="0.98"/>
+      <stop offset="1" stop-color="#170A3D"/>
+    </radialGradient>
+
+    <radialGradient id="innerDepth" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(132 134) scale(88)">
+      <stop offset="0" stop-color="#4BEFFF" stop-opacity="0.18"/>
+      <stop offset="0.42" stop-color="#7C4DFF" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#120528" stop-opacity="0.44"/>
+    </radialGradient>
+
+    <linearGradient id="rimLight" x1="62" y1="42" x2="202" y2="220" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.82"/>
+      <stop offset="0.34" stop-color="#D9B6FF" stop-opacity="0.34"/>
+      <stop offset="0.72" stop-color="#3E16A8" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#00DFFF" stop-opacity="0.38"/>
+    </linearGradient>
+
+    <radialGradient id="auraCore" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(128 128) scale(53)">
+      <stop offset="0" stop-color="#E9FEFF"/>
+      <stop offset="0.21" stop-color="#7DFAFF"/>
+      <stop offset="0.52" stop-color="#00D9FF" stop-opacity="0.82"/>
+      <stop offset="0.78" stop-color="#008CFF" stop-opacity="0.26"/>
+      <stop offset="1" stop-color="#008CFF" stop-opacity="0"/>
+    </radialGradient>
+
+    <filter id="outerShadow" x="18" y="18" width="220" height="224" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#10051F" flood-opacity="0.38"/>
+    </filter>
+
+    <filter id="auraGlow" x="35" y="35" width="186" height="186" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0  0 0 0 0 0.74  0 0 0 0 1  0 0 0 1 0" result="blueGlow"/>
+      <feMerge>
+        <feMergeNode in="blueGlow"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <filter id="softBlur" x="33" y="21" width="190" height="151" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="1.4"/>
+    </filter>
+
+    <clipPath id="circleClip">
+      <circle cx="128" cy="128" r="96"/>
+    </clipPath>
+  </defs>
+
+  <g filter="url(#outerShadow)">
+    <circle cx="128" cy="128" r="96" fill="url(#glassBody)"/>
+
+    <g clip-path="url(#circleClip)">
+      <circle cx="128" cy="128" r="96" fill="url(#innerDepth)"/>
+      <circle cx="128" cy="128" r="47" fill="url(#auraCore)" filter="url(#auraGlow)"/>
+      <circle cx="128" cy="128" r="62" stroke="#35E7FF" stroke-width="4" stroke-opacity="0.78" filter="url(#auraGlow)"/>
+      <circle cx="128" cy="128" r="38" stroke="#B9FCFF" stroke-width="2.5" stroke-opacity="0.70"/>
+      <circle cx="128" cy="128" r="77" stroke="#00B7FF" stroke-width="2" stroke-opacity="0.23"/>
+
+      <ellipse cx="99" cy="74" rx="52" ry="24" transform="rotate(-28 99 74)" fill="#FFFFFF" fill-opacity="0.28" filter="url(#softBlur)"/>
+      <ellipse cx="91" cy="66" rx="24" ry="8" transform="rotate(-28 91 66)" fill="#FFFFFF" fill-opacity="0.42"/>
+      <path d="M61 143C67 188 103 218 148 218C180 218 207 201 221 176C204 213 169 238 128 238C77 238 35 198 32 147C39 151 50 150 61 143Z" fill="#050018" fill-opacity="0.22"/>
+    </g>
+
+    <circle cx="128" cy="128" r="96" stroke="url(#rimLight)" stroke-width="5"/>
+    <circle cx="128" cy="128" r="89" stroke="#FFFFFF" stroke-opacity="0.14" stroke-width="1.5"/>
+  </g>
+</svg>

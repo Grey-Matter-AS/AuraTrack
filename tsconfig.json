@@ -1,0 +1,12 @@
+{
+  "files": [],
+  "references": [
+    { "path": "packages/model" },
+    { "path": "packages/store" },
+    { "path": "packages/sync" },
+    { "path": "packages/ui" },
+    { "path": "packages/reports" },
+    { "path": "packages/i18n" },
+    { "path": "apps/web" }
+  ]
+}
