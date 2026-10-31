@@ -13,6 +13,7 @@ export interface PortLike {
 export type Handlers = Record<string, (arg: any) => unknown>;
 
 type Request = { kind: 'request'; id: number; method: string; arg: unknown };
+type Ready = { kind: 'ready' };
 type Response =
   | { kind: 'response'; id: number; ok: true; result: unknown }
   | { kind: 'response'; id: number; ok: false; error: { name: string; message: string } };
@@ -39,7 +40,7 @@ const isResponse = (data: unknown): data is Response =>
   typeof data === 'object' && data !== null && (data as Response).kind === 'response';
 
 /** Runs in the worker: answers requests with the matching handler. Returns a function that stops listening. */
-export function serve(port: PortLike, handlers: Handlers): () => void {
+export function serve(port: PortLike, handlers: Handlers, options: { announce?: boolean } = {}): () => void {
   const listener = (event: { data: unknown }) => {
     const data = event.data;
     if (!isRequest(data)) return;
@@ -64,15 +65,27 @@ export function serve(port: PortLike, handlers: Handlers): () => void {
   };
   port.addEventListener('message', listener);
   port.start?.();
+  // A module Worker loads after the page has started it, so a request sent at once would be lost: say when listening
+  if (options.announce) port.postMessage({ kind: 'ready' } satisfies Ready);
   return () => port.removeEventListener('message', listener);
 }
 
 /** Runs in the page: `client.method(arg)` sends a request and resolves with the worker's answer. */
-export function connect<H extends Handlers>(port: PortLike): Client<H> & { close(): void } {
+export function connect<H extends Handlers>(
+  port: PortLike,
+  options: { waitForReady?: boolean } = {},
+): Client<H> & { close(): void } {
   let next = 1;
+  let ready = !options.waitForReady;
+  const queued: Request[] = [];
   const pending = new Map<number, { resolve: (value: unknown) => void; reject: (error: Error) => void }>();
   const listener = (event: { data: unknown }) => {
     const data = event.data;
+    if ((data as Ready | null)?.kind === 'ready') {
+      ready = true;
+      for (const request of queued.splice(0)) port.postMessage(request);
+      return;
+    }
     if (!isResponse(data)) return;
     const waiting = pending.get(data.id);
     if (!waiting) return;
@@ -96,7 +109,8 @@ export function connect<H extends Handlers>(port: PortLike): Client<H> & { close
           const id = next++;
           pending.set(id, { resolve, reject });
           const request: Request = { kind: 'request', id, method, arg: args[0] };
-          port.postMessage(request);
+          if (ready) port.postMessage(request);
+          else queued.push(request);
         });
     },
   });

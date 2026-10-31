@@ -62,11 +62,8 @@
 - Real medical data (reports, backups, exports) is never committed. Reference material is generated from made-up test data.
 
 ## Next step
-- **M1 is built; it closes when your real 6.1 backup imports with zero lost records and you have checked the comparison report.** That step only you can do, on your own computer (the data never goes into git):
-  1. `pnpm dev`, open `http://localhost:5173/#/dev`, create a store with a PIN.
-  2. Choose your 6.1 backup file (and its passphrase if encrypted).
-  3. Check: "0 unaccounted for", the comparison table ("everything matches", or each difference explained), and the **To review** list (symptoms, triggers, findings and moods that were kept as your own codes).
-  4. Tell me the result; I fix anything it shows.
+- **M1 is closed (2026-10-31).** The user ran the importer on their real 6.1 backup: 334 of 334 rows imported, 0 rejected, 0 unaccounted for. The user decided not to spend more time checking 6.x data: the 7 series is the priority, so the 'comparison report checked by you' item in M1's done-when is waived. The importer stays for other households moving from 6.1.
+- **Fixed after the real import:** body-area parts with no sub-region (for example 'Left Eye') now map to codes when only one sub-region has that part; 'Wrist' and similar (on both arms) stay at region level, original kept in `legacy`. The dev page showed 'Loading…' forever in `pnpm dev` (worker not ready yet, plus React dev double-effect closed the client): the worker now announces when ready.
 - **Then:** you approve `M2.md` and M2 starts.
 - **You:** review `packages/i18n/src/labels/review.json`: 274 labels per language (symptoms, body areas, EEG activities, ILAE parts) are English-only because 6.1 never translated them. They show in English until reviewed.
 - **You:** the first commit included `apps/web/dist-types/` (generated). It is now in `.gitignore`; to remove it from git: `git rm -r --cached apps/web/dist-types`.

@@ -87,6 +87,14 @@ export function bodyAreaFromLegacy(region: string, subRegion: string, part: stri
   const r = BODY_REGIONS.find((x) => norm(x.legacy) === norm(region));
   if (!r) return null;
   const s = r.subRegions.find((x) => norm(x.legacy) === norm(subRegion));
+  if (!s && norm(subRegion) === '' && norm(part) !== '') {
+    // A part without its sub-region ("Left Eye"): used only when exactly one sub-region has it ("Wrist" is on both arms)
+    const matches = r.subRegions.flatMap((sub) =>
+      sub.parts.filter((x) => norm(x.legacy) === norm(part)).map((x) => ({ sub, part: x })),
+    );
+    const only = matches.length === 1 ? matches[0] : undefined;
+    if (only) return { region: r.code, subRegion: only.sub.code, part: only.part.code };
+  }
   if (!s) return { region: r.code, subRegion: null, part: null };
   const p = s.parts.find((x) => norm(x.legacy) === norm(part));
   return { region: r.code, subRegion: s.code, part: p?.code ?? null };

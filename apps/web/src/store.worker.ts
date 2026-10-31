@@ -4,4 +4,4 @@ import { createStoreApi } from '@auratrack/store';
 import { serve, type PortLike } from '@auratrack/store/rpc';
 
 const { api } = createStoreApi({ name: 'auratrack' });
-serve(self as unknown as PortLike, api);
+serve(self as unknown as PortLike, api, { announce: true });

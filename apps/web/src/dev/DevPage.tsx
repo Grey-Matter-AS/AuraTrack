@@ -30,7 +30,7 @@ const input = 'rounded-md border border-white/30 bg-transparent px-2 py-1.5 text
 export default function DevPage() {
   const client = useMemo(() => {
     const worker = new Worker(new URL('../store.worker.ts', import.meta.url), { type: 'module' });
-    return connect<StoreApi>(worker as unknown as PortLike);
+    return connect<StoreApi>(worker as unknown as PortLike, { waitForReady: true });
   }, []);
   const [status, setStatus] = useState<StoreStatus | null>(null);
   const [counts, setCounts] = useState<Record<string, number>>({});
@@ -59,9 +59,11 @@ export default function DevPage() {
 
   useEffect(() => {
     // Asked after this effect has run, so the first answer arrives as an event, not as a state change inside the effect
-    void Promise.resolve().then(refresh);
-    return () => client.close();
-  }, [client, refresh]);
+    void Promise.resolve()
+      .then(refresh)
+      .catch((e: unknown) => setError(e instanceof Error ? `${e.name}: ${e.message}` : String(e)));
+    // The client is not closed here: React's development mode runs this effect twice, and a closed client never hears back
+  }, [refresh]);
 
   const run = async (work: () => Promise<void>) => {
     setBusy(true);
@@ -322,11 +324,15 @@ function ImportResult({ result }: { result: { report: ImportReport; comparison: 
       ))}
       {report.review.length > 0 && (
         <>
-          <h3 className="mt-3 font-bold">To review ({report.review.length}): kept as your own codes</h3>
+          <h3 className="mt-3 font-bold">
+            To review ({report.review.length}): the original text is kept; shown as your own code, or as the broader
+            area where one is named
+          </h3>
           <ul className="list-disc pl-5" data-testid="review">
             {report.review.map((r) => (
               <li key={`${r.kind}|${r.text}`}>
                 {r.kind}: “{r.text}” × {r.count}
+                {r.keptAs ? ` → ${r.keptAs}` : ''}
               </li>
             ))}
           </ul>

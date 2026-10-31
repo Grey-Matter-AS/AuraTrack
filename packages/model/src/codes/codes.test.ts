@@ -125,6 +125,14 @@ describe('6.1 text to codes', () => {
       part: null,
     });
     expect(bodyAreaFromLegacy('Arms', 'Elsewhere', 'x')).toEqual({ region: 'body.arms', subRegion: null, part: null });
+    // a part without its sub-region: found when only one sub-region has it, region only when it is on both sides
+    expect(bodyAreaFromLegacy('Head & Face', '', 'Left Eye')).toEqual({
+      region: 'body.head_and_face',
+      subRegion: 'body.head_and_face.eyes',
+      part: 'body.head_and_face.eyes.left_eye',
+    });
+    expect(bodyAreaFromLegacy('Arms', '', 'Wrist')).toEqual({ region: 'body.arms', subRegion: null, part: null });
+    expect(bodyAreaFromLegacy('Arms', '', 'Nothing')).toEqual({ region: 'body.arms', subRegion: null, part: null });
     expect(bodyAreaFromLegacy('Internal/General', '', '')).toBeNull();
     expect(bodyAreaFromLegacy('', '', '')).toBeNull();
     expect(bodyAreaFromLegacy('Moon', '', '')).toBeNull();
