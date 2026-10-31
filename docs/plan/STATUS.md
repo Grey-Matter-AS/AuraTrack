@@ -2,8 +2,22 @@
 
 **Read this first in every session.** Then read the current milestone's file (`M<n>.md`) and continue with "Next step".
 
-- **Current milestone:** M0, Foundation
+- **Current milestone:** M1, Data core and import (branch `7.0.1---M1`). M0 is done (CI green, checklist reviewed).
 - **Last updated:** 2026-10-31
+
+## M1 slices (in order; tick as they land)
+| # | Slice | State |
+|---|---|---|
+| 1 | `model`: ids and HLC (hybrid logical clock), property-tested | done 2026-10-31 |
+| 2 | `store`: field-level merge (newest per field, dose rank, tombstones, append-only), property-tested | done 2026-10-31 (found and fixed a real NaN bug in rank comparison via the property tests) |
+| 3 | `model`: zod schemas for every record type | done 2026-10-31: `packages/model/src/schemas/` (seizure with phase marks, medication, dose, wellbeing, EEG, settings, change log, tombstone; record registry, merge rules) |
+| 4 | Codes catalogue (types, ILAE, symptoms, body areas, triggers, findings, moods) + `i18n` labels (en first, 8 languages ported from 6.1) | done: `scripts/build-catalogue.mjs` generates the catalogue (356 codes) and `packages/i18n/src/labels/*.json` from 6.1. 6.1 only has translations for seizure types, triggers, moods, after-seizure findings, wellbeing factors and medication forms. **274 labels per language (symptoms, body areas, EEG activities, ILAE parts) are English-only and listed in `labels/review.json` for you to review** |
+| 5 | Clinical rules ported from 6.1 with their tests (emergency plan, 12-min auto-stop, regimen, doses) | done: `packages/model/src/rules/` (emergency plan, 12-min auto-stop, seizure time from phase marks, clusters, regimen history, scheduled/missed/assumed doses, local-date helpers), 6.1 tests ported, ~98% branch coverage |
+| 6 | `store`: AES-GCM encryption, key wrapping (PIN/passkey), Dexie, change log, working set | done: AES-GCM per record with AAD, PIN-wrapped device key (PBKDF2-SHA256 600k; **Argon2id not yet: needs a wasm library, planned with the lock screen in M2**), passkey (PRF) adapter tested with a fake authenticator only, Dexie store, change log, working set, persistence request, installed-PWA check |
+| 7 | Web Worker host | done: typed RPC over message ports (`rpc.ts`) and the store API for the worker (`api.ts`); tested over MessageChannel. The real `Worker` entry file comes with the developer page (slice 10) |
+| 8 | Backup v7 and recovery kit | done: encrypted backup v7 (`backup.ts`) with counts and verification, restore by change-log replay, recovery kit (text + QR) that unlocks after a forgotten PIN. The kit holds the device-key recovery secret; keys for sharing between devices join it in M6 |
+| 9 | 6.1 importer and comparison report | done: `packages/store/src/import6x/` reads plain, encrypted and all-patients 6.1 backups; maps English to codes (unmapped kept as your own codes and listed for review); laps and manual durations become phase marks that reproduce 6.1's seizure time exactly (property-tested over 500 random cases); medication history becomes change records; keeps the **complete original 6.1 row** on every record (`legacy`); ids derive from 6.1 uuids so a second import adds nothing. The comparison report recomputes 6.1's numbers from the file and compares seizures per month, durations, emergency-plan flags, medication changes and doses. **Not yet run on your real backup** |
+| 10 | Developer page listing imported data; coverage and mutation targets | done: `/#/dev` (lazy-loaded, first load still 67.6 KB) with a real Web Worker; end-to-end test in Chromium and Firefox. Coverage 99.6% statements / 95.8% branches (floor of 90% now enforced in CI). Mutation score 91.5% (Stryker, `pnpm mutation`, nightly job, every file above 80%) |
 
 ## M0 tasks
 | # | Task | State |
@@ -14,7 +28,7 @@
 | 4 | End-to-end tool trial (Playwright vs Cypress) | done: **Playwright** (`docs/decisions/e2e-tool.md`). Chromium and Firefox run locally (20/20); WebKit can't run on openSUSE, so it runs in CI on Ubuntu. |
 | 5 | PWA shell (prompt updates, CSP, deploy target) | done in code: prompt-mode service worker, manifest, strict CSP (`vercel.json`). Connecting the deploy target waits for the GitHub repo. |
 | 6 | Design tokens from 6.1 | done (`packages/ui/src/tokens.css`, one definition per colour using light-dark()) |
-| 7 | 6.1 feature checklist (`feature-checklist.md`), reviewed by you | draft written: waiting for your review |
+| 7 | 6.1 feature checklist (`feature-checklist.md`), reviewed by you | done: reviewed by you (2026-10-31) |
 | 8 | 6.1 report inventory (`report-inventory.md`) | draft from the code. Visual reference generated 2026-10-31 from made-up data (`docs/plan/reports-6.1/`, `scripts/gen-6x-reference.mjs`): 4 PDFs, CSV, previews. Still to do: compare the draft against it section by section. |
 
 ## Decisions
@@ -48,8 +62,24 @@
 - Real medical data (reports, backups, exports) is never committed. Reference material is generated from made-up test data.
 
 ## Next step
-- **Done:** planning docs rebuilt (2026-10-30); feature checklist reviewed by you; first commit pushed and CI green; 6.1 reference reports generated from made-up data (2026-10-31).
-- **You:** commit the new reference files (`docs/plan/reports-6.1/`, about 6.4 MB, mostly the 6 MB neurologist PDF) and `scripts/gen-6x-reference.mjs`. Say so if you'd rather keep the PDF out of git.
-- **Me, next:** check `report-inventory.md` section by section against the reference PDFs. Note the reference has no medication changes, so R-1 section 5 and R-2's changes table aren't covered yet.
-- **Then:** M0 is done once you accept the inventory. M1 starts after you approve `M1.md`.
+- **M1 is built; it closes when your real 6.1 backup imports with zero lost records and you have checked the comparison report.** That step only you can do, on your own computer (the data never goes into git):
+  1. `pnpm dev`, open `http://localhost:5173/#/dev`, create a store with a PIN.
+  2. Choose your 6.1 backup file (and its passphrase if encrypted).
+  3. Check: "0 unaccounted for", the comparison table ("everything matches", or each difference explained), and the **To review** list (symptoms, triggers, findings and moods that were kept as your own codes).
+  4. Tell me the result; I fix anything it shows.
+- **Then:** you approve `M2.md` and M2 starts.
+- **You:** review `packages/i18n/src/labels/review.json`: 274 labels per language (symptoms, body areas, EEG activities, ILAE parts) are English-only because 6.1 never translated them. They show in English until reviewed.
+- **You:** the first commit included `apps/web/dist-types/` (generated). It is now in `.gitignore`; to remove it from git: `git rm -r --cached apps/web/dist-types`.
 - **Deferred:** connecting the deploy target (Vercel) waits until you choose to do it.
+
+## M1 decisions and open points
+- **Every imported record keeps its original 6.1 row** in a `legacy` field (invisible to the schemas, kept in backups). This makes a mapping mistake unable to lose data. Once you have verified the import, we can decide whether to drop it.
+- **Time zone:** 6.1 did not store one; the importer assumes this device's and says so in the report.
+- **An unknown dose status, frequency or other invalid value is rejected with a reason, never guessed** (for example, never "taken" for a dose 6.1 recorded oddly). Rejected rows are listed in the import report and shown beside the comparison numbers.
+- **A medication 6.1 had deleted** is imported as a stopped one, so its dose history still has a medication to belong to.
+- **Argon2id** is not in yet (needs a wasm library); PIN keys use PBKDF2-SHA256 at 600,000 rounds. Planned with the lock screen in M2.
+- **Passkey unlock (WebAuthn PRF)** is written and tested against a fake authenticator only. It needs a real iPhone and Android phone before it is trusted.
+- **Recovery kit** covers recovery of this device's data after a forgotten PIN. Keys for sharing between devices join the kit in M6; the format is versioned.
+- **Seizure phase marks** (`start`, `auraEnd`, `seizureEnd`, `recoveryEnd`): Stop on the recording screen sets `seizureEnd`; recovery is marked afterwards. Seizure time (what the emergency plan uses) is `seizureEnd` minus `auraEnd` (or `start`).
+- **ILAE** parts are optional and never filled by the importer (6.1 had no ILAE data, and it will not guess a classification).
+- Nightly mutation job is in `.github/workflows/mutation.yml`.

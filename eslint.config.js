@@ -4,7 +4,7 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
 
 export default tseslint.config(
-  { ignores: ['**/dist', '**/dist-types', '**/coverage', '**/node_modules', 'docs'] },
+  { ignores: ['**/dist', '**/dist-types', '**/coverage', '**/node_modules', '**/.stryker-tmp', 'reports', 'docs'] },
   js.configs.recommended,
   ...tseslint.configs.strict,
   {
@@ -22,6 +22,11 @@ export default tseslint.config(
         },
       ],
     },
+  },
+  {
+    // Tests read values they have just written: a non-null assertion there is the clearer form
+    files: ['**/*.test.{ts,tsx}'],
+    rules: { '@typescript-eslint/no-non-null-assertion': 'off' },
   },
   {
     files: [

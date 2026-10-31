@@ -11,3 +11,7 @@ cypress/videos
 # Never commit real medical data (reports, backups, exports)
 *.atbak
 docs/plan/reports-6.1/real/
+
+reports
+.stryker-tmp
+dist-types

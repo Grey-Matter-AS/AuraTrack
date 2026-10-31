@@ -1,0 +1,24 @@
+name: Mutation tests
+
+# Nightly: deliberately breaks the clinical rules, the merge and the crypto, and checks that the tests notice.
+# Fails under 80% (docs/plan/README.md, Testing strategy). Takes a few minutes, so it is not run on every push.
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mutation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm mutation

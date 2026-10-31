@@ -1,3 +1,6 @@
-// @auratrack/model — Schemas (zod), codes catalogue (seizure types, symptoms, body areas, triggers, findings, moods) and clinical rules.
-// Built in the milestone plans (docs/plan); intentionally empty in M0.
-export {};
+// @auratrack/model — schemas (zod), the codes catalogue and the clinical rules.
+export * from './codes';
+export * from './hlc';
+export * from './ids';
+export * from './rules';
+export * from './schemas';

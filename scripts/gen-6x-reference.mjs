@@ -10,15 +10,24 @@ const FIXED_NOW = new Date('2026-10-15T12:00:00');
 
 // mulberry32: same sequence every run, so the reference is reproducible
 const prng = `(() => { let a = 20261015; return () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; })()`;
-const seed = readFileSync(SEED_FILE, 'utf8').replaceAll('Math.random()', '__rng()').replace('Math.random().toString(36)', '__rng().toString(36)')
+const seed = readFileSync(SEED_FILE, 'utf8')
+  .replaceAll('Math.random()', '__rng()')
+  .replace('Math.random().toString(36)', '__rng().toString(36)')
   .replace('const DB_VERSION = 10;', 'const DB_VERSION = 130;'); // Dexie opens 6.x at 13 x 10
 
 mkdirSync(out, { recursive: true });
 const browser = await chromium.launch();
-const ctx = await browser.newContext({ viewport: { width: 1280, height: 1000 }, acceptDownloads: true, locale: 'en-GB', timezoneId: 'Europe/Oslo' });
+const ctx = await browser.newContext({
+  viewport: { width: 1280, height: 1000 },
+  acceptDownloads: true,
+  locale: 'en-GB',
+  timezoneId: 'Europe/Oslo',
+});
 const page = await ctx.newPage();
 await page.clock.setFixedTime(FIXED_NOW);
-await page.addInitScript(() => { delete window.showSaveFilePicker; }); // force plain downloads
+await page.addInitScript(() => {
+  delete globalThis.showSaveFilePicker;
+}); // force plain downloads
 await page.goto(url);
 await page.waitForTimeout(2000); // let the app create its own database first
 await page.evaluate(`window.__rng = ${prng}`);
@@ -40,7 +49,9 @@ const save = async (name, i, file) => {
   console.log('saved', file);
 };
 const preview = async (i, file) => {
-  await btn(/open preview/i).nth(i).click();
+  await btn(/open preview/i)
+    .nth(i)
+    .click();
   await page.waitForTimeout(1500);
   await page.screenshot({ path: `${out}/${file}`, fullPage: true });
   console.log('preview', file);
@@ -50,7 +61,11 @@ const preview = async (i, file) => {
 await save(/generate/i, 0, 'csv-export.csv');
 const names = ['event-log', 'neurologist-report', 'seizure-diary', 'eeg-diary'];
 for (let i = 0; i < names.length; i++) {
-  await save(/download pdf/i, i, `${names[i]}.pdf`).catch((e) => console.log('FAILED', names[i], e.message.split('\n')[0]));
-  await preview(i, `${names[i]}-preview.png`).catch((e) => console.log('FAILED preview', names[i], e.message.split('\n')[0]));
+  await save(/download pdf/i, i, `${names[i]}.pdf`).catch((e) =>
+    console.log('FAILED', names[i], e.message.split('\n')[0]),
+  );
+  await preview(i, `${names[i]}-preview.png`).catch((e) =>
+    console.log('FAILED preview', names[i], e.message.split('\n')[0]),
+  );
 }
 await browser.close();

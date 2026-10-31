@@ -9,6 +9,9 @@
     "preview": "vite preview --host 127.0.0.1 --port 4173"
   },
   "dependencies": {
+    "@auratrack/i18n": "workspace:*",
+    "@auratrack/model": "workspace:*",
+    "@auratrack/store": "workspace:*",
     "@auratrack/ui": "workspace:*",
     "react": "19.3.1",
     "react-dom": "19.3.1"

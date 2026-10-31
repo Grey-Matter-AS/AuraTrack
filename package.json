@@ -20,14 +20,19 @@
     "format:check": "prettier --check .",
     "size": "node scripts/check-size.mjs",
     "e2e": "playwright test",
-    "e2e:local": "playwright test --project=chromium --project=firefox"
+    "e2e:local": "playwright test --project=chromium --project=firefox",
+    "mutation": "stryker run",
+    "test:coverage": "vitest run --coverage"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
     "@playwright/test": "^1.64.1",
+    "@stryker-mutator/core": "^10.1.1",
+    "@stryker-mutator/vitest-runner": "^10.1.1",
     "@vitest/coverage-v8": "5.0.5",
     "eslint": "10.13.0",
     "eslint-plugin-react-hooks": "7.1.1",
+    "fast-check": "^4.10.2",
     "globals": "17.13.0",
     "prettier": "3.9.10",
     "typescript": "6.0.3",
