@@ -717,24 +717,16 @@
     padding: 0.625rem 1rem;
     margin-bottom: -1px;
     border-radius: 1.25rem 1.25rem 0 0;
-    border: 1px solid var(--border);
+    /* The whole edge is in the colour of the buttons; the right-hand side is thicker, like a stack of tabs behind this one */
+    border: 1px solid var(--action);
+    border-top-width: 3px;
+    border-right-width: 0.3125rem;
     background: var(--bg-card);
     color: var(--text-primary);
     font: inherit;
     text-align: left;
     cursor: pointer;
     position: relative;
-    overflow: hidden;
-  }
-  /* The top edge thickens towards the right, like the edges of a stack of tabs, in the colour of the buttons and chips */
-  .ui-tabs__picker::before {
-    content: '';
-    position: absolute;
-    inset: 0 0 auto 0;
-    height: 0.5rem;
-    background: var(--action);
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 0.1875rem);
-    pointer-events: none;
   }
   .ui-tabs__picker-line {
     display: flex;

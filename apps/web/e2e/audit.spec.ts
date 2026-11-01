@@ -45,9 +45,16 @@ const apply = (page: Page, theme: string, accent: string, size: string) =>
 
 // Measuring in the middle of a slide-in would read the wrong place and the wrong colour
 const settled = (page: Page) =>
-  page.evaluate(() =>
-    Promise.all(document.getAnimations().map((a) => a.finished.catch(() => undefined))).then(() => undefined),
-  );
+  page.evaluate(async () => {
+    // A change of text size or theme can start new transitions (a toggle thumb sliding) a moment after the first ones end
+    const frame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+    for (let round = 0; round < 10; round++) {
+      await frame();
+      const running = document.getAnimations();
+      if (running.length === 0) return;
+      await Promise.all(running.map((a) => a.finished.catch(() => undefined)));
+    }
+  });
 
 const audit = async (page: Page, scope: string | null, over: Partial<AuditOptions> = {}): Promise<Violation[]> => {
   await settled(page);
