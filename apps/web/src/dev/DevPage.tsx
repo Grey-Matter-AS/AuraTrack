@@ -43,6 +43,7 @@ export default function DevPage() {
   const [imported, setImported] = useState<{ report: ImportReport; comparison: ComparisonReport } | null>(null);
   const [restored, setRestored] = useState<RestoreReport | null>(null);
   const [kit, setKit] = useState<{ kit: string; qrSvg: string } | null>(null);
+  const [pinMs, setPinMs] = useState<number | null>(null);
 
   const refresh = useCallback(async () => {
     const next = await client.status();
@@ -97,6 +98,12 @@ export default function DevPage() {
         <p className="mb-2" data-testid="status">
           {status === null ? 'Loading…' : !status.exists ? 'No store yet' : unlocked ? 'Unlocked' : 'Locked'}
         </p>
+        {pinMs !== null && (
+          <p className="mb-2" data-testid="pin-time">
+            PIN key took {pinMs} ms (creating a store derives the key twice; the first unlock of an older store three
+            times)
+          </p>
+        )}
         {!unlocked && (
           <>
             <input
@@ -112,12 +119,13 @@ export default function DevPage() {
               className={button}
               disabled={busy || pin.length < 4}
               onClick={() =>
-                run(
-                  async () =>
-                    void (await (status?.exists
-                      ? client.unlock({ credential: { pin } })
-                      : client.create({ credential: { pin } }))),
-                )
+                run(async () => {
+                  const started = performance.now();
+                  await (status?.exists
+                    ? client.unlock({ credential: { pin } })
+                    : client.create({ credential: { pin } }));
+                  setPinMs(Math.round(performance.now() - started));
+                })
               }
             >
               {status?.exists ? 'Unlock' : 'Create store'}

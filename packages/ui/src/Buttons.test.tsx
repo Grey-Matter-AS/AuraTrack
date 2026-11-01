@@ -2,7 +2,7 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Button, ButtonRow, CloseButton, IconButton } from './Buttons';
+import { Button, ButtonRow, CloseButton, IconButton, RoundButton } from './Buttons';
 import { UiStringsProvider } from './strings';
 
 afterEach(cleanup);
@@ -87,5 +87,38 @@ describe('ButtonRow', () => {
       </ButtonRow>,
     );
     expect(container.firstElementChild?.className).toBe('ui-button-row ui-button-row--stack');
+  });
+});
+
+describe('RoundButton', () => {
+  it('is a real button with its text inside, in the red or amber style, and calls onClick', async () => {
+    const onClick = vi.fn();
+    render(
+      <>
+        <RoundButton tone="danger" onClick={onClick}>
+          Start timer
+        </RoundButton>
+        <RoundButton tone="warning" icon={<svg data-testid="icon" />}>
+          Log past seizure
+        </RoundButton>
+      </>,
+    );
+    const start = screen.getByRole('button', { name: 'Start timer' });
+    expect(start.getAttribute('type')).toBe('button');
+    expect(start.className).toContain('ui-round--danger');
+    await userEvent.click(start);
+    expect(onClick).toHaveBeenCalledOnce();
+    const past = screen.getByRole('button', { name: 'Log past seizure' });
+    expect(past.className).toContain('ui-round--warning');
+    expect(past.querySelector('[data-testid="icon"]')).toBeTruthy();
+  });
+
+  it('can be disabled', () => {
+    render(
+      <RoundButton tone="danger" disabled>
+        Start
+      </RoundButton>,
+    );
+    expect((screen.getByRole('button') as HTMLButtonElement).disabled).toBe(true);
   });
 });

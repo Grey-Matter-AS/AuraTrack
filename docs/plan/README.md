@@ -308,7 +308,7 @@ The only preparation in v7 is that report data comes from the coded model, so a 
 - **M0:** new repo, CI, tooling, design tokens; 6.x archived; the full 6.1 feature list as the acceptance checklist.
 - **M1:** model, codes catalogue, encrypted store, change log, HLC merge, and the 6.1 importer, tested on your real backup.
 - **M2:** design system and the layout audit in CI across the device matrix.
-- **M3:** a clickable prototype of the new logging, tried on your phone first; then recording (crash-proof, lock-screen Start, emergency plan, auto-stop) and the timeline logging with the body map.
+- **M3 (ten gated slices, Argon2id first):** the PIN key moves to Argon2id; then a clickable prototype of the new logging, tried on your phone first; then recording (crash-proof, lock-screen Start, emergency plan, auto-stop) and the timeline logging with the body map.
 - **M4:** history, event detail, medications (change history, doses, reminders), wellbeing, EEG diary, video, patients.
 - **M5:** reports, starting from the 6.1 PDF layout, with the additions you approve (more detail, better graphics), generated in a worker; Save as PDF and Share; backup and restore.
 - **M6:** household without a hub (registry, pairing, sync by meeting).

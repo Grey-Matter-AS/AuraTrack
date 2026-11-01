@@ -36,6 +36,10 @@ export const IlaeSchema = z.object({
 });
 export type Ilae = z.infer<typeof IlaeSchema>;
 
+/** Which part of the seizure a symptom belongs to: before (prodrome and aura), during, or after (post-ictal). */
+export const PhaseNameSchema = z.enum(['before', 'during', 'after']);
+export type PhaseName = z.infer<typeof PhaseNameSchema>;
+
 /** How well the time between one symptom and the next is known. */
 export const OffsetSchema = z.object({
   kind: z.enum(['exact', 'approximate', 'unknown']),
@@ -53,6 +57,8 @@ export const SymptomEntrySchema = z.object({
   /** Time since the previous moment. */
   sincePrevious: OffsetSchema,
   isFirst: z.boolean(),
+  /** Added in 7.0.3. Records written before it have none; the editor places those by the time marks. */
+  phase: PhaseNameSchema.optional(),
 });
 export type SymptomEntry = z.infer<typeof SymptomEntrySchema>;
 
@@ -75,6 +81,8 @@ export const SeizureSchema = z.object({
   ilae: IlaeSchema.nullable(),
   symptoms: z.array(SymptomEntrySchema).max(200),
   afterFindings: z.array(FindingEntrySchema).max(100),
+  /** Added in 7.0.3: about how many hours before the start the first warning sign came ("about 2 h before"). */
+  prodromeHoursBefore: z.number().min(0).max(168).nullable().optional(),
   recoveryMinutes: z.number().int().nonnegative().nullable(),
   recoveryOngoing: z.boolean(),
   triggerCodes: z.array(CodeSchema).max(50),

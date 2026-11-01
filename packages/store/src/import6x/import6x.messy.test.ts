@@ -4,12 +4,13 @@ import { Store } from '../store';
 import { compareImport } from './compare';
 import { import6x } from './import';
 import { encryptedFile, type Row } from './legacy.fixture';
+import { TEST_PIN_KDF } from '../crypto';
 
 // A deliberately messy 6.1 backup: the oddly shaped, partly filled records that years of real use can leave behind.
 // Nothing may be lost or crash; whatever cannot be mapped is kept, listed or rejected with a reason.
 
 let n = 0;
-const newStore = () => Store.create(`messy-${Date.now()}-${n++}`, { pin: '2468' }, { pinIterations: 1000 });
+const newStore = () => Store.create(`messy-${Date.now()}-${n++}`, { pin: '2468' }, { pinKdf: TEST_PIN_KDF });
 const T = new Date(2026, 5, 10, 9, 0).getTime();
 const TZ = 'Europe/Oslo';
 

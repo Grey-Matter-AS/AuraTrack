@@ -66,6 +66,22 @@ export function CloseButton({ label, ...rest }: Omit<IconButtonProps, 'label' | 
 }
 
 /** A row of buttons that wraps, and stacks on small phones, instead of squeezing. */
+export interface RoundButtonProps extends NativeButton {
+  /** Red for starting a recording, amber for logging a past seizure. */
+  tone: 'danger' | 'warning';
+  icon?: ReactNode;
+}
+
+/** The big round action on Home (Start Timer, Log Past Seizure). A real button; the circle keeps its shape at every text size. */
+export function RoundButton({ tone, icon, type = 'button', children, ...rest }: RoundButtonProps) {
+  return (
+    <button type={type} className={cx('ui-round', `ui-round--${tone}`)} {...rest}>
+      {icon}
+      <span className="ui-round__label">{children}</span>
+    </button>
+  );
+}
+
 export function ButtonRow({ stack = false, children }: { stack?: boolean; children: ReactNode }) {
   return <div className={cx('ui-button-row', stack && 'ui-button-row--stack')}>{children}</div>;
 }

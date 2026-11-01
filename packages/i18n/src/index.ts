@@ -1,5 +1,6 @@
 import da from './labels/da.json';
 import de from './labels/de.json';
+import drafted from './labels/drafted.json';
 import en from './labels/en.json';
 import es from './labels/es.json';
 import fi from './labels/fi.json';
@@ -9,8 +10,10 @@ import nn from './labels/nn.json';
 import sv from './labels/sv.json';
 
 // @auratrack/i18n — labels for every code, in 9 languages. Codes are stored; labels are only ever looked up here.
-// English has every label. Another language has the ones ported from 6.1 where the meaning maps exactly; the rest are
-// listed in labels/review.json and show the English label until they are reviewed.
+// English has every label. Every other language has every label too: the ones ported from 6.1 where the meaning maps
+// exactly, and the rest drafted by Claude (2026-11-01, M3). Drafted labels are listed in labels/drafted.json until a
+// native speaker has checked them. labels/review.json lists codes with no label at all in a language; they show the
+// English label until one is added.
 export const LANGUAGES = ['en', 'nb', 'nn', 'da', 'sv', 'fi', 'de', 'fr', 'es'] as const;
 export type Language = (typeof LANGUAGES)[number];
 export const isLanguage = (value: string): value is Language => (LANGUAGES as readonly string[]).includes(value);
@@ -38,6 +41,10 @@ export function labelFor(language: Language, code: string, custom?: CustomLabels
 
 export const labelText = (language: Language, code: string, custom?: CustomLabels): string =>
   labelFor(language, code, custom).text;
+
+/** Has a native speaker not yet checked this label? True for the ones drafted by Claude and still on the list. */
+export const isDrafted = (language: Language, code: string): boolean =>
+  (drafted as Record<string, string[]>)[language]?.includes(code) ?? false;
 
 /** Codes that have a label in the given language (used by tests and the review list). */
 export const labelledCodes = (language: Language): string[] => Object.keys(LABELS[language]);

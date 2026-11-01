@@ -4,15 +4,18 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 const DevPage = lazy(() => import('./dev/DevPage'));
 
 const KitchenSink = lazy(() => import('./kitchen/KitchenSink'));
+const Prototype = lazy(() => import('./prototype/Prototype'));
 
 const isDevRoute = () => window.location.hash === '#/dev';
 const isKitchenRoute = () => window.location.hash.startsWith('#/kitchen');
+const isPrototypeRoute = () => window.location.hash.startsWith('#/prototype');
+const routeOf = () => (isDevRoute() ? 'dev' : isKitchenRoute() ? 'kitchen' : isPrototypeRoute() ? 'prototype' : 'home');
 
 // M0 shell: proves the build, the PWA and the tokens work. Real screens arrive from M2 on.
 export function App() {
-  const [route, setRoute] = useState(() => (isDevRoute() ? 'dev' : isKitchenRoute() ? 'kitchen' : 'home'));
+  const [route, setRoute] = useState(routeOf);
   useEffect(() => {
-    const onChange = () => setRoute(isDevRoute() ? 'dev' : isKitchenRoute() ? 'kitchen' : 'home');
+    const onChange = () => setRoute(routeOf());
     window.addEventListener('hashchange', onChange);
     return () => window.removeEventListener('hashchange', onChange);
   }, []);
@@ -21,6 +24,13 @@ export function App() {
     return (
       <Suspense fallback={<p className="p-4 text-sm">Loading…</p>}>
         <KitchenSink />
+      </Suspense>
+    );
+  }
+  if (route === 'prototype') {
+    return (
+      <Suspense fallback={<p className="p-4 text-sm">Loading…</p>}>
+        <Prototype />
       </Suspense>
     );
   }

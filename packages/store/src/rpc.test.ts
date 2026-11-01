@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { createStoreApi, type StoreApi } from './api';
 import { encryptedFile, makeBackup, plainFile } from './import6x/legacy.fixture';
 import { RemoteError, connect, serve, type PortLike } from './rpc';
+import { TEST_PIN_KDF } from './crypto';
 
 const channel = () => {
   const { port1, port2 } = new MessageChannel();
@@ -93,7 +94,7 @@ describe('rpc', () => {
 describe('import and backup through the worker interface', () => {
   it('imports a 6.1 backup, compares it, backs up and restores it', async () => {
     const { page, worker, close } = channel();
-    const { api } = createStoreApi({ name: `rpc-imp-${Date.now()}`, options: { pinIterations: 1000 } });
+    const { api } = createStoreApi({ name: `rpc-imp-${Date.now()}`, options: { pinKdf: TEST_PIN_KDF } });
     serve(worker, api);
     const client = connect<StoreApi>(page);
     await client.create({ credential: { pin: '2468' } });
@@ -121,7 +122,7 @@ describe('import and backup through the worker interface', () => {
 describe('importing an encrypted 6.1 backup through the worker interface', () => {
   it('passes the passphrase along', async () => {
     const { page, worker, close } = channel();
-    const { api } = createStoreApi({ name: `rpc-enc-${Date.now()}`, options: { pinIterations: 1000 } });
+    const { api } = createStoreApi({ name: `rpc-enc-${Date.now()}`, options: { pinKdf: TEST_PIN_KDF } });
     serve(worker, api);
     const client = connect<StoreApi>(page);
     await client.create({ credential: { pin: '2468' } });
@@ -138,7 +139,7 @@ describe('importing an encrypted 6.1 backup through the worker interface', () =>
 describe('the store through the worker interface', () => {
   const setup = () => {
     const { page, worker, close } = channel();
-    const { api } = createStoreApi({ name: `rpc-${Date.now()}-${Math.random()}`, options: { pinIterations: 1000 } });
+    const { api } = createStoreApi({ name: `rpc-${Date.now()}-${Math.random()}`, options: { pinKdf: TEST_PIN_KDF } });
     serve(worker, api);
     return { client: connect<StoreApi>(page), close };
   };

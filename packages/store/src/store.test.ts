@@ -1,10 +1,18 @@
 import 'fake-indexeddb/auto';
 import { encodeHlc, newId, type ChangeLogEntry } from '@auratrack/model';
-import { doseLogFixture, ids, medicationFixture, seizureFixture, stripBase } from '@auratrack/model/fixtures';
+import {
+  doseLogFixture,
+  ids,
+  interictalFixture,
+  medicationFixture,
+  seizureFixture,
+  stripBase,
+  symptomSetFixture,
+} from '@auratrack/model/fixtures';
 import Dexie from 'dexie';
 import fc from 'fast-check';
 import { describe, expect, it, vi } from 'vitest';
-import { DecryptError, WrongSecretError } from './crypto';
+import { DecryptError, TEST_PIN_KDF, WrongSecretError } from './crypto';
 import {
   AppendOnlyError,
   NotFoundError,
@@ -15,7 +23,7 @@ import {
   requestPersistentStorage,
 } from './store';
 
-const FAST = { pinIterations: 1000 };
+const FAST = { pinKdf: TEST_PIN_KDF };
 let counter = 0;
 const dbName = () => `test-${Date.now()}-${counter++}`;
 
@@ -131,6 +139,159 @@ describe('persistence and the lock', () => {
     expect([...stamps].sort()).toEqual(stamps);
     expect(new Set(stamps).size).toBe(2);
     expect(again.get('seizure', made.id)).toBeTruthy();
+  });
+});
+
+describe('PIN key upgrade (PBKDF2 to Argon2id)', () => {
+  const OLD = { pinKdf: { name: 'PBKDF2', iterations: 1000 } } as const;
+  const wrapOnDisk = async (name: string) => {
+    const raw = new Dexie(name);
+    await raw.open();
+    const row = (await raw.table('meta').get('wrappedKey')) as { value: { kdf: { name: string } } };
+    raw.close();
+    return row.value;
+  };
+
+  it('re-wraps a PBKDF2 store on the next unlock, with every record and the change log intact', async () => {
+    const name = dbName();
+    const old = await Store.create(name, { pin: '2468' }, OLD);
+    const made = await old.create('seizure', seizure({ notes: 'before the upgrade' }));
+    const log = await old.changesSince();
+    old.close();
+    expect((await wrapOnDisk(name)).kdf.name).toBe('PBKDF2');
+
+    const upgraded = await Store.unlock(name, { pin: '2468' }, FAST);
+    expect((await wrapOnDisk(name)).kdf.name).toBe('Argon2id');
+    expect(upgraded.get('seizure', made.id)).toEqual(made);
+    expect(await upgraded.changesSince()).toEqual(log);
+    expect(upgraded.info).toEqual(old.info);
+    upgraded.close();
+
+    // and it opens again with the same PIN, but not a wrong one
+    const again = await Store.unlock(name, { pin: '2468' }, FAST);
+    expect(again.get('seizure', made.id)?.notes).toBe('before the upgrade');
+    again.close();
+    await expect(Store.unlock(name, { pin: '1357' }, FAST)).rejects.toBeInstanceOf(WrongSecretError);
+  });
+
+  it('a wrong PIN changes nothing on disk', async () => {
+    const name = dbName();
+    (await Store.create(name, { pin: '2468' }, OLD)).close();
+    const before = await wrapOnDisk(name);
+    await expect(Store.unlock(name, { pin: '0000' }, FAST)).rejects.toBeInstanceOf(WrongSecretError);
+    expect(await wrapOnDisk(name)).toEqual(before);
+  });
+
+  it('keeps the old wrap, and still opens, if the new one cannot be made', async () => {
+    const name = dbName();
+    const old = await Store.create(name, { pin: '2468' }, OLD);
+    const made = await old.create('seizure', seizure());
+    old.close();
+    const before = await wrapOnDisk(name);
+    const broken = { pinKdf: { name: 'Argon2id', m: 1, t: 1, p: 1 } } as const; // below the lower limit: refused
+    const opened = await Store.unlock(name, { pin: '2468' }, broken);
+    expect(opened.get('seizure', made.id)).toBeTruthy();
+    expect(await wrapOnDisk(name)).toEqual(before);
+  });
+
+  it('leaves a store that is already current alone, and does not touch passkey or recovery unlocks', async () => {
+    const name = dbName();
+    const store = await Store.create(name, { pin: '2468' }, FAST);
+    const kit = await store.addRecoveryKit({ pin: '2468' });
+    store.close();
+    const before = await wrapOnDisk(name);
+    (await Store.unlock(name, { pin: '2468' }, FAST)).close();
+    expect(await wrapOnDisk(name)).toEqual(before);
+    (await Store.unlock(name, { recoveryKit: kit }, FAST)).close();
+    expect(await wrapOnDisk(name)).toEqual(before);
+  });
+
+  it('the recovery kit still works after the upgrade, and a new PIN is made under Argon2id', async () => {
+    const name = dbName();
+    const old = await Store.create(name, { pin: '2468' }, OLD);
+    const made = await old.create('seizure', seizure());
+    const kit = await old.addRecoveryKit({ pin: '2468' });
+    old.close();
+    (await Store.unlock(name, { pin: '2468' }, FAST)).close(); // upgrade
+    const viaKit = await Store.unlock(name, { recoveryKit: kit }, FAST);
+    expect(viaKit.get('seizure', made.id)).toBeTruthy();
+    await viaKit.changePin({ recoveryKit: kit }, '9753');
+    viaKit.close();
+    expect((await wrapOnDisk(name)).kdf.name).toBe('Argon2id');
+    expect((await Store.unlock(name, { pin: '9753' }, FAST)).get('seizure', made.id)).toBeTruthy();
+    await expect(Store.unlock(name, { pin: '2468' }, FAST)).rejects.toBeInstanceOf(WrongSecretError);
+  });
+});
+
+describe('between-seizures events and symptom sets (7.0.3)', () => {
+  it('saves both, validates them, and keeps them across a restart', async () => {
+    const name = dbName();
+    const store = await Store.create(name, { pin: '2468' }, FAST);
+    const event = await store.create(
+      'interictalEvent',
+      stripBase(interictalFixture({ notes: 'headache after lunch' })),
+    );
+    const set = await store.create('symptomSet', stripBase(symptomSetFixture({ name: 'Usual start' })));
+    await expect(
+      store.create('interictalEvent', stripBase(interictalFixture({ symptomCode: 'Headache' }))),
+    ).rejects.toBeInstanceOf(ValidationError);
+    await expect(store.create('symptomSet', stripBase(symptomSetFixture({ items: [] })))).rejects.toBeInstanceOf(
+      ValidationError,
+    );
+    store.close();
+    const again = await Store.unlock(name, { pin: '2468' }, FAST);
+    expect(again.get('interictalEvent', event.id)?.notes).toBe('headache after lunch');
+    expect(again.get('symptomSet', set.id)?.name).toBe('Usual start');
+    expect(again.list('interictalEvent')).toHaveLength(1);
+    expect(again.list('symptomSet')).toHaveLength(1);
+  });
+
+  it('indexes an event by when it happened, so ranges can be read without opening everything', async () => {
+    const name = dbName();
+    const store = await Store.create(name, { pin: '2468' }, FAST);
+    await store.create('interictalEvent', stripBase(interictalFixture({ occurredAt: 1_760_100_000_000 })));
+    store.close();
+    const raw = new Dexie(name);
+    await raw.open();
+    const rows = (await raw.table('records').toArray()) as { type: string; at: number }[];
+    raw.close();
+    expect(rows.find((r) => r.type === 'interictalEvent')?.at).toBe(1_760_100_000_000);
+  });
+
+  it('two devices editing different fields of one symptom set both keep their edit', async () => {
+    let t = 1_000_000;
+    const now = () => t++;
+    const household = newId();
+    const a = await Store.create(dbName(), { pin: '2468' }, { ...FAST, householdId: household, now });
+    const b = await Store.create(dbName(), { pin: '2468' }, { ...FAST, householdId: household, now });
+    const set = await a.create('symptomSet', stripBase(symptomSetFixture()));
+    await b.applyChanges(await a.changesSince());
+    await a.update('symptomSet', set.id, { name: 'Usual start' });
+    await b.update('symptomSet', set.id, { seizureTypeCode: null });
+    await a.applyChanges(await b.changesSince());
+    await b.applyChanges(await a.changesSince());
+    for (const store of [a, b]) {
+      expect(store.get('symptomSet', set.id)).toMatchObject({ name: 'Usual start', seizureTypeCode: null });
+    }
+  });
+
+  it('a seizure written the old way still opens and can gain a phase on a symptom', async () => {
+    const store = await newStore();
+    const made = await store.create('seizure', seizure());
+    const symptoms = [
+      {
+        id: newId(),
+        code: 'symptom.big_shaking_jerking.rhythmic_shaking',
+        area: null,
+        moment: 0,
+        order: 0,
+        sincePrevious: { kind: 'exact' as const, ms: 0 },
+        isFirst: true,
+        phase: 'during' as const,
+      },
+    ];
+    await store.update('seizure', made.id, { symptoms, prodromeHoursBefore: 2 });
+    expect(store.get('seizure', made.id)).toMatchObject({ prodromeHoursBefore: 2, symptoms: [{ phase: 'during' }] });
   });
 });
 

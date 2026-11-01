@@ -5,10 +5,12 @@ export {
   ButtonRow,
   CloseButton,
   IconButton,
+  RoundButton,
   type ButtonProps,
   type ButtonSize,
   type ButtonVariant,
   type IconButtonProps,
+  type RoundButtonProps,
 } from './Buttons';
 export {
   Checkbox,

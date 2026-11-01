@@ -2,8 +2,23 @@
 
 **Read this first in every session.** Then read the current milestone's file (`M<n>.md`) and continue with "Next step".
 
-- **Current milestone:** M2, Design system and layout guarantee (branch `7.0.2---M2`, approved 2026-10-31). M0 and M1 are done.
-- **Last updated:** 2026-10-31
+- **Current milestone:** M3, Recording and the new logging (branch `7.0.3---M3`, approved 2026-11-01). Slices 1 to 4 are built; **slice 4 is a gate: you try the prototype on your phone before slice 5**. M0, M1 and M2 are closed.
+- **Last updated:** 2026-11-01
+
+## M3 slices
+| # | Slice | State |
+|---|---|---|
+| 1 | Argon2id and key versioning | built 2026-11-01. `crypto.ts`: PINs are wrapped with Argon2id (32 MiB, 3 passes, 1 lane; hash-wasm 4.12.0, loaded only when a PIN is used); PBKDF2 stores still open and are re-wrapped on their next unlock (new wrap proved to open before it replaces the old one; a failure keeps the old wrap). Limits on stored settings. Checked against Node's own Argon2id. CSP `script-src` now has `'wasm-unsafe-eval'` (works in Chromium and Firefox; fails without it). Mutation score on crypto 89%. **Still yours:** read the PIN timing on your phones (`/#/dev` shows it) so the settings can be tuned |
+| 2 | Data additions | done 2026-11-01. `phase` on symptoms and `prodromeHoursBefore` (both optional, old records unchanged); new record types `interictalEvent` (between seizures) and `symptomSet`; typed setting keys (`wakeLock`, `symptomStrip`, `lockedAlertContent`, `appLockEnabled`, `autoLockSeconds`, `quickNoteLabels`) with defaults. No catalogue change (so no version bump): which symptoms are usual for a phase comes from how often they are used |
+| 3 | Words for the screens | 3a done 2026-11-01: all 274 symptom, body-area, ILAE and activity labels drafted by Claude in the 8 other languages (`drafted.json` lists them for a native check once the app is public). **3b (the screens' own sentences) waits until you approve the prototype**, so nothing is translated twice |
+| 4 | Clickable prototype | built 2026-11-01: `/#/prototype` (also on Vercel after you push). New kit part: `RoundButton`. Smoke-tested in Chromium and Firefox (`prototype.spec.ts`; WebKit runs in CI). **Gate: yours** |
+| 5 | Recording engine | **discuss first (locked Start / write-only buffer)**, then design note |
+| 6 to 10 | Home and recording screens, editor, saved sets and between-seizures log, app lock, tests and sign-off | not started |
+
+### M3 decisions
+- Argon2id before anything else, so no real data is ever stored under the old key (decided 2026-11-01).
+- The alert measures seizure time; until "End aura" is tapped, time counts as seizure time in the prototype (the safe way round for the alert). To confirm with you.
+- The prototype's "prototype controls" (skip to 3:50, 4:50, 11:50) exist only to reach the warning, the alert and the auto-stop without waiting.
 
 ## M2 slices
 | # | Slice | State |
@@ -15,7 +30,7 @@
 | 5 | Layout primitives (`Screen`, `ScrollArea`, `Stack`, `Cluster`), lint rules (screens only use kit components, no `position: fixed`, no browser dialogs, no `toISOString`; tested in `lint-rules.test.ts`) | done |
 | 6 | Layout audit as a permanent end-to-end test (`apps/web/e2e/audit.spec.ts`): kitchen sink at `/#/kitchen`, 10 device sizes, dark and light, 5 accents, 4 text sizes, every overlay; overlap, clipping, off-screen, tap targets of 44px, contrast of 4.5:1. The audit proves itself in `audit-selftest.spec.ts` (10 deliberately broken pages must be caught) | done: passes on all 10 devices in Chromium; 2 of them also checked in Firefox. WebKit runs in CI |
 | 7 | Visual baselines of the kitchen sink (`pnpm visual`; 3 devices x dark/light) | done locally; skipped in CI until baselines are made on the CI image (fonts differ) |
-| 8 | You look at the kitchen sink on your own phones | **yours**: open `https://auratrack7.vercel.app/#/kitchen` on each phone (private tab, or clear site data first) |
+| 8 | You look at the kitchen sink on your own phones | done 2026-11-01 (iPhone): number-field caret, tab border and version number fixed afterwards. **M2 closed 2026-11-01**; CI green on all 3 engines at `080e1f6` |
 
 ### M2 decisions
 - **Filled buttons and selected chips use a darkened accent** (`--action`, 62% accent), because white on the bright accent was 3.3:1, under the 4.5:1 rule. The bright accent stays for lines, dots and focus rings. Success green darkened for the same reason.
@@ -26,7 +41,13 @@
 - Kit styles and components are ported from 6.1's kit with the same behaviours (fresh-entry number field, own date hint and icon, never-blank select), now typed and tested.
 - Not in the kit yet (later milestones need them): body map, timeline, charts, the lock screen.
 
-### M2 open points
+### M2 close-out (2026-11-01)
+- Nightly mutation run failed on GitHub (UTC): the daylight-saving test only passes on Norwegian time under Stryker, which cannot change the time zone from inside a test. Fixed with `TZ: Europe/Oslo` on the step in `mutation.yml` (not yet run on GitHub; run it once from the Actions tab).
+- **Rule:** the full layout audit (about 8 minutes per engine) is run only when you ask. Targeted checks otherwise.
+- Numeric fields now start with the caret at the right-hand end, right-aligned (rule for every numeric field in the kit).
+- Version is 7.0.2 (root and `apps/web` package.json, home screen). Bump to 7.0.3 when M3 starts.
+
+### M2 open points (carried into M3)
 - **Argon2id and the lock screen: decided (2026-11-01): M3**, as its first slice, before any real data is saved (so no key re-wrapping is needed later). It needs a wasm library and `wasm-unsafe-eval` in the CSP `script-src` in `vercel.json`; tell the user exactly what changes. Add it to `M3.md` when drafting.
 - Date rows are already one column on the iPhone (checked by the user, 2026-11-01), so nothing to change there. Date hints may still be cut short in two-column rows on wider screens: allowed by the design (hint only).
 - No "new version available, reload" prompt yet: the service worker (M0) serves the saved copy first, so a returning user sees an old version until a second reload. Needs a small update prompt; schedule it (M3 or later).
@@ -89,7 +110,9 @@
 - Real medical data (reports, backups, exports) is never committed. Reference material is generated from made-up test data.
 
 ## Next step
-- **M2 is built.** To close it: you open the kitchen sink on your own phones (`https://auratrack7.vercel.app/#/kitchen`) and tell me what looks or feels wrong. Argon2id and the lock screen are decided: M3.
+- **Slice 4 gate (yours):** push, open `https://auratrack7.vercel.app/#/prototype` on your phone (a private tab, or clear site data first), and try: Start timer, End aura, the skip buttons (warning at 4:00, alert at 5:00, auto-stop at 12:00), the editor tabs, symptoms, the body map, Review, Between seizures, the Lock screen (PIN 2468) and the language setting. Tell me what to change. Also read the PIN timing on `/#/dev` on each phone (slice 1).
+- **Then:** I make the agreed changes, translate the screens' sentences (slice 3b), and we discuss slice 5 (Start from the lock screen) before any work on it.
+- **Open for M3:** the update prompt that never appears during a recording (slice 9).
 - **M1 is closed (2026-10-31).** The user ran the importer on their real 6.1 backup: 334 of 334 rows imported, 0 rejected, 0 unaccounted for. The user decided not to spend more time checking 6.x data: the 7 series is the priority, so the 'comparison report checked by you' item in M1's done-when is waived. The importer stays for other households moving from 6.1.
 - **Fixed after the real import:** body-area parts with no sub-region (for example 'Left Eye') now map to codes when only one sub-region has that part; 'Wrist' and similar (on both arms) stay at region level, original kept in `legacy`. The dev page showed 'Loading…' forever in `pnpm dev` (worker not ready yet, plus React dev double-effect closed the client): the worker now announces when ready.
 - **Then:** you approve `M3.md` and M3 starts.

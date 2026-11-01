@@ -19,7 +19,10 @@ import {
 import Dexie, { type EntityTable } from 'dexie';
 import { buildRecoveryKit, newRecoverySecret, parseRecoveryKit } from './recovery';
 import {
+  exportDeviceKey,
   generateDeviceKey,
+  importDeviceKey,
+  kdfIsCurrent,
   open,
   seal,
   unlockWithPin,
@@ -27,6 +30,7 @@ import {
   WrongSecretError,
   wrapDeviceKeyWithPin,
   wrapDeviceKeyWithSecret,
+  type PinKdf,
   type Sealed,
   type WrappedKey,
 } from './crypto';
@@ -128,8 +132,8 @@ export interface ApplyResult {
 
 export interface StoreOptions {
   now?: () => number;
-  /** Fewer PBKDF2 rounds: tests only. */
-  pinIterations?: number;
+  /** How a new PIN wrap is made; the default is Argon2id at full strength. Cheaper settings are for tests only. */
+  pinKdf?: PinKdf;
 }
 
 /** A record's field values as text that is the same wherever it is written. */
@@ -147,6 +151,7 @@ function indexTime(type: string, values: Record<string, JsonValue> | null): numb
     const start = phases && typeof phases === 'object' && !Array.isArray(phases) ? phases.start : null;
     return start && typeof start === 'object' && !Array.isArray(start) ? num(start.at) : num(values.createdAt);
   }
+  if (type === 'interictalEvent') return num(values.occurredAt);
   if (type === 'doseLog') return num(values.takenAt);
   if (type === 'wellbeingEntry') return num(values.recordedAt);
   if (type === 'eegSession' || type === 'eegActivity') return num(values.startTime);
@@ -165,7 +170,7 @@ export class Store {
     readonly info: StoreInfo,
     clock: Hlc,
     private readonly now: () => number,
-    private readonly pinIterations: number | undefined,
+    private readonly pinKdf: PinKdf | undefined,
   ) {
     this.clock = clock;
   }
@@ -191,7 +196,7 @@ export class Store {
     const key = await generateDeviceKey();
     const wrapped =
       'pin' in credential
-        ? await wrapDeviceKeyWithPin(key, credential.pin, options.pinIterations)
+        ? await wrapDeviceKeyWithPin(key, credential.pin, options.pinKdf)
         : await wrapDeviceKeyWithSecret(key, credential.secret);
     const info: StoreInfo = { householdId: options.householdId ?? newId(), deviceId: options.deviceId ?? newId() };
     const db = new AuraDb(name);
@@ -217,7 +222,7 @@ export class Store {
       throw new StoreError(`No store named ${name}`);
     }
     try {
-      const key = await Store.unwrapWith(db, wrapped, credential);
+      const key = await Store.unlockAndUpgrade(db, wrapped, credential, options);
       const householdId = (await db.meta.get('householdId'))?.value as string;
       const deviceId = (await db.meta.get('deviceId'))?.value as string;
       const clock = decodeHlc((await db.meta.get('hlc'))?.value as string);
@@ -226,6 +231,30 @@ export class Store {
       db.close();
       throw error;
     }
+  }
+
+  /**
+   * Unlocks, and if the PIN wrap uses older or weaker settings (a store made with PBKDF2 in M1), makes a new wrap under
+   * the current ones. The device key itself does not change, so no record is touched. The new wrap is written only after
+   * it has been shown to open, so a failure leaves the old wrap exactly as it was.
+   */
+  private static async unlockAndUpgrade(
+    db: AuraDb,
+    wrapped: WrappedKey,
+    credential: UnlockCredential,
+    options: StoreOptions,
+  ): Promise<CryptoKey> {
+    if (!('pin' in credential) || kdfIsCurrent(wrapped.kdf, options.pinKdf))
+      return Store.unwrapWith(db, wrapped, credential);
+    const movable = await unlockWithPin(wrapped, credential.pin, true); // a wrong PIN throws here
+    try {
+      const upgraded = await wrapDeviceKeyWithPin(movable, credential.pin, options.pinKdf);
+      await unlockWithPin(upgraded, credential.pin); // proves the new wrap opens before it replaces the old one
+      await db.meta.put({ key: 'wrappedKey', value: upgraded });
+    } catch {
+      // keep the old wrap and carry on: the PIN worked, and the upgrade is tried again at the next unlock
+    }
+    return importDeviceKey(await exportDeviceKey(movable));
   }
 
   private static async unwrapWith(
@@ -259,7 +288,7 @@ export class Store {
   async changePin(current: UnlockCredential, newPin: string): Promise<void> {
     const wrapped = (await this.db.meta.get('wrappedKey'))?.value as WrappedKey;
     const key = await Store.unwrapWith(this.db, wrapped, current, true);
-    await this.db.meta.put({ key: 'wrappedKey', value: await wrapDeviceKeyWithPin(key, newPin, this.pinIterations) });
+    await this.db.meta.put({ key: 'wrappedKey', value: await wrapDeviceKeyWithPin(key, newPin, this.pinKdf) });
   }
 
   /** Everything, with stamps: the records (tombstones included) and the whole change log. For backups. */
@@ -274,7 +303,7 @@ export class Store {
     clock: Hlc,
     options: StoreOptions,
   ): Promise<Store> {
-    const store = new Store(db, key, info, clock, options.now ?? Date.now, options.pinIterations);
+    const store = new Store(db, key, info, clock, options.now ?? Date.now, options.pinKdf);
     for (const row of await db.records.toArray()) {
       if (!isStoredType(row.type)) continue;
       const record = JSON.parse(await open(key, row, `${row.type}:${row.id}`)) as VersionedRecord;

@@ -9,17 +9,22 @@ import {
   SettingSchema,
   WellbeingEntrySchema,
 } from './other';
+import { InterictalEventSchema, SymptomSetSchema } from './logging';
 import { SeizureSchema } from './seizure';
 
 export * from './common';
+export * from './logging';
 export * from './medication';
 export * from './other';
 export * from './seizure';
+export * from './settings';
 
 /** The records that live under a patient and merge field by field. */
 export const RECORD_SCHEMAS = {
   patient: PatientSchema,
   seizure: SeizureSchema,
+  interictalEvent: InterictalEventSchema,
+  symptomSet: SymptomSetSchema,
   medication: MedicationSchema,
   medicationChange: MedicationChangeSchema,
   doseLog: DoseLogSchema,

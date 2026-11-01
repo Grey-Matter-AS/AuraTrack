@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { newId } from '../ids';
 import { encodeHlc } from '../hlc';
-import { doseLogFixture, ids, medicationFixture, seizureFixture } from './fixtures';
+import {
+  doseLogFixture,
+  ids,
+  interictalFixture,
+  medicationFixture,
+  seizureFixture,
+  symptomSetFixture,
+} from './fixtures';
 import {
   APPEND_ONLY_TYPES,
   ChangeLogEntrySchema,
@@ -24,6 +31,12 @@ import {
   DoseLogSchema,
   MedicationSchema,
   CalendarDaySchema,
+  InterictalEventSchema,
+  LOCKED_ALERT_CONTENT,
+  SETTING_DEFS,
+  SETTING_KEYS,
+  SymptomSetSchema,
+  settingValue,
 } from './index';
 
 const base = () => ({
@@ -235,5 +248,105 @@ describe('record registry', () => {
 
   it('ranks dose status: taken, then late, then assumed, then missed', () => {
     expect(MERGE_RULES.doseLog?.status?.rank).toEqual(['taken', 'late', 'assumed', 'missed']);
+  });
+});
+
+describe('added in 7.0.3: phases on symptoms, prodrome hours, between-seizures events, symptom sets', () => {
+  const symptom = (over: object = {}) => ({
+    id: newId(),
+    code: 'symptom.big_shaking_jerking.rhythmic_shaking',
+    area: null,
+    moment: 0,
+    order: 0,
+    sincePrevious: { kind: 'exact', ms: 0 },
+    isFirst: true,
+    ...over,
+  });
+
+  it('a seizure written before 7.0.3 (no phase, no prodrome hours) is still valid and unchanged when parsed', () => {
+    const old = seizureFixture({ symptoms: [symptom()] as never });
+    const parsed = SeizureSchema.parse(old);
+    expect(parsed).toEqual(old);
+    expect('phase' in parsed.symptoms[0]!).toBe(false);
+    expect('prodromeHoursBefore' in parsed).toBe(false);
+  });
+
+  it('accepts a phase on a symptom and prodrome hours, and refuses anything else', () => {
+    for (const phase of ['before', 'during', 'after']) {
+      expect(SeizureSchema.safeParse(seizureFixture({ symptoms: [symptom({ phase })] as never })).success).toBe(true);
+    }
+    expect(SeizureSchema.safeParse(seizureFixture({ symptoms: [symptom({ phase: 'later' })] as never })).success).toBe(
+      false,
+    );
+    expect(SeizureSchema.safeParse({ ...seizureFixture(), prodromeHoursBefore: 2.5 }).success).toBe(true);
+    expect(SeizureSchema.safeParse({ ...seizureFixture(), prodromeHoursBefore: null }).success).toBe(true);
+    expect(SeizureSchema.safeParse({ ...seizureFixture(), prodromeHoursBefore: -1 }).success).toBe(false);
+    expect(SeizureSchema.safeParse({ ...seizureFixture(), prodromeHoursBefore: 169 }).success).toBe(false);
+  });
+
+  it('between-seizures events hold one symptom code, a time, an optional body area and a note', () => {
+    expect(InterictalEventSchema.safeParse(interictalFixture()).success).toBe(true);
+    const area = { region: 'body.head_and_face', subRegion: null, part: null };
+    expect(InterictalEventSchema.safeParse(interictalFixture({ area })).success).toBe(true);
+    expect(InterictalEventSchema.safeParse({ ...interictalFixture(), symptomCode: 'Headache' }).success).toBe(false);
+    expect(InterictalEventSchema.safeParse({ ...interictalFixture(), occurredAt: -1 }).success).toBe(false);
+    expect(InterictalEventSchema.safeParse({ ...interictalFixture(), recordedBy: 'nurse' }).success).toBe(false);
+  });
+
+  it('a symptom set has at least one item, each with a phase, and may be for every seizure type', () => {
+    expect(SymptomSetSchema.safeParse(symptomSetFixture()).success).toBe(true);
+    expect(SymptomSetSchema.safeParse(symptomSetFixture({ seizureTypeCode: null, name: 'Usual start' })).success).toBe(
+      true,
+    );
+    expect(SymptomSetSchema.safeParse(symptomSetFixture({ items: [] })).success).toBe(false);
+    expect(
+      SymptomSetSchema.safeParse(symptomSetFixture({ items: [{ code: 'symptom.x', phase: 'meanwhile' }] as never }))
+        .success,
+    ).toBe(false);
+    expect(
+      SymptomSetSchema.safeParse(
+        symptomSetFixture({
+          items: Array.from({ length: 41 }, () => ({ code: 'symptom.x', phase: 'during' as const })),
+        }),
+      ).success,
+    ).toBe(false);
+  });
+
+  it('both new record types are in the registry, merged field by field (no special rule, not append-only)', () => {
+    expect(RECORD_TYPES).toEqual(expect.arrayContaining(['interictalEvent', 'symptomSet']));
+    expect(APPEND_ONLY_TYPES).not.toContain('interictalEvent');
+    expect(MERGE_RULES.interictalEvent).toBeUndefined();
+    expect(MERGE_RULES.symptomSet).toBeUndefined();
+  });
+});
+
+describe('setting keys', () => {
+  it('every key has a scope and a default that its own schema accepts', () => {
+    for (const key of SETTING_KEYS) {
+      const def = SETTING_DEFS[key];
+      expect(['device', 'patient', 'household']).toContain(def.scope);
+      expect(def.schema.safeParse(def.default).success).toBe(true);
+      expect(SettingSchema.safeParse({ ...base(), scope: def.scope, key, value: def.default }).success).toBe(true);
+    }
+  });
+
+  it('gives the stored value when it is valid and the default when it is missing or wrong', () => {
+    expect(settingValue('wakeLock', undefined)).toBe(true);
+    expect(settingValue('wakeLock', false)).toBe(false);
+    expect(settingValue('wakeLock', 'yes')).toBe(true);
+    expect(settingValue('symptomStrip', undefined)).toBe(false);
+    expect(settingValue('autoLockSeconds', 300)).toBe(300);
+    expect(settingValue('autoLockSeconds', -5)).toBe(60);
+    expect(settingValue('autoLockSeconds', 1.5)).toBe(60);
+    expect(settingValue('autoLockSeconds', 3601)).toBe(60);
+    expect(settingValue('quickNoteLabels', ['FELL', 'BLUE'])).toEqual(['FELL', 'BLUE']);
+    expect(settingValue('quickNoteLabels', Array(9).fill('x'))).toEqual([]);
+  });
+
+  it('what the locked alert shows defaults to the rescue medication and contacts, as decided (README 6)', () => {
+    expect(settingValue('lockedAlertContent', undefined)).toBe('rescue_and_contacts');
+    expect(settingValue('lockedAlertContent', 'nothing')).toBe('nothing');
+    expect(settingValue('lockedAlertContent', 'everything')).toBe('rescue_and_contacts');
+    expect(LOCKED_ALERT_CONTENT).toEqual(['nothing', 'rescue', 'rescue_and_contacts']);
   });
 });

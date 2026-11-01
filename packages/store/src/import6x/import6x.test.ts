@@ -2,7 +2,7 @@ import 'fake-indexeddb/auto';
 import { seizureSeconds, totalSeconds } from '@auratrack/model';
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
-import { DecryptError } from '../crypto';
+import { DecryptError, TEST_PIN_KDF } from '../crypto';
 import { Store } from '../store';
 import { compareImport } from './compare';
 import { derivedId } from './ids';
@@ -12,7 +12,7 @@ import { legacySeizureSeconds, mapPhases } from './map';
 import { encryptedFile, householdFile, makeBackup, makeEvents, plainFile, rng, type Row } from './legacy.fixture';
 
 let n = 0;
-const newStore = () => Store.create(`import-${Date.now()}-${n++}`, { pin: '2468' }, { pinIterations: 1000 });
+const newStore = () => Store.create(`import-${Date.now()}-${n++}`, { pin: '2468' }, { pinKdf: TEST_PIN_KDF });
 const TZ = 'Europe/Oslo';
 /** The original 6.1 row kept on a record. (store.list() gives schema-checked values, which leave it out.) */
 const legacyOf = (store: Store, type: 'seizure', id: string) =>

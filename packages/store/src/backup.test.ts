@@ -13,12 +13,12 @@ import {
   suggestedBackupName,
 } from './backup';
 import { toBase64Url } from './bytes';
-import { DecryptError, backupKey, seal } from './crypto';
+import { DecryptError, TEST_PIN_KDF, backupKey, seal } from './crypto';
 import { InvalidKitError, buildRecoveryKit, parseRecoveryKit, recoveryKitQr } from './recovery';
 import { Store } from './store';
 import { WrongSecretError } from './crypto';
 
-const FAST = { pinIterations: 1000 };
+const FAST = { pinKdf: TEST_PIN_KDF };
 const BK = { iterations: 1000 };
 let n = 0;
 const name = () => `backup-${Date.now()}-${n++}`;
