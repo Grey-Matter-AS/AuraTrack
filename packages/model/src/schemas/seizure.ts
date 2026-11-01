@@ -81,8 +81,17 @@ export const SeizureSchema = z.object({
   ilae: IlaeSchema.nullable(),
   symptoms: z.array(SymptomEntrySchema).max(200),
   afterFindings: z.array(FindingEntrySchema).max(100),
-  /** Added in 7.0.3: about how many hours before the start the first warning sign came ("about 2 h before"). */
-  prodromeHoursBefore: z.number().min(0).max(168).nullable().optional(),
+  /**
+   * Added in 7.0.3: about how long before the start the first warning sign came, in seconds. Some people have a few seconds'
+   * warning, others hours; the screen offers seconds, minutes or hours and stores seconds (up to a week).
+   */
+  prodromeSecondsBefore: z
+    .number()
+    .int()
+    .min(0)
+    .max(7 * 24 * 3600)
+    .nullable()
+    .optional(),
   recoveryMinutes: z.number().int().nonnegative().nullable(),
   recoveryOngoing: z.boolean(),
   triggerCodes: z.array(CodeSchema).max(50),

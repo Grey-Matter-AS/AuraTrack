@@ -17,20 +17,22 @@ import {
 } from '@auratrack/ui';
 import { useState } from 'react';
 import { BodyMap } from './BodyMap';
-import { PHASES, clock, type Draft, type Gap, type Item, type PhaseName } from './data';
+import { clock, prodromeText, tabsFor, type Gap, type Item, type PhaseName, type TabId } from './data';
 import { SymptomPicker } from './SymptomPicker';
 import { OverviewStrip, Timeline, type TimelineActions } from './Timeline';
 import { goHome, useNav } from './nav';
 import { usePrototype } from './state';
 
-// The seizure editor, in tabs by phase. Every tab is always there with its state; the overview above shows the whole
-// seizure; Save works from any tab and Review shows everything in order before saving.
+// The seizure editor, in tabs. Classification comes first: the type chosen there decides what the other tabs suggest (and
+// which of them are shown). Every tab is always there with its state; the overview above shows the whole seizure; Save works
+// from any tab and Review shows everything in order before saving.
 
-const TAB_NAME: Record<PhaseName | 'details', string> = {
+const TAB_NAME: Record<TabId, string> = {
+  classification: 'Classification',
   before: 'Before',
   during: 'During',
   after: 'After',
-  details: 'Details',
+  notes: 'Notes',
 };
 
 const NOT_SURE = [{ value: 'unknown', label: 'Not sure' }] as const;
@@ -39,22 +41,23 @@ export function Editor() {
   const nav = useNav();
   const toast = useToast();
   const { draft, setDraft, label } = usePrototype();
-  const [tab, setTab] = useState<string>('before');
+  const [tab, setTab] = useState<TabId>('classification');
   const [areaFor, setAreaFor] = useState<string | null>(null);
 
   const setItems = (update: (previous: Item[]) => Item[]) => setDraft((d) => ({ ...d, items: update(d.items) }));
   const count = (phase: PhaseName) => draft.items.filter((i) => i.phase === phase).length;
   const added = (n: number) => (n === 0 ? 'not filled in yet' : `${n} added`);
-  const tabs: TabItem[] = [
-    {
-      id: 'before',
-      label: TAB_NAME.before,
-      state: draft.prodromeHours > 0 ? `${added(count('before'))} · ${draft.prodromeHours} h` : added(count('before')),
-    },
-    { id: 'during', label: TAB_NAME.during, state: added(count('during')) },
-    { id: 'after', label: TAB_NAME.after, state: added(count('after') + draft.findings.length) },
-    { id: 'details', label: TAB_NAME.details, state: draft.onset ? 'classified' : 'not classified' },
-  ];
+
+  const ids = tabsFor(draft.typeCode);
+  const active: TabId = ids.includes(tab) ? tab : 'classification'; // a tab the type does not show falls back to the first
+  const state: Record<TabId, string> = {
+    classification: draft.typeCode ? label(draft.typeCode) : 'type not set',
+    before: prodromeText(draft) ? `${added(count('before'))} · ${prodromeText(draft)}` : added(count('before')),
+    during: added(count('during')),
+    after: added(count('after') + draft.findings.length),
+    notes: draft.notes ? 'written' : 'nothing yet',
+  };
+  const tabs: TabItem[] = ids.map((id) => ({ id, label: TAB_NAME[id], state: state[id] }));
 
   const actions: TimelineActions = {
     move: (id, direction) =>
@@ -96,44 +99,17 @@ export function Editor() {
           }
         />
         <OverviewStrip draft={draft} />
-        <Section title="What kind of seizure was it?">
-          <Stack>
-            <ChipGroup
-              label="Seizure type"
-              value={draft.typeCode}
-              onChange={(typeCode) => setDraft((d) => ({ ...d, typeCode }))}
-              options={SEIZURE_TYPES.map((t) => ({ value: t.code, label: label(t.code) }))}
-            />
-            <p className="proto-note">
-              {draft.typeCode
-                ? 'The symptoms and sets below now follow this type.'
-                : 'Not sure? Leave it empty: everything still works, and you can set it later.'}
-            </p>
-          </Stack>
-        </Section>
-        <Tabs tabs={tabs} activeTab={tab} onTabChange={setTab} label="Seizure phases">
-          {tab === 'before' ? (
-            <Stack>
-              <NumberField
-                label="About how many hours before the seizure did the first warning sign start?"
-                help="Leave 0 if there was none"
-                value={draft.prodromeHours}
-                max={168}
-                maxLength={3}
-                onChange={(v) => setDraft((d) => ({ ...d, prodromeHours: v }))}
-              />
-              <SymptomPicker phase="before" items={draft.items} onItems={setItems} />
-              <Timeline draft={draft} only="before" actions={actions} />
-            </Stack>
-          ) : null}
-          {tab === 'during' ? (
+        <Tabs tabs={tabs} activeTab={active} onTabChange={(id) => setTab(id as TabId)} label="Seizure sections">
+          {active === 'classification' ? <ClassificationTab /> : null}
+          {active === 'before' ? <BeforeTab actions={actions} setItems={setItems} /> : null}
+          {active === 'during' ? (
             <Stack>
               <SymptomPicker phase="during" items={draft.items} onItems={setItems} />
               <Timeline draft={draft} only="during" actions={actions} />
             </Stack>
           ) : null}
-          {tab === 'after' ? <AfterTab actions={actions} setItems={setItems} /> : null}
-          {tab === 'details' ? <DetailsTab /> : null}
+          {active === 'after' ? <AfterTab actions={actions} setItems={setItems} /> : null}
+          {active === 'notes' ? <NotesTab /> : null}
         </Tabs>
       </Stack>
       {editing ? (
@@ -153,6 +129,122 @@ export function Editor() {
         </BottomSheet>
       ) : null}
     </Screen>
+  );
+}
+
+function ClassificationTab() {
+  const { draft, setDraft, label } = usePrototype();
+  const focal = draft.onset === 'focal';
+  return (
+    <Stack>
+      <Section title="What kind of seizure was it?">
+        <Stack>
+          <ChipGroup
+            label="Seizure type"
+            value={draft.typeCode}
+            onChange={(typeCode) => setDraft((d) => ({ ...d, typeCode }))}
+            options={SEIZURE_TYPES.map((t) => ({ value: t.code, label: label(t.code) }))}
+          />
+          <p className="proto-note">
+            {draft.typeCode
+              ? 'The other tabs now follow this type: what they suggest, and which of them are shown.'
+              : 'Not sure? Leave it empty: everything still works, and you can set it later.'}
+          </p>
+        </Stack>
+      </Section>
+      <Section title="Classification (optional)">
+        <Stack>
+          <p className="proto-note">Answer what you can. "Not sure" is always fine and can be changed later.</p>
+          <ChipGroup
+            label="Where did it start?"
+            value={draft.onset}
+            onChange={(onset) => setDraft((d) => ({ ...d, onset }))}
+            options={
+              [
+                { value: 'focal', label: label('ilae.onset.focal') },
+                { value: 'generalized', label: label('ilae.onset.generalized') },
+                ...NOT_SURE,
+              ] as const
+            }
+          />
+          {focal ? (
+            <ChipGroup
+              label="Awareness"
+              value={draft.awareness}
+              onChange={(awareness) => setDraft((d) => ({ ...d, awareness }))}
+              options={
+                [
+                  { value: 'aware', label: label('ilae.awareness.aware') },
+                  { value: 'impaired', label: label('ilae.awareness.impaired') },
+                  ...NOT_SURE,
+                ] as const
+              }
+            />
+          ) : null}
+          <ChipGroup
+            label="Movement"
+            value={draft.motor}
+            onChange={(motor) => setDraft((d) => ({ ...d, motor }))}
+            options={
+              [
+                { value: 'motor', label: label('ilae.motor.motor') },
+                { value: 'non_motor', label: label('ilae.motor.non_motor') },
+                ...NOT_SURE,
+              ] as const
+            }
+          />
+          {focal ? (
+            <ChipGroup
+              label={label('ilae.spread_to_both_sides')}
+              value={draft.spread}
+              onChange={(spread) => setDraft((d) => ({ ...d, spread }))}
+              options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }, ...NOT_SURE] as const}
+            />
+          ) : null}
+        </Stack>
+      </Section>
+    </Stack>
+  );
+}
+
+function BeforeTab({ actions, setItems }: { actions: TimelineActions; setItems: (u: (p: Item[]) => Item[]) => void }) {
+  const { draft, setDraft, label } = usePrototype();
+  return (
+    <Stack>
+      <Section title="Warning signs">
+        <Stack>
+          <NumberField
+            label="How long before the seizure did the first warning sign start?"
+            help="Leave 0 if there was none"
+            value={draft.prodromeAmount}
+            max={999}
+            maxLength={3}
+            onChange={(prodromeAmount) => setDraft((d) => ({ ...d, prodromeAmount }))}
+          />
+          <ChipGroup
+            label="Unit of time"
+            value={draft.prodromeUnit}
+            onChange={(prodromeUnit) => setDraft((d) => ({ ...d, prodromeUnit }))}
+            options={[
+              { value: 'seconds', label: 'Seconds' },
+              { value: 'minutes', label: 'Minutes' },
+              { value: 'hours', label: 'Hours' },
+            ]}
+          />
+        </Stack>
+      </Section>
+      <Section title="Possible triggers">
+        <ChipGroup
+          multiple
+          label="Triggers"
+          value={draft.triggers}
+          onChange={(triggers) => setDraft((d) => ({ ...d, triggers }))}
+          options={TRIGGERS.map((t) => ({ value: t.code, label: label(t.code) }))}
+        />
+      </Section>
+      <SymptomPicker phase="before" items={draft.items} onItems={setItems} />
+      <Timeline draft={draft} only="before" actions={actions} />
+    </Stack>
   );
 }
 
@@ -204,9 +296,8 @@ function AfterTab({ actions, setItems }: { actions: TimelineActions; setItems: (
   );
 }
 
-function DetailsTab() {
-  const { draft, setDraft, label } = usePrototype();
-  const focal = draft.onset === 'focal';
+function NotesTab() {
+  const { draft, setDraft } = usePrototype();
   const sec = (a: number | null, b: number | null) => (a === null || b === null ? 0 : Math.round((b - a) / 1000));
   const auraSec = sec(draft.start, draft.auraEnd);
   const seizureSec = sec(draft.auraEnd ?? draft.start, draft.seizureEnd);
@@ -219,59 +310,16 @@ function DetailsTab() {
     });
   return (
     <Stack>
-      <Section title="Classification (optional)">
-        <Stack>
-          <p className="proto-note">Answer what you can. "Not sure" is always fine and can be changed later.</p>
-          <ChipGroup
-            label="Where did it start?"
-            value={draft.onset}
-            onChange={(onset) => setDraft((d) => ({ ...d, onset }))}
-            options={[
-              { value: 'focal', label: label('ilae.onset.focal') },
-              { value: 'generalized', label: label('ilae.onset.generalized') },
-              ...NOT_SURE,
-            ]}
-          />
-          {focal ? (
-            <ChipGroup
-              label="Awareness"
-              value={draft.awareness}
-              onChange={(awareness) => setDraft((d) => ({ ...d, awareness }))}
-              options={[
-                { value: 'aware', label: label('ilae.awareness.aware') },
-                { value: 'impaired', label: label('ilae.awareness.impaired') },
-                ...NOT_SURE,
-              ]}
-            />
-          ) : null}
-          <ChipGroup
-            label="Movement"
-            value={draft.motor}
-            onChange={(motor) => setDraft((d) => ({ ...d, motor }))}
-            options={[
-              { value: 'motor', label: label('ilae.motor.motor') },
-              { value: 'non_motor', label: label('ilae.motor.non_motor') },
-              ...NOT_SURE,
-            ]}
-          />
-          {focal ? (
-            <ChipGroup
-              label={label('ilae.spread_to_both_sides')}
-              value={draft.spread}
-              onChange={(spread) => setDraft((d) => ({ ...d, spread }))}
-              options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }, ...NOT_SURE] as const}
-            />
-          ) : null}
-        </Stack>
-      </Section>
-      <Section title="Possible triggers">
-        <ChipGroup
-          multiple
-          label="Triggers"
-          value={draft.triggers}
-          onChange={(triggers) => setDraft((d) => ({ ...d, triggers }))}
-          options={TRIGGERS.map((t) => ({ value: t.code, label: label(t.code) }))}
+      <Section title="Notes">
+        <TextArea
+          label="Notes for the neurologist"
+          value={draft.notes}
+          onChange={(notes) => setDraft((d) => ({ ...d, notes }))}
+          rows={4}
         />
+        {draft.quickNotes.length > 0 ? (
+          <p className="proto-note">From recording: {draft.quickNotes.join(' ')}</p>
+        ) : null}
       </Section>
       <Section title="Times">
         <Stack>
@@ -302,20 +350,6 @@ function DetailsTab() {
           />
         </Stack>
       </Section>
-      <Section title="Notes">
-        <TextArea
-          label="Notes for the neurologist"
-          value={draft.notes}
-          onChange={(notes) => setDraft((d) => ({ ...d, notes }))}
-          rows={4}
-        />
-        {draft.quickNotes.length > 0 ? (
-          <p className="proto-note">From recording: {draft.quickNotes.join(' ')}</p>
-        ) : null}
-      </Section>
     </Stack>
   );
 }
-
-export { PHASES };
-export type { Draft };

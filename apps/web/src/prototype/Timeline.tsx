@@ -7,6 +7,7 @@ import {
   clock,
   inSeizureOrder,
   mmss,
+  prodromeText,
   type Draft,
   type Gap,
   type Item,
@@ -134,9 +135,7 @@ export function Timeline({
   return (
     <ol className="proto-timeline" aria-label="Seizure timeline">
       {marker('Start', draft.start, 'aura')}
-      {draft.prodromeHours > 0 ? (
-        <li className="proto-gap">Warning signs began about {draft.prodromeHours} h before</li>
-      ) : null}
+      {prodromeText(draft) ? <li className="proto-gap">Warning signs began {prodromeText(draft)} before</li> : null}
       {rows('before')}
       {marker('Aura ends', draft.auraEnd, 'aura')}
       {rows('during')}

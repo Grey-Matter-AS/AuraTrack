@@ -2,13 +2,22 @@ import { expect, test, type Page } from '@playwright/test';
 
 // M3 slice 4: the clickable prototype of recording and logging (made-up data, nothing saved).
 // A smoke test of the whole flow, so a later change cannot quietly break what the user is trying on their phone.
+
 // Wide screens show a row of tabs; narrow ones show one control that opens the list of tabs
 async function openTab(page: Page, name: string) {
   const tab = page.getByRole('tab', { name });
   if (await tab.isVisible()) return tab.click();
-  await page.getByRole('button', { name: /\d of 4/ }).click();
+  await page.getByRole('button', { name: /\d of \d/ }).click();
   await page.getByRole('button', { name }).click();
 }
+const tabNames = async (page: Page): Promise<string[]> => {
+  const wide = page.getByRole('tab');
+  if (await wide.first().isVisible()) return (await wide.allInnerTexts()).map((t) => t.split('\n')[0] ?? '');
+  await page.getByRole('button', { name: /\d of \d/ }).click();
+  const names = await page.getByRole('dialog').getByRole('button').allInnerTexts();
+  await page.keyboard.press('Escape');
+  return names.map((t) => t.split('\n')[0] ?? '').filter((t) => t.trim() !== ''); // the close button has no text
+};
 
 test.describe('prototype', () => {
   test('record: end aura, warning at 4 minutes, alert at 5, end seizure, then the editor and Review', async ({
@@ -37,10 +46,13 @@ test.describe('prototype', () => {
     await page.getByRole('button', { name: 'End seizure' }).click();
     await page.getByRole('button', { name: 'Add details' }).click();
 
-    // The editor: four tabs, an overview, and Save from any tab
+    // The editor opens on Classification; Save works from any tab
     await expect(page.getByRole('button', { name: 'Save' })).toBeVisible();
+    await expect(page.getByText('What kind of seizure was it?')).toBeVisible();
     await expect(page.getByText('Seizure 5:')).toBeVisible();
+
     // A feeling such as déjà vu has no place on the body: no area button. A movement does.
+    await openTab(page, 'Before');
     await page
       .getByRole('button', { name: /Deja Vu/i })
       .first()
@@ -75,26 +87,60 @@ test.describe('prototype', () => {
     const stopped = page.getByRole('alertdialog', { name: 'Recording stopped at 12 minutes' });
     await expect(stopped).toBeVisible();
     await stopped.getByRole('button', { name: 'Add details' }).click();
-    await openTab(page, 'Details');
+    await openTab(page, 'Notes');
     await expect(page.getByText(/\[T\+\d+s\] FELL/)).toBeVisible();
   });
 
-  test('the seizure type is asked first, and the suggestions follow it; a fixed-place symptom asks for no area', async ({
+  test('Classification comes first; the suggestions and the tabs follow the type; a fixed-place symptom asks for no area', async ({
     page,
   }) => {
     await page.goto('/#/prototype');
     await page.getByRole('button', { name: 'Log past seizure' }).click();
-    await expect(page.getByRole('button', { name: /Staring Blankly/i })).toHaveCount(0); // not usual before the type is set
+    expect((await tabNames(page))[0]).toBe('Classification');
+
+    await openTab(page, 'During');
+    await expect(page.getByText('Often for this patient')).toBeVisible(); // no type yet
+    await openTab(page, 'Classification');
     await page.getByRole('button', { name: 'Absence' }).click();
     await openTab(page, 'During');
     await expect(page.getByText('Often for Absence')).toBeVisible();
     await expect(page.getByRole('button', { name: /Tongue Biting/i })).toHaveCount(0); // not usual for an absence
+
+    await openTab(page, 'Classification');
     await page.getByRole('button', { name: 'Tonic-Clonic' }).click();
+    await openTab(page, 'During');
     await page
       .getByRole('button', { name: /Tongue Biting/i })
       .first()
       .click();
     await expect(page.getByRole('button', { name: 'Add area' })).toHaveCount(0); // always the mouth: nothing to ask
+
+    // An aura-only seizure has no "during" part, so that tab is not shown
+    await openTab(page, 'Classification');
+    await page.getByRole('button', { name: 'Aura only' }).click();
+    expect(await tabNames(page)).not.toContain('During');
+    await page.getByRole('button', { name: 'Tonic-Clonic' }).click();
+    expect(await tabNames(page)).toContain('During');
+  });
+
+  test('the time before the seizure that the first warning sign came is in seconds, minutes or hours', async ({
+    page,
+  }) => {
+    await page.goto('/#/prototype');
+    await page.getByRole('button', { name: 'Log past seizure' }).click();
+    await openTab(page, 'Before');
+    await page.getByLabel('How long before the seizure did the first warning sign start?').fill('30');
+    await page.getByRole('button', { name: 'Seconds' }).click();
+    await page.getByRole('button', { name: 'Review' }).click();
+    await expect(
+      page.locator('[data-screen="review"]').getByText('Warning signs began about 30 s before'),
+    ).toBeVisible();
+    await page.getByRole('button', { name: 'Back to editing' }).click();
+    await page.getByRole('button', { name: 'Hours' }).click();
+    await page.getByRole('button', { name: 'Review' }).click();
+    await expect(
+      page.locator('[data-screen="review"]').getByText('Warning signs began about 30 h before'),
+    ).toBeVisible();
   });
 
   test('log a past seizure, between seizures, and the lock screen with Start', async ({ page }) => {
@@ -120,6 +166,7 @@ test.describe('prototype', () => {
     await page.goto('/#/prototype');
     await page.getByLabel('Language of the symptom and body labels').selectOption('nb');
     await page.getByRole('button', { name: 'Log past seizure' }).click();
+    await openTab(page, 'Before');
     await page
       .getByRole('button', { name: /Deja Vu|Déjà vu/i })
       .first()

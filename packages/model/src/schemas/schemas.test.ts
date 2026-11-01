@@ -268,20 +268,26 @@ describe('added in 7.0.3: phases on symptoms, prodrome hours, between-seizures e
     const parsed = SeizureSchema.parse(old);
     expect(parsed).toEqual(old);
     expect('phase' in parsed.symptoms[0]!).toBe(false);
-    expect('prodromeHoursBefore' in parsed).toBe(false);
+    expect('prodromeSecondsBefore' in parsed).toBe(false);
   });
 
-  it('accepts a phase on a symptom and prodrome hours, and refuses anything else', () => {
+  it('accepts a phase on a symptom and the warning-sign time, and refuses anything else', () => {
     for (const phase of ['before', 'during', 'after']) {
       expect(SeizureSchema.safeParse(seizureFixture({ symptoms: [symptom({ phase })] as never })).success).toBe(true);
     }
     expect(SeizureSchema.safeParse(seizureFixture({ symptoms: [symptom({ phase: 'later' })] as never })).success).toBe(
       false,
     );
-    expect(SeizureSchema.safeParse({ ...seizureFixture(), prodromeHoursBefore: 2.5 }).success).toBe(true);
-    expect(SeizureSchema.safeParse({ ...seizureFixture(), prodromeHoursBefore: null }).success).toBe(true);
-    expect(SeizureSchema.safeParse({ ...seizureFixture(), prodromeHoursBefore: -1 }).success).toBe(false);
-    expect(SeizureSchema.safeParse({ ...seizureFixture(), prodromeHoursBefore: 169 }).success).toBe(false);
+    const prodrome = (value: number | null) =>
+      SeizureSchema.safeParse({ ...seizureFixture(), prodromeSecondsBefore: value }).success;
+    expect(prodrome(5)).toBe(true); // a few seconds' warning
+    expect(prodrome(90 * 60)).toBe(true); // an hour and a half
+    expect(prodrome(7 * 24 * 3600)).toBe(true); // the longest: a week
+    expect(prodrome(null)).toBe(true);
+    expect(prodrome(0)).toBe(true);
+    expect(prodrome(-1)).toBe(false);
+    expect(prodrome(7 * 24 * 3600 + 1)).toBe(false);
+    expect(prodrome(2.5)).toBe(false); // whole seconds
   });
 
   it('between-seizures events hold one symptom code, a time, an optional body area and a note', () => {

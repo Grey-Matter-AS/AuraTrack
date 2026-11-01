@@ -43,7 +43,9 @@ export interface Draft {
   findings: string[];
   notes: string;
   quickNotes: string[];
-  prodromeHours: number;
+  /** How long before the seizure the first warning sign came: an amount and its unit. */
+  prodromeAmount: number;
+  prodromeUnit: 'seconds' | 'minutes' | 'hours';
   recoveryMinutes: number;
   notBackYet: boolean;
   emergencyStop: boolean;
@@ -69,7 +71,8 @@ export const emptyDraft = (start = Date.now()): Draft => ({
   findings: [],
   notes: '',
   quickNotes: [],
-  prodromeHours: 0,
+  prodromeAmount: 0,
+  prodromeUnit: 'minutes',
   recoveryMinutes: 0,
   notBackYet: false,
   emergencyStop: false,
@@ -241,3 +244,21 @@ export function localInputValue(ms: number): string {
   const two = (n: number) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())}T${two(d.getHours())}:${two(d.getMinutes())}`;
 }
+
+const UNIT_SHORT = { seconds: 's', minutes: 'min', hours: 'h' } as const;
+/** "about 30 s", "about 2 h", or null when there was no warning. */
+export const prodromeText = (d: Pick<Draft, 'prodromeAmount' | 'prodromeUnit'>): string | null =>
+  d.prodromeAmount > 0 ? `about ${d.prodromeAmount} ${UNIT_SHORT[d.prodromeUnit]}` : null;
+/** What the model stores: whole seconds. */
+export const prodromeSeconds = (d: Pick<Draft, 'prodromeAmount' | 'prodromeUnit'>): number =>
+  d.prodromeAmount * { seconds: 1, minutes: 60, hours: 3600 }[d.prodromeUnit];
+
+export type TabId = 'classification' | 'before' | 'during' | 'after' | 'notes';
+/**
+ * The tabs follow the seizure type. An aura-only seizure has no "during" part, so that tab is not shown; every other type
+ * shows all of them. (More of this, like hiding what never applies to a type, is for you to say after trying it.)
+ */
+export const tabsFor = (typeCode: string | null): TabId[] =>
+  typeCode === 'seizure_type.aura_only'
+    ? ['classification', 'before', 'after', 'notes']
+    : ['classification', 'before', 'during', 'after', 'notes'];
