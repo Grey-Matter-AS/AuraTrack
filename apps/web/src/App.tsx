@@ -1,3 +1,4 @@
+import { Button, Stack } from '@auratrack/ui';
 import { lazy, Suspense, useEffect, useState } from 'react';
 
 // The developer page (M1) is loaded only when opened, so it adds nothing to the first load.
@@ -48,6 +49,15 @@ export function App() {
         <p className="mt-2 text-sm" style={{ color: 'var(--text-dim)' }}>
           Version 7.0.2
         </p>
+        <div className="mt-6">
+          <Stack>
+            <Button variant="primary" onClick={() => (window.location.hash = '#/prototype')}>
+              Try the prototype
+            </Button>
+            <Button onClick={() => (window.location.hash = '#/kitchen')}>Component kitchen sink</Button>
+            <Button onClick={() => (window.location.hash = '#/dev')}>Developer page</Button>
+          </Stack>
+        </div>
       </div>
     </main>
   );
