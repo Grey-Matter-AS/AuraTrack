@@ -27,8 +27,8 @@
 - Not in the kit yet (later milestones need them): body map, timeline, charts, the lock screen.
 
 ### M2 open points
-- **Argon2id and the lock screen.** M1's notes said the lock screen and Argon2id would come in M2, but `M2.md` does not list them. I have not built them. Decide: add to M2, or to M3.
-- Date and time hints in a two-column row can be cut short on a phone ("Select mo…"). Allowed by the design (hint only), but a single column for date rows may read better.
+- **Argon2id and the lock screen: decided (2026-11-01): M3**, as its first slice, before any real data is saved (so no key re-wrapping is needed later). It needs a wasm library and `wasm-unsafe-eval` in the CSP `script-src` in `vercel.json`; tell the user exactly what changes. Add it to `M3.md` when drafting.
+- Date rows are already one column on the iPhone (checked by the user, 2026-11-01), so nothing to change there. Date hints may still be cut short in two-column rows on wider screens: allowed by the design (hint only).
 - No "new version available, reload" prompt yet: the service worker (M0) serves the saved copy first, so a returning user sees an old version until a second reload. Needs a small update prompt; schedule it (M3 or later).
 - The audit takes about 8 minutes for 10 devices in one engine; CI runs 3 engines (timeout set to 60 minutes).
 
@@ -40,7 +40,7 @@
 | 3 | `model`: zod schemas for every record type | done 2026-10-31: `packages/model/src/schemas/` (seizure with phase marks, medication, dose, wellbeing, EEG, settings, change log, tombstone; record registry, merge rules) |
 | 4 | Codes catalogue (types, ILAE, symptoms, body areas, triggers, findings, moods) + `i18n` labels (en first, 8 languages ported from 6.1) | done: `scripts/build-catalogue.mjs` generates the catalogue (356 codes) and `packages/i18n/src/labels/*.json` from 6.1. 6.1 only has translations for seizure types, triggers, moods, after-seizure findings, wellbeing factors and medication forms. **274 labels per language (symptoms, body areas, EEG activities, ILAE parts) are English-only and listed in `labels/review.json` for you to review** |
 | 5 | Clinical rules ported from 6.1 with their tests (emergency plan, 12-min auto-stop, regimen, doses) | done: `packages/model/src/rules/` (emergency plan, 12-min auto-stop, seizure time from phase marks, clusters, regimen history, scheduled/missed/assumed doses, local-date helpers), 6.1 tests ported, ~98% branch coverage |
-| 6 | `store`: AES-GCM encryption, key wrapping (PIN/passkey), Dexie, change log, working set | done: AES-GCM per record with AAD, PIN-wrapped device key (PBKDF2-SHA256 600k; **Argon2id not yet: needs a wasm library, planned with the lock screen in M2**), passkey (PRF) adapter tested with a fake authenticator only, Dexie store, change log, working set, persistence request, installed-PWA check |
+| 6 | `store`: AES-GCM encryption, key wrapping (PIN/passkey), Dexie, change log, working set | done: AES-GCM per record with AAD, PIN-wrapped device key (PBKDF2-SHA256 600k; **Argon2id not yet: needs a wasm library, planned with the lock screen, first slice of M3**), passkey (PRF) adapter tested with a fake authenticator only, Dexie store, change log, working set, persistence request, installed-PWA check |
 | 7 | Web Worker host | done: typed RPC over message ports (`rpc.ts`) and the store API for the worker (`api.ts`); tested over MessageChannel. The real `Worker` entry file comes with the developer page (slice 10) |
 | 8 | Backup v7 and recovery kit | done: encrypted backup v7 (`backup.ts`) with counts and verification, restore by change-log replay, recovery kit (text + QR) that unlocks after a forgotten PIN. The kit holds the device-key recovery secret; keys for sharing between devices join it in M6 |
 | 9 | 6.1 importer and comparison report | done: `packages/store/src/import6x/` reads plain, encrypted and all-patients 6.1 backups; maps English to codes (unmapped kept as your own codes and listed for review); laps and manual durations become phase marks that reproduce 6.1's seizure time exactly (property-tested over 500 random cases); medication history becomes change records; keeps the **complete original 6.1 row** on every record (`legacy`); ids derive from 6.1 uuids so a second import adds nothing. The comparison report recomputes 6.1's numbers from the file and compares seizures per month, durations, emergency-plan flags, medication changes and doses. **Not yet run on your real backup** |
@@ -89,7 +89,7 @@
 - Real medical data (reports, backups, exports) is never committed. Reference material is generated from made-up test data.
 
 ## Next step
-- **M2 is built.** To close it: you open the kitchen sink on your own phones (`https://auratrack7.vercel.app/#/kitchen`) and tell me what looks or feels wrong. Also decide the Argon2id/lock screen question above.
+- **M2 is built.** To close it: you open the kitchen sink on your own phones (`https://auratrack7.vercel.app/#/kitchen`) and tell me what looks or feels wrong. Argon2id and the lock screen are decided: M3.
 - **M1 is closed (2026-10-31).** The user ran the importer on their real 6.1 backup: 334 of 334 rows imported, 0 rejected, 0 unaccounted for. The user decided not to spend more time checking 6.x data: the 7 series is the priority, so the 'comparison report checked by you' item in M1's done-when is waived. The importer stays for other households moving from 6.1.
 - **Fixed after the real import:** body-area parts with no sub-region (for example 'Left Eye') now map to codes when only one sub-region has that part; 'Wrist' and similar (on both arms) stay at region level, original kept in `legacy`. The dev page showed 'Loading…' forever in `pnpm dev` (worker not ready yet, plus React dev double-effect closed the client): the worker now announces when ready.
 - **Then:** you approve `M3.md` and M3 starts.
@@ -102,7 +102,7 @@
 - **Time zone:** 6.1 did not store one; the importer assumes this device's and says so in the report.
 - **An unknown dose status, frequency or other invalid value is rejected with a reason, never guessed** (for example, never "taken" for a dose 6.1 recorded oddly). Rejected rows are listed in the import report and shown beside the comparison numbers.
 - **A medication 6.1 had deleted** is imported as a stopped one, so its dose history still has a medication to belong to.
-- **Argon2id** is not in yet (needs a wasm library); PIN keys use PBKDF2-SHA256 at 600,000 rounds. Planned with the lock screen in M2.
+- **Argon2id** is not in yet (needs a wasm library); PIN keys use PBKDF2-SHA256 at 600,000 rounds. Planned with the lock screen, first slice of M3.
 - **Passkey unlock (WebAuthn PRF)** is written and tested against a fake authenticator only. It needs a real iPhone and Android phone before it is trusted.
 - **Recovery kit** covers recovery of this device's data after a forgotten PIN. Keys for sharing between devices join the kit in M6; the format is versioned.
 - **Seizure phase marks** (`start`, `auraEnd`, `seizureEnd`, `recoveryEnd`): Stop on the recording screen sets `seizureEnd`; recovery is marked afterwards. Seizure time (what the emergency plan uses) is `seizureEnd` minus `auraEnd` (or `start`).

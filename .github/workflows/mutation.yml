@@ -21,4 +21,7 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # Stryker runs the tests where a test can't change the time zone itself, and the daylight-saving test expects Norwegian time
       - run: pnpm mutation
+        env:
+          TZ: Europe/Oslo
