@@ -1,0 +1,1069 @@
+/* AuraTrack UI kit: the only button, field, chip, overlay, card and layout styles.
+   Components in this package render these classes; screens use the components, never raw elements.
+   Rules every block here keeps (the layout audit checks them on the device matrix):
+   - nothing overlaps: rows wrap with gaps, children have min-width: 0, scrolling children never shrink
+   - nothing leaves the screen: max-width: 100%, overlays are capped to the dynamic viewport and scroll inside
+   - every tap target is at least 2.75rem (44px at the default text size)
+   Device classes: under 360 small phone, 360-599 phone, 600-899 or short landscape, 900+ tablet or computer. */
+
+@layer components {
+  /* ─── Layout primitives ─── */
+  .ui-screen {
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+    min-width: 0;
+    max-width: 100%;
+    padding: max(0.75rem, env(safe-area-inset-top)) max(0.75rem, env(safe-area-inset-right))
+      max(0.75rem, env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-left));
+    box-sizing: border-box;
+    background: var(--bg-base);
+    color: var(--text-primary);
+    font-size: var(--fs-body);
+    overflow-wrap: anywhere; /* a very long word breaks as a last resort instead of running off the screen */
+  }
+  .ui-screen__content {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+    max-width: 64rem;
+    min-width: 0;
+    margin-inline: auto;
+  }
+  /* A scrolling column: its children keep their full height, so text never spills over the next one */
+  .ui-scroll {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-width: 0;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .ui-scroll > * {
+    flex-shrink: 0;
+  }
+  .ui-stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-gap, 1rem);
+    min-width: 0;
+  }
+  .ui-stack > * {
+    min-width: 0;
+  }
+  .ui-cluster {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--ui-gap, 0.5rem);
+    min-width: 0;
+  }
+  .ui-cluster > * {
+    min-width: 0;
+  }
+
+  /* ─── Buttons ─── */
+  .ui-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-width: 0;
+    max-width: 100%;
+    min-height: var(--touch-target-compact);
+    padding: 0.625rem 1rem;
+    border-radius: 1rem;
+    border: 1px solid transparent;
+    font: inherit;
+    font-size: var(--fs-label);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    line-height: 1.2;
+    text-transform: uppercase;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    hyphens: none;
+    cursor: pointer;
+    transition:
+      transform 0.1s ease,
+      filter 0.15s ease,
+      opacity 0.15s ease;
+  }
+  .ui-btn:active {
+    transform: scale(0.97);
+  }
+  .ui-btn:disabled {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+  .ui-btn--md {
+    min-height: max(44px, 3rem);
+  }
+  .ui-btn--lg {
+    min-height: var(--touch-target-comfortable);
+    padding: 0.875rem 1.25rem;
+    font-size: var(--fs-label-lg);
+    border-radius: 1.25rem;
+  }
+  .ui-btn--full {
+    width: 100%;
+  }
+  .ui-btn--primary {
+    background: var(--action);
+    color: var(--on-action);
+    border-color: var(--action-border);
+  }
+  .ui-btn--secondary {
+    background: var(--bg-raised);
+    color: var(--text-on-raised);
+    border-color: var(--border);
+  }
+  .ui-btn--success {
+    background: var(--success);
+    color: var(--on-action);
+    border-color: var(--success-border);
+  }
+  .ui-btn--danger {
+    background: var(--danger);
+    color: var(--on-action);
+    border-color: var(--danger-border);
+  }
+  .ui-btn--warning {
+    background: var(--warning-bg);
+    color: var(--warning-text);
+    border-color: var(--warning-border);
+  }
+  .ui-btn--ghost {
+    background: transparent;
+    color: var(--text-dim);
+    border-color: var(--border);
+    border-style: dashed;
+  }
+
+  .ui-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: var(--touch-target-compact);
+    height: var(--touch-target-compact);
+    padding: 0;
+    border-radius: 1rem;
+    border: 1px solid var(--border);
+    background: var(--bg-raised);
+    color: var(--text-on-raised);
+    cursor: pointer;
+    transition:
+      transform 0.1s ease,
+      filter 0.15s ease;
+  }
+  .ui-icon-btn:active {
+    transform: scale(0.95);
+  }
+  .ui-icon-btn--accent {
+    background: var(--action);
+    color: var(--on-action);
+    border-color: var(--action-border);
+  }
+  .ui-icon-btn--success {
+    background: var(--success);
+    color: var(--on-action);
+    border-color: var(--success-border);
+  }
+  .ui-icon-btn--danger {
+    background: var(--danger);
+    color: var(--on-action);
+    border-color: var(--danger-border);
+  }
+
+  /* Rows of buttons wrap instead of squeezing; on small phones each button takes a full line */
+  .ui-button-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+  .ui-button-row > * {
+    flex: 1 1 9rem;
+  }
+  .ui-button-row--stack {
+    flex-direction: column;
+  }
+  .ui-button-row--stack > * {
+    flex: 0 0 auto;
+    width: 100%;
+  }
+
+  /* ─── Chips (single or multi select, segments) ─── */
+  .ui-chip-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+  .ui-chip-group--fill > .ui-chip {
+    flex: 1 1 auto;
+  }
+  .ui-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    max-width: 100%;
+    min-height: var(--touch-target-compact);
+    padding: 0.5rem 0.875rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--bg-raised);
+    color: var(--text-on-raised);
+    font: inherit;
+    font-size: var(--fs-label);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    line-height: 1.2;
+    text-transform: uppercase;
+    text-align: center;
+    overflow-wrap: anywhere;
+    hyphens: none;
+    cursor: pointer;
+    transition:
+      transform 0.1s ease,
+      background-color 0.15s ease;
+  }
+  .ui-chip:active {
+    transform: scale(0.96);
+  }
+  .ui-chip[aria-pressed='true'],
+  .ui-chip[aria-selected='true'] {
+    background: var(--selected);
+    color: var(--on-selected);
+    border-color: transparent;
+  }
+
+  /* Full-width radio-like rows */
+  .ui-choice-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+  .ui-choice {
+    display: block;
+    width: 100%;
+    min-height: var(--touch-target-compact);
+    padding: 0.75rem 1rem;
+    border-radius: 1rem;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: var(--fs-body);
+    font-weight: 600;
+    text-align: left;
+    overflow-wrap: anywhere;
+    cursor: pointer;
+  }
+  .ui-choice__detail {
+    display: block;
+    margin-top: 0.125rem;
+    font-size: var(--fs-small);
+    font-weight: 500;
+  }
+  .ui-choice[aria-pressed='true'] {
+    background: var(--selected);
+    color: var(--on-selected);
+    border-color: transparent;
+  }
+
+  /* ─── Switch ─── */
+  .ui-toggle {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 3.5rem;
+    min-height: var(--touch-target-compact);
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+  }
+  .ui-toggle__track {
+    position: relative;
+    display: block;
+    width: 3.5rem;
+    height: 2rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--bg-input);
+    transition: background-color 0.15s ease;
+  }
+  .ui-toggle__thumb {
+    position: absolute;
+    top: 0.25rem;
+    left: 0.2rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 999px;
+    background: var(--text-dim);
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+    transition:
+      left 0.15s ease,
+      background-color 0.15s ease;
+  }
+  .ui-toggle[aria-checked='true'] .ui-toggle__track {
+    background: var(--selected);
+    border-color: transparent;
+  }
+  .ui-toggle[aria-checked='true'] .ui-toggle__thumb {
+    left: 1.6rem;
+    background: #ffffff;
+  }
+
+  /* ─── Fields ─── */
+  .ui-field-wrap {
+    min-width: 0;
+    max-width: 100%;
+  }
+  .ui-label {
+    display: block;
+    margin-bottom: 0.375rem;
+    color: var(--text-dim);
+    font-size: var(--fs-label);
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    overflow-wrap: anywhere;
+  }
+  .ui-help {
+    margin: 0.375rem 0 0;
+    color: var(--text-dim);
+    font-size: var(--fs-small);
+    overflow-wrap: anywhere;
+  }
+  .ui-error {
+    margin: 0.375rem 0 0;
+    color: var(--status-missed-text);
+    font-size: var(--fs-small);
+    font-weight: 700;
+  }
+  .ui-field {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    min-height: max(44px, 3rem);
+    padding: 0.625rem 0.875rem;
+    border-radius: 0.875rem;
+    border: 1px solid var(--border);
+    background-color: var(--bg-input);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: max(16px, 1em); /* iOS zooms into smaller text */
+    outline: none;
+    box-sizing: border-box;
+  }
+  .ui-field::placeholder {
+    color: var(--text-dim);
+    opacity: 1;
+  }
+  textarea.ui-field {
+    min-height: 5.5rem;
+    resize: none;
+  }
+  .ui-field[readonly],
+  .ui-field:disabled {
+    opacity: 0.65;
+  }
+  .ui-field--compact {
+    width: 4.5rem;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-weight: 800;
+  }
+  .ui-field[aria-invalid='true'] {
+    border-color: var(--status-missed-text);
+  }
+
+  /* A select draws its own chevron: one definition in the text colour, in both themes */
+  .ui-select {
+    position: relative;
+    min-width: 0;
+  }
+  .ui-select > select.ui-field {
+    appearance: none;
+    padding-right: 2.5rem;
+    text-overflow: ellipsis;
+  }
+  .ui-select > select.ui-field option {
+    color: var(--text-primary);
+    background-color: var(--bg-card);
+  }
+  .ui-select::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 1.125rem;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-right: 2px solid var(--text-dim);
+    border-bottom: 2px solid var(--text-dim);
+    transform: translateY(-70%) rotate(45deg);
+    pointer-events: none;
+  }
+
+  /* Date and time fields: own hint and icon, so an empty field is never a blank box (iOS) */
+  .ui-date {
+    position: relative;
+    min-width: 0;
+    max-width: 100%;
+  }
+  .ui-date > .ui-field {
+    position: relative;
+    padding-right: 2.75rem;
+    appearance: none;
+  }
+  .ui-date__hint {
+    position: absolute;
+    top: 50%;
+    left: calc(0.875rem + 1px);
+    right: 2.75rem;
+    transform: translateY(-50%);
+    color: var(--text-dim);
+    font-size: max(16px, 1em);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    pointer-events: none;
+  }
+  /* The icon covers the browser's own (Firefox draws one at the right edge that cannot be hidden), and taps pass through it */
+  .ui-date__icon {
+    position: absolute;
+    top: 1px;
+    right: 1px;
+    bottom: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    border-radius: 0 0.8125rem 0.8125rem 0;
+    background: var(--bg-input);
+    color: var(--text-dim);
+    pointer-events: none;
+  }
+  /* While empty and not focused, the browser's own "dd/mm/yyyy" is invisible: the hint above is what shows */
+  .ui-date--empty > .ui-field {
+    color: transparent;
+  }
+  .ui-date--empty > .ui-field::-webkit-datetime-edit {
+    color: transparent;
+  }
+  /* The native picker button covers the whole field (invisible): a tap anywhere opens the picker */
+  .ui-date > .ui-field::-webkit-calendar-picker-indicator {
+    position: absolute;
+    inset: 0;
+    width: auto;
+    height: auto;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  /* Firefox puts its own button at the right edge, under the icon above, so the text may use the room beside it */
+  @supports (-moz-appearance: none) {
+    .ui-date > .ui-field {
+      padding-right: 0.875rem;
+    }
+  }
+
+  /* Checkbox row: the whole row is the tap target */
+  .ui-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    min-height: var(--touch-target-compact);
+    cursor: pointer;
+  }
+  .ui-check > input {
+    flex-shrink: 0;
+    width: 1.25rem;
+    height: 1.25rem;
+    margin: 0.125rem 0 0;
+    accent-color: var(--action);
+  }
+  .ui-check__label {
+    display: block;
+    font-size: var(--fs-body);
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+  .ui-check__help {
+    display: block;
+    margin-top: 0.125rem;
+    color: var(--text-dim);
+    font-size: var(--fs-small);
+    overflow-wrap: anywhere;
+  }
+
+  /* Rows of fields: as many columns as fit (min width per field), one column on small phones */
+  .ui-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--ui-row-min, 9rem)), 1fr));
+    gap: 0.75rem;
+    min-width: 0;
+  }
+  .ui-row > * {
+    min-width: 0;
+  }
+  /* A main field plus a short companion (dose and unit) */
+  .ui-row--split {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  /* ─── Containers ─── */
+  .ui-section {
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    border-radius: 2rem;
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-card);
+  }
+  .ui-section__header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .ui-section__title {
+    margin: 0;
+    color: var(--text-dim);
+    font-size: var(--fs-label);
+    font-weight: 800;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    overflow-wrap: anywhere;
+  }
+  .ui-section__body {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding: 1.5rem;
+    min-width: 0;
+  }
+  .ui-card {
+    min-width: 0;
+    max-width: 100%;
+    padding: 1rem;
+    border-radius: 1.25rem;
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    box-sizing: border-box;
+  }
+  .ui-card--compact {
+    padding: 0.75rem;
+  }
+  .ui-card--danger {
+    border-color: color-mix(in srgb, var(--danger) 55%, transparent);
+  }
+  .ui-card--accent {
+    border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  }
+  .ui-inset {
+    min-width: 0;
+    max-width: 100%;
+    padding: 1rem;
+    border-radius: 1rem;
+    border: 1px solid var(--border);
+    background: var(--inset-bg);
+    color: var(--text-primary);
+    box-sizing: border-box;
+  }
+  .ui-empty {
+    padding: 2rem 1rem;
+    border: 2px dashed var(--border);
+    border-radius: 1.5rem;
+    color: var(--text-dim);
+    text-align: center;
+    font-size: var(--fs-body);
+    font-style: italic;
+  }
+
+  /* ─── Header with the patient chip ─── */
+  .ui-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    min-width: 0;
+  }
+  .ui-header__title {
+    flex: 1 1 8rem;
+    min-width: 0;
+    margin: 0;
+    color: var(--text-dim);
+    font-size: var(--fs-label);
+    font-weight: 900;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    overflow-wrap: anywhere;
+  }
+  .ui-header__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+  .ui-patient {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+    max-width: 100%;
+    min-height: var(--touch-target-compact);
+    padding: 0.25rem 0.875rem 0.25rem 0.375rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--bg-raised);
+    color: var(--text-on-raised);
+    font: inherit;
+    font-size: var(--fs-small);
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .ui-patient__dot {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 999px;
+    background: var(--action);
+    color: var(--on-action);
+    font-size: var(--fs-small);
+    font-weight: 800;
+  }
+  .ui-patient__name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* ─── Tabs ─── */
+  .ui-tabs {
+    container-type: inline-size;
+    min-width: 0;
+    max-width: 100%;
+  }
+  /* Wide: a row of tabs joined to the panel under it. The selected tab is filled, with an accent bar. */
+  .ui-tabs__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    padding: 0 0.5rem;
+    margin-bottom: -1px;
+    position: relative;
+  }
+  .ui-tab {
+    min-height: var(--touch-target-compact);
+    min-width: 0;
+    max-width: 100%;
+    padding: 0.5rem 1rem;
+    border-radius: 0.875rem 0.875rem 0 0;
+    border: 1px solid transparent;
+    border-bottom: 0;
+    background: transparent;
+    color: var(--text-dim);
+    font: inherit;
+    font-size: var(--fs-label);
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    overflow-wrap: anywhere;
+    cursor: pointer;
+  }
+  .ui-tab[aria-selected='true'] {
+    border-color: var(--border);
+    border-top: 3px solid var(--accent);
+    background: var(--bg-card);
+    color: var(--text-primary);
+  }
+  .ui-tabs__panel {
+    animation: ui-panel-in 0.18s ease;
+    min-width: 0;
+    padding: 1rem;
+    border-radius: 1.25rem;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-primary);
+  }
+  .ui-tabs__row ~ .ui-tabs__panel {
+    border-top-left-radius: 0.25rem;
+  }
+  /* Narrow: one control that is the top edge of the panel, with the position and a dot per tab */
+  .ui-tabs__picker {
+    display: none;
+    width: 100%;
+    min-height: var(--touch-target-compact);
+    padding: 0.625rem 1rem;
+    margin-bottom: -1px;
+    border-radius: 1.25rem 1.25rem 0 0;
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--accent);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    position: relative;
+  }
+  .ui-tabs__picker-line {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+  .ui-tabs__picker-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--fs-label-lg);
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .ui-tabs__picker-position {
+    flex-shrink: 0;
+    color: var(--text-dim);
+    font-size: var(--fs-small);
+    font-weight: 700;
+  }
+  .ui-tabs__picker-chevron {
+    flex-shrink: 0;
+    color: var(--text-dim);
+  }
+  .ui-tabs__dots {
+    display: flex;
+    gap: 0.375rem;
+    margin-top: 0.375rem;
+  }
+  .ui-tabs__dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 999px;
+    border: 1px solid var(--text-dim);
+  }
+  .ui-tabs__dot[data-active='true'] {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  @container (max-width: 30rem) {
+    .ui-tabs__row {
+      display: none;
+    }
+    .ui-tabs__picker {
+      display: block;
+    }
+    .ui-tabs__picker ~ .ui-tabs__panel {
+      border-top-left-radius: 0;
+      border-top-right-radius: 0;
+    }
+  }
+  @keyframes ui-panel-in {
+    from {
+      opacity: 0;
+      transform: translateY(0.25rem);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* ─── Screen stack ─── */
+  .ui-stack-screen[inert] {
+    display: none;
+  }
+  .ui-stack-screen {
+    min-width: 0;
+    animation: ui-screen-in 0.2s ease;
+  }
+  @keyframes ui-screen-in {
+    from {
+      opacity: 0;
+      transform: translateX(0.75rem);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* ─── Overlays ─── */
+  .ui-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-sheet);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    /* --toast-space: while a message shows at the top, the overlay starts below it, so the two never cover each other */
+    padding: calc(env(safe-area-inset-top) + var(--toast-space, 0px)) env(safe-area-inset-right) 0
+      env(safe-area-inset-left);
+    background: rgb(0 0 0 / 0.65);
+  }
+  .ui-overlay--dialog {
+    z-index: var(--z-dialog);
+    align-items: center;
+    padding: calc(max(1rem, env(safe-area-inset-top)) + var(--toast-space, 0px)) 1rem
+      max(1rem, env(safe-area-inset-bottom));
+  }
+  .ui-sheet {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 28rem;
+    max-height: calc(100dvh - env(safe-area-inset-top) - 1rem - var(--toast-space, 0px));
+    overflow: hidden;
+    border-radius: 2rem 2rem 0 0;
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    animation: ui-sheet-in 0.2s ease;
+  }
+  @keyframes ui-sheet-in {
+    from {
+      transform: translateY(1.5rem);
+      opacity: 0;
+    }
+    to {
+      transform: none;
+      opacity: 1;
+    }
+  }
+  .ui-sheet__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-shrink: 0;
+    padding: 1.25rem 1.5rem 0.5rem;
+  }
+  .ui-sheet__title {
+    min-width: 0;
+    margin: 0;
+    color: var(--text-dim);
+    font-size: var(--fs-label);
+    font-weight: 800;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    overflow-wrap: anywhere;
+  }
+  .ui-sheet__body {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0.75rem 1.5rem 1rem;
+  }
+  .ui-sheet__body > * {
+    flex-shrink: 0;
+  }
+  /* Focus moves to the panel itself when it opens; its fields have their own ring */
+  .ui-sheet:focus,
+  .ui-dialog:focus {
+    outline: none;
+  }
+  .ui-sheet__footer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    flex-shrink: 0;
+    padding: 0.75rem 1.5rem calc(env(safe-area-inset-bottom) + 1.25rem);
+    border-top: 1px solid var(--border-subtle);
+  }
+  .ui-dialog {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+    max-width: 24rem;
+    max-height: 100%;
+    overflow-y: auto;
+    padding: 1.5rem;
+    border-radius: 2rem;
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    box-shadow: 0 25px 50px rgb(0 0 0 / 0.35);
+  }
+  .ui-dialog__title {
+    margin: 0;
+    font-size: var(--fs-title);
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    overflow-wrap: anywhere;
+  }
+  .ui-dialog__title--danger {
+    color: var(--status-missed-text);
+  }
+  .ui-dialog__message {
+    margin: 0;
+    color: var(--text-dim);
+    font-size: var(--fs-body);
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+  }
+  .ui-dialog__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  /* Toasts never take taps, so they cannot block a control underneath */
+  .ui-toast-host {
+    position: fixed;
+    left: 50%;
+    bottom: calc(env(safe-area-inset-bottom) + 1rem);
+    z-index: var(--z-toast);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: min(28rem, calc(100vw - 2rem));
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
+  body[data-overlay-open] .ui-toast-host {
+    bottom: auto;
+    top: calc(env(safe-area-inset-top) + 0.75rem);
+  }
+  .ui-toast {
+    padding: 0.75rem 1rem;
+    border-radius: 1rem;
+    font-size: var(--fs-body);
+    font-weight: 700;
+    text-align: center;
+    overflow-wrap: anywhere;
+    box-shadow: 0 12px 30px rgb(0 0 0 / 0.3);
+    color: var(--on-action);
+  }
+  .ui-toast--error {
+    background: var(--danger);
+  }
+  .ui-toast--success {
+    background: var(--success);
+  }
+  .ui-toast--info {
+    background: var(--action);
+  }
+
+  /* Keyboard focus on every control */
+  .ui-btn:focus-visible,
+  .ui-icon-btn:focus-visible,
+  .ui-chip:focus-visible,
+  .ui-choice:focus-visible,
+  .ui-field:focus-visible,
+  .ui-toggle:focus-visible,
+  .ui-tab:focus-visible,
+  .ui-tabs__picker:focus-visible,
+  .ui-patient:focus-visible,
+  .ui-check > input:focus-visible {
+    outline: 2px solid var(--accent-text);
+    outline-offset: 2px;
+  }
+  .ui-field:focus {
+    border-color: var(--accent-text);
+  }
+
+  @media (hover: hover) {
+    .ui-btn:hover,
+    .ui-icon-btn:hover,
+    .ui-chip:hover,
+    .ui-choice:hover {
+      filter: brightness(1.1);
+    }
+  }
+
+  /* Small phones: single columns, tighter padding */
+  @media (max-width: 359px) {
+    .ui-row,
+    .ui-row--split {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .ui-button-row > * {
+      flex-basis: 100%;
+    }
+    .ui-sheet__header,
+    .ui-sheet__body,
+    .ui-sheet__footer {
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+    .ui-section__body {
+      padding: 1rem;
+    }
+    .ui-section__header {
+      padding: 0.875rem 1rem;
+    }
+  }
+
+  /* Landscape phones, small tablets and short screens: sheets float centred and stay scrollable */
+  @media (min-width: 600px), (max-height: 500px) {
+    .ui-overlay {
+      align-items: center;
+      padding: calc(max(1rem, env(safe-area-inset-top)) + var(--toast-space, 0px)) max(1rem, env(safe-area-inset-right))
+        max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+    }
+    .ui-sheet {
+      max-width: 32rem;
+      max-height: 100%;
+      border-radius: 2rem;
+    }
+    .ui-sheet__footer {
+      padding-bottom: 1.25rem;
+    }
+  }
+
+  /* Tablets and computers */
+  @media (min-width: 900px) {
+    .ui-sheet {
+      max-width: 36rem;
+    }
+    .ui-dialog {
+      max-width: 28rem;
+    }
+  }
+}
+
+/* "Reduce motion" in the phone's settings (common with photosensitivity), or in the app: no animation or sliding */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+:root[data-motion='reduce'] *,
+:root[data-motion='reduce'] *::before,
+:root[data-motion='reduce'] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}

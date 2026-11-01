@@ -30,6 +30,7 @@ jobs:
     # All three engines, including WebKit (Safari's engine), which can't run on openSUSE locally
     runs-on: ubuntu-latest
     needs: check
+    timeout-minutes: 60 # the layout audit walks 10 device sizes in each of the 3 engines
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

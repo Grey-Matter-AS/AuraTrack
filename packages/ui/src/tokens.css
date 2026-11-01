@@ -44,8 +44,8 @@
   /* Actions */
   --on-action: #ffffff;
   --on-selected: #ffffff;
-  --success: #16a34a;
-  --success-border: #15803d;
+  --success: #15803d; /* white on it reads at 5:1 */
+  --success-border: #166534;
   --danger: #dc2626;
   --danger-border: #991b1b;
   --warning-bg: #334155;
@@ -56,15 +56,18 @@
      derived here; danger, success and warning stay fixed. */
   --accent: #5b8def;
   --accent-text: light-dark(color-mix(in srgb, var(--accent) 68%, #000), var(--accent));
-  --action: var(--accent);
-  --action-border: color-mix(in srgb, var(--accent) 78%, #000);
-  --action-active: color-mix(in srgb, var(--accent) 85%, #000);
-  --selected: var(--accent);
+  /* Fills that carry white text (buttons, selected chips) are the accent darkened until white reads at 4.5:1 or more,
+     for every accent colour (checked by the contrast audit). The bright accent itself stays for lines and dots. */
+  --action: color-mix(in srgb, var(--accent) 62%, #000);
+  --action-border: color-mix(in srgb, var(--accent) 50%, #000);
+  --action-active: color-mix(in srgb, var(--accent) 52%, #000);
+  --selected: var(--action);
 
   /* Sizes */
-  --touch-target-compact: 2.75rem;
-  --touch-target-comfortable: 3.5rem;
-  --touch-target-large: 4.75rem;
+  /* Never under 44px, whatever the text size setting */
+  --touch-target-compact: max(44px, 2.75rem);
+  --touch-target-comfortable: max(44px, 3.5rem);
+  --touch-target-large: max(44px, 4.75rem);
   --panel-radius: 1.75rem;
   --panel-radius-lg: 2.25rem;
   --surface-shadow: 0 18px 40px rgb(15 23 42 / 0.18);
@@ -74,6 +77,13 @@
   --z-dialog: 60;
   --z-toast: 70;
   --z-alert: 80;
+
+  /* Fluid type: grows a little with the screen, and always scales with the text size setting (rem) */
+  --fs-label: clamp(0.6875rem, 0.66rem + 0.15vw, 0.75rem);
+  --fs-label-lg: clamp(0.75rem, 0.72rem + 0.2vw, 0.875rem);
+  --fs-small: clamp(0.75rem, 0.72rem + 0.15vw, 0.8125rem);
+  --fs-body: clamp(0.875rem, 0.84rem + 0.2vw, 1rem);
+  --fs-title: clamp(0.9375rem, 0.88rem + 0.3vw, 1.125rem);
 
   /* Text size (Settings → Appearance), applied as the root font size */
   --font-size-root: 16px;

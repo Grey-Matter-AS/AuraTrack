@@ -3,18 +3,28 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 // The developer page (M1) is loaded only when opened, so it adds nothing to the first load.
 const DevPage = lazy(() => import('./dev/DevPage'));
 
+const KitchenSink = lazy(() => import('./kitchen/KitchenSink'));
+
 const isDevRoute = () => window.location.hash === '#/dev';
+const isKitchenRoute = () => window.location.hash.startsWith('#/kitchen');
 
 // M0 shell: proves the build, the PWA and the tokens work. Real screens arrive from M2 on.
 export function App() {
-  const [dev, setDev] = useState(isDevRoute);
+  const [route, setRoute] = useState(() => (isDevRoute() ? 'dev' : isKitchenRoute() ? 'kitchen' : 'home'));
   useEffect(() => {
-    const onChange = () => setDev(isDevRoute());
+    const onChange = () => setRoute(isDevRoute() ? 'dev' : isKitchenRoute() ? 'kitchen' : 'home');
     window.addEventListener('hashchange', onChange);
     return () => window.removeEventListener('hashchange', onChange);
   }, []);
 
-  if (dev) {
+  if (route === 'kitchen') {
+    return (
+      <Suspense fallback={<p className="p-4 text-sm">Loading…</p>}>
+        <KitchenSink />
+      </Suspense>
+    );
+  }
+  if (route === 'dev') {
     return (
       <Suspense fallback={<p className="p-4 text-sm">Loading…</p>}>
         <DevPage />

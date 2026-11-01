@@ -2,8 +2,34 @@
 
 **Read this first in every session.** Then read the current milestone's file (`M<n>.md`) and continue with "Next step".
 
-- **Current milestone:** M1, Data core and import (branch `7.0.1---M1`). M0 is done (CI green, checklist reviewed).
+- **Current milestone:** M2, Design system and layout guarantee (branch `7.0.2---M2`, approved 2026-10-31). M0 and M1 are done.
 - **Last updated:** 2026-10-31
+
+## M2 slices
+| # | Slice | State |
+|---|---|---|
+| 1 | Kit foundation: styles (`packages/ui/src/ui.css`), fluid type, 44px tap-target floor, strings for the kit's own words (`UiStringsProvider`), test tooling (jsdom, Testing Library) | done |
+| 2 | Components: Button, IconButton, ChipGroup, ChoiceList, Toggle, Checkbox, Section, Card, Inset, EmptyState, FieldRow, TextField, TextArea, NumberField (fresh entry), DecimalField, DateTimeField (own hint and icon), Select (never blank) | done, 96 component tests |
+| 3 | Overlays: BottomSheet, Dialog, Toast (focus in, trapped, returned; Escape; only the topmost reacts; messages never cover an overlay's controls) | done |
+| 4 | Tabs (wide row joined to the panel; narrow: one control as the panel's top edge with "2 of 4" and dots, list opens in a sheet), screen-stack navigator (history, focus, scroll), header with patient chip, reduced motion (phone setting or `data-motion`) | done |
+| 5 | Layout primitives (`Screen`, `ScrollArea`, `Stack`, `Cluster`), lint rules (screens only use kit components, no `position: fixed`, no browser dialogs, no `toISOString`; tested in `lint-rules.test.ts`) | done |
+| 6 | Layout audit as a permanent end-to-end test (`apps/web/e2e/audit.spec.ts`): kitchen sink at `/#/kitchen`, 10 device sizes, dark and light, 5 accents, 4 text sizes, every overlay; overlap, clipping, off-screen, tap targets of 44px, contrast of 4.5:1. The audit proves itself in `audit-selftest.spec.ts` (10 deliberately broken pages must be caught) | done: passes on all 10 devices in Chromium; 2 of them also checked in Firefox. WebKit runs in CI |
+| 7 | Visual baselines of the kitchen sink (`pnpm visual`; 3 devices x dark/light) | done locally; skipped in CI until baselines are made on the CI image (fonts differ) |
+| 8 | You look at the kitchen sink on your own phones | **yours**: `pnpm dev --host`, open `/#/kitchen` on the phone |
+
+### M2 decisions
+- **Filled buttons and selected chips use a darkened accent** (`--action`, 62% accent), because white on the bright accent was 3.3:1, under the 4.5:1 rule. The bright accent stays for lines, dots and focus rings. Success green darkened for the same reason.
+- **Tap-target tokens never go below 44px**, whatever the text size (`max(44px, 2.75rem)`).
+- **Very long words break as a last resort** (`overflow-wrap: anywhere` on screens, buttons and chips), so a long German or Finnish word cannot run off the screen.
+- **Layout is audited by what a person sees:** a box scrolled out of view inside a scroll area does not count as overlapping.
+- **Narrow tabs** are a panel-top control with the position and dots, not a dropdown (your decision, 2026-10-31).
+- Kit styles and components are ported from 6.1's kit with the same behaviours (fresh-entry number field, own date hint and icon, never-blank select), now typed and tested.
+- Not in the kit yet (later milestones need them): body map, timeline, charts, the lock screen.
+
+### M2 open points
+- **Argon2id and the lock screen.** M1's notes said the lock screen and Argon2id would come in M2, but `M2.md` does not list them. I have not built them. Decide: add to M2, or to M3.
+- Date and time hints in a two-column row can be cut short on a phone ("Select mo…"). Allowed by the design (hint only), but a single column for date rows may read better.
+- The audit takes about 8 minutes for 10 devices in one engine; CI runs 3 engines (timeout set to 60 minutes).
 
 ## M1 slices (in order; tick as they land)
 | # | Slice | State |
@@ -62,12 +88,13 @@
 - Real medical data (reports, backups, exports) is never committed. Reference material is generated from made-up test data.
 
 ## Next step
+- **M2 is built.** To close it: you open the kitchen sink on your own phones (`pnpm dev --host`, then `http://<your computer's address>:5173/#/kitchen`; or after deploying) and tell me what looks or feels wrong. Also decide the Argon2id/lock screen question above.
 - **M1 is closed (2026-10-31).** The user ran the importer on their real 6.1 backup: 334 of 334 rows imported, 0 rejected, 0 unaccounted for. The user decided not to spend more time checking 6.x data: the 7 series is the priority, so the 'comparison report checked by you' item in M1's done-when is waived. The importer stays for other households moving from 6.1.
 - **Fixed after the real import:** body-area parts with no sub-region (for example 'Left Eye') now map to codes when only one sub-region has that part; 'Wrist' and similar (on both arms) stay at region level, original kept in `legacy`. The dev page showed 'Loading…' forever in `pnpm dev` (worker not ready yet, plus React dev double-effect closed the client): the worker now announces when ready.
-- **Then:** you approve `M2.md` and M2 starts.
+- **Then:** you approve `M3.md` and M3 starts.
 - **You:** review `packages/i18n/src/labels/review.json`: 274 labels per language (symptoms, body areas, EEG activities, ILAE parts) are English-only because 6.1 never translated them. They show in English until reviewed.
 - **You:** the first commit included `apps/web/dist-types/` (generated). It is now in `.gitignore`; to remove it from git: `git rm -r --cached apps/web/dist-types`.
-- **Deferred:** connecting the deploy target (Vercel) waits until you choose to do it.
+- **Vercel deploy:** now wanted (2026-10-31), so the kitchen sink can be checked on phones. `vercel.json` is ready (build, output folder, security headers). The user connects the repo on vercel.com; every pushed branch then gets its own preview address.
 
 ## M1 decisions and open points
 - **Every imported record keeps its original 6.1 row** in a `legacy` field (invisible to the schemas, kept in backups). This makes a mapping mistake unable to lose data. Once you have verified the import, we can decide whether to drop it.

@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import '@auratrack/ui/tokens.css';
+@import '@auratrack/ui/ui.css';
 
 body {
   margin: 0;
