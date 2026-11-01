@@ -18,6 +18,7 @@
 ### M3 decisions
 - Argon2id before anything else, so no real data is ever stored under the old key (decided 2026-11-01).
 - The alert measures seizure time; until "End aura" is tapped, time counts as seizure time in the prototype (the safe way round for the alert). To confirm with you.
+- **Prototype feedback 1 (2026-11-02), applied:** (1) the seizure type is asked first, in a bar above the tabs, and the symptom suggestions and saved sets then follow it; the tab order stays Before, During, After, Details (type is optional: "not sure" is fine). (2) A body area is asked only for symptoms that have a place on the body: the catalogue already says which (feelings and states such as déjà vu, smells, awareness, speech have none; tongue biting is always the mouth, so nothing is asked). (3) The emergency alert (5 minutes) and the 12-minute stop are now the whole screen in red with white text, as in 6.1 (new kit tone `emergency` on `Dialog`; white on this red is 4.8:1).
 - The prototype's "prototype controls" (skip to 3:50, 4:50, 11:50) exist only to reach the warning, the alert and the auto-stop without waiting.
 
 ## M2 slices

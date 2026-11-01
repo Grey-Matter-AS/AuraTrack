@@ -1,7 +1,7 @@
 import { SYMPTOMS, SYMPTOM_GROUPS } from '@auratrack/model';
 import { Button, ChipGroup, Section, Select, Stack, TextField } from '@auratrack/ui';
 import { useMemo, useState } from 'react';
-import { FREQUENT, SAVED_SETS, newItemId, type Item, type PhaseName } from './data';
+import { SAVED_SETS, frequentFor, newItemId, startingArea, type Item, type PhaseName } from './data';
 import { usePrototype } from './state';
 
 // Adding symptoms to one phase: saved sets and this patient's usual ones first, then a search, then a browse by group.
@@ -26,7 +26,7 @@ export function SymptomPicker({
     const removed = here.find((c) => !next.includes(c));
     onItems((previous) =>
       added
-        ? [...previous, { id: newItemId(), code: added, phase, area: null, gap: 'few' }]
+        ? [...previous, { id: newItemId(), code: added, phase, area: startingArea(added), gap: 'few' }]
         : removed
           ? previous.filter((i) => !(i.phase === phase && i.code === removed))
           : previous,
@@ -39,7 +39,7 @@ export function SymptomPicker({
       ...previous,
       ...set.items
         .filter((x) => x.phase === phase && !previous.some((i) => i.phase === phase && i.code === x.code))
-        .map((x) => ({ id: newItemId(), code: x.code, phase, area: null, gap: 'few' as const })),
+        .map((x) => ({ id: newItemId(), code: x.code, phase, area: startingArea(x.code), gap: 'few' as const })),
     ]);
   };
 
@@ -67,8 +67,14 @@ export function SymptomPicker({
           </div>
         </Section>
       ) : null}
-      <Section title="Often for this patient">
-        <ChipGroup multiple label="Often" value={here} onChange={toggle} options={chips(FREQUENT[phase])} />
+      <Section title={draft.typeCode ? `Often for ${label(draft.typeCode)}` : 'Often for this patient'}>
+        <ChipGroup
+          multiple
+          label="Often"
+          value={here}
+          onChange={toggle}
+          options={chips(frequentFor(draft.typeCode, phase))}
+        />
       </Section>
       <Section title="Find a symptom">
         <TextField label="Search" value={query} onChange={setQuery} placeholder="Type to search" />

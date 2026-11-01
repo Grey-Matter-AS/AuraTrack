@@ -1,7 +1,7 @@
 import { AUTO_STOP_AT_S, emergencyPlan, recordingState } from '@auratrack/model';
 import { AppHeader, Button, ButtonRow, Card, Dialog, Screen, Section, Stack } from '@auratrack/ui';
 import { useEffect, useRef, useState } from 'react';
-import { FREQUENT, PATIENTS, QUICK_NOTES, RESCUE, mmss, newItemId } from './data';
+import { FREQUENT, PATIENTS, QUICK_NOTES, RESCUE, mmss, newItemId, startingArea } from './data';
 import { goHome, useNav } from './nav';
 import { usePrototype } from './state';
 
@@ -57,7 +57,7 @@ export function Recording({ locked = false }: { locked?: boolean }) {
         ...d,
         items: [
           ...d.items,
-          { id: newItemId(), code, phase, area: null, gap: d.items.length === 0 ? 'unknown' : 'few' },
+          { id: newItemId(), code, phase, area: startingArea(code), gap: d.items.length === 0 ? 'unknown' : 'few' },
         ],
         quickNotes: [...d.quickNotes, `[T+${at}s] ${label(code)}`],
       };
@@ -182,7 +182,7 @@ export function Recording({ locked = false }: { locked?: boolean }) {
 
       {state === 'alert' && !alertSeen ? (
         <Dialog
-          tone="danger"
+          tone="emergency"
           title={selfMode ? 'This seizure has lasted 5 minutes' : '5 minutes: follow the emergency plan'}
           dismissible={false}
           message={
@@ -211,7 +211,7 @@ export function Recording({ locked = false }: { locked?: boolean }) {
       ) : null}
       {draft.emergencyStop && !stopSeen ? (
         <Dialog
-          tone="danger"
+          tone="emergency"
           title="Recording stopped at 12 minutes"
           dismissible={false}
           message="This is a long seizure. A note for possible status epilepticus is saved with it. Your quick notes are kept."

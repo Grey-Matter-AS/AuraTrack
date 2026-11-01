@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { CloseButton } from './Buttons';
+import { cx } from './cx';
 import { useOverlayBehaviour } from './overlay';
 
 interface OverlayProps {
@@ -50,17 +51,24 @@ export function Dialog({
   actions,
   tone,
   children,
-}: OverlayProps & { message?: string; actions?: ReactNode; tone?: 'danger' | undefined }) {
+}: OverlayProps & { message?: string; actions?: ReactNode; tone?: 'danger' | 'emergency' | undefined }) {
   const panelRef = useRef<HTMLDivElement>(null);
   useOverlayBehaviour(onClose, dismissible, panelRef);
   return (
     <div
-      className="ui-overlay ui-overlay--dialog"
+      className={cx('ui-overlay', 'ui-overlay--dialog', tone === 'emergency' && 'ui-overlay--emergency')}
       onClick={(e) => {
         if (dismissible && e.target === e.currentTarget) onClose?.();
       }}
     >
-      <div ref={panelRef} tabIndex={-1} className="ui-dialog" role="alertdialog" aria-modal="true" aria-label={title}>
+      <div
+        ref={panelRef}
+        tabIndex={-1}
+        className={cx('ui-dialog', tone === 'emergency' && 'ui-dialog--emergency')}
+        role="alertdialog"
+        aria-modal="true"
+        aria-label={title}
+      >
         {title ? (
           <h2 className={tone === 'danger' ? 'ui-dialog__title ui-dialog__title--danger' : 'ui-dialog__title'}>
             {title}

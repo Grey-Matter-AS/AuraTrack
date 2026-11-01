@@ -5,7 +5,6 @@ import {
   Button,
   Checkbox,
   ChipGroup,
-  ChoiceList,
   NumberField,
   Screen,
   Section,
@@ -54,7 +53,7 @@ export function Editor() {
     },
     { id: 'during', label: TAB_NAME.during, state: added(count('during')) },
     { id: 'after', label: TAB_NAME.after, state: added(count('after') + draft.findings.length) },
-    { id: 'details', label: TAB_NAME.details, state: draft.typeCode ? label(draft.typeCode) : 'type not set' },
+    { id: 'details', label: TAB_NAME.details, state: draft.onset ? 'classified' : 'not classified' },
   ];
 
   const actions: TimelineActions = {
@@ -97,6 +96,21 @@ export function Editor() {
           }
         />
         <OverviewStrip draft={draft} />
+        <Section title="What kind of seizure was it?">
+          <Stack>
+            <ChipGroup
+              label="Seizure type"
+              value={draft.typeCode}
+              onChange={(typeCode) => setDraft((d) => ({ ...d, typeCode }))}
+              options={SEIZURE_TYPES.map((t) => ({ value: t.code, label: label(t.code) }))}
+            />
+            <p className="proto-note">
+              {draft.typeCode
+                ? 'The symptoms and sets below now follow this type.'
+                : 'Not sure? Leave it empty: everything still works, and you can set it later.'}
+            </p>
+          </Stack>
+        </Section>
         <Tabs tabs={tabs} activeTab={tab} onTabChange={setTab} label="Seizure phases">
           {tab === 'before' ? (
             <Stack>
@@ -205,14 +219,6 @@ function DetailsTab() {
     });
   return (
     <Stack>
-      <Section title="Seizure type">
-        <ChoiceList
-          label="Seizure type"
-          value={draft.typeCode ?? ''}
-          onChange={(typeCode) => setDraft((d) => ({ ...d, typeCode }))}
-          options={SEIZURE_TYPES.map((t) => ({ value: t.code, label: label(t.code) }))}
-        />
-      </Section>
       <Section title="Classification (optional)">
         <Stack>
           <p className="proto-note">Answer what you can. "Not sure" is always fine and can be changed later.</p>

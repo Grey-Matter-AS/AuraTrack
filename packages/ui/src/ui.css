@@ -1093,6 +1093,43 @@
       max-width: 28rem;
     }
   }
+
+  /* The emergency alert (5 minutes, status epilepticus): the whole screen red, white text, nothing else to look at.
+     White on this red is 4.8:1. It follows the overlay and dialog rules above so it must come after them. */
+  .ui-overlay--emergency {
+    align-items: stretch;
+    padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
+      max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+    background: var(--danger);
+  }
+  .ui-dialog--emergency {
+    max-width: 40rem;
+    height: 100%;
+    margin-inline: auto;
+    justify-content: center;
+    padding: 1rem 0.5rem;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: #fff;
+    box-shadow: none;
+  }
+  .ui-dialog--emergency .ui-dialog__title {
+    color: #fff;
+    font-size: clamp(1.5rem, 7vw, 2.5rem);
+    line-height: 1.15;
+  }
+  .ui-dialog--emergency .ui-dialog__message,
+  .ui-dialog--emergency p {
+    color: #fff;
+    font-size: var(--fs-body);
+    margin: 0;
+  }
+  .ui-dialog--emergency .ui-btn {
+    background: #fff;
+    color: #7f1d1d;
+    border-color: #fff;
+  }
 }
 
 /* "Reduce motion" in the phone's settings (common with photosensitivity), or in the app: no animation or sliding */

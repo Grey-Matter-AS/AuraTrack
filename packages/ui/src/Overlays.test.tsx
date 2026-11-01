@@ -161,6 +161,25 @@ describe('Dialog', () => {
     expect(container.querySelector('.ui-dialog__actions')).toBeNull();
   });
 
+  it('the emergency tone fills the screen in red with the dialog on it, and is not dismissed by a tap outside', async () => {
+    const onClose = vi.fn();
+    const { container } = render(
+      <Dialog tone="emergency" title="5 minutes" dismissible={false} onClose={onClose}>
+        <p>Rescue medication</p>
+      </Dialog>,
+    );
+    expect(container.querySelector('.ui-overlay--emergency')).toBeTruthy();
+    expect(screen.getByRole('alertdialog').className).toContain('ui-dialog--emergency');
+    expect(container.querySelector('.ui-dialog__title')?.className).toBe('ui-dialog__title'); // the colour comes from the emergency panel
+    await userEvent.click(screen.getByRole('alertdialog').parentElement!);
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('other tones are not emergency', () => {
+    const { container } = render(<Dialog tone="danger" title="Delete" />);
+    expect(container.querySelector('.ui-overlay--emergency')).toBeNull();
+  });
+
   it('title without danger has the plain style', () => {
     const { container } = render(<Dialog title="Plain" />);
     expect(container.querySelector('.ui-dialog__title')?.className).toBe('ui-dialog__title');

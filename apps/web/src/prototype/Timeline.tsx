@@ -1,6 +1,17 @@
 import { Button, IconButton, Select } from '@auratrack/ui';
 import { areaText } from './BodyMap';
-import { GAPS, PHASES, clock, inSeizureOrder, mmss, type Draft, type Gap, type Item, type PhaseName } from './data';
+import {
+  GAPS,
+  PHASES,
+  areaRule,
+  clock,
+  inSeizureOrder,
+  mmss,
+  type Draft,
+  type Gap,
+  type Item,
+  type PhaseName,
+} from './data';
 import { usePrototype } from './state';
 
 // The graphical timeline, vertical: a line with the phases, and the symptoms as boxes in the order they happened, with the
@@ -39,6 +50,7 @@ function Moment({
 }) {
   const { label, language } = usePrototype();
   const area = areaText(item.area, label);
+  const rule = areaRule(item.code); // feelings and states have no place on the body; some symptoms are always in one place
   return (
     <>
       {position > 0 ? <li className="proto-gap">{GAP_LABEL[item.gap]}</li> : null}
@@ -64,9 +76,11 @@ function Moment({
                 <IconButton label="Remove" tone="danger" onClick={() => actions.remove(item.id)}>
                   ✕
                 </IconButton>
-                <Button size="md" onClick={() => actions.pickArea(item.id)}>
-                  {area ? 'Change area' : 'Add area'}
-                </Button>
+                {rule.kind === 'ask' ? (
+                  <Button size="md" onClick={() => actions.pickArea(item.id)}>
+                    {area ? 'Change area' : 'Add area'}
+                  </Button>
+                ) : null}
               </div>
               {position > 0 ? (
                 <Select

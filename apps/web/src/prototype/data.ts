@@ -1,4 +1,4 @@
-import { SEIZURE_TYPES, SYMPTOMS } from '@auratrack/model';
+import { SEIZURE_TYPES, SYMPTOMS, SYMPTOM_GROUPS, bodyAreaFromLegacy } from '@auratrack/model';
 
 // Made-up data for the clickable prototype (M3, slice 4). Nothing here is real, and nothing is saved.
 // The codes are the real catalogue's, so the labels (in any of the nine languages) are the real ones.
@@ -77,7 +77,7 @@ export const emptyDraft = (start = Date.now()): Draft => ({
 
 export const PATIENTS = [{ name: 'Alex (demo)' }, { name: 'Sam (demo)' }] as const;
 
-/** Usual symptoms per phase for this made-up patient: the "frequent" row of the editor and the symptom strip. */
+/** Usual symptoms per phase for this made-up patient. */
 export const FREQUENT: Record<PhaseName, string[]> = {
   before: [
     'symptom.emotions_memory.deja_vu_been_here_before',
@@ -92,6 +92,89 @@ export const FREQUENT: Record<PhaseName, string[]> = {
     'symptom.face_and_mouth.tongue_biting',
   ],
   after: ['symptom.awareness.confused_dream_like', 'symptom.talking.slurred_speech'],
+};
+
+/**
+ * Once the seizure type is known, the "often" rows follow it: a tonic-clonic seizure and an absence have different usual
+ * symptoms. In the real app this comes from what this patient has recorded for the type; here it is made up.
+ */
+export const FREQUENT_BY_TYPE: Record<string, Record<PhaseName, string[]>> = {
+  'seizure_type.tonic_clonic': {
+    before: FREQUENT.before,
+    during: [
+      'symptom.awareness.total_blackout',
+      'symptom.stiffening_locking.body_gone_rigid',
+      'symptom.big_shaking_jerking.rhythmic_shaking',
+      'symptom.face_and_mouth.tongue_biting',
+      'symptom.face_and_mouth.drooling',
+    ],
+    after: [
+      'symptom.awareness.confused_dream_like',
+      'symptom.talking.slurred_speech',
+      'symptom.talking.unable_to_speak',
+    ],
+  },
+  'seizure_type.focal_aware': {
+    before: [
+      'symptom.emotions_memory.deja_vu_been_here_before',
+      'symptom.hearing_and_smell.strange_smell',
+      'symptom.hearing_and_smell.strange_taste',
+    ],
+    during: [
+      'symptom.emotions_memory.sudden_fear_panic',
+      'symptom.skin_sensation.tingling_pins_and_needles',
+      'symptom.vision_eyes.flashing_lights_colors',
+      'symptom.awareness.fully_awake_aware',
+    ],
+    after: [],
+  },
+  'seizure_type.focal_impaired': {
+    before: FREQUENT.before,
+    during: [
+      'symptom.eyes.staring_blankly',
+      'symptom.automatic_habits.lip_smacking_chewing',
+      'symptom.automatic_habits.fidgeting_with_clothes',
+      'symptom.awareness.confused_dream_like',
+    ],
+    after: ['symptom.awareness.confused_dream_like', 'symptom.talking.slurred_speech'],
+  },
+  'seizure_type.absence': {
+    before: [],
+    during: ['symptom.eyes.staring_blankly', 'symptom.eyes.rapid_blinking', 'symptom.awareness.total_blackout'],
+    after: [],
+  },
+  'seizure_type.aura_only': {
+    before: [],
+    during: [
+      'symptom.emotions_memory.deja_vu_been_here_before',
+      'symptom.hearing_and_smell.strange_smell',
+      'symptom.emotions_memory.intense_peace_joy',
+    ],
+    after: [],
+  },
+};
+export const frequentFor = (typeCode: string | null, phase: PhaseName): string[] =>
+  (typeCode ? FREQUENT_BY_TYPE[typeCode]?.[phase] : undefined) ?? FREQUENT[phase];
+
+/**
+ * Does a symptom have a place on the body? The catalogue (from 6.1) knows: feelings and states (déjà vu, a strange smell,
+ * blacking out, speech) have none; some symptoms are always in one place (tongue biting is the mouth), so nothing is asked.
+ */
+export type AreaRule = { kind: 'none' } | { kind: 'ask' } | { kind: 'fixed'; area: Area };
+export function areaRule(code: string): AreaRule {
+  const symptom = SYMPTOMS.find((s) => s.code === code);
+  if (!symptom) return { kind: 'ask' };
+  if (SYMPTOM_GROUPS.find((g) => g.code === symptom.group)?.skipRegion) return { kind: 'none' };
+  if (symptom.forceRegion) {
+    const area = bodyAreaFromLegacy(symptom.forceRegion, symptom.forceSubRegion ?? '', '');
+    if (area) return { kind: 'fixed', area };
+  }
+  return { kind: 'ask' };
+}
+/** The area a new symptom starts with: the fixed one, or none. */
+export const startingArea = (code: string): Area | null => {
+  const rule = areaRule(code);
+  return rule.kind === 'fixed' ? rule.area : null;
 };
 
 export interface SavedSet {

@@ -25,6 +25,9 @@ test.describe('prototype', () => {
     await page.getByRole('button', { name: '+30 s' }).click(); // 4:50 to 5:20
     await page.getByRole('button', { name: '+30 s' }).click();
     const alert = page.getByRole('alertdialog');
+    // The alert is the whole screen in red with white text
+    expect(await alert.evaluate((el) => getComputedStyle(el.parentElement!).backgroundColor)).toBe('rgb(220, 38, 38)');
+    expect(await alert.evaluate((el) => getComputedStyle(el).color)).toBe('rgb(255, 255, 255)');
     await expect(alert).toContainText('Rescue medication');
     await expect(alert).toContainText('Emergency contact');
     await alert.getByRole('button', { name: 'Dismiss' }).click();
@@ -37,14 +40,21 @@ test.describe('prototype', () => {
     // The editor: four tabs, an overview, and Save from any tab
     await expect(page.getByRole('button', { name: 'Save' })).toBeVisible();
     await expect(page.getByText('Seizure 5:')).toBeVisible();
+    // A feeling such as déjà vu has no place on the body: no area button. A movement does.
     await page
       .getByRole('button', { name: /Deja Vu/i })
       .first()
       .click();
+    await expect(page.getByRole('button', { name: 'Add area' })).toHaveCount(0);
+    await openTab(page, 'During');
+    await page
+      .getByRole('button', { name: /Rhythmic Shaking/i })
+      .first()
+      .click();
     await page.getByRole('button', { name: 'Add area' }).click();
-    await page.getByRole('button', { name: 'Arms' }).click();
+    await page.getByRole('button', { name: 'Arms', exact: true }).click();
     await page.getByRole('button', { name: 'Done' }).click();
-    await expect(page.getByText(/Before · /)).toBeVisible();
+    await expect(page.getByText(/During · /)).toBeVisible();
 
     await page.getByRole('button', { name: 'Review' }).click();
     await expect(page.getByRole('heading', { name: 'Review' })).toBeVisible();
@@ -67,6 +77,24 @@ test.describe('prototype', () => {
     await stopped.getByRole('button', { name: 'Add details' }).click();
     await openTab(page, 'Details');
     await expect(page.getByText(/\[T\+\d+s\] FELL/)).toBeVisible();
+  });
+
+  test('the seizure type is asked first, and the suggestions follow it; a fixed-place symptom asks for no area', async ({
+    page,
+  }) => {
+    await page.goto('/#/prototype');
+    await page.getByRole('button', { name: 'Log past seizure' }).click();
+    await expect(page.getByRole('button', { name: /Staring Blankly/i })).toHaveCount(0); // not usual before the type is set
+    await page.getByRole('button', { name: 'Absence' }).click();
+    await openTab(page, 'During');
+    await expect(page.getByText('Often for Absence')).toBeVisible();
+    await expect(page.getByRole('button', { name: /Tongue Biting/i })).toHaveCount(0); // not usual for an absence
+    await page.getByRole('button', { name: 'Tonic-Clonic' }).click();
+    await page
+      .getByRole('button', { name: /Tongue Biting/i })
+      .first()
+      .click();
+    await expect(page.getByRole('button', { name: 'Add area' })).toHaveCount(0); // always the mouth: nothing to ask
   });
 
   test('log a past seizure, between seizures, and the lock screen with Start', async ({ page }) => {
