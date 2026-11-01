@@ -57,7 +57,7 @@ Every 6.1 feature is kept, but rewritten. The clinical rules decided in 6.x stay
 14. **If you ever share AuraTrack with other families:** an app that gives emergency alerts may count as a medical device under EU rules. That doesn't affect personal use; the "not a medical device" notice stays.
 
 ## 1. Repositories and cut-over
-- **New GitHub repository:** `AuraTrack` v7, GPL-3.0.
+- **New GitHub repository:** `AuraTrack7` (v7), GPL-3.0.
   - The 6.x repository is tagged `v6.1.0` and **archived** (read-only, still viewable).
   - You do the GitHub steps on github.com (decided).
 - **Cut-over:**

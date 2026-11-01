@@ -48,7 +48,7 @@
 ## M0 tasks
 | # | Task | State |
 |---|---|---|
-| 1 | Repositories: 6.x tagged `v6.1.0` locally; you rename and archive it on GitHub; new repo `Grey-Matter-AS/AuraTrack` | done: 6.x renamed to `AuraTrack-v6` and archived; new repo created (2026-10-30). Local remotes set: 6.x → `AuraTrack-v6`, v7 → `AuraTrack`. The `v6.1.0` tag exists only locally (an archived repo is read-only). |
+| 1 | Repositories: 6.x tagged `v6.1.0` locally; you rename and archive it on GitHub; new repo `Grey-Matter-AS/AuraTrack` (renamed to `AuraTrack7` on 2026-11-01) | done: 6.x renamed to `AuraTrack-v6` and archived; new repo created (2026-10-30). Local remotes set: 6.x → `AuraTrack-v6`, v7 → `AuraTrack7` (`origin`). The `v6.1.0` tag exists only locally (an archived repo is read-only). |
 | 2 | Monorepo (pnpm, TS strict, ESLint, Prettier, Vitest) | done: typecheck, lint, format, test and build all pass. TypeScript is pinned to 6 because typescript-eslint doesn't support 7 yet. Exact versions throughout (`.npmrc`). |
 | 3 | CI (GitHub Actions) | done (`.github/workflows/ci.yml`); runs once the repo is on GitHub. Bundle budget script `pnpm size`: 67.5 KB of 180 KB. |
 | 4 | End-to-end tool trial (Playwright vs Cypress) | done: **Playwright** (`docs/decisions/e2e-tool.md`). Chromium and Firefox run locally (20/20); WebKit can't run on openSUSE, so it runs in CI on Ubuntu. |
@@ -63,7 +63,7 @@
   - v7 lives in `/home/user01/Projects/AuraTrack7`
   - 6.x stays in `/home/user01/Projects/AuraTrack6`, untouched, for reference and the importer
 - **Package manager:** pnpm, enabled through corepack in `~/.local/bin`.
-- **GitHub:** first commit `M0: foundation` pushed to `Grey-Matter-AS/AuraTrack`; CI green (2026-10-30). `gh` is installed in WSL and logged in. You commit and push.
+- **GitHub:** first commit `M0: foundation` pushed to `Grey-Matter-AS/AuraTrack7` (then named `AuraTrack`); CI green (2026-10-30). `gh` is installed in WSL and logged in. You commit and push.
 
 ## Open questions
 - (none)
