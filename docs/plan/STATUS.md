@@ -15,7 +15,7 @@
 | 5 | Layout primitives (`Screen`, `ScrollArea`, `Stack`, `Cluster`), lint rules (screens only use kit components, no `position: fixed`, no browser dialogs, no `toISOString`; tested in `lint-rules.test.ts`) | done |
 | 6 | Layout audit as a permanent end-to-end test (`apps/web/e2e/audit.spec.ts`): kitchen sink at `/#/kitchen`, 10 device sizes, dark and light, 5 accents, 4 text sizes, every overlay; overlap, clipping, off-screen, tap targets of 44px, contrast of 4.5:1. The audit proves itself in `audit-selftest.spec.ts` (10 deliberately broken pages must be caught) | done: passes on all 10 devices in Chromium; 2 of them also checked in Firefox. WebKit runs in CI |
 | 7 | Visual baselines of the kitchen sink (`pnpm visual`; 3 devices x dark/light) | done locally; skipped in CI until baselines are made on the CI image (fonts differ) |
-| 8 | You look at the kitchen sink on your own phones | **yours**: `pnpm dev --host`, open `/#/kitchen` on the phone |
+| 8 | You look at the kitchen sink on your own phones | **yours**: open `https://auratrack7.vercel.app/#/kitchen` on each phone (private tab, or clear site data first) |
 
 ### M2 decisions
 - **Filled buttons and selected chips use a darkened accent** (`--action`, 62% accent), because white on the bright accent was 3.3:1, under the 4.5:1 rule. The bright accent stays for lines, dots and focus rings. Success green darkened for the same reason.
@@ -29,6 +29,7 @@
 ### M2 open points
 - **Argon2id and the lock screen.** M1's notes said the lock screen and Argon2id would come in M2, but `M2.md` does not list them. I have not built them. Decide: add to M2, or to M3.
 - Date and time hints in a two-column row can be cut short on a phone ("Select mo…"). Allowed by the design (hint only), but a single column for date rows may read better.
+- No "new version available, reload" prompt yet: the service worker (M0) serves the saved copy first, so a returning user sees an old version until a second reload. Needs a small update prompt; schedule it (M3 or later).
 - The audit takes about 8 minutes for 10 devices in one engine; CI runs 3 engines (timeout set to 60 minutes).
 
 ## M1 slices (in order; tick as they land)
@@ -88,13 +89,13 @@
 - Real medical data (reports, backups, exports) is never committed. Reference material is generated from made-up test data.
 
 ## Next step
-- **M2 is built.** To close it: you open the kitchen sink on your own phones (`pnpm dev --host`, then `http://<your computer's address>:5173/#/kitchen`; or after deploying) and tell me what looks or feels wrong. Also decide the Argon2id/lock screen question above.
+- **M2 is built.** To close it: you open the kitchen sink on your own phones (`https://auratrack7.vercel.app/#/kitchen`) and tell me what looks or feels wrong. Also decide the Argon2id/lock screen question above.
 - **M1 is closed (2026-10-31).** The user ran the importer on their real 6.1 backup: 334 of 334 rows imported, 0 rejected, 0 unaccounted for. The user decided not to spend more time checking 6.x data: the 7 series is the priority, so the 'comparison report checked by you' item in M1's done-when is waived. The importer stays for other households moving from 6.1.
 - **Fixed after the real import:** body-area parts with no sub-region (for example 'Left Eye') now map to codes when only one sub-region has that part; 'Wrist' and similar (on both arms) stay at region level, original kept in `legacy`. The dev page showed 'Loading…' forever in `pnpm dev` (worker not ready yet, plus React dev double-effect closed the client): the worker now announces when ready.
 - **Then:** you approve `M3.md` and M3 starts.
 - **You:** review `packages/i18n/src/labels/review.json`: 274 labels per language (symptoms, body areas, EEG activities, ILAE parts) are English-only because 6.1 never translated them. They show in English until reviewed.
 - **You:** the first commit included `apps/web/dist-types/` (generated). It is now in `.gitignore`; to remove it from git: `git rm -r --cached apps/web/dist-types`.
-- **Vercel deploy:** now wanted (2026-10-31), so the kitchen sink can be checked on phones. `vercel.json` is ready (build, output folder, security headers). The user connects the repo on vercel.com; every pushed branch then gets its own preview address.
+- **Vercel deploy: done (2026-11-01).** Repo renamed `Grey-Matter-AS/AuraTrack7` and made public (the free plan cannot link a private organisation repo). Project `auratrack7`, root directory `./`, settings from `vercel.json`. `main` is production at `auratrack7.vercel.app`; other pushed branches get preview addresses. The kitchen sink loads there (user confirmed). A browser that visited an older version shows the saved copy until the service worker updates.
 
 ## M1 decisions and open points
 - **Every imported record keeps its original 6.1 row** in a `legacy` field (invisible to the schemas, kept in backups). This makes a mapping mistake unable to lose data. Once you have verified the import, we can decide whether to drop it.

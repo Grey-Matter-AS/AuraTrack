@@ -179,6 +179,26 @@ export function DateTimeField({
   );
 }
 
+/**
+ * Numbers are entered from the right: the caret always starts at the end, and a number field reads right to left
+ * from there. A phone puts the caret where it likes after the focus event, so it is placed again on the next frame
+ * and just after the tap.
+ */
+function caretAtEnd(input: HTMLInputElement) {
+  const place = () => {
+    if (document.activeElement !== input) return;
+    const end = input.value.length;
+    input.setSelectionRange(end, end);
+  };
+  place();
+  requestAnimationFrame(place);
+  setTimeout(place, 0);
+  setTimeout(place, 60); // iPhone places its caret after the tap finishes
+}
+const numericCaret = {
+  onFocus: (e: { currentTarget: HTMLInputElement }) => caretAtEnd(e.currentTarget),
+};
+
 export interface NumberFieldProps extends FieldFrame {
   value: number;
   onChange: (value: number) => void;
@@ -229,9 +249,10 @@ export function NumberField({
         value={draft ?? shown}
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy(fieldId, { help, error })}
-        className={cx('ui-field', compact && 'ui-field--compact')}
-        onFocus={() => {
+        className={cx('ui-field', 'ui-field--number', compact && 'ui-field--compact')}
+        onFocus={(e) => {
           if (!readOnly) setDraft('');
+          numericCaret.onFocus(e);
         }}
         onBlur={() => setDraft(null)}
         onChange={(e) => handle(e.target.value)}
@@ -258,11 +279,12 @@ export function DecimalField({ label, help, error, id, value, onChange, placehol
         id={fieldId}
         type="text"
         inputMode="decimal"
-        className="ui-field"
+        className="ui-field ui-field--number"
         placeholder={placeholder ?? label}
         value={value}
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy(fieldId, { help, error })}
+        onFocus={numericCaret.onFocus}
         onChange={(e) => onChange(e.target.value.replace(/[^\d.,]/g, '').replace(',', '.'))}
       />
     </Frame>

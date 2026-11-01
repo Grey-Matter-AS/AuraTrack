@@ -220,6 +220,30 @@ describe('DecimalField', () => {
   });
 });
 
+describe('numeric fields start at the right-hand end', () => {
+  it('puts the caret after the last character when a dose is focused, even if the phone moves it first', async () => {
+    render(<DecimalField label="Dose" value="12.5" onChange={() => {}} />);
+    const input = screen.getByLabelText('Dose') as HTMLInputElement;
+    input.focus();
+    input.setSelectionRange(0, 0); // what a phone may do right after focus
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect([input.selectionStart, input.selectionEnd]).toEqual([4, 4]);
+  });
+
+  it('right-aligns every number field, so an empty one also starts at the right', () => {
+    render(
+      <>
+        <NumberField label="Minutes" value={5} onChange={() => {}} />
+        <NumberField label="Timer" compact value={12} onChange={() => {}} />
+        <DecimalField label="Dose" value="" onChange={() => {}} />
+      </>,
+    );
+    for (const label of ['Minutes', 'Timer', 'Dose']) {
+      expect(screen.getByLabelText(label).className).toContain('ui-field--number');
+    }
+  });
+});
+
 describe('Select', () => {
   const options = [
     { value: 'mg', label: 'mg' },

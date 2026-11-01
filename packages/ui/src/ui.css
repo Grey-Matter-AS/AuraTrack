@@ -382,9 +382,12 @@
   }
   .ui-field--compact {
     width: 4.5rem;
-    text-align: center;
     font-family: var(--font-mono);
     font-weight: 800;
+  }
+  /* Numbers are entered from the right, so the caret and the text sit at the right-hand end */
+  .ui-field--number {
+    text-align: end;
   }
   .ui-field[aria-invalid='true'] {
     border-color: var(--status-missed-text);
@@ -690,7 +693,7 @@
   }
   .ui-tab[aria-selected='true'] {
     border-color: var(--border);
-    border-top: 3px solid var(--accent);
+    border-top: 3px solid var(--action);
     background: var(--bg-card);
     color: var(--text-primary);
   }
@@ -715,13 +718,23 @@
     margin-bottom: -1px;
     border-radius: 1.25rem 1.25rem 0 0;
     border: 1px solid var(--border);
-    border-top: 3px solid var(--accent);
     background: var(--bg-card);
     color: var(--text-primary);
     font: inherit;
     text-align: left;
     cursor: pointer;
     position: relative;
+    overflow: hidden;
+  }
+  /* The top edge thickens towards the right, like the edges of a stack of tabs, in the colour of the buttons and chips */
+  .ui-tabs__picker::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 0.5rem;
+    background: var(--action);
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 0.1875rem);
+    pointer-events: none;
   }
   .ui-tabs__picker-line {
     display: flex;
