@@ -321,8 +321,8 @@ describe('the PIN screen', () => {
     await user.click(screen.getByRole('button', { name: 'Back to normal' }));
     await user.click(await screen.findByRole('button', { name: 'Save and close' }));
     await screen.findByText('AuraTrack is locked');
-    await user.type(screen.getByLabelText('PIN'), PIN);
-    await user.click(screen.getByRole('button', { name: 'Unlock' }));
+    await user.type(await screen.findByLabelText('PIN'), PIN);
+    await user.click(await screen.findByRole('button', { name: 'Unlock' })); // it reads "Unlocking…" while the screen is busy
     await screen.findByRole('button', { name: 'Start timer' });
     expect(await screen.findByText(/recorded while locked/)).toBeTruthy();
     const [seizure] = (await ctx.client.list({ type: 'seizure' })) as unknown as {

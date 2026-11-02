@@ -1,6 +1,6 @@
 # M7 in detail: the household hub and push alerts (draft for approval)
 
-**Status: draft, written 2026-11-02, not yet approved.** It builds on `M7.md` (requirements) and README section 7. Branch `7.1.0---M7`. You bump the version and commit.
+**Status: approved and built 2026-11-02 in two runs (log: `M7-log.md`, sign-off: `M7-signoff.md`).** Decisions: tray as a library helper (status page always works); the wizard offers both private-network routes (Tailscale, or home Wi-Fi only with the hub's own certificate) and you choose; lock-screen push text private by default; two runs (1: slices 1 to 5 and 7; 2: slice 6 push, then 8). It builds on `M7.md` (requirements) and README section 7. Branch `7.1.0---M7`. You bump the version and commit.
 
 Decided with you: **no Docker needed.** The hub is a plain Node program that starts with the computer, with a **tray icon and a status page**. Docker stays an optional add-on for a Pi or NAS.
 

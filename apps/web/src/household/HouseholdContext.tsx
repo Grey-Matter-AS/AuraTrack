@@ -1,7 +1,11 @@
 import {
+  connectHub as connectHubTo,
+  disconnectHub as disconnectHubFrom,
+  hubLocalOf,
+  type HubLinkResult,
   loadHousehold,
   registerPatient,
-  removeDevice as removeFromHousehold,
+  removeDeviceWithHub,
   startHousehold,
   updateDevice,
   type HouseholdState,
@@ -17,6 +21,7 @@ import {
   useSyncExternalStore,
 } from 'react';
 import { useApp } from '../app/AppContext';
+import { alertEvents, sendAlert, type WatchedRecording } from './alerts';
 import { HouseholdService, type MeetingNote, type ServiceSnapshot } from './service';
 import { householdEnv } from './transport';
 
@@ -36,6 +41,9 @@ export interface HouseholdApi {
   rename(deviceName: string): Promise<void>;
   setFollows(args: { all: boolean; ids: string[] }): Promise<void>;
   removeDevice(deviceId: string): Promise<void>;
+  /** Sets the hub up for the household with the address and the code the hub shows. */
+  connectHub(args: { url: string; adminCode: string }): Promise<HubLinkResult>;
+  disconnectHub(): Promise<void>;
   leave(): Promise<void>;
   searchNow(): void;
   note: ChangesNote | null;
@@ -44,7 +52,14 @@ export interface HouseholdApi {
   canJoin(): Promise<boolean>;
 }
 
-const OFF: ServiceSnapshot = { status: 'off', household: null, last: null, removed: false, listening: false };
+const OFF: ServiceSnapshot = {
+  status: 'off',
+  household: null,
+  last: null,
+  removed: false,
+  listening: false,
+  hub: { state: 'off', url: null, lastAt: null, lastApplied: 0, unreadable: 0 },
+};
 const Context = createContext<HouseholdApi | null>(null);
 
 /** The household, or null when the screen is shown without the provider (a few tests). */
@@ -85,11 +100,11 @@ export function HouseholdProvider({ children }: { children: React.ReactNode }) {
     return new HouseholdService({
       api,
       who: ownWho,
-      transport: householdEnv.transport(),
+      transport: (hub) => householdEnv.transportFor(hub),
       now: Date.now,
       isBusy: () => recordingRef.current,
       onApplied: (n: MeetingNote) => {
-        setNote((old) => ({ count: (old?.count ?? 0) + n.applied, name: n.peerName }));
+        setNote((old) => ({ count: (old?.count ?? 0) + n.applied, name: n.via === 'hub' ? '' : n.peerName }));
         void refreshApp.current();
       },
     });
@@ -108,6 +123,20 @@ export function HouseholdProvider({ children }: { children: React.ReactNode }) {
   );
 
   // A person added here is listed in the household (with a key), and what is saved is passed on while reachable
+  // Tell the household's other devices when a recording starts, passes the alert time or ends. Nothing here waits for anything:
+  // it runs after the recording screen has already done its work, and a hub that is away is simply skipped.
+  const watched = useRef<WatchedRecording | null>(null);
+  const session = app.recording.session;
+  const view = app.recording.view;
+  useEffect(() => {
+    const now: WatchedRecording | null =
+      session && view ? { seizureId: session.seizureId, status: session.status, alert: view.alert } : null;
+    const events = alertEvents(watched.current, now);
+    watched.current = now;
+    if (!session) return;
+    for (const event of events) void sendAlert({ api }, event, session.patientId);
+  }, [session, view, api]);
+
   const inHousehold = snapshot.household !== null;
   useEffect(() => {
     if (!service || !inHousehold) return;
@@ -162,7 +191,25 @@ export function HouseholdProvider({ children }: { children: React.ReactNode }) {
               )
             : s,
         ),
-      removeDevice: (deviceId) => changeState((s) => removeFromHousehold(s, deviceId, Date.now())),
+      removeDevice: async (deviceId) => {
+        if (!ownWho) return;
+        await removeDeviceWithHub({ api, who: ownWho, local: hubLocalOf(api), now: Date.now }, deviceId);
+        await service?.refresh();
+      },
+      connectHub: async (args) => {
+        if (!ownWho) return 'no_household';
+        const result = await connectHubTo({ api, who: ownWho, local: hubLocalOf(api), now: Date.now }, args);
+        if (result === 'ok') {
+          await service?.refresh();
+          service?.searchNow();
+        }
+        return result;
+      },
+      disconnectHub: async () => {
+        if (!ownWho) return;
+        await disconnectHubFrom({ api, who: ownWho, local: hubLocalOf(api), now: Date.now });
+        await service?.refresh();
+      },
       leave: async () => {
         await api.saveHouseholdState({ state: null });
         await service?.refresh();

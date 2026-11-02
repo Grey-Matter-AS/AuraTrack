@@ -15,8 +15,18 @@ export interface DeviceInfo {
   readonly follows: readonly string[];
   /** Follows every patient in the household, including ones added later. */
   readonly followAll: boolean;
-  /** When `name` and `follows` were last set (ms), the newest wins. */
+  /** The device's public key, so a key for a person can be sealed to this device alone. */
+  readonly pub?: string;
+  /** When `name`, `follows` and `pub` were last set (ms), the newest wins. */
   readonly infoAt: number;
+}
+
+/** The household's hub: where it is, and the key every device uses to enrol itself there (never leaves the household). */
+export interface HubConfig {
+  readonly url: string;
+  readonly joinKey: string;
+  /** When this was set (ms): the newest setting wins, so a hub can be changed or switched off from any device. */
+  readonly at: number;
 }
 
 export interface Membership {
@@ -25,6 +35,8 @@ export interface Membership {
   readonly devices: Readonly<Record<string, DeviceInfo>>;
   /** The patients of the household (random ids only, nothing about them), so a device can learn of a new one. */
   readonly patients: Readonly<Record<string, number>>;
+  /** The hub; an empty `url` means it was switched off (kept, with its time, so an old setting cannot come back). */
+  readonly hub?: HubConfig;
 }
 
 export interface Keyring {
@@ -59,7 +71,22 @@ export function mergeMembership(a: Membership, b: Membership): Membership {
     const mine = devices[id];
     devices[id] = mine ? mergeDevice(mine, info) : info;
   }
-  return { householdId: a.householdId, name: a.name, devices, patients: { ...b.patients, ...a.patients } };
+  const ha = a.hub;
+  const hb = b.hub;
+  const hub = !hb
+    ? ha
+    : !ha
+      ? hb
+      : hb.at > ha.at || (hb.at === ha.at && JSON.stringify(hb) > JSON.stringify(ha))
+        ? hb
+        : ha;
+  return {
+    householdId: a.householdId,
+    name: a.name,
+    devices,
+    patients: { ...b.patients, ...a.patients },
+    ...(hub ? { hub } : {}),
+  };
 }
 
 /** The patients a device keeps a copy of. */
@@ -176,7 +203,7 @@ export function addDevice(
 export function updateDevice(
   state: HouseholdState,
   deviceId: string,
-  patch: { name?: string; follows?: readonly string[]; followAll?: boolean },
+  patch: { name?: string; follows?: readonly string[]; followAll?: boolean; pub?: string },
   now: number,
 ): HouseholdState {
   const d = state.membership.devices[deviceId];
@@ -186,6 +213,7 @@ export function updateDevice(
     name: patch.name ?? d.name,
     follows: patch.follows ?? d.follows,
     followAll: patch.followAll ?? d.followAll,
+    ...(patch.pub !== undefined ? { pub: patch.pub } : d.pub !== undefined ? { pub: d.pub } : {}),
     infoAt: Math.max(now, d.infoAt + 1),
   };
   return { ...state, membership: { ...state.membership, devices: { ...state.membership.devices, [deviceId]: next } } };
@@ -218,3 +246,19 @@ export function removeDevice(state: HouseholdState, deviceId: string, now: numbe
 }
 
 export const newDeviceId = randomId;
+
+/** Whether the household has a hub switched on. */
+export const hubOf = (m: Membership): HubConfig | null => (m.hub && m.hub.url !== '' ? m.hub : null);
+
+export function setHub(state: HouseholdState, hub: { url: string; joinKey: string }, now: number): HouseholdState {
+  const at = Math.max(now, (state.membership.hub?.at ?? 0) + 1);
+  return {
+    ...state,
+    membership: { ...state.membership, hub: { url: hub.url.trim().replace(/\/+$/, ''), joinKey: hub.joinKey, at } },
+  };
+}
+
+export function clearHub(state: HouseholdState, now: number): HouseholdState {
+  const at = Math.max(now, (state.membership.hub?.at ?? 0) + 1);
+  return { ...state, membership: { ...state.membership, hub: { url: '', joinKey: '', at } } };
+}

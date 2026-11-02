@@ -5,3 +5,5 @@ packages:
 # Install scripts we do not run: core-js only prints a donation notice, and jsPDF works without it
 allowBuilds:
   core-js: false
+  # esbuild finds its program in the platform package it installs; its own install script is not needed
+  esbuild: false

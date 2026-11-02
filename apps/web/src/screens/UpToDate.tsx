@@ -1,4 +1,4 @@
-import { activeDevices } from '@auratrack/sync';
+import { activeDevices, hubOf } from '@auratrack/sync';
 import { AppHeader, Button, Card, Screen, Section, Stack } from '@auratrack/ui';
 import { useState } from 'react';
 import { useApp } from '../app/AppContext';
@@ -39,6 +39,27 @@ export function UpToDate() {
         >
           {t('hh.lookNow')}
         </Button>
+        {household && hubOf(household.membership) ? (
+          <Section title={t('hub.row')}>
+            <Card compact>
+              <Stack gap="0.25rem">
+                <p className="app-banner">{t(`hub.state.${snapshot.hub.state}` as never)}</p>
+                {snapshot.hub.unreadable > 0 ? (
+                  <p role="status" className="app-note">
+                    {t('hub.unreadable', { count: snapshot.hub.unreadable })}
+                  </p>
+                ) : null}
+                <p className="app-note">
+                  {snapshot.hub.lastAt
+                    ? t('hub.last', {
+                        when: `${agoText(t, now, snapshot.hub.lastAt)} · ${fmt.when(snapshot.hub.lastAt)}`,
+                      })
+                    : t('hub.never')}
+                </p>
+              </Stack>
+            </Card>
+          </Section>
+        ) : null}
         <Section title={t('hh.devices')}>
           <Stack>
             {devices.map((d) => {

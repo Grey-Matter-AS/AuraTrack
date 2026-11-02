@@ -1,0 +1,29 @@
+{
+  "name": "@auratrack/server",
+  "private": true,
+  "version": "7.0.6",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "start": "node dist/hub.mjs",
+    "package": "node scripts/package.mjs",
+    "sea": "node scripts/sea.mjs"
+  },
+  "dependencies": {
+    "@auratrack/sync": "workspace:*",
+    "express": "^5.1.0",
+    "peer": "^1.0.2",
+    "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "@auratrack/model": "workspace:*",
+    "@auratrack/store": "workspace:*",
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.0.0",
+    "@types/ws": "^8.18.1",
+    "esbuild": "^0.25.0",
+    "fake-indexeddb": "^6.2.7",
+    "postject": "^1.0.0-alpha.6",
+    "selfsigned": "^5.5.0"
+  }
+}

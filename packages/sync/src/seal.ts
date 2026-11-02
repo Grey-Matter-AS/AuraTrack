@@ -9,6 +9,14 @@ export class SealError extends Error {
   }
 }
 
+/** The message names a key this device does not hold (as opposed to one that is damaged or forged). */
+export class NoKeyError extends SealError {
+  constructor() {
+    super('no key for this message');
+    this.name = 'NoKeyError';
+  }
+}
+
 const URL_SAFE = /[+/=]/g;
 export const toB64 = (bytes: Uint8Array): string => {
   let text = '';
@@ -68,7 +76,7 @@ export async function openText(keys: readonly KeyEntry[], sealed: string, aad: s
   const parts = sealed.split('.');
   if (parts.length !== 3) throw new SealError('not sealed text');
   const entry = keys.find((k) => k.id === parts[0]);
-  if (!entry) throw new SealError('no key for this message');
+  if (!entry) throw new NoKeyError();
   try {
     const data = await crypto.subtle.decrypt(
       { name: 'AES-GCM', iv: fromB64(parts[1] as string), additionalData: new TextEncoder().encode(aad) },

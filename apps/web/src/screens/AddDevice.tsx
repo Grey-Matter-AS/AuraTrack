@@ -62,7 +62,6 @@ export function AddDevice() {
     if (!state || !who) return setFailure('failed');
     const fresh = newInvite(Date.now());
     setInvite(fresh);
-    setStep('code');
     try {
       listener.current = await householdEnv.transport().listen(await inviteListenerId(fresh.secret), (channel) => {
         void runInviter(channel, {
@@ -105,6 +104,8 @@ export function AddDevice() {
           }
         });
       });
+      // The code is shown only once the device is listening, so a quick scan never finds nobody there
+      if (run.current === mine) setStep('code');
     } catch {
       setFailure('failed');
       setStep('choose');

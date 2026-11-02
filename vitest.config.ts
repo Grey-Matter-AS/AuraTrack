@@ -5,6 +5,8 @@ export default defineConfig({
   test: {
     include: ['packages/*/src/**/*.test.{ts,tsx}', 'apps/*/src/**/*.test.{ts,tsx}'],
     passWithNoTests: true,
+    // The screen tests run the real encrypted store and many taps; with every core busy a few of them time out, so some are left free
+    maxWorkers: 6,
     // The screen tests drive the real store and many taps; they are slower under coverage
     testTimeout: 30_000,
     coverage: {

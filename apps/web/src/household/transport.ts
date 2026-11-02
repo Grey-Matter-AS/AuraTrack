@@ -134,7 +134,18 @@ export function brokerConfig(): PeerJsConfig {
   }
 }
 
-/** What the app uses; tests replace it with an in-memory one. */
-export const householdEnv: { transport: () => PeerTransport } = {
+/** The hub's own signalling server (it answers at /peer), for a household that has a hub. */
+export function peerConfigOfHub(url: string): PeerJsConfig {
+  const u = new URL(url);
+  const secure = u.protocol === 'https:';
+  return { host: u.hostname, port: Number(u.port || (secure ? 443 : 80)), path: '/peer/', secure };
+}
+
+/** What the app uses; tests replace them with an in-memory one. With a hub the hub finds the devices for each other. */
+export const householdEnv: {
+  transport: () => PeerTransport;
+  transportFor: (hub: { url: string } | null) => PeerTransport;
+} = {
   transport: () => peerJsTransport(brokerConfig()),
+  transportFor: (hub) => (hub ? peerJsTransport(peerConfigOfHub(hub.url)) : householdEnv.transport()),
 };

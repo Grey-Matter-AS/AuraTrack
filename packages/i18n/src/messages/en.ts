@@ -4,11 +4,13 @@
 import { m4en } from './m4/en';
 import { m5en } from './m5/en';
 import { m6en } from './m6/en';
+import { m7en } from './m7/en';
 
 export const en = {
   ...m4en,
   ...m5en,
   ...m6en,
+  ...m7en,
   'common.save': 'Save',
   'common.review': 'Review',
   'common.done': 'Done',

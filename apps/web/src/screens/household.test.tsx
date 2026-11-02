@@ -18,7 +18,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { HouseholdService } from '../household/service';
 import { memoryBroker } from '../household/testTransport';
 import { householdEnv } from '../household/transport';
-import { PIN, makeSeizure, seed, setup, type Ctx } from './testSupport';
+import { PIN, makeSeizure, seed, setup, tick, type Ctx } from './testSupport';
 
 // The household screens on the real app and real stores: starting one, adding a device by code, the up-to-date screen,
 // removing a device, joining from set-up, and the update by file. Devices are other real stores; the broker is in memory.
@@ -151,7 +151,7 @@ describe('adding a device', () => {
     await user.click(await screen.findByRole('button', { name: 'Add a device' }));
     const code = (await screen.findByLabelText('Code')).textContent ?? '';
     expect(code).toMatch(/^[A-Z2-9]{4}(-[A-Z2-9]{4}){3}$/);
-    expect(screen.getByRole('img', { name: 'QR code to join the household' })).toBeTruthy();
+    expect(await screen.findByRole('img', { name: 'QR code to join the household' })).toBeTruthy();
     expect(inviteQrText({ code, secret: new Uint8Array(), expiresAt: 0 })).toContain(code);
 
     // The other phone: a real joiner, through the in-memory broker
@@ -399,5 +399,156 @@ describe('the update by file', () => {
     expect(await screen.findByText('That is not an update file.')).toBeTruthy();
     await user.upload(target, new File([foreign], 'x.auraupdate', { type: 'text/plain' }));
     expect(await screen.findByText('This update is from another household.')).toBeTruthy();
+  });
+});
+
+describe('connecting a hub', () => {
+  const realFetch = globalThis.fetch;
+  afterEach(() => {
+    globalThis.fetch = realFetch;
+  });
+
+  async function openConnect(ctx: Ctx) {
+    await appAsFirst(ctx);
+    const user = userEvent.setup();
+    ctx.mount();
+    await openHousehold(user);
+    await user.click(await screen.findByRole('button', { name: 'Connect a hub' }));
+    const sheet = await screen.findByRole('dialog', { name: 'Connect a hub' });
+    return { user, sheet };
+  }
+
+  it('says plainly when the code is wrong, when nothing answers, and when the address is not https', async () => {
+    const ctx = setup();
+    const { user, sheet } = await openConnect(ctx);
+    const address = within(sheet).getByLabelText('Hub address');
+    await user.clear(address);
+    await user.type(address, 'https://hub.example');
+    await user.type(within(sheet).getByLabelText('Code from the hub'), 'ABCDE12345');
+
+    globalThis.fetch = (async () =>
+      new Response(JSON.stringify({ error: 'wrong_admin_code' }), { status: 403 })) as typeof fetch;
+    await user.click(within(sheet).getByRole('button', { name: 'Connect' }));
+    expect(await within(sheet).findByText(/That code is not the hub’s/)).toBeTruthy();
+
+    globalThis.fetch = (async () => {
+      throw new TypeError('network');
+    }) as typeof fetch;
+    await user.click(within(sheet).getByRole('button', { name: 'Connect' }));
+    expect(await within(sheet).findByText(/Nothing answered at that address/)).toBeTruthy();
+
+    await user.clear(address);
+    await user.type(address, 'http://192.168.1.20:8420');
+    expect(await within(sheet).findByText(/must start with https:\/\//)).toBeTruthy();
+    expect((within(sheet).getByRole('button', { name: 'Connect' }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('shows the hub as connected once it accepts, and switching it off asks first and keeps the household', async () => {
+    const ctx = setup();
+    const { user, sheet } = await openConnect(ctx);
+    const address = within(sheet).getByLabelText('Hub address');
+    await user.clear(address);
+    await user.type(address, 'https://hub.example');
+    await user.type(within(sheet).getByLabelText('Code from the hub'), 'ABCDE12345');
+    globalThis.fetch = (async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.endsWith('/v1/setup')) return new Response(JSON.stringify({ token: 'tok' }), { status: 200 });
+      return new Response(JSON.stringify({ error: 'unauthorised' }), { status: 401 });
+    }) as typeof fetch;
+    await user.click(within(sheet).getByRole('button', { name: 'Connect' }));
+    expect(await screen.findByText('Connected to https://hub.example')).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: 'Switch the hub off' }));
+    const dialog = await screen.findByRole('alertdialog');
+    expect(within(dialog).getByText(/updating each other when two of them are open/)).toBeTruthy();
+    await user.click(within(dialog).getByRole('button', { name: 'Switch off' }));
+    expect(await screen.findByRole('button', { name: 'Connect a hub' })).toBeTruthy();
+    const state = (await loadHousehold(ctx.api)) as HouseholdState;
+    expect(Object.keys(state.membership.devices)).toHaveLength(1);
+  });
+});
+
+describe('alerts to the household', () => {
+  const realFetch = globalThis.fetch;
+  afterEach(() => {
+    globalThis.fetch = realFetch;
+  });
+
+  /** An app in a household whose hub (answered by a fake) is connected; returns what was sent to /v1/alert. */
+  async function withHub(ctx: Ctx) {
+    const { device } = await appAsFirst(ctx);
+    const alerts: { event: string; patientId: string; auth: string | null }[] = [];
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url.endsWith('/v1/setup')) return new Response(JSON.stringify({ token: 'tok' }), { status: 200 });
+      if (url.endsWith('/v1/alert')) {
+        const headers = init?.headers as Record<string, string>;
+        alerts.push({
+          ...(JSON.parse(String(init?.body)) as { event: string; patientId: string }),
+          auth: headers.authorization ?? null,
+        });
+        return new Response(JSON.stringify({ sent: 1, failed: 0 }), { status: 200 });
+      }
+      return new Response(JSON.stringify({ error: 'unauthorised' }), { status: 401 });
+    }) as typeof fetch;
+    const { connectHub, hubLocalOf } = await import('@auratrack/sync');
+    expect(
+      await connectHub(
+        { api: device.api, who: device.who, local: hubLocalOf(device.api), now: Date.now },
+        { url: 'https://hub.example', adminCode: 'X' },
+      ),
+    ).toBe('ok');
+    return { alerts, device };
+  }
+
+  it('tells the hub when a recording starts, when it passes the alert time, and when it ends, each once', async () => {
+    const ctx = setup();
+    const { alerts } = await withHub(ctx);
+    const user = userEvent.setup();
+    ctx.mount();
+    await user.click(await screen.findByRole('button', { name: 'Start timer' }));
+    await waitFor(() => expect(alerts.map((a) => a.event)).toEqual(['started']));
+    await tick(ctx, 5 * 60_000 + 1000);
+    await waitFor(() => expect(alerts.map((a) => a.event)).toEqual(['started', 'alert']));
+    await tick(ctx, 30_000);
+    expect(alerts.map((a) => a.event)).toEqual(['started', 'alert']); // not again
+    await user.click(await screen.findByRole('button', { name: 'Dismiss' })); // the red alert
+    await user.click(screen.getByRole('button', { name: 'End seizure' }));
+    await user.click(screen.getByRole('button', { name: 'Back to normal' }));
+    await waitFor(() => expect(alerts.map((a) => a.event)).toEqual(['started', 'alert', 'recorded']));
+    expect(new Set(alerts.map((a) => a.auth))).toEqual(new Set(['Bearer tok']));
+    expect(alerts[0]?.patientId).toBeTruthy();
+  });
+
+  it('a recording is not held up by a hub that does not answer', async () => {
+    const ctx = setup();
+    await withHub(ctx);
+    globalThis.fetch = (async () => {
+      throw new TypeError('network down');
+    }) as typeof fetch;
+    const user = userEvent.setup();
+    ctx.mount();
+    await user.click(await screen.findByRole('button', { name: 'Start timer' }));
+    expect(await screen.findByRole('timer')).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: 'End seizure' }));
+    await user.click(screen.getByRole('button', { name: 'Back to normal' }));
+    await waitFor(() => expect(ctx.api.list({ type: 'seizure' })).toHaveLength(1));
+    await waitFor(() =>
+      expect((ctx.api.list({ type: 'seizure' }) as { status: string }[])[0]?.status).not.toBe('in_progress'),
+    );
+  });
+
+  it('says in plain words what alerts need, and that this browser cannot show them when it cannot', async () => {
+    const ctx = setup();
+    await withHub(ctx);
+    const user = userEvent.setup();
+    ctx.mount();
+    await openHousehold(user);
+    expect(await screen.findByText('Alerts on this device')).toBeTruthy();
+    expect(screen.getByText(/The notification says only “AuraTrack”/)).toBeTruthy();
+    expect(
+      screen.getByText(/iPhone and iPad: alerts work only after AuraTrack is added to the Home Screen/),
+    ).toBeTruthy();
+    expect(screen.getByText(/They never replace watching the person/)).toBeTruthy();
+    expect(screen.getByText('This browser cannot show alerts.')).toBeTruthy();
   });
 });

@@ -315,6 +315,20 @@ export function createStoreApi(config: StoreApiConfig) {
     async saveHouseholdState(arg: { state: unknown }): Promise<void> {
       await current().putSecret('household', arg.state);
     },
+    /** What this device keeps about the household's hub: its own token (never shared), and removals not yet told to the hub. */
+    hubLocal(): Promise<unknown> {
+      return current().getSecret('hubLocal');
+    },
+    async saveHubLocal(arg: { value: unknown }): Promise<void> {
+      await current().putSecret('hubLocal', arg.value);
+    },
+    /** This device's own key pair for receiving keys sealed to it (private half stays here), and what it has already sent. */
+    deviceKeys(): Promise<unknown> {
+      return current().getSecret('deviceKeys');
+    },
+    async saveDeviceKeys(arg: { value: unknown }): Promise<void> {
+      await current().putSecret('deviceKeys', arg.value);
+    },
     storeIsEmpty(): boolean {
       return current().isEmpty();
     },

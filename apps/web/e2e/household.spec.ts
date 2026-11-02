@@ -96,3 +96,92 @@ test('two phones become a household, and a seizure recorded on one reaches the o
   await place(a, 'History');
   await expect(a.getByText(/Seizures: 2/)).toBeVisible();
 });
+
+// M7: the household's hub (the built hub, on this computer). What one phone saves reaches another through the hub alone, with
+// the first phone closed.
+test('a household with a hub: a seizure saved on one phone reaches another through the hub while the first is closed', async ({
+  browser,
+}) => {
+  test.setTimeout(300_000);
+  const status = (await (await fetch('http://127.0.0.1:9420/status.json')).json()) as { adminCode: string };
+  const a = await phone(browser);
+  await setUp(a);
+  await place(a, 'More');
+  await a.getByRole('button', { name: 'Household', exact: true }).click();
+  await a.getByRole('button', { name: 'Start a household' }).click();
+  const sheet = a.getByRole('dialog', { name: 'Start a household' });
+  await sheet.getByLabel('Name of the household').fill('Home');
+  await sheet.getByLabel('Name of this device').fill('Kitchen tablet');
+  await sheet.getByRole('button', { name: 'Start' }).click();
+  await expect(a.getByText('Kitchen tablet · This device')).toBeVisible();
+
+  // connect the hub
+  await a.getByRole('button', { name: 'Connect a hub' }).click();
+  const connect = a.getByRole('dialog', { name: 'Connect a hub' });
+  await connect.getByLabel('Hub address').fill('http://127.0.0.1:9420');
+  await connect.getByLabel('Code from the hub').fill(status.adminCode);
+  await connect.getByRole('button', { name: 'Connect', exact: true }).click();
+  await expect(a.getByText('Connected to http://127.0.0.1:9420')).toBeVisible({ timeout: 20_000 });
+  await expect(a.getByText('In step with the hub')).toBeVisible({ timeout: 30_000 });
+
+  // B joins (the hub is in the household by then)
+  await a.getByRole('button', { name: 'Add a device' }).click();
+  await a.getByRole('button', { name: 'Add a device' }).click();
+  const code = (await a.getByLabel('Code', { exact: true }).textContent()) ?? '';
+  const b = await phone(browser);
+  await b.goto('/#/app');
+  await b.getByLabel('PIN (at least 4 digits)').fill(PIN);
+  await b.getByLabel('PIN again').fill(PIN);
+  await b.getByRole('button', { name: 'Join a household instead' }).click();
+  await b.getByLabel('Code from the other device').fill(code);
+  await b.getByLabel('Name of this device').fill('Mum’s phone');
+  await b.getByRole('button', { name: 'Join', exact: true }).click();
+  const dialogA = a.getByRole('alertdialog');
+  const dialogB = b.getByRole('alertdialog');
+  await expect(dialogA).toBeVisible({ timeout: 30_000 });
+  await expect(dialogB).toBeVisible({ timeout: 30_000 });
+  await dialogA.getByRole('button', { name: 'The same' }).click();
+  await dialogB.getByRole('button', { name: 'The same' }).click();
+  await expect(b.getByRole('button', { name: 'Start timer' })).toBeVisible({ timeout: 30_000 });
+  await expect(b.getByText('Alex').first()).toBeVisible({ timeout: 60_000 });
+  // B is closed, with what it holds kept aside, before A saves anything
+  await expect(b.getByText('In step with the hub').or(b.getByRole('button', { name: 'Start timer' }))).toBeVisible();
+  const entriesBefore = ((await (await fetch('http://127.0.0.1:9420/status.json')).json()) as { entries: number })
+    .entries;
+  await b.waitForTimeout(3000);
+  const kept = await b.context().storageState({ indexedDB: true });
+  await b.context().close();
+
+  // A records a seizure, and the hub gets it; then A is closed too
+  await a.getByRole('button', { name: 'Back', exact: true }).click();
+  await a.getByRole('button', { name: 'Back', exact: true }).click();
+  await place(a, 'Home');
+  await recordOne(a);
+  await expect
+    .poll(
+      async () => ((await (await fetch('http://127.0.0.1:9420/status.json')).json()) as { entries: number }).entries,
+      {
+        timeout: 60_000,
+      },
+    )
+    .toBeGreaterThan(entriesBefore);
+  await a.context().close();
+
+  // B opens again with A closed: the seizure comes from the hub
+  const context = await browser.newContext({
+    viewport: { width: 430, height: 932 },
+    serviceWorkers: 'block',
+    storageState: kept,
+  });
+  const b2 = await context.newPage();
+  await b2.goto('/#/app');
+  await b2.getByLabel('PIN', { exact: false }).first().fill(PIN);
+  await b2
+    .getByRole('button', { name: /Unlock|Open/ })
+    .first()
+    .click();
+  await expect(b2.getByRole('button', { name: 'Start timer' })).toBeVisible({ timeout: 30_000 });
+  await place(b2, 'History');
+  await expect(b2.getByText(/Seizures: 1/)).toBeVisible({ timeout: 90_000 });
+  await context.close();
+});

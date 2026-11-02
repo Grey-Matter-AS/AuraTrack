@@ -21,7 +21,8 @@ export default defineConfig({
         theme_color: '#0f172a',
         icons: [{ src: '/favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any maskable' }],
       },
-      workbox: { globPatterns: ['**/*.{js,css,html,svg,json,woff2}'] },
+      // push-sw.js shows the household hub's alerts when the app is closed
+      workbox: { globPatterns: ['**/*.{js,css,html,svg,json,woff2}'], importScripts: ['push-sw.js'] },
     }),
   ],
   build: { target: 'es2023', sourcemap: true },

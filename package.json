@@ -10,7 +10,7 @@
   },
   "scripts": {
     "dev": "pnpm --filter @auratrack/web dev",
-    "build": "pnpm --filter @auratrack/web build",
+    "build": "pnpm --filter @auratrack/web build && pnpm --filter @auratrack/server build",
     "preview": "pnpm --filter @auratrack/web preview",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -24,7 +24,8 @@
     "mutation": "stryker run",
     "test:coverage": "vitest run --coverage",
     "audit": "playwright test audit --project=chromium",
-    "visual": "playwright test visual --project=chromium"
+    "visual": "playwright test visual --project=chromium",
+    "hub": "pnpm --filter @auratrack/server build && node apps/server/dist/hub.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

@@ -194,10 +194,13 @@ describe('changing, renaming and stopping', () => {
     const meds = await list<Medication>(ctx, 'medication');
     expect(meds.find((m) => m.name === 'Lamotrigine')?.active).toBe(false);
     expect(meds.find((m) => m.name === 'Valproate')?.active).toBe(true);
-    const types = (await list<MedicationChange>(ctx, 'medicationChange'))
-      .map((c) => `${c.medicationName}:${c.type}`)
-      .sort();
-    expect(types).toEqual(['Lamotrigine:stopped', 'Valproate:started']);
+    // the history lines are written just after the medicines
+    await waitFor(async () => {
+      const types = (await list<MedicationChange>(ctx, 'medicationChange'))
+        .map((c) => `${c.medicationName}:${c.type}`)
+        .sort();
+      expect(types).toEqual(['Lamotrigine:stopped', 'Valproate:started']);
+    });
   });
 
   it('stops a medicine instead of deleting it, keeps it listed as stopped, and can take it up again', async () => {

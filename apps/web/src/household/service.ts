@@ -1,14 +1,18 @@
 import {
   activeDevices,
+  hubOf,
   isActive,
   loadHousehold,
   newestKey,
   runSession,
   storeContext,
   type HouseholdState,
+  type HubConfig,
+  type HubLocalApi,
   type SessionReport,
   type StoreLike,
 } from '@auratrack/sync';
+import { HubSync, type HubSnapshot } from './hubSync';
 import { dayNumber, peerIdFor, peerIdsToTry, type Listener, type PeerTransport } from './transport';
 
 // Keeps this device reachable while the app is open, and looks for the household's other devices when it opens (for about
@@ -27,6 +31,8 @@ export interface MeetingNote {
   peerId: string | null;
   peerName: string;
   outcome: SessionReport['outcome'];
+  /** Came through the hub, not from a device. */
+  via?: 'hub';
   applied: number;
   sent: number;
   rejected: number;
@@ -40,12 +46,17 @@ export interface ServiceSnapshot {
   removed: boolean;
   /** This device is reachable by the others (the broker answered). */
   listening: boolean;
+  /** The household's hub, if it has one. */
+  hub: HubSnapshot;
 }
 
 export interface ServiceDeps {
-  api: StoreLike;
+  api: StoreLike & HubLocalApi;
   who: { householdId: string; deviceId: string };
-  transport: PeerTransport;
+  /** How devices find each other: one transport, or one for each hub setting (the hub runs the signalling when there is one). */
+  transport: PeerTransport | ((hub: HubConfig | null) => PeerTransport);
+  fetch?: typeof fetch;
+  openEvents?: (url: string, token: string, onEvent: () => void) => { close(): void };
   now(): number;
   /** True while a recording runs. */
   isBusy(): boolean;
@@ -55,7 +66,16 @@ export interface ServiceDeps {
 }
 
 export class HouseholdService {
-  private snap: ServiceSnapshot = { status: 'off', household: null, last: null, removed: false, listening: false };
+  private snap: ServiceSnapshot = {
+    status: 'off',
+    household: null,
+    last: null,
+    removed: false,
+    listening: false,
+    hub: { state: 'off', url: null, lastAt: null, lastApplied: 0, unreadable: 0 },
+  };
+  private readonly hubSync: HubSync;
+  private listenKey = '';
   private readonly subs = new Set<() => void>();
   private listener: Listener | null = null;
   private listenDay = -1;
@@ -68,7 +88,38 @@ export class HouseholdService {
   /** When each device was last tried, so one that is away is not asked every few seconds. */
   private tried = new Map<string, number>();
 
-  constructor(private readonly deps: ServiceDeps) {}
+  constructor(private readonly deps: ServiceDeps) {
+    this.hubSync = new HubSync({
+      api: deps.api,
+      who: deps.who,
+      now: deps.now,
+      isBusy: deps.isBusy,
+      ...(deps.fetch ? { fetch: deps.fetch } : {}),
+      ...(deps.openEvents ? { openEvents: deps.openEvents } : {}),
+      onApplied: (applied) =>
+        deps.onApplied?.({
+          at: deps.now(),
+          peerId: null,
+          peerName: '',
+          via: 'hub',
+          outcome: 'done',
+          applied,
+          sent: 0,
+          rejected: 0,
+          reason: null,
+        }),
+      onRemoved: () => {
+        this.set({ removed: true });
+        this.stop();
+      },
+    });
+    this.hubSync.subscribe(() => this.set({ hub: this.hubSync.snapshot() }));
+  }
+
+  private transportFor(household: HouseholdState): PeerTransport {
+    const t = this.deps.transport;
+    return typeof t === 'function' ? t(hubOf(household.membership)) : t;
+  }
 
   snapshot = (): ServiceSnapshot => this.snap;
   subscribe = (fn: () => void): (() => void) => {
@@ -87,6 +138,7 @@ export class HouseholdService {
       household,
       status: household ? (this.running ? 'syncing' : this.snap.status === 'off' ? 'idle' : this.snap.status) : 'off',
     });
+    if (household && this.started) void this.hubSync.round();
     if (household && !this.started && !this.snap.removed) await this.start();
     if (!household && this.started) this.stop();
   }
@@ -100,6 +152,7 @@ export class HouseholdService {
     this.set({ status: 'idle' });
     this.lookUntil = this.deps.now() + LOOK_MS;
     this.timer = setInterval(() => void this.tick(), TICK_MS);
+    this.hubSync.start();
     void this.tick();
   }
 
@@ -107,6 +160,7 @@ export class HouseholdService {
     this.started = false;
     if (this.timer) clearInterval(this.timer);
     this.timer = null;
+    this.hubSync.stop();
     this.listener?.close();
     this.listener = null;
     this.listenDay = -1;
@@ -115,6 +169,7 @@ export class HouseholdService {
 
   /** Look for the other devices now, for a minute. */
   searchNow(): void {
+    void this.hubSync.round();
     this.met = new Set();
     this.tried = new Map();
     this.lookUntil = this.deps.now() + LOOK_MS;
@@ -123,6 +178,7 @@ export class HouseholdService {
 
   /** After something was saved: stay reachable and look again for a few minutes, so the others get it soon. */
   extend(): void {
+    this.hubSync.nudge();
     this.met = new Set();
     this.tried = new Map();
     this.lookUntil = Math.max(this.lookUntil, this.deps.now() + LINGER_MS);
@@ -132,14 +188,16 @@ export class HouseholdService {
     const key = household.keyring.household[0];
     if (!key) return;
     const day = dayNumber(this.deps.now());
-    if (this.listener && this.listenDay === day) return;
+    const where = `${day}|${hubOf(household.membership)?.url ?? ''}`;
+    if (this.listener && this.listenKey === where) return;
     if (!this.listener && this.deps.now() < this.retryAt) return;
     this.listener?.close();
     this.listener = null;
     try {
       const id = await peerIdFor(key, this.deps.who.deviceId, day);
-      this.listener = await this.deps.transport.listen(id, (channel) => void this.incoming(channel));
+      this.listener = await this.transportFor(household).listen(id, (channel) => void this.incoming(channel));
       this.listenDay = day;
+      this.listenKey = where;
       this.set({ listening: true });
     } catch {
       this.set({ listening: false });
@@ -199,6 +257,7 @@ export class HouseholdService {
       return;
     }
     this.set({ last: note });
+    this.hubSync.nudge(); // what was learned may include the hub, or news for it
     if (report.applied > 0) this.deps.onApplied?.(note);
   }
 
@@ -229,7 +288,7 @@ export class HouseholdService {
       for (const id of await peerIdsToTry(key, device.id, now)) {
         let channel;
         try {
-          channel = await this.deps.transport.connect(id, CONNECT_MS);
+          channel = await this.transportFor(household).connect(id, CONNECT_MS);
         } catch {
           continue;
         }

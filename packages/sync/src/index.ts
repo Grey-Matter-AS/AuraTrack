@@ -7,3 +7,7 @@ export * from './memory';
 export * from './pairing';
 export * from './update';
 export * from './storeContext';
+export * from './ecies';
+export * from './hub';
+export * from './hubClient';
+export * from './hubLink';

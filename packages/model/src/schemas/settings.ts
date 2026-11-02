@@ -80,6 +80,14 @@ export const SETTING_DEFS = {
   wellbeingReminderTime: { scope: 'device', schema: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/), default: '20:00' },
   /** Video: record with the camera during a seizure (F-209); which camera. The file stays on this device. */
   videoEnabled: { scope: 'device', schema: z.boolean(), default: false },
+  /** Alerts from the household's hub on this device (M7): on or off, which events, and for whom (none chosen means everyone). */
+  pushEnabled: { scope: 'device', schema: z.boolean(), default: false },
+  pushEvents: {
+    scope: 'device',
+    schema: z.array(z.enum(['started', 'alert', 'recorded'])).max(3),
+    default: ['started', 'alert', 'recorded'] as ('started' | 'alert' | 'recorded')[],
+  },
+  pushPatientIds: { scope: 'device', schema: z.array(z.string().max(80)).max(50), default: [] as string[] },
   videoCamera: { scope: 'device', schema: z.enum(['back', 'front']), default: 'back' },
   /** The carer's own name, for reports (F-601). */
   carerName: { scope: 'patient', schema: z.string().max(120), default: '' },

@@ -278,6 +278,17 @@ for (const device of MATRIX) {
     await sheet('people this device keeps', () =>
       page.getByRole('button', { name: 'People this device keeps' }).click(),
     );
+    await look('household, with the hub section');
+    await sheet('connect a hub', () => page.getByRole('button', { name: 'Connect a hub' }).click());
+    await page.getByRole('button', { name: 'Connect a hub' }).click();
+    const hubSheet = page.getByRole('dialog', { name: 'Connect a hub' });
+    const hubStatus = (await (await fetch('http://127.0.0.1:9420/status.json')).json()) as { adminCode: string };
+    await hubSheet.getByLabel('Hub address').fill('http://127.0.0.1:9420');
+    await look('connect a hub, filled in', '.ui-overlay', true);
+    await hubSheet.getByLabel('Code from the hub').fill(hubStatus.adminCode);
+    await hubSheet.getByRole('button', { name: 'Connect', exact: true }).click();
+    await page.getByText('Connected to http://127.0.0.1:9420').waitFor({ timeout: 30_000 });
+    await look('household, hub connected, with alerts');
     await page.getByRole('button', { name: 'Add a device' }).click();
     await look('add a device, choose');
     await page.getByRole('button', { name: 'Add a device' }).click();

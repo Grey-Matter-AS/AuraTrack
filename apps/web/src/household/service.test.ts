@@ -45,7 +45,7 @@ describe('the household service', () => {
     const sb = serviceFor(b, broker, { onApplied: (n) => notes.push(n) });
     await sa.start();
     await sb.start();
-    await settle(() => seizures(b).length === 1);
+    await settle(() => seizures(b).length === 1 && notes.length > 0);
     expect(notes[0]?.applied).toBeGreaterThan(0);
     expect(notes[0]?.peerName).toBeTruthy();
     expect(sb.snapshot().last?.outcome).toBe('done');

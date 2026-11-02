@@ -96,8 +96,11 @@ describe('locking by itself', () => {
     await seed(ctx, { autoLockSeconds: 0 });
     render(<AppRoot client={ctx.client} env={ctx.f.env} passkeyEnv={null} />);
     await screen.findByRole('button', { name: 'Start timer' });
-    await act(async () => ctx.f.hide());
-    expect(await screen.findByText('AuraTrack is locked')).toBeTruthy();
+    // the setting is read just after Home appears, so go away (and come back) until the app has it
+    await waitFor(async () => {
+      await act(async () => ctx.f.hide());
+      expect(screen.getByText('AuraTrack is locked')).toBeTruthy();
+    });
   });
 
   it('does not lock when the setting is off', async () => {

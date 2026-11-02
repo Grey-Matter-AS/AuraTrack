@@ -132,7 +132,9 @@ export function HouseholdCard() {
       {hh.note ? (
         <>
           <p className="app-banner" role="status">
-            {t('hh.note', { name: hh.note.name, count: hh.note.count })}
+            {hh.note.name
+              ? t('hh.note', { name: hh.note.name, count: hh.note.count })
+              : t('hub.note', { count: hh.note.count })}
           </p>
           <div className="ui-cluster">
             <Button size="md" onClick={() => nav.push('history')}>

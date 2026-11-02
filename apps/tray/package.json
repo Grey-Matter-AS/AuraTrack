@@ -1,0 +1,17 @@
+{
+  "name": "@auratrack/tray",
+  "private": true,
+  "version": "7.0.6",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "start": "node dist/tray.mjs"
+  },
+  "dependencies": {
+    "systray2": "^2.1.4"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "esbuild": "^0.25.0"
+  }
+}

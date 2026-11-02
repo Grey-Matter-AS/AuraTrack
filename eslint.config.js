@@ -32,7 +32,18 @@ const noIsoAtAll = {
 };
 
 export default tseslint.config(
-  { ignores: ['**/dist', '**/dist-types', '**/coverage', '**/node_modules', '**/.stryker-tmp', 'reports', 'docs'] },
+  {
+    ignores: [
+      '**/dist',
+      '**/dist-types',
+      '**/coverage',
+      '**/node_modules',
+      '**/.stryker-tmp',
+      'reports',
+      'docs',
+      'apps/web/public',
+    ],
+  },
   js.configs.recommended,
   ...tseslint.configs.strict,
   {
@@ -60,6 +71,7 @@ export default tseslint.config(
       '*.config.{js,ts}',
       '**/vite.config.ts',
       'scripts/**',
+      'apps/*/scripts/**',
       'e2e-trial/**',
       'playwright.config.ts',
       'apps/web/e2e/**',
