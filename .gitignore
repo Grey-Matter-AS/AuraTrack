@@ -12,6 +12,7 @@ cypress/videos
 *.atbak
 docs/plan/reports-6.1/real/
 
-reports
+# Mutation-test output at the repo root only (not the reports source folders)
+/reports/
 .stryker-tmp
 dist-types
