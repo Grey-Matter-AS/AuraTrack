@@ -9,6 +9,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import type { AppApi } from '../app/AppContext';
 import { fakeEnv, T0 } from '../recording/fakeEnv';
 import AppRoot from './AppRoot';
+import { backToHome, openSettings } from './testSupport';
 
 // The real screens, on the real store (in memory) and a clock the test moves. Nothing is mocked except time and the browser.
 
@@ -183,9 +184,12 @@ describe('recording', () => {
     await seed(ctx, {});
     const user = userEvent.setup();
     ctx.mount();
+    await screen.findByRole('button', { name: 'Start timer' });
+    await openSettings(user, 'Recording and emergency plan');
     const mine = await screen.findByRole('checkbox', { name: /Recording for myself/ });
     await user.click(mine);
     await waitFor(() => expect((mine as HTMLInputElement).checked).toBe(true));
+    await backToHome(user);
     await user.click(screen.getByRole('button', { name: 'Start timer' }));
     await screen.findByRole('timer');
     expect(screen.getByRole('button', { name: 'Stop' })).toBeTruthy();
@@ -244,7 +248,9 @@ describe('recording', () => {
     expect(screen.queryByText('Symptoms (one tap, timed automatically)')).toBeNull();
     await user.click(screen.getByRole('button', { name: 'End seizure' }));
     await addDetailsThenBack(user);
+    await openSettings(user, 'Recording and emergency plan');
     await user.click(await screen.findByRole('checkbox', { name: /Symptom strip while recording/ }));
+    await backToHome(user);
     await user.click(screen.getByRole('button', { name: 'Start timer' }));
     expect(await screen.findByText('Symptoms (one tap, timed automatically)')).toBeTruthy();
     await user.click(screen.getByRole('button', { name: /shaking/i }));
@@ -344,7 +350,10 @@ describe('the PIN screen', () => {
     await seed(ctx, {});
     const user = userEvent.setup();
     ctx.mount();
+    await screen.findByRole('button', { name: 'Start timer' });
+    await openSettings(user, 'Recording and emergency plan');
     await user.click(await screen.findByRole('checkbox', { name: /Start without the PIN/ }));
+    await backToHome(user);
     await user.click(screen.getByRole('button', { name: 'Lock' }));
     await screen.findByText('AuraTrack is locked');
     expect((screen.getByRole('button', { name: 'Start timer without the PIN' }) as HTMLButtonElement).disabled).toBe(
@@ -417,11 +426,12 @@ describe('a recording the app lost', () => {
     const sheet = await screen.findByRole('dialog', { name: 'When did it end?' });
     await user.click(within(sheet).getByRole('button', { name: 'Save' }));
     await screen.findByRole('button', { name: 'Start timer' });
-    const saved = (await ctx.client.get({ type: 'seizure', id: seizureId })) as unknown as {
-      phases: { seizureEnd: { at: number; source: string } };
-    };
-    expect(saved.phases.seizureEnd.source).toBe('entered-later');
-    expect(Math.abs(saved.phases.seizureEnd.at - (T0 + 20_000))).toBeLessThan(60_000); // the last tap, to the minute
+    type Saved = { phases: { seizureEnd: { at: number; source: string } | null } };
+    await waitFor(async () => {
+      const saved = (await ctx.client.get({ type: 'seizure', id: seizureId })) as unknown as Saved;
+      expect(saved.phases.seizureEnd?.source).toBe('entered-later');
+      expect(Math.abs((saved.phases.seizureEnd?.at ?? 0) - (T0 + 20_000))).toBeLessThan(60_000); // the last tap, to the minute
+    });
   });
 
   it('does not ask about one past 12 minutes: it says the timer stopped itself', async () => {
@@ -472,8 +482,10 @@ describe('cancelled recordings and settings', () => {
     await seed(ctx, {});
     const user = userEvent.setup();
     ctx.mount();
+    await screen.findByRole('button', { name: 'Start timer' });
+    await openSettings(user, 'Appearance');
     await user.selectOptions(await screen.findByLabelText('Language'), 'nb');
-    expect(await screen.findByRole('button', { name: 'Lås' })).toBeTruthy();
+    expect(await screen.findByLabelText('Språk')).toBeTruthy();
     expect(globalThis.localStorage.getItem('auratrack.language')).toBe('nb');
   });
 

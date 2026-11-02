@@ -1,4 +1,4 @@
-import { AppHeader, Button, Card, Screen, Stack, TextField } from '@auratrack/ui';
+import { AppHeader, BottomSheet, Button, Card, Screen, Stack, TextArea, TextField } from '@auratrack/ui';
 import { useState } from 'react';
 import { useApp } from '../app/AppContext';
 import { Recording } from './Recording';
@@ -67,6 +67,7 @@ function Setup() {
 function Locked() {
   const { t, actions, busy, wrongPin, locked, passkey, passkeySupported, passkeyFailed } = useApp();
   const [pin, setPin] = useState('');
+  const [forgot, setForgot] = useState(false);
   const available = locked?.available === true;
   const name = locked?.screen.patientName ?? null;
   return (
@@ -97,6 +98,9 @@ function Locked() {
             ) : null}
           </>
         ) : null}
+        <Button variant="ghost" fullWidth onClick={() => setForgot(true)}>
+          {t('lock.forgot')}
+        </Button>
         <Card tone="accent">
           <p className="app-note">{available ? t('lock.startNote') : t('lock.startUnavailable')}</p>
           {/* Start, with no PIN. It is a recording; it joins the records when the app is unlocked. */}
@@ -105,6 +109,64 @@ function Locked() {
           </Button>
         </Card>
       </Stack>
+      {forgot ? <ForgotPin onClose={() => setForgot(false)} /> : null}
     </Screen>
+  );
+}
+
+/** The PIN is forgotten: the printed recovery kit opens the app, and a new PIN is set. */
+function ForgotPin({ onClose }: { onClose: () => void }) {
+  const { t, actions, busy } = useApp();
+  const [kit, setKit] = useState('');
+  const [pin, setPin] = useState('');
+  const [again, setAgain] = useState('');
+  const [wrong, setWrong] = useState(false);
+  const digits = /^\d{4,}$/.test(pin);
+  const mismatch = again.length > 0 && again !== pin;
+  return (
+    <BottomSheet
+      title={t('lock.kitTitle')}
+      onClose={onClose}
+      footer={
+        <Button
+          variant="primary"
+          fullWidth
+          disabled={busy || kit.trim() === '' || !digits || pin !== again}
+          onClick={() => {
+            setWrong(false);
+            void actions.unlockWithKit(kit, pin).then((r) => setWrong(r === 'wrong_kit'));
+          }}
+        >
+          {t('lock.kitGo')}
+        </Button>
+      }
+    >
+      <Stack>
+        <p className="app-note">{t('lock.kitHelp')}</p>
+        <TextArea label={t('lock.kitCode')} value={kit} onChange={setKit} rows={4} />
+        {wrong ? (
+          <p role="alert" className="ui-error">
+            {t('lock.kitWrong')}
+          </p>
+        ) : null}
+        <TextField
+          label={t('lock.kitNewPin')}
+          type="password"
+          inputMode="numeric"
+          autoComplete="new-password"
+          value={pin}
+          onChange={setPin}
+        />
+        <TextField
+          label={t('setup.pinAgain')}
+          type="password"
+          inputMode="numeric"
+          autoComplete="new-password"
+          value={again}
+          onChange={setAgain}
+          {...(mismatch ? { error: t('setup.mismatch') } : {})}
+        />
+      </Stack>
+    </BottomSheet>
   );
 }

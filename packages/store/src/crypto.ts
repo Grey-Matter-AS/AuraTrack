@@ -230,6 +230,34 @@ export async function seal(key: CryptoKey, plaintext: string, aad: string): Prom
   return { iv: toBase64Url(iv), ct: toBase64Url(new Uint8Array(ct)) };
 }
 
+/** Seal bytes (a video): the ciphertext stays bytes, so a large file is not made a third bigger by base64. */
+export async function sealBytes(
+  key: CryptoKey,
+  plaintext: Uint8Array,
+  aad: string,
+): Promise<{ iv: Uint8Array; data: Uint8Array }> {
+  const iv = randomBytes(IV_BYTES);
+  const data = await subtle().encrypt({ name: 'AES-GCM', iv, additionalData: utf8(aad) }, key, plaintext as Bytes);
+  return { iv, data: new Uint8Array(data) };
+}
+
+export async function openBytes(
+  key: CryptoKey,
+  sealed: { iv: Uint8Array; data: Uint8Array },
+  aad: string,
+): Promise<Uint8Array> {
+  try {
+    const plain = await subtle().decrypt(
+      { name: 'AES-GCM', iv: sealed.iv as Bytes, additionalData: utf8(aad) },
+      key,
+      sealed.data as Bytes,
+    );
+    return new Uint8Array(plain);
+  } catch {
+    throw new DecryptError();
+  }
+}
+
 export async function open(key: CryptoKey, sealed: Sealed, aad: string): Promise<string> {
   try {
     const plain = await subtle().decrypt(

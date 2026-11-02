@@ -1,3 +1,4 @@
+import { APP_VERSION } from './version';
 import { Button, Stack } from '@auratrack/ui';
 import { lazy, Suspense, useEffect, useState } from 'react';
 
@@ -65,7 +66,7 @@ export function App() {
       <div className="text-center">
         <h1 className="text-xs font-black tracking-[0.4em] uppercase">AuraTrack</h1>
         <p className="mt-2 text-sm" style={{ color: 'var(--text-dim)' }}>
-          Version 7.0.2
+          Version {APP_VERSION}
         </p>
         <div className="mt-6">
           <Stack>

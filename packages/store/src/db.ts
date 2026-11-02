@@ -19,6 +19,15 @@ export interface MetaRow {
   key: string;
   value: unknown;
 }
+/** A seizure video, sealed with the data key. It stays on this device: it is not a record, so it never syncs. */
+export interface VideoRow {
+  seizureId: string;
+  iv: Uint8Array;
+  data: Uint8Array;
+  mime: string;
+  size: number;
+  savedAt: number;
+}
 /** One posted event: the one-time public key, the IV and the ciphertext. Nothing about the recording is readable. */
 export interface DropBoxRow extends Sealed {
   seq?: number;
@@ -35,6 +44,7 @@ export class AuraDb extends Dexie {
   records!: Dexie.Table<RecordRow, [string, string]>;
   changeLog!: EntityTable<LogRow, 'id'>;
   dropbox!: Dexie.Table<DropBoxRow, number>;
+  videos!: Dexie.Table<VideoRow, string>;
   constructor(name: string) {
     super(name);
     this.version(1).stores({
@@ -44,5 +54,7 @@ export class AuraDb extends Dexie {
     });
     // 7.0.3: the drop box for recordings started from the PIN screen. A new table only, so no existing row is touched.
     this.version(2).stores({ dropbox: '++seq' });
+    // 7.0.4: seizure videos, sealed, one per seizure. A new table only, so no existing row is touched.
+    this.version(3).stores({ videos: 'seizureId' });
   }
 }

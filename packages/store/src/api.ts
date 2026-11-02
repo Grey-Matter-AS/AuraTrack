@@ -1,11 +1,19 @@
-import type { ChangeLogEntry, RecordType } from '@auratrack/model';
-import { createBackup, restoreBackup, suggestedBackupName, type RestoreReport } from './backup';
+import type { ChangeLogEntry, ChangePlan, RecordType } from '@auratrack/model';
+import Dexie from 'dexie';
+import {
+  createBackup,
+  readBackup,
+  restoreBackup,
+  suggestedBackupName,
+  type BackupCounts,
+  type RestoreReport,
+} from './backup';
 import { compareImport, type ComparisonReport } from './import6x/compare';
 import { import6x, type ImportReport } from './import6x/import';
 import { AuraDb } from './db';
 import { LockedRecorder, NO_LOCKED_SCREEN, type LockedScreen, type LockedStatus } from './dropbox';
 import { RecordingService, type RecoveryReport } from './recording';
-import { recoveryKitQr } from './recovery';
+import { recoveryKitMatrix, recoveryKitQr } from './recovery';
 import type { RecordingEvent, RecordingSession } from '@auratrack/model';
 import {
   Store,
@@ -107,6 +115,7 @@ export function createStoreApi(config: StoreApiConfig) {
     },
     async remove(arg: { type: StoredType; id: string }): Promise<void> {
       await current().delete(arg.type, arg.id);
+      if (arg.type === 'seizure') await current().deleteVideo(arg.id); // a deleted seizure takes its video with it
       await refreshIfNeeded(arg.type);
     },
     applyChanges(arg: { entries: ChangeLogEntry[] }): Promise<ApplyResult> {
@@ -148,6 +157,66 @@ export function createStoreApi(config: StoreApiConfig) {
         .filter((entry) => entry.recordType === arg.type && entry.recordId === arg.id)
         .map((entry) => ({ at: entry.at, kind: entry.kind, fields: Object.keys(entry.fields ?? {}) }));
     },
+    /**
+     * Applies a planned change to a medicine: the medicine is written, then the record in its history. If the history record
+     * cannot be written, the medicine is put back as it was, so the two never disagree (README 4.4).
+     */
+    async changeMedication(arg: { plan: ChangePlan }): Promise<Values> {
+      const s = current();
+      const { medication, change } = arg.plan;
+      let id: string;
+      let undo: () => Promise<unknown>;
+      if ('create' in medication) {
+        const created = (await s.create('medication', medication.create as never)) as unknown as { id: string };
+        id = created.id;
+        undo = () => s.delete('medication', id);
+      } else {
+        id = medication.id;
+        const previous = s.get('medication', id) as unknown as Values | null;
+        await s.update('medication', id, medication.patch as never);
+        undo = async () => {
+          if (!previous) return;
+          const back: Values = {};
+          for (const key of Object.keys(medication.patch)) back[key] = previous[key];
+          await s.update('medication', id, back as never);
+        };
+      }
+      try {
+        const written = (await s.create('medicationChange', { ...change, medicationId: id } as never)) as Values;
+        await refreshIfNeeded('medication');
+        return { ...written, medicationId: id };
+      } catch (e) {
+        await undo().catch(() => undefined);
+        throw e;
+      }
+    },
+    /**
+     * Keeps a seizure's video, sealed, on this device, and notes its file name on the seizure. Replaces an earlier video.
+     * The video is not a record: it is not synced and not part of a backup (it can be large and is private to this phone).
+     */
+    async videoPut(arg: { seizureId: string; mime: string; bytes: Uint8Array; fileName: string }): Promise<void> {
+      const s = current();
+      if (!s.get('seizure', arg.seizureId)) throw new StoreError('There is no such seizure');
+      await s.putVideo(arg.seizureId, arg.mime, arg.bytes);
+      await s.update('seizure', arg.seizureId, { video: { fileName: arg.fileName.slice(0, 255) } } as never);
+    },
+    async videoGet(arg: { seizureId: string }): Promise<{ mime: string; bytes: Uint8Array } | null> {
+      return current().getVideo(arg.seizureId);
+    },
+    /** Removes the video from this device and the file name from the seizure. The seizure stays. */
+    async videoDelete(arg: { seizureId: string }): Promise<void> {
+      const s = current();
+      await s.deleteVideo(arg.seizureId);
+      if (s.get('seizure', arg.seizureId)) await s.update('seizure', arg.seizureId, { video: null } as never);
+    },
+    videoList(): Promise<{ seizureId: string; mime: string; size: number }[]> {
+      return current().videos();
+    },
+    /** The ids of the records of this type that were changed after they were first written (the audit marker). */
+    async editedIds(arg: { type: StoredType }): Promise<string[]> {
+      const log = await current().changesSince(null);
+      return [...new Set(log.filter((e) => e.recordType === arg.type && e.kind === 'update').map((e) => e.recordId))];
+    },
     incomplete(): { type: string; id: string }[] {
       return current().incomplete();
     },
@@ -165,17 +234,41 @@ export function createStoreApi(config: StoreApiConfig) {
       return { report, comparison: await compareImport(current(), legacy, report) };
     },
     /** The encrypted backup file as text, and the name to save it under. */
-    async backup(arg: { passphrase: string }): Promise<{ fileName: string; text: string }> {
-      const file = await createBackup(current(), arg.passphrase);
+    async backup(arg: { passphrase: string; patientId?: string }): Promise<{ fileName: string; text: string }> {
+      const file = await createBackup(current(), arg.passphrase, arg.patientId ? { patientId: arg.patientId } : {});
       return { fileName: suggestedBackupName(), text: JSON.stringify(file) };
+    },
+    /** Opens a backup file and says what is in it, without changing anything. Wrong passphrase and foreign files are errors. */
+    async checkBackup(arg: { text: string; passphrase: string }): Promise<{
+      counts: BackupCounts;
+      countsMatch: boolean;
+      invalid: number;
+      badChanges: number;
+      exportedAt: number;
+      patients: string[];
+    }> {
+      const { payload, check } = await readBackup(arg.text, arg.passphrase);
+      const people = payload.records
+        .filter((r) => r.type === 'patient' && r.deletedAt === null)
+        .map((r) => String(r.fields['name']?.value ?? ''));
+      return {
+        counts: check.actual,
+        countsMatch: check.countsMatch,
+        invalid: check.invalid.length,
+        badChanges: check.badChanges,
+        exportedAt: payload.exportedAt,
+        patients: people,
+      };
     },
     restore(arg: { text: string; passphrase: string }): Promise<RestoreReport> {
       return restoreBackup(current(), arg.text, arg.passphrase);
     },
     /** Makes the recovery kit (text and a QR code as SVG). Needs the current PIN or secret. */
-    async recoveryKit(arg: { credential: Credential }): Promise<{ kit: string; qrSvg: string }> {
+    async recoveryKit(arg: {
+      credential: Credential;
+    }): Promise<{ kit: string; qrSvg: string; qr: { size: number; dark: boolean[] } }> {
       const kit = await current().addRecoveryKit(arg.credential);
-      return { kit, qrSvg: await recoveryKitQr(kit) };
+      return { kit, qrSvg: await recoveryKitQr(kit), qr: recoveryKitMatrix(kit) };
     },
     /** Adds Face ID / fingerprint unlocking. The page does the WebAuthn part and sends the secret it got. */
     addPasskey(arg: { credential: Credential; secret: Uint8Array; handle: PasskeyRecord }): Promise<void> {
@@ -183,6 +276,19 @@ export function createStoreApi(config: StoreApiConfig) {
     },
     removePasskey(): Promise<void> {
       return current().removePasskey();
+    },
+    /**
+     * Erases this device's data and keys: the whole database goes in one step, so nothing is left half-deleted (F-805).
+     * Needs the PIN (or passkey secret) again, so a phone left open cannot be wiped by a stranger. A backup is the only way back.
+     */
+    async erase(arg: { credential: UnlockCredential }): Promise<void> {
+      (await Store.unlock(config.name, arg.credential, config.options)).close();
+      store?.close();
+      store = null;
+      recording = null;
+      locked?.reset();
+      locked = null;
+      await Dexie.delete(config.name);
     },
     changePin(arg: { current: UnlockCredential; newPin: string }): Promise<void> {
       return current().changePin(arg.current, arg.newPin);

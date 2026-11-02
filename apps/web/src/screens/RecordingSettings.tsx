@@ -1,8 +1,8 @@
-import { Button, Checkbox, Section, Select, Stack, TextField } from '@auratrack/ui';
+import { Button, Checkbox, Section, Stack, TextField } from '@auratrack/ui';
 import { useState } from 'react';
 import { useApp } from '../app/AppContext';
 
-const LANGUAGE_NAMES: Record<string, string> = {
+export const LANGUAGE_NAMES: Record<string, string> = {
   en: 'English',
   nb: 'Norsk bokmål',
   nn: 'Norsk nynorsk',
@@ -14,9 +14,9 @@ const LANGUAGE_NAMES: Record<string, string> = {
   es: 'Español',
 };
 
-/** The settings for recording (F-604), shown on Home until the settings screen arrives in a later milestone. */
+/** The settings for recording (F-604): who records, the symptom strip, the screen, vibration, sound, locked Start, quick notes. */
 export function RecordingSettings() {
-  const { t, settings, actions, recording, language } = useApp();
+  const { t, settings, actions, recording } = useApp();
   const set = actions.setSetting;
   const [notes, setNotes] = useState(settings.quickNoteLabels.join(', '));
   const parsed = notes
@@ -74,15 +74,6 @@ export function RecordingSettings() {
         >
           {t('common.save')}
         </Button>
-        <Select
-          label={t('settings.language')}
-          value={language}
-          onChange={(value) => {
-            const next = Object.keys(LANGUAGE_NAMES).find((l) => l === value);
-            if (next) void set('language', next as typeof settings.language);
-          }}
-          options={Object.entries(LANGUAGE_NAMES).map(([value, label]) => ({ value, label }))}
-        />
       </Stack>
     </Section>
   );

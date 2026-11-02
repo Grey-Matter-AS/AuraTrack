@@ -41,6 +41,16 @@
   --status-late-text: light-dark(#92400e, #fcd34d);
   --status-late-border: light-dark(#fcd34d, rgb(217 119 6 / 0.45));
 
+  /* Chart series: eight colours that stay apart for people with colour-blind vision (Okabe and Ito), the same in both themes */
+  --series-1: #3b8ed0;
+  --series-2: #e69f00;
+  --series-3: #00a37a;
+  --series-4: #cc79a7;
+  --series-5: #56b4e9;
+  --series-6: #d55e00;
+  --series-7: #c9bb2e;
+  --series-8: #9aa5b1;
+
   /* Actions */
   --on-action: #ffffff;
   --on-selected: #ffffff;

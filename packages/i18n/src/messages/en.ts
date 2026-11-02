@@ -1,7 +1,12 @@
 // The words the screens use, in English: the source for every other language. Keys are grouped by screen. A value may hold
 // {placeholders}; every language must use exactly the same ones (checked by the tests). Labels for catalogue codes
 // (symptoms, body areas, triggers, ...) are not here: they live in ../labels.
+import { m4en } from './m4/en';
+import { m5en } from './m5/en';
+
 export const en = {
+  ...m4en,
+  ...m5en,
   'common.save': 'Save',
   'common.review': 'Review',
   'common.done': 'Done',

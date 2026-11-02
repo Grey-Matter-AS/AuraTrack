@@ -283,3 +283,60 @@ describe('a backup that is not what it claims', () => {
     await expect(readBackup(notJson, 'a good passphrase')).rejects.toBeInstanceOf(BackupFormatError);
   });
 });
+
+describe('a backup of one person', () => {
+  async function twoPeople() {
+    const store = await Store.create(name(), { pin: '2468' }, FAST);
+    const alexId = newId();
+    const samId = newId();
+    for (const [id, who] of [
+      [alexId, 'Alex'],
+      [samId, 'Sam'],
+    ] as const)
+      await store.create('patient', {
+        id,
+        patientId: id,
+        name: who,
+        dateOfBirth: null,
+        emergencyContact: '',
+        color: '#336699',
+      } as never);
+    const one = await store.create('seizure', seizure({ patientId: alexId, notes: 'alex one' }));
+    await store.create('seizure', seizure({ patientId: alexId, notes: 'alex two' }));
+    await store.create('seizure', seizure({ patientId: samId, notes: 'sam one' }));
+    await store.create('setting', { patientId: newId(), scope: 'device', key: 'theme', value: 'light' } as never);
+    await store.delete('seizure', one.id);
+    return { store, alexId, samId };
+  }
+
+  it('holds that person, their records and what they deleted, and nobody else', async () => {
+    const { store, alexId } = await twoPeople();
+    const file = await createBackup(store, 'a long passphrase', { ...BK, patientId: alexId });
+    const { payload, check } = await readBackup(file, 'a long passphrase');
+    expect(check.countsMatch).toBe(true);
+    expect(payload.records.every((r) => r.fields['patientId']?.value === alexId)).toBe(true);
+    expect(payload.records.filter((r) => r.type === 'seizure')).toHaveLength(2); // one of them deleted: a tombstone
+    expect(payload.records.filter((r) => r.type === 'seizure' && r.deletedAt !== null)).toHaveLength(1);
+    expect(payload.records.filter((r) => r.type === 'patient')).toHaveLength(1);
+    expect(payload.records.some((r) => r.type === 'setting')).toBe(false);
+    expect(payload.changeLog.every((e) => e.patientId === alexId)).toBe(true);
+    expect(JSON.stringify(payload)).not.toContain('sam one');
+  });
+
+  it('restores into another phone as that person only, with the same records', async () => {
+    const { store, alexId } = await twoPeople();
+    const file = await createBackup(store, 'a long passphrase', { ...BK, patientId: alexId });
+    const fresh = await Store.create(name(), { pin: '1357' }, FAST);
+    const report = await restoreBackup(fresh, file, 'a long passphrase');
+    expect(report.ok).toBe(true);
+    expect(fresh.list('patient').map((p) => (p as { name: string }).name)).toEqual(['Alex']);
+    expect(fresh.list('seizure').map((s) => (s as { notes: string }).notes)).toEqual(['alex two']);
+  });
+
+  it('a backup of everyone still holds everyone', async () => {
+    const { store } = await twoPeople();
+    const { payload } = await readBackup(await createBackup(store, 'a long passphrase', BK), 'a long passphrase');
+    expect(payload.records.filter((r) => r.type === 'patient')).toHaveLength(2);
+    expect(payload.records.some((r) => r.type === 'setting')).toBe(true);
+  });
+});

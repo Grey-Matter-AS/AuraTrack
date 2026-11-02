@@ -3,3 +3,7 @@ export * from './doses';
 export * from './emergency';
 export * from './regimen';
 export * from './recording';
+export * from './history';
+export * from './medication';
+export * from './eeg';
+export * from './wellbeing';

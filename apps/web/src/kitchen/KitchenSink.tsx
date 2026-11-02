@@ -1,3 +1,4 @@
+import KitchenM4 from './KitchenM4';
 import { useState } from 'react';
 import {
   AppHeader,
@@ -243,6 +244,7 @@ function Fields() {
 }
 
 export default function KitchenSink() {
+  if (window.location.hash === '#/kitchen/m4') return <KitchenM4 />;
   return (
     <ToastProvider>
       <Screen>

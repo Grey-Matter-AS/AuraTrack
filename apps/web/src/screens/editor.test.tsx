@@ -403,6 +403,7 @@ describe('your own symptoms and saved sets', () => {
     // Home → the sets screen
     await user.click(screen.getByRole('button', { name: 'Back' }));
     await user.click(await screen.findByRole('button', { name: 'Leave' }));
+    await user.click(await screen.findByRole('button', { name: 'More' }));
     await user.click(await screen.findByRole('button', { name: 'Symptom sets and your own symptoms' }));
     expect(await screen.findByText('Usual start')).toBeTruthy();
     await user.click(screen.getByRole('button', { name: 'Rename' }));

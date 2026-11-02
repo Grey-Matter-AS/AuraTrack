@@ -1,5 +1,5 @@
 import type { MessageKey } from '@auratrack/i18n';
-import { Button, IconButton, Select } from '@auratrack/ui';
+import { Button, IconButton, PhaseStrip, Select } from '@auratrack/ui';
 import { areaText } from './BodyMap';
 import {
   GAPS,
@@ -152,32 +152,20 @@ const phaseColour = (phase: string): string =>
 export function OverviewStrip({ draft, now }: { draft: Draft; now?: number }) {
   const { t } = useApp();
   const end = draft.recoveryEnd ?? draft.seizureEnd ?? now ?? draft.start;
-  const total = Math.max(1, end - draft.start);
-  const auraMs = draft.auraEnd !== null ? Math.max(0, draft.auraEnd - draft.start) : 0;
-  const seizureMs = Math.max(0, (draft.seizureEnd ?? end) - (draft.auraEnd ?? draft.start));
-  const recoveryMs = draft.seizureEnd !== null ? Math.max(0, (draft.recoveryEnd ?? end) - draft.seizureEnd) : 0;
-  const pct = (ms: number) => `${Math.round((ms / total) * 100)}%`;
+  const aura = draft.auraEnd !== null ? Math.max(0, draft.auraEnd - draft.start) : 0;
+  const seizure = Math.max(0, (draft.seizureEnd ?? end) - (draft.auraEnd ?? draft.start));
+  const recovery = draft.seizureEnd !== null ? Math.max(0, (draft.recoveryEnd ?? end) - draft.seizureEnd) : 0;
   return (
-    <div>
-      <div className="ed-strip" role="img" aria-label={t('tl.overview')}>
-        <span className="ed-aura" style={{ width: pct(auraMs) }} />
-        <span className="ed-seizure" style={{ width: pct(seizureMs) }} />
-        <span className="ed-recovery" style={{ width: pct(recoveryMs) }} />
-      </div>
-      <ul className="ed-legend">
-        <li>
-          <span className="ed-dot ed-aura" />
-          {t('rec.aura')} {mmss(auraMs / 1000)}
-        </li>
-        <li>
-          <span className="ed-dot ed-seizure" />
-          {t('rec.seizure')} {mmss(seizureMs / 1000)}
-        </li>
-        <li>
-          <span className="ed-dot ed-recovery" />
-          {t('rec.recovery')} {mmss(recoveryMs / 1000)}
-        </li>
-      </ul>
-    </div>
+    <PhaseStrip
+      aura={aura}
+      seizure={seizure}
+      recovery={recovery}
+      label={t('tl.overview')}
+      legend={{
+        aura: `${t('rec.aura')} ${mmss(aura / 1000)}`,
+        seizure: `${t('rec.seizure')} ${mmss(seizure / 1000)}`,
+        recovery: `${t('rec.recovery')} ${mmss(recovery / 1000)}`,
+      }}
+    />
   );
 }

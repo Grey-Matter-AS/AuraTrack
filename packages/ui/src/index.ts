@@ -41,8 +41,18 @@ export {
   type TextAreaProps,
   type TextFieldProps,
 } from './Fields';
+export { FilePicker, type FilePickerProps } from './FilePicker';
 export { AppHeader, type AppHeaderProps } from './Header';
 export { Cluster, ScrollArea, Screen, Stack } from './Layout';
+export { NavBar, type NavBarItem, type NavBarProps } from './NavBar';
+export {
+  PhaseStrip,
+  PhaseTimeline,
+  type PhaseStripProps,
+  type TimelineEntry,
+  type TimelinePhase,
+} from './PhaseTimeline';
+export { EventChart, TrendChart, type ChartEvent, type EventKind, type TrendBar, type TrendMarker } from './Charts';
 export { createScreenStack, type Navigator, type ScreenMap } from './Navigator';
 export { BottomSheet, Dialog, ToastProvider, useToast, type ToastTone } from './Overlays';
 export { prefersReducedMotion, useReducedMotion } from './motion';

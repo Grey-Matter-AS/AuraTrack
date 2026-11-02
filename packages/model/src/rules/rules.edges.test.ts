@@ -163,9 +163,9 @@ describe('missed and assumed doses: the edges', () => {
     logs: [] as { medicationId: string; scheduledTime: string | null; takenAt: number }[],
   };
 
-  it('a dose is due exactly at its time, and "assume taken" waits exactly 90 minutes', () => {
-    expect(planMissedDoses({ ...base, now: at(2, 8), assume: false })).toHaveLength(1);
-    expect(planMissedDoses({ ...base, now: at(2, 8) - 1, assume: false })).toHaveLength(0);
+  it('a dose is missed, or assumed, exactly 90 minutes after its time and not a moment before', () => {
+    expect(planMissedDoses({ ...base, now: at(2, 9, 30), assume: false })).toHaveLength(1);
+    expect(planMissedDoses({ ...base, now: at(2, 9, 30) - 1, assume: false })).toHaveLength(0);
     expect(planMissedDoses({ ...base, now: at(2, 9, 30), assume: true, assumeSince: '2026-03-03' })).toHaveLength(1);
     expect(planMissedDoses({ ...base, now: at(2, 9, 30) - 1, assume: true, assumeSince: '2026-03-03' })).toHaveLength(
       0,

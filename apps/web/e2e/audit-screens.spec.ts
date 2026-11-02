@@ -149,10 +149,13 @@ for (const device of MATRIX) {
     await page.getByRole('dialog', { name: 'Between seizures' }).waitFor();
     await everyLook('between seizures', '.ui-overlay', true);
     await page.keyboard.press('Escape');
+    const main = page.getByRole('navigation', { name: 'Main menu' });
+    await main.getByRole('button', { name: 'More', exact: true }).click();
     await page.getByRole('button', { name: 'Symptom sets and your own symptoms' }).click();
     await page.getByRole('heading', { name: 'Symptom sets and your own symptoms' }).waitFor();
     await everyLook('saved sets');
     await page.getByRole('button', { name: 'Back', exact: true }).click();
+    await main.getByRole('button', { name: 'Home', exact: true }).click();
 
     await page.getByRole('button', { name: 'Lock', exact: true }).click();
     await page.getByText('AuraTrack is locked').waitFor();

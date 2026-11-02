@@ -49,4 +49,10 @@ describe('AppHeader', () => {
     expect(onBack).toHaveBeenCalledTimes(1);
     expect(screen.getByRole('button', { name: 'Help' }).parentElement?.className).toBe('ui-header__actions');
   });
+
+  it('paints the dot in the patient colour when there is one', () => {
+    render(<AppHeader title="T" patient={{ name: 'Ola', color: '#1d4ed8' }} />);
+    const dot = document.querySelector<HTMLElement>('.ui-patient__dot');
+    expect(dot?.style.background).toBe('rgb(29, 78, 216)');
+  });
 });

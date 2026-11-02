@@ -3,7 +3,8 @@
 **Read this first in every session.** Then read the current milestone's file (`M<n>.md`) and continue with "Next step".
 
 - **Current milestone:** M3, Recording and the new logging (branch `7.0.3---M3`, approved 2026-11-01). **All ten slices are built (2026-11-02); M3 waits for your phone check and your test seizures.** M0, M1 and M2 are closed.
-- **Last updated:** 2026-11-01
+- **M4 and M5 are built (2026-11-02, branch `7.0.4---M4`, nothing committed);** they wait for your checks, see "Next step" and `M4-signoff.md`, `M5-signoff.md`.
+- **Last updated:** 2026-11-02
 
 ## M3 slices
 | # | Slice | State |
@@ -123,6 +124,10 @@
 - Real medical data (reports, backups, exports) is never committed. Reference material is generated from made-up test data.
 
 ## Next step
+- **M4 and M5 built in one run (2026-11-02), approved plan `M4-M5-plan.md`.** All slices are in: shell, people, settings, History (list, chart, timeline), medicines and dose panel, EEG diary, video, install/backup/what's new cards, wellbeing, reports (R-1 to R-5, preview, save, share), backup, restore, import and recovery kit, and 12 report additions. 735 new messages in 9 languages (drafted by Claude). 950 unit and component tests pass; e2e on Chromium and Firefox pass; lint and typecheck clean. Sign-off notes: `M4-signoff.md`, `M5-signoff.md`.
+- **Your next steps:** (1) turn on the report additions one by one in Reports, look at the preview, tell me which to keep (dropped ones are removed from the code); (2) compare the report with 6.1 on your real data on your computer; (3) rehearse backup, restore and the 6.1 import; (4) phone checks: camera and video on the iPhone, install card, reminders; (5) use v7 next to 6.1 for a few days; (6) bump the version (still 7.0.2) and commit.
+- **Decision to confirm:** missed and assumed doses now show only after the 90-minute grace (they used to show straight away).
+- **Open:** layout audit does not yet cover the Reports, Report preview and Backup screens; native check of the translations; closed-app reminders need the server (M6/M7).
 - **Next (after M3):** your phone check of M3 and your test seizures on your devices; then you close M3, bump the version to 7.0.3 (the app still says 7.0.2) and commit. M4 comes next (History, medication, dose panel, the wellbeing option, install banner). The earlier note for slice 6 follows.
 - **Slice 6 check (still open):** your phone check of slice 6 (`/#/app`: set up, Start, the buttons, Lock then Start without the PIN, Log past seizure, a language change). Then slice 7, the seizure editor (it also takes the question "when did the seizure end?" for a recording the timer stopped at 12 minutes, and "Add details" for recordings made while locked). Home's "Save and close" becomes "Add details" then.
 - **Phone check for slice 5 (still open):** `/#/dev`: create the store, "Add a test patient", Lock, "Start (without the PIN)", tap the buttons, unlock. Check that the screen stays on (wake lock), and what the alert does at 5 minutes.

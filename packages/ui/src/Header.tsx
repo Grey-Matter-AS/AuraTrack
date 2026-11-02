@@ -6,7 +6,7 @@ import { useUiStrings } from './strings';
 export interface AppHeaderProps {
   title: string;
   /** The person being tracked. Shown as a chip; with `onPatientClick` it is a button that switches person. */
-  patient?: { name: string };
+  patient?: { name: string; /** A colour that tells people apart (white letters must read on it). */ color?: string };
   onPatientClick?: () => void;
   /** Shows a back button. */
   onBack?: () => void;
@@ -20,7 +20,11 @@ export function AppHeader({ title, patient, onPatientClick, onBack, actions }: A
   const strings = useUiStrings();
   const chip = patient ? (
     <>
-      <span className="ui-patient__dot" aria-hidden="true">
+      <span
+        className="ui-patient__dot"
+        aria-hidden="true"
+        {...(patient.color ? { style: { background: patient.color } } : {})}
+      >
         {initial(patient.name)}
       </span>
       <span className="ui-patient__name">{patient.name}</span>

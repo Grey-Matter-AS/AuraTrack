@@ -47,7 +47,9 @@ import {
   importDeviceKey,
   kdfIsCurrent,
   open,
+  openBytes,
   seal,
+  sealBytes,
   unlockWithPin,
   unlockWithSecret,
   WrongSecretError,
@@ -369,6 +371,28 @@ export class Store {
 
   close(): void {
     this.db.close();
+  }
+
+  // ── Seizure videos: sealed bytes that stay on this device (not records, so they never sync and are not in a backup)
+
+  /** Seals a video and keeps it for the seizure, replacing an earlier one. */
+  async putVideo(seizureId: string, mime: string, bytes: Uint8Array): Promise<void> {
+    const sealed = await sealBytes(this.key, bytes, `video:${seizureId}`);
+    await this.db.videos.put({ seizureId, ...sealed, mime, size: bytes.byteLength, savedAt: this.now() });
+  }
+
+  async getVideo(seizureId: string): Promise<{ mime: string; bytes: Uint8Array } | null> {
+    const row = await this.db.videos.get(seizureId);
+    return row ? { mime: row.mime, bytes: await openBytes(this.key, row, `video:${seizureId}`) } : null;
+  }
+
+  async deleteVideo(seizureId: string): Promise<void> {
+    await this.db.videos.delete(seizureId);
+  }
+
+  /** The seizures that have a video on this device, with its size and type. */
+  async videos(): Promise<{ seizureId: string; mime: string; size: number }[]> {
+    return (await this.db.videos.toArray()).map((r) => ({ seizureId: r.seizureId, mime: r.mime, size: r.size }));
   }
 
   private bucket(type: StoredType): Map<string, VersionedRecord> {

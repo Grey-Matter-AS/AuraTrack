@@ -4,6 +4,12 @@
   "version": "0.0.0",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./pdf": "./src/pdfEntry.ts"
+  },
+  "dependencies": {
+    "@auratrack/i18n": "workspace:*",
+    "@auratrack/model": "workspace:*",
+    "jspdf": "^4.2.1"
   }
 }

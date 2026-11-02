@@ -113,6 +113,17 @@ export interface DoseDraft {
   unitSnapshot: string;
 }
 
+/**
+ * The calendar day of the slot a dose log belongs to. A dose taken just after midnight for a late-evening slot belongs to the
+ * evening before, so it must not leave that slot looking "missed". The slot nearest to when it was taken wins.
+ */
+export function slotDayKey(scheduledTime: string, takenAt: number): string {
+  const same = startOfLocalDay(takenAt);
+  const before = startOfLocalDay(new Date(same - 1));
+  const distance = (day: number) => Math.abs(takenAt - scheduledTimestampForDay(scheduledTime, day));
+  return localDateKey(distance(before) < distance(same) ? before : same);
+}
+
 const sinceStart = (value: string | number | null | undefined, fallback: number): number => {
   if (value === null || value === undefined || value === '') return fallback;
   const date = typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) ? parseLocalDate(value) : new Date(value);
@@ -121,8 +132,8 @@ const sinceStart = (value: string | number | null | undefined, fallback: number)
 
 /**
  * The dose logs to add for scheduled doses that passed without a log (a pure plan; the store writes it, once).
- * Default: today only, as 'missed'. With "assume taken" on: 'assumed' once 90 minutes have passed, and back-filled for
- * days the app was not opened (from when the setting was turned on, at most 31 days).
+ * Default: today only, as 'missed', once 90 minutes have passed. With "assume taken" on: 'assumed' instead, and back-filled
+ * for days the app was not opened (from when the setting was turned on, at most 31 days).
  */
 export function planMissedDoses(plan: MissedDosePlan): DoseDraft[] {
   const todayStart = startOfLocalDay(plan.now);
@@ -131,11 +142,13 @@ export function planMissedDoses(plan: MissedDosePlan): DoseDraft[] {
     const backfillLimit = startOfLocalDay(new Date(todayStart - ASSUME_BACKFILL_DAYS * 86_400_000));
     firstDay = Math.min(todayStart, Math.max(sinceStart(plan.assumeSince, todayStart), backfillLimit));
   }
-  const cutoff = plan.assume ? plan.now - GRACE_MS : plan.now;
+  // A dose is only "missed" (or "assumed") once the 90 minutes in which it still counts as taken are over, so a reminder
+  // and a late tap are never met by a log that says missed
+  const cutoff = plan.now - GRACE_MS;
   const logged = new Set(
     plan.logs
       .filter((l) => l.scheduledTime !== null)
-      .map((l) => `${l.medicationId}|${l.scheduledTime}|${localDateKey(l.takenAt)}`),
+      .map((l) => `${l.medicationId}|${l.scheduledTime}|${slotDayKey(l.scheduledTime as string, l.takenAt)}`),
   );
   const drafts: DoseDraft[] = [];
   for (let day = firstDay; day <= todayStart; day = nextLocalDay(day)) {

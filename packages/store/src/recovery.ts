@@ -45,3 +45,9 @@ export async function parseRecoveryKit(text: string): Promise<{ householdId: str
 /** The kit as an SVG QR code, for printing. */
 export const recoveryKitQr = (kit: string): Promise<string> =>
   QRCode.toString(kit, { type: 'svg', errorCorrectionLevel: 'M', margin: 2 });
+
+/** The same QR code as a grid of dark and light squares (row by row), so a PDF can draw it as vector shapes. */
+export function recoveryKitMatrix(kit: string): { size: number; dark: boolean[] } {
+  const code = QRCode.create(kit, { errorCorrectionLevel: 'M' });
+  return { size: code.modules.size, dark: Array.from(code.modules.data, (v) => v === 1) };
+}

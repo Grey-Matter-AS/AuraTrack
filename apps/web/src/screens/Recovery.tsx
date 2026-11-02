@@ -2,7 +2,6 @@ import { lastActivityAt, localDateKey, type RecordingSession } from '@auratrack/
 import { BottomSheet, Button, DateTimeField, Dialog, Stack } from '@auratrack/ui';
 import { useState } from 'react';
 import { useApp } from '../app/AppContext';
-import { timeText } from './format';
 
 // A recording the app lost (F-212): it was closed or crashed while recording. "Still happening" carries on with the same
 // clock; "It ended" asks when, offering the last tap, and saves that time as entered later (decision 2). One that ran past
@@ -15,7 +14,7 @@ const localInput = (at: number): string => {
 };
 
 export function Recovery() {
-  const { recovery, t, language, busy } = useApp();
+  const { recovery, t, fmt, busy } = useApp();
   const [stoppedSeen, setStoppedSeen] = useState(false);
   const open = recovery.running[0];
   if (open) return <Question key={open.seizureId} session={open} />;
@@ -33,14 +32,14 @@ export function Recovery() {
         }
       >
         <p>{t('home.badgeStopped')}</p>
-        <p className="app-note">{recovery.autoStopped.map((s) => timeText(language, s.start)).join(', ')}</p>
+        <p className="app-note">{recovery.autoStopped.map((s) => fmt.time(s.start)).join(', ')}</p>
       </Dialog>
     );
   return null;
 }
 
 function Question({ session }: { session: RecordingSession }) {
-  const { t, language, actions, busy } = useApp();
+  const { t, fmt, actions, busy } = useApp();
   const [asking, setAsking] = useState(false);
   const [when, setWhen] = useState(() => localInput(lastActivityAt(session)));
   const at = new Date(when).getTime();
@@ -51,7 +50,7 @@ function Question({ session }: { session: RecordingSession }) {
       <Dialog
         title={t('recover.title')}
         dismissible={false}
-        message={t('recover.message', { time: timeText(language, session.start) })}
+        message={t('recover.message', { time: fmt.time(session.start) })}
         actions={
           <>
             <Button

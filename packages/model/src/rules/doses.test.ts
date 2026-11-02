@@ -131,6 +131,11 @@ describe('missed and assumed doses', () => {
     ]);
   });
 
+  it('does not call a dose missed until the 90 minutes in which it still counts as taken are over', () => {
+    expect(planMissedDoses({ ...base, now: at(2, 9, 29), assume: false })).toEqual([]);
+    expect(planMissedDoses({ ...base, now: at(2, 9, 31), assume: false })).toHaveLength(1);
+  });
+
   it('adds nothing for a dose already logged, and never twice', () => {
     const logs = [{ medicationId: med.id, scheduledTime: '08:00', takenAt: at(2, 8, 20) }];
     expect(planMissedDoses({ ...base, logs, now: at(2, 12), assume: false })).toEqual([]);

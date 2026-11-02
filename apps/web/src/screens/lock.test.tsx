@@ -9,6 +9,7 @@ import type { AppApi } from '../app/AppContext';
 import { updates } from '../app/updates';
 import { fakeEnv, T0 } from '../recording/fakeEnv';
 import AppRoot from './AppRoot';
+import { backToHome, openSettings } from './testSupport';
 
 // Locking by itself, unlocking with a passkey, the update card, and the quick-note buttons. Real store, a clock the test moves.
 
@@ -191,10 +192,13 @@ describe('Face ID or fingerprint', () => {
     await seed(ctx);
     const user = userEvent.setup();
     render(<AppRoot client={ctx.client} env={ctx.f.env} passkeyEnv={fakePasskeys()} />);
+    await screen.findByRole('button', { name: 'Start timer' });
+    await openSettings(user, 'Lock');
     await user.type(await screen.findByLabelText('Your PIN (to set it up)'), PIN);
     await user.click(screen.getByRole('button', { name: 'Set up Face ID or fingerprint' }));
     expect(await screen.findByText('Face ID or fingerprint is set up')).toBeTruthy();
     expect((await ctx.client.status()).passkey).not.toBeNull();
+    await backToHome(user);
     await user.click(screen.getByRole('button', { name: 'Lock' }));
     await user.click(await screen.findByRole('button', { name: 'Unlock with Face ID or fingerprint' }));
     await screen.findByRole('button', { name: 'Start timer' });
@@ -205,6 +209,8 @@ describe('Face ID or fingerprint', () => {
     await seed(ctx);
     const user = userEvent.setup();
     render(<AppRoot client={ctx.client} env={ctx.f.env} passkeyEnv={fakePasskeys()} />);
+    await screen.findByRole('button', { name: 'Start timer' });
+    await openSettings(user, 'Lock');
     await user.type(await screen.findByLabelText('Your PIN (to set it up)'), '1111');
     await user.click(screen.getByRole('button', { name: 'Set up Face ID or fingerprint' }));
     expect(await screen.findByText('That PIN is not right. Try again.')).toBeTruthy();
@@ -216,9 +222,12 @@ describe('Face ID or fingerprint', () => {
     await seed(ctx);
     const user = userEvent.setup();
     const { unmount } = render(<AppRoot client={ctx.client} env={ctx.f.env} passkeyEnv={fakePasskeys()} />);
+    await screen.findByRole('button', { name: 'Start timer' });
+    await openSettings(user, 'Lock');
     await user.type(await screen.findByLabelText('Your PIN (to set it up)'), PIN);
     await user.click(screen.getByRole('button', { name: 'Set up Face ID or fingerprint' }));
     await screen.findByText('Face ID or fingerprint is set up');
+    await backToHome(user);
     await user.click(screen.getByRole('button', { name: 'Lock' }));
     unmount();
     render(<AppRoot client={ctx.client} env={ctx.f.env} passkeyEnv={fakePasskeys({ refuse: true })} />);
@@ -232,7 +241,10 @@ describe('Face ID or fingerprint', () => {
   it('says so when the browser has no passkeys, and offers no button', async () => {
     const ctx = setup();
     await seed(ctx);
+    const user = userEvent.setup();
     render(<AppRoot client={ctx.client} env={ctx.f.env} passkeyEnv={null} />);
+    await screen.findByRole('button', { name: 'Start timer' });
+    await openSettings(user, 'Lock');
     expect(await screen.findByText(/cannot unlock with Face ID or fingerprint/)).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Set up Face ID or fingerprint' })).toBeNull();
   });
@@ -242,6 +254,8 @@ describe('Face ID or fingerprint', () => {
     await seed(ctx);
     const user = userEvent.setup();
     render(<AppRoot client={ctx.client} env={ctx.f.env} passkeyEnv={fakePasskeys()} />);
+    await screen.findByRole('button', { name: 'Start timer' });
+    await openSettings(user, 'Lock');
     await user.type(await screen.findByLabelText('Your PIN (to set it up)'), PIN);
     await user.click(screen.getByRole('button', { name: 'Set up Face ID or fingerprint' }));
     await screen.findByText('Face ID or fingerprint is set up');
@@ -292,6 +306,8 @@ describe('quick-note buttons', () => {
     await seed(ctx);
     const user = userEvent.setup();
     render(<AppRoot client={ctx.client} env={ctx.f.env} passkeyEnv={null} />);
+    await screen.findByRole('button', { name: 'Start timer' });
+    await openSettings(user, 'Recording and emergency plan');
     const field = await screen.findByLabelText('Quick note buttons');
     await user.type(field, 'Fell, Cried out, Very long label that is cut at twenty-four letters');
     const save = screen.getAllByRole('button', { name: 'Save' }).at(-1)! as HTMLButtonElement;
@@ -303,6 +319,7 @@ describe('quick-note buttons', () => {
       ).find((s) => s.key === 'quickNoteLabels');
       expect(labels?.value).toEqual(['Fell', 'Cried out', 'Very long label that is']);
     });
+    await backToHome(user);
     await user.click(screen.getByRole('button', { name: 'Start timer' }));
     await screen.findByRole('timer');
     const names = screen.getAllByRole('button').map((b) => b.textContent);

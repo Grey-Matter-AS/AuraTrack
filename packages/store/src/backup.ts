@@ -100,14 +100,24 @@ export function countRecords(records: readonly VersionedRecord[], changeLog: num
   return { records: counts, tombstones, changeLog };
 }
 
-/** Makes the encrypted backup file (as an object; `JSON.stringify` it to save). */
+/**
+ * Makes the encrypted backup file (as an object; `JSON.stringify` it to save). With a `patientId` the file holds that person only:
+ * restoring it adds them to another phone or household without touching anyone else.
+ */
 export async function createBackup(
   store: Store,
   passphrase: string,
-  options: { now?: () => number; iterations?: number } = {},
+  options: { now?: () => number; iterations?: number; patientId?: string } = {},
 ): Promise<EncryptedBackupFile> {
   if (passphrase.normalize('NFKC').length < MIN_BACKUP_PASSPHRASE_LENGTH) throw new PassphraseTooShortError();
-  const { records, changeLog } = await store.snapshot();
+  const everything = await store.snapshot();
+  // One person: their records (the person included, and what was deleted, as tombstones) and the change log lines for them
+  const { records, changeLog } = options.patientId
+    ? {
+        records: everything.records.filter((r) => r.fields['patientId']?.value === options.patientId),
+        changeLog: everything.changeLog.filter((e) => e.patientId === options.patientId),
+      }
+    : everything;
   const now = options.now?.() ?? Date.now();
   const payload: BackupPayload = {
     schema: BACKUP_SCHEMA,

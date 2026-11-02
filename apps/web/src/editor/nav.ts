@@ -1,6 +1,28 @@
 // The screens open each other through the stack that stack.ts builds; they find it here so the files do not import each
 // other in a circle.
-export type ScreenName = 'home' | 'editor' | 'review' | 'sets';
+export type ScreenName =
+  | 'home'
+  | 'history'
+  | 'meds'
+  | 'more'
+  | 'editor'
+  | 'review'
+  | 'sets'
+  | 'patients'
+  | 'settings'
+  | 'settingsGroup'
+  | 'help'
+  | 'about'
+  | 'detail'
+  | 'medEdit'
+  | 'medDetail'
+  | 'doseGrid'
+  | 'eeg'
+  | 'eegSession'
+  | 'wellbeing'
+  | 'backup'
+  | 'reports'
+  | 'reportPreview';
 
 export interface Nav {
   push: (name: ScreenName, props?: object) => void;

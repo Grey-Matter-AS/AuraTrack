@@ -5,10 +5,10 @@ const placeholders = (text: string): string[] => [...text.matchAll(/\{(\w+)\}/g)
 const others = LANGUAGES.filter((l): l is Exclude<Language, 'en'> => l !== 'en');
 
 describe('screen messages', () => {
-  it('has 301 messages, each with a key that says which screen it belongs to', () => {
-    expect(MESSAGE_KEYS).toHaveLength(301);
+  it('has 1,035 messages, each with a key that says which screen it belongs to', () => {
+    expect(MESSAGE_KEYS).toHaveLength(1035);
     expect(new Set(MESSAGE_KEYS).size).toBe(MESSAGE_KEYS.length);
-    for (const key of MESSAGE_KEYS) expect(key, key).toMatch(/^[a-z]+\.[A-Za-z0-9]+$/);
+    for (const key of MESSAGE_KEYS) expect(key, key).toMatch(/^[a-z]+(\.[A-Za-z0-9_]+)+$/);
   });
 
   it.each(others)('%s: every message is written, trimmed and not empty', (language) => {
@@ -29,7 +29,7 @@ describe('screen messages', () => {
 
   it.each(others)('%s: nearly every message differs from English (a few short words are the same)', (language) => {
     const same = MESSAGE_KEYS.filter((key) => messageTemplate(language, key) === messageTemplate('en', key));
-    expect(same.length).toBeLessThan(18);
+    expect(same.length).toBeLessThan(MESSAGE_KEYS.length * 0.04);
   });
 
   it('fills in placeholders, leaves an unknown one as written, and works with numbers', () => {

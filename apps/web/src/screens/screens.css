@@ -57,3 +57,60 @@
   color: var(--text-dim);
   overflow-wrap: anywhere;
 }
+.app-dot {
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 999px;
+  border: 2px solid var(--border);
+}
+.app-help {
+  margin: 0;
+  font-size: var(--fs-body);
+  line-height: 1.5;
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+.app-preview {
+  display: block;
+  width: 100%;
+  max-width: 16rem;
+  max-height: 9rem;
+  margin-inline: auto;
+  border-radius: 0.75rem;
+  background: #000;
+  object-fit: cover;
+}
+.app-video {
+  display: block;
+  width: 100%;
+  max-height: 22rem;
+  border-radius: 0.75rem;
+  background: #000;
+}
+.app-pages {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+.app-page {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--border);
+  border-radius: 0.25rem;
+  background: #fff;
+}
+.app-qr {
+  display: block;
+  width: min(100%, 14rem);
+  height: auto;
+  margin-inline: auto;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+}
+.app-code {
+  font-family: var(--font-mono);
+  word-break: break-all;
+}

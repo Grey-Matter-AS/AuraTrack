@@ -5,6 +5,7 @@ import { useApp } from '../app/AppContext';
 import { useEditorHost } from '../editor/EditorContext';
 import { usualSymptoms } from '../app/settings';
 import { clock } from './format';
+import { VideoPreview } from './VideoPreview';
 import './screens.css';
 
 // The recording screen (F-201 to F-215). The settled rules: the emergency plan counted from Start, a warning a minute before
@@ -169,6 +170,7 @@ export function Recording() {
             </div>
           </Section>
         ) : null}
+        <VideoPreview />
         {session.quickNotes.length > 0 ? (
           <ul className="app-list" aria-label={t('rec.notesSoFar')}>
             {session.quickNotes.map((n) => (
