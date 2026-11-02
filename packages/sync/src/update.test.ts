@@ -69,3 +69,45 @@ describe('QR frames', () => {
     expect(c.add('AU1/2/4/b')).toBeNull();
   });
 });
+
+describe('an update that is wrong in other ways', () => {
+  const file = (head: unknown) => `AURA-UPDATE-1\n${JSON.stringify(head)}`;
+
+  it('is damaged when its header is missing a part or has parts of the wrong type', async () => {
+    const a = TestNode.first('h', 'A', []);
+    for (const head of [
+      { hid: 'h', at: 1, parts: {} },
+      { hid: 'h', from: 'A', parts: {} },
+      { hid: 'h', from: 'A', at: 1 },
+      { hid: 'h', from: 'A', at: 1, parts: null },
+    ])
+      await expect(openUpdate(file(head), a.state)).rejects.toMatchObject({ reason: 'damaged' });
+  });
+
+  it('skips a part that is not text or is for a patient this device has no key for, and damaged or forged parts', async () => {
+    const a = TestNode.first('h', 'A', ['p1']);
+    const opened = await openUpdate(
+      file({ hid: 'h', from: 'B', at: 1, parts: { household: 5, nobody: 'x.y.z', p1: 'not sealed' } }),
+      a.state,
+    );
+    expect(opened.scopes).toEqual([]);
+    expect(opened.skipped.sort()).toEqual(['household', 'nobody', 'p1']);
+  });
+
+  it('is damaged when what a part holds is not a list of entries', async () => {
+    const a = TestNode.first('h', 'A', []);
+    const { sealJson, newestKey } = await import('./seal');
+    const key = newestKey(a.state.keyring.household);
+    if (!key) throw new Error('no key');
+    const parts = { household: await sealJson(key, { not: 'a list' }, 'update:household') };
+    await expect(openUpdate(file({ hid: 'h', from: 'B', at: 1, parts }), a.state)).rejects.toMatchObject({
+      reason: 'damaged',
+    });
+  });
+
+  it('is left out of a built file when this device has no key for a scope', async () => {
+    const a = TestNode.first('h', 'A', []);
+    const text = await buildUpdate(a.state, 'A', [{ scope: 'nobody', entries: [] }], 1);
+    expect(JSON.parse(text.split('\n')[1] as string).parts).toEqual({});
+  });
+});
