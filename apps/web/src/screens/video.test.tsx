@@ -75,7 +75,7 @@ describe('the video of a seizure', () => {
     expect(section).toBeTruthy();
     await waitFor(() => expect(document.querySelector('video.app-video')).not.toBeNull());
     expect(await screen.findByText('2.0 MB')).toBeTruthy();
-    expect(screen.getByText(/encrypted on this phone only/)).toBeTruthy();
+    expect(screen.getByText(/encrypted on this device only/)).toBeTruthy();
     expect(URL.createObjectURL).toHaveBeenCalled();
   });
 
@@ -92,7 +92,7 @@ describe('the video of a seizure', () => {
     await openPlace(user, 'History');
     await user.click(await screen.findByRole('button', { name: 'Open' }));
     expect(await screen.findByText('from-the-other-phone.webm')).toBeTruthy();
-    expect(await screen.findByText(/stays on the phone that filmed it/)).toBeTruthy();
+    expect(await screen.findByText(/stays on the device that filmed it/)).toBeTruthy();
     expect(document.querySelector('video')).toBeNull();
   });
 

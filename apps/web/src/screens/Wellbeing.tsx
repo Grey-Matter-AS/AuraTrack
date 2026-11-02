@@ -48,7 +48,7 @@ export function useFactorName() {
 /** Wellbeing (F-406, F-551 to F-554): the check-ins, how they line up with seizures, and the factors asked. */
 export function Wellbeing() {
   const app = useApp();
-  const { t, settings, patient } = app;
+  const { t, settings } = app;
   const nav = useNav();
   const [view, setView] = useState<View>('entries');
   const [sheet, setSheet] = useState<WellbeingEntry | 'new' | null>(null);
@@ -64,11 +64,7 @@ export function Wellbeing() {
   return (
     <Screen>
       <Stack>
-        <AppHeader
-          title={t('more.wellbeing')}
-          onBack={() => nav.pop()}
-          {...(patient ? { patient: { name: patient.name, color: patient.color } } : {})}
-        />
+        <AppHeader title={t('more.wellbeing')} onBack={() => nav.pop()} />
         <Button variant="primary" fullWidth onClick={() => setSheet('new')}>
           {t('wb.checkIn')}
         </Button>

@@ -31,7 +31,7 @@ import {
   type PhaseName,
   type TabId,
 } from './draft';
-import { useEditor } from './EditorContext';
+import { useEditor, useEditorHost } from './EditorContext';
 import { goHome, useNav } from './nav';
 import { SymptomPicker } from './SymptomPicker';
 import { OverviewStrip, Timeline, type TimelineActions } from './Timeline';
@@ -49,6 +49,9 @@ export function Editor() {
   const toast = useToast();
   const app = useApp();
   const { draft, setDraft, label, t, dirty, patch, original } = useEditor();
+  // Whichever way the editor is left, what it held is let go, so a later lock cannot save it
+  const { discard } = useEditorHost();
+  useEffect(() => discard, [discard]);
   const [tab, setTab] = useState<TabId>('classification');
   const [areaFor, setAreaFor] = useState<string | null>(null);
   const [leaving, setLeaving] = useState(false);

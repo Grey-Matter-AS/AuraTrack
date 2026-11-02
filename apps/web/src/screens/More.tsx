@@ -5,15 +5,12 @@ import { MainNav } from './MainNav';
 
 /** Everything that is not one of the three daily places: people, settings, the optional modules, backup, help. */
 export function More() {
-  const { t, patient, settings } = useApp();
+  const { t, settings } = useApp();
   const nav = useNav();
   return (
     <Screen>
       <Stack>
-        <AppHeader
-          title={t('more.title')}
-          {...(patient ? { patient: { name: patient.name, color: patient.color } } : {})}
-        />
+        <AppHeader title={t('more.title')} />
         <MainNav current="more" />
         <Button fullWidth onClick={() => nav.push('patients')}>
           {t('more.patients')}

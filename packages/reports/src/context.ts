@@ -14,6 +14,8 @@ export interface ReportContext {
   fmt: {
     /** "05 Oct 2026" */
     date(at: number): string;
+    /** "05/10", or "10-05" for month-first orders: a chart's axis */
+    dayMonth(at: number): string;
     /** "5 October 2026" */
     longDate(at: number): string;
     /** "14:05" */

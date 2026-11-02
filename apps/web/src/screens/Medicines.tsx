@@ -10,7 +10,7 @@ import './screens.css';
 
 /** Medicines (F-501 to F-509): today's doses, the medicines being taken, and those that were stopped. */
 export function Medicines() {
-  const { t, patient, medications } = useApp();
+  const { t, medications } = useApp();
   const nav = useNav();
   const [extra, setExtra] = useState(false);
   const active = medications.filter((m) => m.active);
@@ -18,10 +18,7 @@ export function Medicines() {
   return (
     <Screen>
       <Stack>
-        <AppHeader
-          title={t('nav.meds')}
-          {...(patient ? { patient: { name: patient.name, color: patient.color } } : {})}
-        />
+        <AppHeader title={t('nav.meds')} />
         <MainNav current="meds" />
         <DosePanel />
         <div className="ui-cluster">

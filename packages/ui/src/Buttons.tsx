@@ -39,16 +39,18 @@ export function Button({
 export interface IconButtonProps extends NativeButton {
   /** The accessible name: required, because the button has no text. */
   label: string;
-  tone?: 'neutral' | 'accent' | 'success' | 'danger';
+  tone?: 'neutral' | 'accent' | 'success' | 'danger' | 'blue';
+  /** A circle, to sit beside the patient chip. */
+  round?: boolean;
 }
 
-export function IconButton({ label, tone = 'neutral', type = 'button', children, ...rest }: IconButtonProps) {
+export function IconButton({ label, tone = 'neutral', round, type = 'button', children, ...rest }: IconButtonProps) {
   return (
     <button
       type={type}
       aria-label={label}
       title={label}
-      className={cx('ui-icon-btn', tone !== 'neutral' && `ui-icon-btn--${tone}`)}
+      className={cx('ui-icon-btn', tone !== 'neutral' && `ui-icon-btn--${tone}`, round && 'ui-icon-btn--round')}
       {...rest}
     >
       {children}

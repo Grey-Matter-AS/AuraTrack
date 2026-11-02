@@ -4,6 +4,7 @@ import {
   adherence,
   buildDangerMap,
   clusterWindowLabel,
+  emergencyContactLine,
   frequencyBuckets,
   getScheduledDosesForDay,
   isLongSeizure,
@@ -35,6 +36,7 @@ import { DAY_MS, type ReportContext } from './context';
 export interface NeurologistInput {
   patient: Patient;
   carerName: string;
+  carerPhone: string;
   recordedBy: 'self' | 'carer';
   neurologist: { name: string; institution: string; contact: string };
   includeDateOfBirth: boolean;
@@ -116,7 +118,8 @@ export interface SymptomGroup {
 }
 export interface ChartData {
   bucket: 'day' | 'week' | 'month';
-  frequency: FrequencyBucket[];
+  /** `axis` is the day as the chart prints it, in the person's date order. */
+  frequency: (FrequencyBucket & { axis: string })[];
   /** Seizure length against the start time, for the duration trend. */
   durations: { at: number; seconds: number }[];
   types: { label: string; count: number }[];
@@ -130,6 +133,8 @@ export interface NeurologistReport {
   generated: string;
   period: { from: string; to: string; days: number };
   preparedBy: string;
+  /** The carer's phone, when a carer prepared it. */
+  preparedByPhone: string;
   forLines: string[];
   patient: { name: string; lines: string[] };
   summary: { value: string; lines: string[] };
@@ -498,6 +503,7 @@ export function buildNeurologistReport(input: NeurologistInput, ctx: ReportConte
     generated: fmt.longDate(ctx.now),
     period: { from: fmt.date(from), to: fmt.date(to), days },
     preparedBy: (input.recordedBy === 'carer' ? input.carerName : input.patient.name) || '-',
+    preparedByPhone: input.recordedBy === 'carer' ? input.carerPhone : '',
     forLines: [
       input.neurologist.name ? `${t('rep.for')}: ${input.neurologist.name}` : '',
       input.neurologist.institution,
@@ -509,7 +515,7 @@ export function buildNeurologistReport(input: NeurologistInput, ctx: ReportConte
         input.includeDateOfBirth && input.patient.dateOfBirth
           ? `${t('rep.dob')}: ${fmt.longDate(new Date(`${input.patient.dateOfBirth}T00:00:00`).getTime())}`
           : '',
-        input.patient.emergencyContact ? `${t('rep.emergency')}: ${input.patient.emergencyContact}` : '',
+        emergencyContactLine(input.patient) ? `${t('rep.emergency')}: ${emergencyContactLine(input.patient)}` : '',
       ].filter(Boolean),
     },
     summary: {
@@ -547,7 +553,10 @@ export function buildNeurologistReport(input: NeurologistInput, ctx: ReportConte
     }),
     chart: {
       bucket,
-      frequency: frequencyBuckets(period, from, to, bucket, plan),
+      frequency: frequencyBuckets(period, from, to, bucket, plan).map((b) => ({
+        ...b,
+        axis: fmt.dayMonth(new Date(`${b.day}T00:00:00`).getTime()),
+      })),
       durations: ascending
         .map((s) => ({ at: s.phases.start.at, seconds: seconds(s) }))
         .filter((d): d is { at: number; seconds: number } => d.seconds !== null),

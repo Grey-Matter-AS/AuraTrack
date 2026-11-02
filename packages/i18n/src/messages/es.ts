@@ -311,7 +311,7 @@ export const es: Record<MessageKey, string> = {
   'settings.autoLock': 'Bloquear tras (segundos fuera)',
   'settings.passkey': 'Face ID o huella',
   'settings.passkeyAdd': 'Configurar Face ID o huella',
-  'settings.passkeyOn': 'Configurado en este teléfono',
+  'settings.passkeyOn': 'Configurado en este dispositivo',
   'settings.passkeyNone': 'Este navegador no puede desbloquear con Face ID o huella. El PIN sigue funcionando.',
   'settings.passkeyPin': 'Tu PIN (para configurarlo)',
   'settings.passkeyDone': 'Face ID o huella está configurado',

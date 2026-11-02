@@ -11,6 +11,12 @@ describe('formats', () => {
     expect(makeFormats('en', { ...base, timeFormat: '12h' }, units).time(at)).toMatch(/^0?2:05 PM$/);
   });
 
+  it('writes the day and month for a chart in the chosen order', () => {
+    expect(makeFormats('en', base, units).dayMonth(at)).toBe('05/10');
+    expect(makeFormats('en', { ...base, dateFormat: 'mdy' }, units).dayMonth(at)).toBe('10-05');
+    expect(makeFormats('en', { ...base, dateFormat: 'ymd' }, units).dayMonth(at)).toBe('10-05');
+  });
+
   it('writes the day in the chosen order', () => {
     expect(makeFormats('en', base, units).day(at)).toBe('Mon 5 Oct');
     expect(makeFormats('en', { ...base, dateFormat: 'mdy' }, units).day(at)).toBe('Mon Oct 5');

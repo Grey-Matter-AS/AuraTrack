@@ -55,8 +55,8 @@ export interface TextFieldProps extends FieldFrame, NativeInput {
   onChange: (value: string) => void;
   id?: string;
   multiline?: false;
-  /** 'password' hides what is typed (a PIN); the default is plain text. */
-  type?: 'text' | 'password';
+  /** 'password' hides what is typed (a PIN); 'tel' opens the number keyboard and keeps + and spaces; the default is plain text. */
+  type?: 'text' | 'password' | 'tel';
 }
 export interface TextAreaProps extends FieldFrame {
   value: string;

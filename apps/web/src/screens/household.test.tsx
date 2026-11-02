@@ -73,7 +73,7 @@ describe('the household screen', () => {
     const user = userEvent.setup();
     ctx.mount();
     await openHousehold(user);
-    expect(await screen.findByText(/A household lets other phones and tablets/)).toBeTruthy();
+    expect(await screen.findByText(/A household lets the other devices/)).toBeTruthy();
     await user.click(screen.getByRole('button', { name: 'Start a household' }));
     const sheet = await screen.findByRole('dialog', { name: 'Start a household' });
     await user.type(within(sheet).getByLabelText('Name of the household'), 'Home');
@@ -233,7 +233,7 @@ describe('Household up to date?', () => {
     const user = userEvent.setup();
     ctx.mount();
     await openHousehold(user);
-    expect(await screen.findByText(/A phone whose app is closed cannot be updated or alerted/)).toBeTruthy();
+    expect(await screen.findByText(/A device whose app is closed cannot be updated or alerted/)).toBeTruthy();
   });
 });
 

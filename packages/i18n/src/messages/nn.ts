@@ -311,7 +311,7 @@ export const nn: Record<MessageKey, string> = {
   'settings.autoLock': 'Lås etter (sekund borte)',
   'settings.passkey': 'Face ID eller fingeravtrykk',
   'settings.passkeyAdd': 'Set opp Face ID eller fingeravtrykk',
-  'settings.passkeyOn': 'Sett opp på denne telefonen',
+  'settings.passkeyOn': 'Sett opp på denne eininga',
   'settings.passkeyNone':
     'Denne nettlesaren kan ikkje låse opp med Face ID eller fingeravtrykk. PIN-koden fungerer framleis.',
   'settings.passkeyPin': 'PIN-koden din (for å setje det opp)',

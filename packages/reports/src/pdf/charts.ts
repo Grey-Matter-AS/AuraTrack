@@ -33,7 +33,7 @@ export function frequencyChart(flow: Flow, data: ChartData, title: string, legen
     const h = (b.count / max) * box.h;
     if (b.count > 0) s.rect(x, box.y + box.h - h, barW, h, { fill: COLORS.blue });
     if (b.long > 0) s.rect(x, box.y + box.h - (b.long / max) * box.h, barW, (b.long / max) * box.h, { fill: COLORS.accent });
-    if (i % every === 0) s.text(b.day.slice(5), x + barW / 2, bottom - 8, { size: 6.5, color: COLORS.muted, align: 'center' });
+    if (i % every === 0) s.text(b.axis, x + barW / 2, bottom - 8, { size: 6.5, color: COLORS.muted, align: 'center' });
   });
   s.text(legend, flow.right, flow.y + 9, { size: 7, color: COLORS.muted, align: 'right' });
   flow.y = bottom + 8;

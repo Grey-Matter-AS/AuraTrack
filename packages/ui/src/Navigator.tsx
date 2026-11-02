@@ -21,6 +21,8 @@ export type ScreenMap = Record<string, ComponentType<any>>;
 export interface Navigator<M extends ScreenMap> {
   push<K extends keyof M & string>(name: K, props?: ComponentProps<M[K]>): void;
   replace<K extends keyof M & string>(name: K, props?: ComponentProps<M[K]>): void;
+  /** Makes `name` the first screen and returns to it, whatever is open above it. */
+  home<K extends keyof M & string>(name: K): void;
   /** Goes back one screen (the same as the phone's back). Does nothing on the first screen. */
   pop(): void;
   /** How many screens are open; 1 on the first. */
@@ -42,9 +44,12 @@ export function createScreenStack<M extends ScreenMap>(screens: M) {
   function ScreenStack({
     initial,
     initialProps,
+    header,
   }: {
     initial: keyof M & string;
     initialProps?: ComponentProps<M[keyof M & string]>;
+    /** Stays above every screen, and can use the navigator. */
+    header?: ReactNode;
   }) {
     const uid = useRef(1);
     const [entries, setEntries] = useState<Entry[]>(() => [
@@ -56,6 +61,7 @@ export function createScreenStack<M extends ScreenMap>(screens: M) {
     // A reload keeps the browser's history entries but not our screens: start again from the first screen
     useEffect(() => {
       window.history.replaceState({ ...(window.history.state as object | null), [HISTORY_KEY]: 0 }, '');
+      window.scrollTo(0, 0); // set-up or the PIN screen may have been scrolled; the first screen starts at its top
     }, []);
 
     useEffect(() => {
@@ -96,13 +102,26 @@ export function createScreenStack<M extends ScreenMap>(screens: M) {
       window.history.back();
     }, []);
 
+    const depth = entries.length;
+    const home = useCallback(
+      (name: string) => {
+        announce.current = true;
+        setEntries((list) =>
+          list[0]?.name === name ? list : [{ uid: uid.current++, name, props: {}, scrollY: 0 }, ...list.slice(1)],
+        );
+        if (depth > 1) window.history.go(-(depth - 1));
+      },
+      [depth],
+    );
+
     const navigator = useMemo(
-      () => ({ push, replace, pop, depth: entries.length }) as unknown as Navigator<M>,
-      [push, replace, pop, entries.length],
+      () => ({ push, replace, home, pop, depth }) as unknown as Navigator<M>,
+      [push, replace, home, pop, depth],
     );
 
     return (
       <Context.Provider value={navigator}>
+        {header}
         {entries.map((entry, index) => {
           const Screen = screens[entry.name] as ComponentType<object>;
           const isTop = index === entries.length - 1;

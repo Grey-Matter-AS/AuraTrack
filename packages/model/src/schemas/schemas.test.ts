@@ -18,6 +18,7 @@ import {
   HouseholdSchema,
   MERGE_RULES,
   PatientSchema,
+  emergencyContactLine,
   RECORD_SCHEMAS,
   RECORD_TYPES,
   SeizureSchema,
@@ -45,6 +46,19 @@ const base = () => ({
   patientId: ids.patient,
   deviceId: ids.device,
   createdAt: 1,
+});
+
+describe('emergencyContactLine', () => {
+  it('joins the name and the phone, or gives whichever there is', () => {
+    expect(emergencyContactLine({ emergencyContact: 'Sam', emergencyPhone: '555' })).toBe('Sam, 555');
+    expect(emergencyContactLine({ emergencyContact: 'Sam' })).toBe('Sam');
+    expect(emergencyContactLine({ emergencyContact: '', emergencyPhone: '555' })).toBe('555');
+    expect(emergencyContactLine({ emergencyContact: '' })).toBe('');
+  });
+  it('a person saved before the phone field existed is still valid', () => {
+    const old = { ...base(), name: 'A', dateOfBirth: null, emergencyContact: 'Sam 555', color: 'blue' };
+    expect(PatientSchema.safeParse(old).success).toBe(true);
+  });
 });
 
 describe('shared parts', () => {

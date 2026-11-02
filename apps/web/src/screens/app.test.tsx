@@ -315,7 +315,7 @@ describe('the PIN screen', () => {
     await seed(ctx, {});
     const user = userEvent.setup();
     ctx.mount();
-    await user.click(await screen.findByRole('button', { name: 'Lock' }));
+    await user.click(await screen.findByRole('button', { name: 'Lock the app' }));
     await screen.findByText('AuraTrack is locked');
     await user.click(screen.getByRole('button', { name: 'Start timer without the PIN' }));
     expect(await screen.findByText(/Recording while the app is locked/)).toBeTruthy();
@@ -342,7 +342,7 @@ describe('the PIN screen', () => {
     await seed(ctx, {});
     const user = userEvent.setup();
     ctx.mount();
-    await user.click(await screen.findByRole('button', { name: 'Lock' }));
+    await user.click(await screen.findByRole('button', { name: 'Lock the app' }));
     await user.type(await screen.findByLabelText('PIN'), '0000');
     await user.click(screen.getByRole('button', { name: 'Unlock' }));
     expect(await screen.findByText('That PIN is not right. Try again.')).toBeTruthy();
@@ -358,7 +358,7 @@ describe('the PIN screen', () => {
     await openSettings(user, 'Recording and emergency plan');
     await user.click(await screen.findByRole('checkbox', { name: /Start without the PIN/ }));
     await backToHome(user);
-    await user.click(screen.getByRole('button', { name: 'Lock' }));
+    await user.click(screen.getByRole('button', { name: 'Lock the app' }));
     await screen.findByText('AuraTrack is locked');
     expect((screen.getByRole('button', { name: 'Start timer without the PIN' }) as HTMLButtonElement).disabled).toBe(
       true,
@@ -370,7 +370,7 @@ describe('the PIN screen', () => {
     await seed(ctx, { contact: 'Sam 555 0100', rescue: 'Midazolam' });
     const user = userEvent.setup();
     ctx.mount();
-    await user.click(await screen.findByRole('button', { name: 'Lock' }));
+    await user.click(await screen.findByRole('button', { name: 'Lock the app' }));
     await user.click(await screen.findByRole('button', { name: 'Start timer without the PIN' }));
     await tick(ctx, 300_000);
     const alert = await screen.findByRole('alertdialog');

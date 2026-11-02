@@ -2,10 +2,20 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { AppHeader } from './Header';
+import { AppHeader, AppTopBar } from './Header';
 import { UiStringsProvider } from './strings';
 
 afterEach(cleanup);
+
+describe('AppTopBar', () => {
+  it('has the name, the person, and the buttons either side of the person, in that order', () => {
+    render(<AppTopBar patient={{ name: 'Sam' }} before={<button>first</button>} after={<button>last</button>} />);
+    expect(screen.getByLabelText('AuraTrack')).toBeTruthy();
+    expect(screen.getByText('aTr')).toBeTruthy();
+    const end = screen.getByText('Sam').closest('.ui-topbar__end');
+    expect(end?.textContent).toBe('firstSSamlast');
+  });
+});
 
 describe('AppHeader', () => {
   it('has the title as the page heading, and nothing else by default', () => {

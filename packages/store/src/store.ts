@@ -24,6 +24,7 @@ import {
   type Hlc,
   type RecordOf,
   type RecordType,
+  emergencyContactLine,
 } from '@auratrack/model';
 import Dexie from 'dexie';
 import { AuraDb } from './db';
@@ -543,7 +544,7 @@ export class Store {
         content === 'nothing' || !patient
           ? null
           : {
-              contact: content === 'rescue_and_contacts' && patient.emergencyContact ? patient.emergencyContact : null,
+              contact: content === 'rescue_and_contacts' ? emergencyContactLine(patient) || null : null,
               rescue,
             },
     };

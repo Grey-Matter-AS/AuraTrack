@@ -23,6 +23,17 @@ describe('ChipGroup', () => {
     expect(onChange).toHaveBeenCalledWith('c');
   });
 
+  it('shows its label when asked, and it still names the group', () => {
+    render(<ChipGroup label="Letters" showLabel options={options} value="b" onChange={vi.fn()} />);
+    expect(screen.getByText('Letters')).toBeTruthy();
+    expect(screen.getByRole('group', { name: 'Letters' })).toBeTruthy();
+  });
+
+  it('keeps its label for screen readers only by default', () => {
+    render(<ChipGroup label="Letters" options={options} value="b" onChange={vi.fn()} />);
+    expect(screen.queryByText('Letters')).toBeNull();
+  });
+
   it('multiple choice: adds and removes, keeping the order it was given', async () => {
     const onChange = vi.fn();
     const { rerender } = render(

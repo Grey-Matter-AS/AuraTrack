@@ -20,6 +20,18 @@ export const CloseIcon = (props: SVGProps<SVGSVGElement>) => (
     <path d="M6 6l12 12M18 6L6 18" />
   </svg>
 );
+export const HomeIcon = (props: SVGProps<SVGSVGElement>) => (
+  <svg {...base(props)}>
+    <path d="M4 11l8-7 8 7" />
+    <path d="M6 10v10h12V10" />
+  </svg>
+);
+export const LockIcon = (props: SVGProps<SVGSVGElement>) => (
+  <svg {...base(props)}>
+    <rect x="5" y="11" width="14" height="9" rx="2" />
+    <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+  </svg>
+);
 export const BackIcon = (props: SVGProps<SVGSVGElement>) => (
   <svg {...base(props)}>
     <path d="M15 5l-7 7 7 7" />

@@ -18,6 +18,24 @@ function neurologist(over: Parameters<typeof neurologistInput>[0] = {}) {
   return surface;
 }
 
+describe('phone numbers on the report', () => {
+  it('prints the emergency contact with the phone, and the carer phone under who prepared it', () => {
+    const input = neurologistInput({
+      patient: { ...patient, emergencyContact: 'Sam', emergencyPhone: '555 0100' },
+      carerPhone: '555 0199',
+    });
+    const report = buildNeurologistReport(input, ctx);
+    expect(report.patient.lines).toContain('Emergency contact: Sam, 555 0100');
+    const surface = new RecordingSurface();
+    renderNeurologist(report, ctx.t, surface, { alertSeconds: input.plan.alertSec });
+    expect(surface.texts()).toContain('555 0199');
+  });
+  it('leaves out a carer phone when the person records for themselves', () => {
+    const input = neurologistInput({ recordedBy: 'self', carerPhone: '555 0199' });
+    expect(buildNeurologistReport(input, ctx).preparedByPhone).toBe('');
+  });
+});
+
 describe('the logo in the header', () => {
   it('is on the first page, left of the name, and on no other page', () => {
     const s = neurologist();

@@ -40,6 +40,7 @@ export function context(language = 'en'): ReportContext {
     language,
     fmt: {
       date: (ms) => localDateKey(ms),
+      dayMonth: (ms) => localDateKey(ms).slice(5),
       longDate: (ms) => localDateKey(ms),
       time: (ms) => `${two(new Date(ms).getHours())}:${two(new Date(ms).getMinutes())}`,
       duration: (s) => `${Math.floor(s / 60)}:${two(Math.round(s % 60))}`,
@@ -160,6 +161,7 @@ export function neurologistInput(over: Partial<NeurologistInput> = {}): Neurolog
   return {
     patient,
     carerName: 'Kari Nordmann',
+    carerPhone: '',
     recordedBy: 'carer',
     neurologist: { name: 'Dr. Random Example', institution: 'Example Hospital', contact: '555 0199' },
     includeDateOfBirth: true,

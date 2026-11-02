@@ -9,6 +9,7 @@ import { EditorHost } from '../editor/EditorContext';
 import { HouseholdProvider } from '../household/HouseholdContext';
 import { Recording } from './Recording';
 import { stack } from './stack';
+import { TopBar } from './TopBar';
 import './screens.css';
 
 // The app (route #/app). Which screen shows follows the state: set-up, the PIN screen, the recording that is running, or Home.
@@ -19,7 +20,7 @@ function Shell() {
   if (phase === 'loading') return <p className="app-note">{t('app.loading')}</p>;
   if (phase === 'error') return <p role="alert">{t('app.error', { error: error ?? '' })}</p>;
   if (phase === 'setup' || phase === 'joining' || phase === 'locked') return <Gate />;
-  return recording.session ? <Recording /> : <stack.ScreenStack initial="home" />;
+  return recording.session ? <Recording /> : <stack.ScreenStack initial="home" header={<TopBar />} />;
 }
 
 function Strings({ children }: { children: React.ReactNode }) {

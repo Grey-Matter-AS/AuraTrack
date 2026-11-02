@@ -311,7 +311,7 @@ export const fr: Record<MessageKey, string> = {
   'settings.autoLock': 'Verrouiller après (secondes d’absence)',
   'settings.passkey': 'Face ID ou empreinte',
   'settings.passkeyAdd': 'Configurer Face ID ou l’empreinte',
-  'settings.passkeyOn': 'Configuré sur ce téléphone',
+  'settings.passkeyOn': 'Configuré sur cet appareil',
   'settings.passkeyNone':
     'Ce navigateur ne peut pas déverrouiller avec Face ID ou l’empreinte. Le code PIN fonctionne toujours.',
   'settings.passkeyPin': 'Votre code PIN (pour la configuration)',

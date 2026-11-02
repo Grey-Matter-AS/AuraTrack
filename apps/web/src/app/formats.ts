@@ -14,6 +14,8 @@ export interface Formats {
   day(at: number): string;
   /** The day with its year, for reports: "05 Oct 2026", "Oct 5, 2026" or "2026-10-05". */
   date(at: number): string;
+  /** The day and the month on their own, for a chart's axis: "05/10" or "10-05". */
+  dayMonth(at: number): string;
   /** "5 October 2026" in the person's language, or "2026-10-05". */
   longDate(at: number): string;
   /** The day and the time. */
@@ -73,5 +75,10 @@ export function makeFormats(
     const [dayOfMonth, month, year] = [part('day'), part('month'), part('year')];
     return settings.dateFormat === 'mdy' ? `${month} ${dayOfMonth}, ${year}` : `${dayOfMonth} ${month} ${year}`;
   };
-  return { time, day, date, longDate, when: (at) => `${day(at)} ${time(at)}`, duration };
+  const dayMonth = (at: number) => {
+    const d = new Date(at);
+    const [month, dayOfMonth] = [pad(d.getMonth() + 1), pad(d.getDate())];
+    return settings.dateFormat === 'dmy' ? `${dayOfMonth}/${month}` : `${month}-${dayOfMonth}`;
+  };
+  return { time, day, date, dayMonth, longDate, when: (at) => `${day(at)} ${time(at)}`, duration };
 }

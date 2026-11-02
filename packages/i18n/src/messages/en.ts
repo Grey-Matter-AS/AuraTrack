@@ -309,7 +309,7 @@ export const en = {
   'settings.autoLock': 'Lock after (seconds away)',
   'settings.passkey': 'Face ID or fingerprint',
   'settings.passkeyAdd': 'Set up Face ID or fingerprint',
-  'settings.passkeyOn': 'Set up on this phone',
+  'settings.passkeyOn': 'Set up on this device',
   'settings.passkeyNone': 'This browser cannot unlock with Face ID or fingerprint. The PIN still works.',
   'settings.passkeyPin': 'Your PIN (to set it up)',
   'settings.passkeyDone': 'Face ID or fingerprint is set up',

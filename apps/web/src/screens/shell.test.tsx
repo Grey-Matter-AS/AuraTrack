@@ -198,6 +198,80 @@ describe('settings', () => {
       expect(people[0]?.emergencyContact).toBe('Sam 555 0100');
     });
   });
+
+  it('keeps a phone number for the contact and the carer, separately', async () => {
+    const ctx = setup();
+    const user = await home(ctx);
+    await openSettings(user, 'About the person');
+    await user.type(await screen.findByLabelText('Emergency contact'), 'Sam');
+    await user.type(screen.getByLabelText('Emergency contact phone'), '+47 555 0100');
+    await user.type(screen.getByLabelText('Carer name'), 'Kari');
+    await user.type(screen.getByLabelText('Carer phone'), '555 0199');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(async () => {
+      const people = (await ctx.client.list({ type: 'patient' })) as unknown as { emergencyPhone: string }[];
+      expect(people[0]?.emergencyPhone).toBe('+47 555 0100');
+      const rows = (await ctx.client.list({ type: 'setting' })) as unknown as { key: string; value: unknown }[];
+      expect(rows.find((r) => r.key === 'carerName')?.value).toBe('Kari');
+      expect(rows.find((r) => r.key === 'carerPhone')?.value).toBe('555 0199');
+    });
+  });
+
+  it('copies the contact to the carer when they are the same person', async () => {
+    const ctx = setup();
+    const user = await home(ctx);
+    await openSettings(user, 'About the person');
+    await user.type(await screen.findByLabelText('Emergency contact'), 'Sam');
+    await user.type(screen.getByLabelText('Emergency contact phone'), '555 0100');
+    await user.click(screen.getByRole('checkbox', { name: /same person/ }));
+    const carer = screen.getByLabelText('Carer name') as HTMLInputElement;
+    expect(carer.value).toBe('Sam');
+    expect(carer.disabled).toBe(true);
+    expect((screen.getByLabelText('Carer phone') as HTMLInputElement).value).toBe('555 0100');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(async () => {
+      const rows = (await ctx.client.list({ type: 'setting' })) as unknown as { key: string; value: unknown }[];
+      expect(rows.find((r) => r.key === 'carerIsContact')?.value).toBe(true);
+      expect(rows.find((r) => r.key === 'carerName')?.value).toBe('Sam');
+      expect(rows.find((r) => r.key === 'carerPhone')?.value).toBe('555 0100');
+    });
+  });
+
+  it('names each set of choices on Appearance', async () => {
+    const ctx = setup();
+    const user = await home(ctx);
+    await openSettings(user, 'Appearance');
+    for (const name of ['Theme', 'Accent colour', 'Text size']) expect(await screen.findByText(name)).toBeTruthy();
+  });
+});
+
+describe('the top bar', () => {
+  it('shows the name and the buttons on every screen, and Go to Home returns from anywhere', async () => {
+    const ctx = setup();
+    const user = await home(ctx);
+    await openSettings(user, 'Appearance');
+    expect(screen.getByText('aTr')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Lock the app' })).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: 'Go to Home' }));
+    expect(await screen.findByRole('button', { name: 'Start timer' })).toBeTruthy();
+  });
+
+  it('Go to Home also returns from a main place, which replaced Home', async () => {
+    const ctx = setup();
+    const user = await home(ctx);
+    await user.click(await screen.findByRole('button', { name: 'History' }));
+    await user.click(await screen.findByRole('button', { name: 'Go to Home' }));
+    expect(await screen.findByRole('button', { name: 'Start timer' })).toBeTruthy();
+  });
+
+  it('is not on the recording screen', async () => {
+    const ctx = setup();
+    const user = await home(ctx);
+    await user.click(await screen.findByRole('button', { name: 'Start timer' }));
+    await screen.findByRole('button', { name: /Stop|Seizure started|Aura/i });
+    expect(screen.queryByRole('button', { name: 'Go to Home' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Lock the app' })).toBeNull();
+  });
 });
 
 describe('erasing everything', () => {
@@ -205,7 +279,7 @@ describe('erasing everything', () => {
     const ctx = setup();
     const user = await home(ctx);
     await openSettings(user, 'Data and backup');
-    await user.click(await screen.findByRole('button', { name: 'Erase everything on this phone' }));
+    await user.click(await screen.findByRole('button', { name: 'Erase everything on this device' }));
     const dialog = await screen.findByRole('alertdialog');
     await user.type(within(dialog).getByLabelText('PIN'), '1111');
     await user.click(within(dialog).getByRole('button', { name: 'Erase everything' }));

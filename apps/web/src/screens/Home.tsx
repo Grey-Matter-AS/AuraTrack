@@ -54,16 +54,7 @@ export function Home() {
   return (
     <Screen>
       <Stack>
-        <AppHeader
-          title="AuraTrack"
-          {...(patient ? { patient: { name: patient.name, color: patient.color } } : {})}
-          {...(patients.length > 1 ? { onPatientClick: () => void actions.switchPatient() } : {})}
-          actions={
-            <Button size="md" onClick={() => void actions.lock()}>
-              {t('common.lock')}
-            </Button>
-          }
-        />
+        <AppHeader title="AuraTrack" titleHidden />
 
         <MainNav current="home" />
         <UpdateCard />

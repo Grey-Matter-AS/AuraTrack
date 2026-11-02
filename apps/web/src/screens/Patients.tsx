@@ -105,12 +105,15 @@ function PersonSheet({
 }: {
   person: Patient | null;
   onClose: () => void;
-  onSave: (values: Pick<Patient, 'name' | 'dateOfBirth' | 'emergencyContact' | 'color'>) => Promise<void>;
+  onSave: (
+    values: Pick<Patient, 'name' | 'dateOfBirth' | 'emergencyContact' | 'emergencyPhone' | 'color'>,
+  ) => Promise<void>;
 }) {
   const { t } = useApp();
   const [name, setName] = useState(person?.name ?? '');
   const [dob, setDob] = useState(person?.dateOfBirth ?? '');
   const [contact, setContact] = useState(person?.emergencyContact ?? '');
+  const [phone, setPhone] = useState(person?.emergencyPhone ?? '');
   const [color, setColor] = useState(person ? colorCodeOf(person.color) : 'blue');
   return (
     <BottomSheet
@@ -126,6 +129,7 @@ function PersonSheet({
               name: name.trim().slice(0, 120),
               dateOfBirth: dob === '' ? null : dob,
               emergencyContact: contact.trim().slice(0, 120),
+              emergencyPhone: phone.trim().slice(0, 120),
               color: color === '' && person ? person.color : colorHexOf(color),
             })
           }
@@ -138,8 +142,10 @@ function PersonSheet({
         <TextField label={t('people.name')} value={name} onChange={setName} autoComplete="off" />
         <DateTimeField label={t('people.dob')} type="date" value={dob} onChange={setDob} />
         <TextField label={t('people.contact')} help={t('people.contactHelp')} value={contact} onChange={setContact} />
+        <TextField label={t('people.contactPhone')} type="tel" value={phone} onChange={setPhone} autoComplete="off" />
         <ChipGroup
           label={t('people.color')}
+          showLabel
           value={color}
           onChange={setColor}
           options={PATIENT_COLORS.map((c) => ({ value: c.code, label: t(`color.${c.code}` as never) }))}

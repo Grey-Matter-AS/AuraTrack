@@ -311,7 +311,7 @@ export const da: Record<MessageKey, string> = {
   'settings.autoLock': 'Lås efter (sekunder væk)',
   'settings.passkey': 'Face ID eller fingeraftryk',
   'settings.passkeyAdd': 'Opsæt Face ID eller fingeraftryk',
-  'settings.passkeyOn': 'Opsat på denne telefon',
+  'settings.passkeyOn': 'Opsat på denne enhed',
   'settings.passkeyNone': 'Denne browser kan ikke låse op med Face ID eller fingeraftryk. PIN-koden virker stadig.',
   'settings.passkeyPin': 'Din PIN-kode (for at opsætte det)',
   'settings.passkeyDone': 'Face ID eller fingeraftryk er opsat',

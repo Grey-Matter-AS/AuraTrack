@@ -60,15 +60,12 @@ export const seriesOf = (typeCode: string | null): number => {
 
 /** History (F-401, F-402, F-315): the list with filters, the frequency chart, and the timeline over days and weeks. */
 export function History() {
-  const { t, patient } = useApp();
+  const { t } = useApp();
   const [view, setView] = useState<View>('list');
   return (
     <Screen>
       <Stack>
-        <AppHeader
-          title={t('nav.history')}
-          {...(patient ? { patient: { name: patient.name, color: patient.color } } : {})}
-        />
+        <AppHeader title={t('nav.history')} />
         <MainNav current="history" />
         <ChipGroup
           label={t('hist.view')}

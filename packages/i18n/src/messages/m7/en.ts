@@ -3,7 +3,7 @@
 export const m7en = {
   'hub.title': 'Hub',
   'hub.none':
-    'A hub is a program on a household computer (or a Raspberry Pi or NAS) that is always on. With one, phones update while their apps are closed, and the household has a daily backup. It only ever holds sealed data that it cannot read.',
+    'A hub is a program on a household computer (or a Raspberry Pi or NAS) that is always on. With one, devices update while their apps are closed, and the household has a daily backup. It only ever holds sealed data that it cannot read.',
   'hub.noneLimit':
     'Without a hub everything keeps working: devices update each other when two of them are open at the same time.',
   'hub.connect': 'Connect a hub',
@@ -54,14 +54,14 @@ export const m7en = {
   'push.people': 'For these people',
   'push.everyone': 'Everyone',
   'push.requirements':
-    'iPhone and iPad: alerts work only after AuraTrack is added to the Home Screen, on iOS 16.4 or later. The maker of the phone’s push service carries the message: it sees that a message went to this device, not what it says.',
+    'iPhone and iPad: alerts work only after AuraTrack is added to the Home Screen, on iOS 16.4 or later. The maker of the device’s push service carries the message: it sees that a message went to this device, not what it says.',
   'push.state.needs_home_screen': 'Add AuraTrack to the Home Screen first (Share, then Add to Home Screen).',
   'push.state.unsupported': 'This browser cannot show alerts.',
   'push.state.blocked': 'Notifications are blocked for this site in the browser’s settings.',
   'push.err.denied': 'Notifications were not allowed, so alerts are off.',
   'push.err.failed': 'Alerts could not be turned on. Check that the hub can be reached, and try again.',
   'push.limit':
-    'Alerts need the hub and this device’s permission. They are best effort: they can be late or missing if the phone is off, saving battery or offline. They never replace watching the person or following the emergency plan.',
+    'Alerts need the hub and this device’s permission. They are best effort: they can be late or missing if the device is off, saving battery or offline. They never replace watching the person or following the emergency plan.',
   'push.locked': 'A recording started from the PIN screen sends its alert once the app is unlocked.',
   'push.notificationTitle': 'AuraTrack',
   'push.notificationBody': 'Open AuraTrack',

@@ -84,10 +84,7 @@ function TextSetting({
   label,
   multiline = false,
 }: {
-  settingKey: Extract<
-    SettingKey,
-    'neurologistName' | 'neurologistInstitution' | 'neurologistContact' | 'reportNotes' | 'carerName'
-  >;
+  settingKey: Extract<SettingKey, 'neurologistName' | 'neurologistInstitution' | 'neurologistContact' | 'reportNotes'>;
   label: string;
   multiline?: boolean;
 }) {
@@ -116,35 +113,64 @@ function TextSetting({
 }
 
 function Identity() {
-  const { t, patient, actions } = useApp();
+  const { t, patient, settings, actions } = useApp();
   const [name, setName] = useState(patient?.name ?? '');
   const [dob, setDob] = useState(patient?.dateOfBirth ?? '');
   const [contact, setContact] = useState(patient?.emergencyContact ?? '');
+  const [phone, setPhone] = useState(patient?.emergencyPhone ?? '');
+  const [same, setSame] = useState(settings.carerIsContact);
+  const [carer, setCarer] = useState(settings.carerName);
+  const [carerPhone, setCarerPhone] = useState(settings.carerPhone);
+  // While they are the same person the carer's fields show the contact, and saving copies it across
+  const carerShown = same ? contact : carer;
+  const carerPhoneShown = same ? phone : carerPhone;
   const changed =
     !!patient &&
     (name.trim() !== patient.name ||
       (dob || null) !== patient.dateOfBirth ||
-      contact.trim() !== patient.emergencyContact);
+      contact.trim() !== patient.emergencyContact ||
+      phone.trim() !== (patient.emergencyPhone ?? '') ||
+      same !== settings.carerIsContact ||
+      carerShown.trim() !== settings.carerName ||
+      carerPhoneShown.trim() !== settings.carerPhone);
   if (!patient) return null;
+  const save = async () => {
+    await actions.updateRecord('patient', patient.id, {
+      name: name.trim().slice(0, 120),
+      dateOfBirth: dob === '' ? null : dob,
+      emergencyContact: contact.trim().slice(0, 120),
+      emergencyPhone: phone.trim().slice(0, 120),
+    });
+    await actions.setSetting('carerIsContact', same);
+    await actions.setSetting('carerName', carerShown.trim().slice(0, 120));
+    await actions.setSetting('carerPhone', carerPhoneShown.trim().slice(0, 120));
+  };
   return (
     <Section title={t('settings.group.identity')}>
       <Stack>
         <TextField label={t('people.name')} value={name} onChange={setName} autoComplete="off" />
         <DateTimeField label={t('people.dob')} type="date" value={dob} onChange={setDob} />
         <TextField label={t('people.contact')} help={t('people.contactHelp')} value={contact} onChange={setContact} />
-        <Button
-          disabled={!changed || name.trim() === ''}
-          onClick={() =>
-            void actions.updateRecord('patient', patient.id, {
-              name: name.trim().slice(0, 120),
-              dateOfBirth: dob === '' ? null : dob,
-              emergencyContact: contact.trim().slice(0, 120),
-            })
-          }
-        >
+        <TextField label={t('people.contactPhone')} type="tel" value={phone} onChange={setPhone} autoComplete="off" />
+        <Checkbox checked={same} onChange={setSame} label={t('settings.carerSame')} />
+        <TextField
+          label={t('settings.carerName')}
+          value={carerShown}
+          onChange={setCarer}
+          disabled={same}
+          autoComplete="off"
+        />
+        <TextField
+          label={t('settings.carerPhone')}
+          type="tel"
+          value={carerPhoneShown}
+          onChange={setCarerPhone}
+          disabled={same}
+          autoComplete="off"
+        />
+        <Button disabled={!changed || name.trim() === ''} onClick={() => void save()}>
           {t('common.save')}
         </Button>
-        <TextSetting settingKey="carerName" label={t('settings.carerName')} />
       </Stack>
     </Section>
   );
@@ -157,6 +183,7 @@ function Appearance() {
     <Stack>
       <ChipGroup
         label={t('settings.theme')}
+        showLabel
         value={settings.theme}
         onChange={(v) => void set('theme', v)}
         options={[
@@ -167,6 +194,7 @@ function Appearance() {
       />
       <ChipGroup
         label={t('settings.accent')}
+        showLabel
         value={settings.accentColor}
         onChange={(v) => void set('accentColor', v)}
         options={(['blue', 'red', 'green', 'purple', 'amber'] as const).map((value) => ({
@@ -176,6 +204,7 @@ function Appearance() {
       />
       <ChipGroup
         label={t('settings.textSize')}
+        showLabel
         value={settings.fontSize}
         onChange={(v) => void set('fontSize', v)}
         options={[
@@ -205,12 +234,14 @@ function Display() {
     <Stack>
       <ChipGroup
         label={t('settings.pageSize')}
+        showLabel
         value={String(settings.historyPageSize)}
         onChange={(v) => void set('historyPageSize', Number(v))}
         options={['10', '20', '50'].map((value) => ({ value, label: value }))}
       />
       <ChipGroup
         label={t('settings.dateFormat')}
+        showLabel
         value={settings.dateFormat}
         onChange={(v) => void set('dateFormat', v)}
         options={[
@@ -221,6 +252,7 @@ function Display() {
       />
       <ChipGroup
         label={t('settings.timeFormat')}
+        showLabel
         value={settings.timeFormat}
         onChange={(v) => void set('timeFormat', v)}
         options={[
@@ -230,6 +262,7 @@ function Display() {
       />
       <ChipGroup
         label={t('settings.durationFormat')}
+        showLabel
         value={settings.durationFormat}
         onChange={(v) => void set('durationFormat', v)}
         options={[
@@ -345,6 +378,7 @@ function Recording() {
           {settings.videoEnabled ? (
             <ChipGroup
               label={t('settings.camera')}
+              showLabel
               value={settings.videoCamera}
               onChange={(v) => void actions.setSetting('videoCamera', v)}
               options={[
@@ -456,6 +490,7 @@ function DataSettings() {
           {settings.backupReminderEnabled ? (
             <ChipGroup
               label={t('settings.backupEvery')}
+              showLabel
               value={String(settings.backupReminderIntervalDays)}
               onChange={(v) => void actions.setSetting('backupReminderIntervalDays', Number(v))}
               options={['7', '14', '30', '90'].map((value) => ({ value, label: t('settings.days', { n: value }) }))}

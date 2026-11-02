@@ -34,6 +34,8 @@ interface Host {
   /** Opens the editor on a seizure: a fresh working copy. */
   open: (seizure: Seizure) => void;
   close: () => void;
+  /** Lets go of unsaved edits, so a later lock cannot save what was left behind. */
+  discard: () => void;
   /** A seizure to open as soon as Home is on screen (after a recording, "Add details"). */
   pending: string | null;
   openLater: (id: string | null) => void;
@@ -50,6 +52,7 @@ export function EditorHost({ children }: { children: ReactNode }) {
     setSession({ original: seizure, initial, draft: initial });
   }, []);
   const close = useCallback(() => setSession(null), []);
+  const discard = useCallback(() => setSession((s) => (s ? { ...s, draft: s.initial } : s)), []);
   const setDraft = useCallback<EditorState['setDraft']>(
     (update) => setSession((s) => (s ? { ...s, draft: typeof update === 'function' ? update(s.draft) : update } : s)),
     [],
@@ -67,11 +70,15 @@ export function EditorHost({ children }: { children: ReactNode }) {
     return () => beforeLock(null);
   }, [session, beforeLock, saveStrict]);
   const value = useMemo(
-    () => ({ session, open, close, pending, openLater, setDraft }),
-    [session, open, close, pending, setDraft],
+    () => ({ session, open, close, discard, pending, openLater, setDraft }),
+    [session, open, close, discard, pending, setDraft],
   );
   return <HostContext.Provider value={value}>{children}</HostContext.Provider>;
 }
+
+/** The edits not saved yet, when the editor is open. */
+export const hasUnsavedEdits = (host: Host): boolean =>
+  !!host.session && JSON.stringify(host.session.draft) !== JSON.stringify(host.session.initial);
 
 export function useEditorHost(): Host {
   const value = useContext(HostContext);

@@ -1,3 +1,4 @@
+import { emergencyContactLine } from '@auratrack/model';
 import { Button, ButtonRow, Card, Dialog, Screen, Section, Stack, AppHeader } from '@auratrack/ui';
 import type { MessageKey } from '@auratrack/i18n';
 import { useState } from 'react';
@@ -41,7 +42,7 @@ export function Recording() {
   const card = isLocked ? locked?.screen.card : null;
   const info = isLocked
     ? { rescue: card?.rescue ?? [], contact: card?.contact ?? null, hidden: card === null || card === undefined }
-    : { rescue: rescue, contact: patient?.emergencyContact || null, hidden: false };
+    : { rescue: rescue, contact: (patient && emergencyContactLine(patient)) || null, hidden: false };
   const showName = isLocked ? locked?.screen.patientName : patient?.name;
 
   const alertOpen = view.alert === 'alert' && running && dismissed !== session.seizureId;

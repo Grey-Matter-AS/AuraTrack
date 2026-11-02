@@ -312,7 +312,7 @@ export const de: Record<MessageKey, string> = {
   'settings.autoLock': 'Sperren nach (Sekunden weg)',
   'settings.passkey': 'Face ID oder Fingerabdruck',
   'settings.passkeyAdd': 'Face ID oder Fingerabdruck einrichten',
-  'settings.passkeyOn': 'Auf diesem Telefon eingerichtet',
+  'settings.passkeyOn': 'Auf diesem Gerät eingerichtet',
   'settings.passkeyNone':
     'Dieser Browser kann nicht mit Face ID oder Fingerabdruck entsperren. Die PIN funktioniert weiterhin.',
   'settings.passkeyPin': 'Deine PIN (zum Einrichten)',

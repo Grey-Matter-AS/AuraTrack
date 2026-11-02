@@ -202,7 +202,7 @@ describe('Face ID or fingerprint', () => {
     expect(await screen.findByText('Face ID or fingerprint is set up')).toBeTruthy();
     expect((await ctx.client.status()).passkey).not.toBeNull();
     await backToHome(user);
-    await user.click(screen.getByRole('button', { name: 'Lock' }));
+    await user.click(screen.getByRole('button', { name: 'Lock the app' }));
     await user.click(await screen.findByRole('button', { name: 'Unlock with Face ID or fingerprint' }));
     await screen.findByRole('button', { name: 'Start timer' });
   });
@@ -231,7 +231,7 @@ describe('Face ID or fingerprint', () => {
     await user.click(screen.getByRole('button', { name: 'Set up Face ID or fingerprint' }));
     await screen.findByText('Face ID or fingerprint is set up');
     await backToHome(user);
-    await user.click(screen.getByRole('button', { name: 'Lock' }));
+    await user.click(screen.getByRole('button', { name: 'Lock the app' }));
     unmount();
     render(<AppRoot client={ctx.client} env={ctx.f.env} passkeyEnv={fakePasskeys({ refuse: true })} />);
     await user.click(await screen.findByRole('button', { name: 'Unlock with Face ID or fingerprint' }));

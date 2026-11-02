@@ -8,7 +8,7 @@ type Tr = Partial<Record<keyof typeof m7en, string>>;
 const nb: Tr = {
   'hub.title': 'Hub',
   'hub.none':
-    'En hub er et program på en husstandsdatamaskin (eller en Raspberry Pi eller NAS) som alltid er på. Med en hub oppdateres telefoner mens appene deres er lukket, og husstanden får daglig sikkerhetskopi. Den holder bare forseglede data som den ikke kan lese.',
+    'En hub er et program på en husstandsdatamaskin (eller en Raspberry Pi eller NAS) som alltid er på. Med en hub oppdateres enheter mens appene deres er lukket, og husstanden får daglig sikkerhetskopi. Den holder bare forseglede data som den ikke kan lese.',
   'hub.noneLimit': 'Uten hub fungerer alt som før: enhetene oppdaterer hverandre når to av dem er åpne samtidig.',
   'hub.connect': 'Koble til en hub',
   'hub.address': 'Adresse til huben',
@@ -57,14 +57,14 @@ const nb: Tr = {
   'push.people': 'For disse personene',
   'push.everyone': 'Alle',
   'push.requirements':
-    'iPhone og iPad: varsler virker bare etter at AuraTrack er lagt til på Hjem-skjermen, med iOS 16.4 eller nyere. Produsenten av telefonens pushtjeneste frakter meldingen: den ser at en melding gikk til denne enheten, ikke hva den sier.',
+    'iPhone og iPad: varsler virker bare etter at AuraTrack er lagt til på Hjem-skjermen, med iOS 16.4 eller nyere. Produsenten av enhetens pushtjeneste frakter meldingen: den ser at en melding gikk til denne enheten, ikke hva den sier.',
   'push.state.needs_home_screen': 'Legg først AuraTrack til på Hjem-skjermen (Del, deretter Legg til på Hjem-skjerm).',
   'push.state.unsupported': 'Denne nettleseren kan ikke vise varsler.',
   'push.state.blocked': 'Varsler er blokkert for dette nettstedet i nettleserens innstillinger.',
   'push.err.denied': 'Varsler ble ikke tillatt, så varsler er av.',
   'push.err.failed': 'Varsler kunne ikke slås på. Sjekk at huben kan nås, og prøv igjen.',
   'push.limit':
-    'Varsler trenger huben og tillatelse fra denne enheten. De gjøres etter beste evne: de kan komme sent eller utebli hvis telefonen er av, sparer strøm eller er uten nett. De erstatter aldri å følge med på personen eller følge nødplanen.',
+    'Varsler trenger huben og tillatelse fra denne enheten. De gjøres etter beste evne: de kan komme sent eller utebli hvis enheten er av, sparer strøm eller er uten nett. De erstatter aldri å følge med på personen eller følge nødplanen.',
   'push.locked': 'Et opptak startet fra PIN-skjermen sender varselet når appen er låst opp.',
   'push.notificationTitle': 'AuraTrack',
   'push.notificationBody': 'Åpne AuraTrack',
@@ -73,7 +73,7 @@ const nb: Tr = {
 const nn: Tr = {
   'hub.title': 'Hub',
   'hub.none':
-    'Ein hub er eit program på ei husstandsdatamaskin (eller ein Raspberry Pi eller NAS) som alltid er på. Med ein hub blir telefonar oppdaterte medan appane deira er att, og husstanden får dagleg tryggingskopi. Han held berre forsegla data som han ikkje kan lese.',
+    'Ein hub er eit program på ei husstandsdatamaskin (eller ein Raspberry Pi eller NAS) som alltid er på. Med ein hub blir einingar oppdaterte medan appane deira er att, og husstanden får dagleg tryggingskopi. Han held berre forsegla data som han ikkje kan lese.',
   'hub.noneLimit': 'Utan hub fungerer alt som før: einingane oppdaterer kvarandre når to av dei er opne samstundes.',
   'hub.connect': 'Koble til ein hub',
   'hub.address': 'Adresse til huben',
@@ -122,14 +122,14 @@ const nn: Tr = {
   'push.people': 'For desse personane',
   'push.everyone': 'Alle',
   'push.requirements':
-    'iPhone og iPad: varsel verkar berre etter at AuraTrack er lagt til på Heim-skjermen, med iOS 16.4 eller nyare. Produsenten av push-tenesta til telefonen fraktar meldinga: han ser at ei melding gjekk til denne eininga, ikkje kva ho seier.',
+    'iPhone og iPad: varsel verkar berre etter at AuraTrack er lagt til på Heim-skjermen, med iOS 16.4 eller nyare. Produsenten av push-tenesta til eininga fraktar meldinga: han ser at ei melding gjekk til denne eininga, ikkje kva ho seier.',
   'push.state.needs_home_screen': 'Legg først AuraTrack til på Heim-skjermen (Del, deretter Legg til på Heim-skjerm).',
   'push.state.unsupported': 'Denne nettlesaren kan ikkje vise varsel.',
   'push.state.blocked': 'Varsel er blokkerte for dette nettstaden i innstillingane til nettlesaren.',
   'push.err.denied': 'Varsel vart ikkje tillatne, så varsel er av.',
   'push.err.failed': 'Varsel kunne ikkje slåast på. Sjekk at huben kan nåast, og prøv igjen.',
   'push.limit':
-    'Varsel treng huben og løyve frå denne eininga. Dei blir gjorde etter beste evne: dei kan koma seint eller utebli viss telefonen er av, sparar straum eller er utan nett. Dei erstattar aldri å følgje med på personen eller følgje nødplanen.',
+    'Varsel treng huben og løyve frå denne eininga. Dei blir gjorde etter beste evne: dei kan koma seint eller utebli viss eininga er av, sparar straum eller er utan nett. Dei erstattar aldri å følgje med på personen eller følgje nødplanen.',
   'push.locked': 'Eit opptak starta frå PIN-skjermen sender varselet når appen er låst opp.',
   'push.notificationTitle': 'AuraTrack',
   'push.notificationBody': 'Opne AuraTrack',
@@ -138,7 +138,7 @@ const nn: Tr = {
 const da: Tr = {
   'hub.title': 'Hub',
   'hub.none':
-    'En hub er et program på en husstandscomputer (eller en Raspberry Pi eller NAS), der altid er tændt. Med en hub opdateres telefoner, mens deres apps er lukkede, og husstanden får en daglig sikkerhedskopi. Den rummer kun forseglede data, som den ikke kan læse.',
+    'En hub er et program på en husstandscomputer (eller en Raspberry Pi eller NAS), der altid er tændt. Med en hub opdateres enheder, mens deres apps er lukkede, og husstanden får en daglig sikkerhedskopi. Den rummer kun forseglede data, som den ikke kan læse.',
   'hub.noneLimit': 'Uden en hub virker alt som før: enhederne opdaterer hinanden, når to af dem er åbne på samme tid.',
   'hub.connect': 'Tilslut en hub',
   'hub.address': 'Hubbens adresse',
@@ -187,14 +187,14 @@ const da: Tr = {
   'push.people': 'For disse personer',
   'push.everyone': 'Alle',
   'push.requirements':
-    'iPhone og iPad: underretninger virker kun, når AuraTrack er lagt på hjemmeskærmen, med iOS 16.4 eller nyere. Producenten af telefonens push-tjeneste fragter beskeden: den ser, at en besked gik til denne enhed, ikke hvad den siger.',
+    'iPhone og iPad: underretninger virker kun, når AuraTrack er lagt på hjemmeskærmen, med iOS 16.4 eller nyere. Producenten af enhedens push-tjeneste fragter beskeden: den ser, at en besked gik til denne enhed, ikke hvad den siger.',
   'push.state.needs_home_screen': 'Læg først AuraTrack på hjemmeskærmen (Del, derefter Føj til hjemmeskærm).',
   'push.state.unsupported': 'Denne browser kan ikke vise underretninger.',
   'push.state.blocked': 'Underretninger er blokeret for dette websted i browserens indstillinger.',
   'push.err.denied': 'Underretninger blev ikke tilladt, så de er slået fra.',
   'push.err.failed': 'Underretninger kunne ikke slås til. Tjek, at hubben kan nås, og prøv igen.',
   'push.limit':
-    'Underretninger kræver hubben og denne enheds tilladelse. De sker efter bedste evne: de kan komme sent eller udeblive, hvis telefonen er slukket, sparer strøm eller er offline. De erstatter aldrig at holde øje med personen eller følge nødplanen.',
+    'Underretninger kræver hubben og denne enheds tilladelse. De sker efter bedste evne: de kan komme sent eller udeblive, hvis enheden er slukket, sparer strøm eller er offline. De erstatter aldrig at holde øje med personen eller følge nødplanen.',
   'push.locked': 'En optagelse startet fra PIN-skærmen sender sin underretning, når appen er låst op.',
   'push.notificationTitle': 'AuraTrack',
   'push.notificationBody': 'Åbn AuraTrack',
@@ -203,7 +203,7 @@ const da: Tr = {
 const sv: Tr = {
   'hub.title': 'Hubb',
   'hub.none':
-    'En hubb är ett program på en hushållsdator (eller en Raspberry Pi eller NAS) som alltid är på. Med en hubb uppdateras telefoner medan deras appar är stängda, och hushållet får en daglig säkerhetskopia. Den håller bara förseglade data som den inte kan läsa.',
+    'En hubb är ett program på en hushållsdator (eller en Raspberry Pi eller NAS) som alltid är på. Med en hubb uppdateras enheter medan deras appar är stängda, och hushållet får en daglig säkerhetskopia. Den håller bara förseglade data som den inte kan läsa.',
   'hub.noneLimit':
     'Utan hubb fungerar allt som förut: enheterna uppdaterar varandra när två av dem är öppna samtidigt.',
   'hub.connect': 'Anslut en hubb',
@@ -254,14 +254,14 @@ const sv: Tr = {
   'push.people': 'För dessa personer',
   'push.everyone': 'Alla',
   'push.requirements':
-    'iPhone och iPad: aviseringar fungerar bara efter att AuraTrack lagts till på hemskärmen, med iOS 16.4 eller senare. Tillverkaren av telefonens pushtjänst fraktar meddelandet: den ser att ett meddelande gick till den här enheten, inte vad det säger.',
+    'iPhone och iPad: aviseringar fungerar bara efter att AuraTrack lagts till på hemskärmen, med iOS 16.4 eller senare. Tillverkaren av enhetens pushtjänst fraktar meddelandet: den ser att ett meddelande gick till den här enheten, inte vad det säger.',
   'push.state.needs_home_screen': 'Lägg först till AuraTrack på hemskärmen (Dela, sedan Lägg till på hemskärmen).',
   'push.state.unsupported': 'Den här webbläsaren kan inte visa aviseringar.',
   'push.state.blocked': 'Aviseringar är blockerade för den här webbplatsen i webbläsarens inställningar.',
   'push.err.denied': 'Aviseringar tilläts inte, så de är avstängda.',
   'push.err.failed': 'Aviseringar kunde inte slås på. Kontrollera att hubben kan nås och försök igen.',
   'push.limit':
-    'Aviseringar kräver hubben och den här enhetens tillstånd. De sker efter bästa förmåga: de kan komma sent eller utebli om telefonen är avstängd, sparar batteri eller är offline. De ersätter aldrig att hålla uppsikt över personen eller följa nödplanen.',
+    'Aviseringar kräver hubben och den här enhetens tillstånd. De sker efter bästa förmåga: de kan komma sent eller utebli om enheten är avstängd, sparar batteri eller är offline. De ersätter aldrig att hålla uppsikt över personen eller följa nödplanen.',
   'push.locked': 'En inspelning som startats från PIN-skärmen skickar sin avisering när appen låsts upp.',
   'push.notificationTitle': 'AuraTrack',
   'push.notificationBody': 'Öppna AuraTrack',
@@ -270,7 +270,7 @@ const sv: Tr = {
 const fi: Tr = {
   'hub.title': 'Keskus',
   'hub.none':
-    'Keskus on kotitalouden tietokoneella (tai Raspberry Pillä tai NAS-laitteella) toimiva ohjelma, joka on aina päällä. Keskuksen avulla puhelimet päivittyvät, vaikka niiden sovellukset ovat kiinni, ja kotitaloudella on päivittäinen varmuuskopio. Se säilyttää vain sinetöityä tietoa, jota se ei voi lukea.',
+    'Keskus on kotitalouden tietokoneella (tai Raspberry Pillä tai NAS-laitteella) toimiva ohjelma, joka on aina päällä. Keskuksen avulla laitteet päivittyvät, vaikka niiden sovellukset ovat kiinni, ja kotitaloudella on päivittäinen varmuuskopio. Se säilyttää vain sinetöityä tietoa, jota se ei voi lukea.',
   'hub.noneLimit':
     'Ilman keskusta kaikki toimii kuten ennen: laitteet päivittävät toisensa, kun kaksi niistä on auki samaan aikaan.',
   'hub.connect': 'Yhdistä keskus',
@@ -321,7 +321,7 @@ const fi: Tr = {
   'push.people': 'Näille henkilöille',
   'push.everyone': 'Kaikille',
   'push.requirements':
-    'iPhone ja iPad: hälytykset toimivat vasta, kun AuraTrack on lisätty Koti-valikkoon, iOS 16.4:llä tai uudemmalla. Puhelimen push-palvelun tarjoaja kuljettaa viestin: se näkee, että viesti meni tälle laitteelle, ei mitä siinä lukee.',
+    'iPhone ja iPad: hälytykset toimivat vasta, kun AuraTrack on lisätty Koti-valikkoon, iOS 16.4:llä tai uudemmalla. Laitteen push-palvelun tarjoaja kuljettaa viestin: se näkee, että viesti meni tälle laitteelle, ei mitä siinä lukee.',
   'push.state.needs_home_screen': 'Lisää ensin AuraTrack Koti-valikkoon (Jaa, sitten Lisää Koti-valikkoon).',
   'push.state.unsupported': 'Tämä selain ei voi näyttää hälytyksiä.',
   'push.state.blocked': 'Ilmoitukset on estetty tälle sivustolle selaimen asetuksissa.',
@@ -329,7 +329,7 @@ const fi: Tr = {
   'push.err.failed':
     'Hälytyksiä ei voitu ottaa käyttöön. Tarkista, että keskus on tavoitettavissa, ja yritä uudelleen.',
   'push.limit':
-    'Hälytykset tarvitsevat keskuksen ja tämän laitteen luvan. Ne tehdään parhaan kykyjen mukaan: ne voivat tulla myöhässä tai jäädä tulematta, jos puhelin on sammutettu, säästää akkua tai on offline-tilassa. Ne eivät koskaan korvaa henkilön seuraamista tai hätäsuunnitelman noudattamista.',
+    'Hälytykset tarvitsevat keskuksen ja tämän laitteen luvan. Ne tehdään parhaan kykyjen mukaan: ne voivat tulla myöhässä tai jäädä tulematta, jos laite on sammutettu, säästää akkua tai on offline-tilassa. Ne eivät koskaan korvaa henkilön seuraamista tai hätäsuunnitelman noudattamista.',
   'push.locked': 'PIN-näytöltä aloitettu tallennus lähettää hälytyksensä, kun sovellus on avattu.',
   'push.notificationTitle': 'AuraTrack',
   'push.notificationBody': 'Avaa AuraTrack',
@@ -338,7 +338,7 @@ const fi: Tr = {
 const de: Tr = {
   'hub.title': 'Hub',
   'hub.none':
-    'Ein Hub ist ein Programm auf einem Haushaltscomputer (oder einem Raspberry Pi oder NAS), das immer läuft. Mit einem Hub aktualisieren sich Telefone, während ihre Apps geschlossen sind, und der Haushalt hat eine tägliche Sicherung. Er hält nur versiegelte Daten, die er nicht lesen kann.',
+    'Ein Hub ist ein Programm auf einem Haushaltscomputer (oder einem Raspberry Pi oder NAS), das immer läuft. Mit einem Hub aktualisieren sich Geräte, während ihre Apps geschlossen sind, und der Haushalt hat eine tägliche Sicherung. Er hält nur versiegelte Daten, die er nicht lesen kann.',
   'hub.noneLimit':
     'Ohne Hub funktioniert alles wie bisher: Die Geräte aktualisieren einander, wenn zwei von ihnen gleichzeitig geöffnet sind.',
   'hub.connect': 'Hub verbinden',
@@ -389,7 +389,7 @@ const de: Tr = {
   'push.people': 'Für diese Personen',
   'push.everyone': 'Alle',
   'push.requirements':
-    'iPhone und iPad: Warnungen funktionieren erst, wenn AuraTrack zum Home-Bildschirm hinzugefügt wurde, ab iOS 16.4. Der Hersteller des Push-Dienstes des Telefons befördert die Nachricht: Er sieht, dass eine Nachricht an dieses Gerät ging, nicht was darin steht.',
+    'iPhone und iPad: Warnungen funktionieren erst, wenn AuraTrack zum Home-Bildschirm hinzugefügt wurde, ab iOS 16.4. Der Hersteller des Push-Dienstes des Geräts befördert die Nachricht: Er sieht, dass eine Nachricht an dieses Gerät ging, nicht was darin steht.',
   'push.state.needs_home_screen':
     'Fügen Sie AuraTrack zuerst zum Home-Bildschirm hinzu (Teilen, dann Zum Home-Bildschirm).',
   'push.state.unsupported': 'Dieser Browser kann keine Warnungen anzeigen.',
@@ -398,7 +398,7 @@ const de: Tr = {
   'push.err.failed':
     'Warnungen konnten nicht eingeschaltet werden. Prüfen Sie, ob der Hub erreichbar ist, und versuchen Sie es erneut.',
   'push.limit':
-    'Warnungen brauchen den Hub und die Erlaubnis dieses Geräts. Sie erfolgen nach bestem Bemühen: Sie können sich verspäten oder ausbleiben, wenn das Telefon aus ist, Akku spart oder offline ist. Sie ersetzen nie, die Person im Blick zu behalten oder dem Notfallplan zu folgen.',
+    'Warnungen brauchen den Hub und die Erlaubnis dieses Geräts. Sie erfolgen nach bestem Bemühen: Sie können sich verspäten oder ausbleiben, wenn das Gerät aus ist, Akku spart oder offline ist. Sie ersetzen nie, die Person im Blick zu behalten oder dem Notfallplan zu folgen.',
   'push.locked': 'Eine vom PIN-Bildschirm gestartete Erfassung sendet ihre Warnung, sobald die App entsperrt ist.',
   'push.notificationTitle': 'AuraTrack',
   'push.notificationBody': 'AuraTrack öffnen',
@@ -407,7 +407,7 @@ const de: Tr = {
 const fr: Tr = {
   'hub.title': 'Hub',
   'hub.none':
-    'Un hub est un programme sur un ordinateur du foyer (ou un Raspberry Pi ou un NAS) qui reste toujours allumé. Avec un hub, les téléphones se mettent à jour même quand leurs applis sont fermées, et le foyer a une sauvegarde quotidienne. Il ne garde que des données scellées qu’il ne peut pas lire.',
+    'Un hub est un programme sur un ordinateur du foyer (ou un Raspberry Pi ou un NAS) qui reste toujours allumé. Avec un hub, les appareils se mettent à jour même quand leurs applis sont fermées, et le foyer a une sauvegarde quotidienne. Il ne garde que des données scellées qu’il ne peut pas lire.',
   'hub.noneLimit':
     'Sans hub, tout continue de fonctionner : les appareils se mettent à jour entre eux quand deux d’entre eux sont ouverts en même temps.',
   'hub.connect': 'Connecter un hub',
@@ -458,7 +458,7 @@ const fr: Tr = {
   'push.people': 'Pour ces personnes',
   'push.everyone': 'Tout le monde',
   'push.requirements':
-    'iPhone et iPad : les alertes ne fonctionnent qu’une fois AuraTrack ajouté à l’écran d’accueil, avec iOS 16.4 ou plus. Le fabricant du service push du téléphone transporte le message : il voit qu’un message est allé à cet appareil, pas ce qu’il dit.',
+    'iPhone et iPad : les alertes ne fonctionnent qu’une fois AuraTrack ajouté à l’écran d’accueil, avec iOS 16.4 ou plus. Le fabricant du service push de l’appareil transporte le message : il voit qu’un message est allé à cet appareil, pas ce qu’il dit.',
   'push.state.needs_home_screen':
     'Ajoutez d’abord AuraTrack à l’écran d’accueil (Partager, puis Sur l’écran d’accueil).',
   'push.state.unsupported': 'Ce navigateur ne peut pas afficher d’alertes.',
@@ -466,7 +466,7 @@ const fr: Tr = {
   'push.err.denied': 'Les notifications n’ont pas été autorisées, les alertes sont donc désactivées.',
   'push.err.failed': 'Les alertes n’ont pas pu être activées. Vérifiez que le hub est joignable, puis réessayez.',
   'push.limit':
-    'Les alertes demandent le hub et l’autorisation de cet appareil. Elles sont faites au mieux : elles peuvent arriver en retard ou manquer si le téléphone est éteint, économise la batterie ou est hors ligne. Elles ne remplacent jamais de surveiller la personne ni de suivre le plan d’urgence.',
+    'Les alertes demandent le hub et l’autorisation de cet appareil. Elles sont faites au mieux : elles peuvent arriver en retard ou manquer si l’appareil est éteint, économise la batterie ou est hors ligne. Elles ne remplacent jamais de surveiller la personne ni de suivre le plan d’urgence.',
   'push.locked':
     'Un enregistrement démarré depuis l’écran du code PIN envoie son alerte une fois l’appli déverrouillée.',
   'push.notificationTitle': 'AuraTrack',
@@ -476,7 +476,7 @@ const fr: Tr = {
 const es: Tr = {
   'hub.title': 'Hub',
   'hub.none':
-    'Un hub es un programa en un ordenador del hogar (o una Raspberry Pi o un NAS) que está siempre encendido. Con uno, los teléfonos se actualizan aunque sus apps estén cerradas, y el hogar tiene una copia de seguridad diaria. Solo guarda datos sellados que no puede leer.',
+    'Un hub es un programa en un ordenador del hogar (o una Raspberry Pi o un NAS) que está siempre encendido. Con uno, los dispositivos se actualizan aunque sus apps estén cerradas, y el hogar tiene una copia de seguridad diaria. Solo guarda datos sellados que no puede leer.',
   'hub.noneLimit':
     'Sin hub todo sigue funcionando: los dispositivos se actualizan entre sí cuando dos de ellos están abiertos a la vez.',
   'hub.connect': 'Conectar un hub',
@@ -527,7 +527,7 @@ const es: Tr = {
   'push.people': 'Para estas personas',
   'push.everyone': 'Todas',
   'push.requirements':
-    'iPhone y iPad: las alertas solo funcionan una vez añadida AuraTrack a la pantalla de inicio, con iOS 16.4 o posterior. El fabricante del servicio push del teléfono transporta el mensaje: ve que un mensaje fue a este dispositivo, no lo que dice.',
+    'iPhone y iPad: las alertas solo funcionan una vez añadida AuraTrack a la pantalla de inicio, con iOS 16.4 o posterior. El fabricante del servicio push del dispositivo transporta el mensaje: ve que un mensaje fue a este dispositivo, no lo que dice.',
   'push.state.needs_home_screen':
     'Añada primero AuraTrack a la pantalla de inicio (Compartir y luego Añadir a pantalla de inicio).',
   'push.state.unsupported': 'Este navegador no puede mostrar alertas.',
@@ -535,7 +535,7 @@ const es: Tr = {
   'push.err.denied': 'No se permitieron las notificaciones, así que las alertas están desactivadas.',
   'push.err.failed': 'No se pudieron activar las alertas. Compruebe que el hub es accesible e inténtelo de nuevo.',
   'push.limit':
-    'Las alertas necesitan el hub y el permiso de este dispositivo. Se hacen lo mejor posible: pueden llegar tarde o faltar si el teléfono está apagado, ahorrando batería o sin conexión. Nunca sustituyen vigilar a la persona ni seguir el plan de emergencia.',
+    'Las alertas necesitan el hub y el permiso de este dispositivo. Se hacen lo mejor posible: pueden llegar tarde o faltar si el dispositivo está apagado, ahorrando batería o sin conexión. Nunca sustituyen vigilar a la persona ni seguir el plan de emergencia.',
   'push.locked': 'Un registro iniciado desde la pantalla del PIN envía su alerta cuando la app se desbloquea.',
   'push.notificationTitle': 'AuraTrack',
   'push.notificationBody': 'Abrir AuraTrack',

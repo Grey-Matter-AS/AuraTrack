@@ -76,7 +76,7 @@ test('the warning, the red alert and the 12-minute stop come on time', async ({ 
 
 test('a recording started on the PIN screen joins the records at unlock', async ({ page }) => {
   await firstRun(page);
-  await page.getByRole('button', { name: 'Lock', exact: true }).click();
+  await page.getByRole('button', { name: 'Lock the app', exact: true }).click();
   await expect(page.getByText('AuraTrack is locked')).toBeVisible();
   await page.getByRole('button', { name: 'Start timer without the PIN' }).click();
   await expect(page.getByText(/Recording while the app is locked/)).toBeVisible();

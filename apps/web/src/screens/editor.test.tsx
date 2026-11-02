@@ -453,3 +453,46 @@ describe("the clock is the test's", () => {
     void act;
   });
 });
+
+describe('the top bar over the editor', () => {
+  const typeNote = async (user: ReturnType<typeof userEvent.setup>) => {
+    await user.click(tab('Notes'));
+    await user.type(screen.getByLabelText('Notes for the neurologist'), 'Slept after');
+  };
+  const lockAndOpen = async (ctx: Ctx, user: ReturnType<typeof userEvent.setup>) => {
+    await user.click(await screen.findByRole('button', { name: 'Lock the app' }));
+    await screen.findByText('AuraTrack is locked');
+    await ctx.client.unlock({ credential: { pin: PIN } });
+  };
+
+  it('Lock saves what the editor holds, as changes', async () => {
+    const ctx = setup();
+    const { id } = await seed(ctx);
+    const user = await openEditor(ctx);
+    await typeNote(user);
+    await lockAndOpen(ctx, user);
+    expect((await get(ctx, id!)).notes).toBe('Slept after');
+  });
+
+  it('Go to Home asks first when there are unsaved edits, and Stay keeps them', async () => {
+    const ctx = setup();
+    await seed(ctx);
+    const user = await openEditor(ctx);
+    await typeNote(user);
+    await user.click(screen.getByRole('button', { name: 'Go to Home' }));
+    await user.click(await screen.findByRole('button', { name: 'Keep editing' }));
+    expect((screen.getByLabelText('Notes for the neurologist') as HTMLTextAreaElement).value).toBe('Slept after');
+  });
+
+  it('edits left behind are gone: a later lock does not save them', async () => {
+    const ctx = setup();
+    const { id } = await seed(ctx);
+    const user = await openEditor(ctx);
+    await typeNote(user);
+    await user.click(screen.getByRole('button', { name: 'Go to Home' }));
+    await user.click(await screen.findByRole('button', { name: 'Leave' }));
+    await screen.findByRole('button', { name: 'Start timer' });
+    await lockAndOpen(ctx, user);
+    expect((await get(ctx, id!)).notes).toBe('');
+  });
+});

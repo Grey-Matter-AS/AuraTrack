@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -24,6 +24,7 @@ function Detail({ id }: { id: string }) {
     <div>
       <p>detail {id}</p>
       <button onClick={() => nav.pop()}>back</button>
+      <button onClick={() => nav.home('detail')}>make first</button>
       <button onClick={() => nav.push('detail', { id: `${id}+` })}>deeper</button>
     </div>
   );
@@ -72,6 +73,14 @@ describe('screen stack', () => {
     expect(screen.getByText('home 1')).toBeTruthy();
     expect(container.querySelectorAll('.ui-stack-screen')).toHaveLength(1);
     expect(document.activeElement).toBe(container.querySelector('[data-screen="home"]'));
+  });
+
+  it('home returns to the first screen from any depth', async () => {
+    render(<ScreenStack initial="home" />);
+    await userEvent.click(screen.getByRole('button', { name: 'open' }));
+    await userEvent.click(screen.getByRole('button', { name: 'deeper' }));
+    await userEvent.click(screen.getByRole('button', { name: 'make first' }));
+    await waitFor(() => expect(document.querySelectorAll('.ui-stack-screen')).toHaveLength(1));
   });
 
   it('back on the first screen does nothing', async () => {

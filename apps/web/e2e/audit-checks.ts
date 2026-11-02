@@ -112,6 +112,7 @@ export function auditInPage(options: AuditOptions): Violation[] {
   if (run('clipped')) {
     for (const el of els) {
       if (['INPUT', 'TEXTAREA', 'SELECT', 'svg', 'path', 'circle', 'rect', 'text', 'g'].includes(el.tagName)) continue;
+      if (el.closest('.ui-header--hidden')) continue; // for screen readers only: nobody sees it, so nothing is cut off
       const s = css(el);
       if (s.display === 'inline' || el.clientWidth === 0) continue;
       const ellipsis = s.textOverflow === 'ellipsis' && s.whiteSpace === 'nowrap';

@@ -157,7 +157,7 @@ for (const device of MATRIX) {
     await page.getByRole('button', { name: 'Back', exact: true }).click();
     await main.getByRole('button', { name: 'Home', exact: true }).click();
 
-    await page.getByRole('button', { name: 'Lock', exact: true }).click();
+    await page.getByRole('button', { name: 'Lock the app', exact: true }).click();
     await page.getByText('AuraTrack is locked').waitFor();
     await everyLook('PIN screen');
 

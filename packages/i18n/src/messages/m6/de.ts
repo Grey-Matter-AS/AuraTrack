@@ -4,7 +4,7 @@ export const de: Partial<Record<keyof typeof m6en, string>> = {
   'more.household': 'Haushalt',
   'hh.title': 'Haushalt',
   'hh.none':
-    'Im Moment bewahrt dieses Telefon seine Einträge allein auf. Ein Haushalt lässt andere Telefone und Tablets derer, die sich um dieselbe Person kümmern, dieselben Einträge haben, ohne Server und ohne dass etwas unversiegelt Ihre Geräte verlässt.',
+    'Im Moment bewahrt dieses Gerät seine Einträge allein auf. Ein Haushalt lässt andere Geräte derer, die sich um dieselbe Person kümmern, dieselben Einträge haben, ohne Server und ohne dass etwas unversiegelt Ihre Geräte verlässt.',
   'hh.noneLimit': 'Die Geräte aktualisieren einander, wenn zwei von ihnen gleichzeitig geöffnet sind.',
   'hh.start': 'Haushalt starten',
   'hh.startTitle': 'Haushalt starten',
@@ -28,7 +28,7 @@ export const de: Partial<Record<keyof typeof m6en, string>> = {
   'hh.fileTitle': 'Aktualisierung per Datei oder QR',
   'hh.limitTitle': 'Gut zu wissen',
   'hh.limit':
-    'Zwei Telefone aktualisieren einander nur, wenn beide gleichzeitig geöffnet sind, nahe beieinander oder beide online. Ein Telefon mit geschlossener App kann von einem anderen Telefon weder aktualisiert noch alarmiert werden, weil das Web nicht erlaubt, dass eine geschlossene App von einer anderen geweckt wird. Es holt auf, wenn es das nächste Mal geöffnet wird, während ein anderes Gerät des Haushalts geöffnet ist. Ein Haushaltscomputer (eine spätere Version) hebt diese Grenze auf.',
+    'Zwei Geräte aktualisieren einander nur, wenn beide gleichzeitig geöffnet sind, nahe beieinander oder beide online. Ein Gerät mit geschlossener App kann von einem anderen Gerät weder aktualisiert noch alarmiert werden, weil das Web nicht erlaubt, dass eine geschlossene App von einer anderen geweckt wird. Es holt auf, wenn es das nächste Mal geöffnet wird, während ein anderes Gerät des Haushalts geöffnet ist. Ein Hub auf einem Computer im Haushalt hebt diese Grenze auf.',
   'hh.removeTitle': '{name} entfernen?',
   'hh.removeText':
     'Es erhält danach nichts Neues mehr: Der Haushalt wechselt seine Schlüssel. Was es schon hat, bleibt auf dem Gerät, und es behält es. Entfernen Sie nur ein Gerät, das verloren ging oder nicht mehr benutzt wird.',
@@ -51,14 +51,14 @@ export const de: Partial<Record<keyof typeof m6en, string>> = {
   'hh.addQr': 'QR-Code zum Beitritt zum Haushalt',
   'hh.addExpires': 'Der Code funktioniert einmal und läuft in {minutes} Minuten ab.',
   'hh.addWaiting': 'Warte auf das neue Gerät …',
-  'hh.addCompare': 'Zeigen beide Telefone dieselben sechs Ziffern?',
+  'hh.addCompare': 'Zeigen beide Geräte dieselben sechs Ziffern?',
   'hh.addCompareDevice': '„{name}“ möchte beitreten.',
   'hh.addSame': 'Dieselben',
   'hh.addDiffer': 'Sie unterscheiden sich',
   'hh.addDone': '„{name}“ ist dabei. Es erhält alles, wenn beide geöffnet sind.',
   'hh.addFailed':
     'Das Gerät konnte nicht hinzugefügt werden. Nichts wurde geändert. Beginnen Sie neu mit einem neuen Code.',
-  'hh.addDeclined': 'Es wurde nicht hinzugefügt, weil die Ziffern nicht auf beiden Telefonen bestätigt wurden.',
+  'hh.addDeclined': 'Es wurde nicht hinzugefügt, weil die Ziffern nicht auf beiden Geräten bestätigt wurden.',
   'hh.addExpired': 'Der Code ist abgelaufen. Beginnen Sie neu.',
   'hh.addRefused': 'Dieses Gerät kannte den Code nicht, deshalb wurde es nicht hinzugefügt.',
   'hh.addAgain': 'Weiteres Gerät hinzufügen',
@@ -70,16 +70,16 @@ export const de: Partial<Record<keyof typeof m6en, string>> = {
   'hh.joinScan': 'QR-Code scannen',
   'hh.joinGo': 'Beitreten',
   'hh.joinConnecting': 'Suche das Gerät …',
-  'hh.joinCompare': 'Zeigt das andere Telefon dieselben sechs Ziffern?',
-  'hh.joinWaitingOther': 'Warte auf die Bestätigung des anderen Telefons …',
+  'hh.joinCompare': 'Zeigt das andere Gerät dieselben sechs Ziffern?',
+  'hh.joinWaitingOther': 'Warte auf die Bestätigung des anderen Geräts …',
   'hh.joinDone':
     'Beigetreten. Die Einträge kommen, wenn das andere Gerät geöffnet ist. Lassen Sie es eine Minute offen.',
   'hh.joinNotFound':
     'Das Gerät wurde nicht gefunden. Prüfen Sie, ob es den Code zeigt und online ist, und versuchen Sie es erneut.',
   'hh.joinHasRecords':
-    'Dieses Telefon hat schon Einträge und kann deshalb keinem Haushalt beitreten. Machen Sie eine Sicherung und stellen Sie sie auf dem Gerät des Haushalts wieder her (Mehr, Sicherung und Wiederherstellung).',
+    'Dieses Gerät hat schon Einträge und kann deshalb keinem Haushalt beitreten. Machen Sie eine Sicherung und stellen Sie sie auf dem Gerät des Haushalts wieder her (Mehr, Sicherung und Wiederherstellung).',
   'hh.joinWaitingFirst': 'Warte auf das erste Treffen mit dem Haushalt. Lassen Sie das andere Gerät geöffnet.',
-  'hh.joinPinTitle': 'Wählen Sie eine PIN für dieses Telefon',
+  'hh.joinPinTitle': 'Wählen Sie eine PIN für dieses Gerät',
   'hh.joinStay': 'Abbrechen',
   'hh.scanTitle': 'QR-Code scannen',
   'hh.scanHelp': 'Halten Sie den Code vor die Kamera.',

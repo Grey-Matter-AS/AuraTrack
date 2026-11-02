@@ -40,7 +40,7 @@ export type MadeReport =
   | { type: 'pdf'; job: ReportJob; fileName: string; landscape: boolean }
   | { type: 'csv'; text: string; fileName: string };
 
-const dayStart = (key: string): number => {
+export const dayStart = (key: string): number => {
   const [y = 0, m = 1, d = 1] = key.split('-').map(Number);
   return startOfLocalDay(new Date(y, m - 1, d));
 };
@@ -65,7 +65,7 @@ export function useReportMaker(): (request: ReportRequest) => MadeReport | null 
         t,
         label,
         language,
-        fmt: { date: fmt.date, longDate: fmt.longDate, time: fmt.time, duration: fmt.duration },
+        fmt: { date: fmt.date, dayMonth: fmt.dayMonth, longDate: fmt.longDate, time: fmt.time, duration: fmt.duration },
         now,
         appVersion: APP_VERSION,
       };
@@ -75,7 +75,8 @@ export function useReportMaker(): (request: ReportRequest) => MadeReport | null 
       if (request.kind === 'neurologist') {
         const input = {
             patient,
-            carerName: settings.carerName,
+            carerName: settings.carerIsContact ? patient.emergencyContact : settings.carerName,
+            carerPhone: settings.carerIsContact ? (patient.emergencyPhone ?? '') : settings.carerPhone,
             recordedBy: settings.recordedBy,
             neurologist: { name: settings.neurologistName, institution: settings.neurologistInstitution, contact: settings.neurologistContact },
             includeDateOfBirth: settings.reportIncludeDateOfBirth,

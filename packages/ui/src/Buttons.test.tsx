@@ -42,6 +42,17 @@ describe('Button', () => {
 });
 
 describe('IconButton', () => {
+  it('can be round, and keeps its name without any text', () => {
+    render(
+      <IconButton label="Lock" tone="danger" round>
+        <svg />
+      </IconButton>,
+    );
+    const button = screen.getByRole('button', { name: 'Lock' });
+    expect(button.className).toContain('ui-icon-btn--round');
+    expect(button.textContent).toBe('');
+  });
+
   it('takes its accessible name from the required label, and shows it as a tooltip', () => {
     render(
       <IconButton label="Delete" tone="danger">

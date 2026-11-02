@@ -236,11 +236,11 @@ describe('bringing in a version 6 file', () => {
     const ctx = setup();
     await seed(ctx);
     const user = await openBackup(ctx);
-    choose('Choose a version 6 file', 'old.json', OLD_FILE);
+    choose('Choose a version 6 backup file', 'old.json', OLD_FILE);
     await user.click(await screen.findByRole('button', { name: 'Bring it in' }));
     const result = await screen.findByRole('status', {}, { timeout: 15_000 });
     expect(result.textContent).toMatch(/Brought in \d+ of \d+ records/);
-    expect(await screen.findByText('The numbers match version 6.')).toBeTruthy();
+    expect(await screen.findByText('The numbers match the backup file.')).toBeTruthy();
     const notes = ((await ctx.client.list({ type: 'seizure' })) as unknown as { notes: string }[]).map((s) => s.notes);
     expect(notes).toEqual(['from version 6']);
   });
@@ -249,9 +249,9 @@ describe('bringing in a version 6 file', () => {
     const ctx = setup();
     await seed(ctx);
     const user = await openBackup(ctx);
-    choose('Choose a version 6 file', 'old.json', OLD_FILE);
+    choose('Choose a version 6 backup file', 'old.json', OLD_FILE);
     await user.click(await screen.findByRole('button', { name: 'Bring it in' }));
-    await screen.findByText('The numbers match version 6.');
+    await screen.findByText('The numbers match the backup file.');
     await waitFor(() =>
       expect((screen.getByRole('button', { name: 'Bring it in' }) as HTMLButtonElement).disabled).toBe(false),
     );
@@ -264,7 +264,7 @@ describe('bringing in a version 6 file', () => {
     const ctx = setup();
     await seed(ctx);
     const user = await openBackup(ctx);
-    choose('Choose a version 6 file', 'x.json', '{"hello": "world"}');
+    choose('Choose a version 6 backup file', 'x.json', '{"hello": "world"}');
     await user.click(await screen.findByRole('button', { name: 'Bring it in' }));
     expect(await screen.findByText('The file could not be read. Nothing was changed.')).toBeTruthy();
   });
@@ -296,21 +296,21 @@ describe('the recovery kit', () => {
     ctx.mount();
     await screen.findByRole('button', { name: 'Start timer' });
     const { kit } = await ctx.client.recoveryKit({ credential: { pin: PIN } });
-    await user.click(screen.getByRole('button', { name: 'Lock' }));
+    await user.click(screen.getByRole('button', { name: 'Lock the app' }));
     await user.click(await screen.findByRole('button', { name: 'Forgot the PIN?' }));
     const sheet = await screen.findByRole('dialog', { name: 'Open with the recovery kit' });
     await user.type(within(sheet).getByLabelText('Code from the kit'), 'AT7KIT1.not-a-real-kit.abc');
     await user.type(within(sheet).getByLabelText('New PIN (at least 4 digits)'), '9753');
     await user.type(within(sheet).getByLabelText('PIN again'), '9753');
     await user.click(within(sheet).getByRole('button', { name: 'Open and set the new PIN' }));
-    expect(await within(sheet).findByText(/does not open the data on this phone/)).toBeTruthy();
+    expect(await within(sheet).findByText(/does not open the data on this device/)).toBeTruthy();
     const code = within(sheet).getByLabelText('Code from the kit');
     await user.clear(code);
     await user.type(code, kit);
     await user.click(within(sheet).getByRole('button', { name: 'Open and set the new PIN' }));
     await screen.findByRole('button', { name: 'Start timer' });
     // The new PIN works, the old one does not
-    await user.click(screen.getByRole('button', { name: 'Lock' }));
+    await user.click(screen.getByRole('button', { name: 'Lock the app' }));
     await user.type(await screen.findByLabelText('PIN'), PIN);
     await user.click(screen.getByRole('button', { name: 'Unlock' }));
     expect(await screen.findByText('That PIN is not right. Try again.')).toBeTruthy();

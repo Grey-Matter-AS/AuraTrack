@@ -73,7 +73,7 @@ describe('choosing a report', () => {
   it('shows the period of the last 90 days, and a custom period with a check that the first day is not after the last', async () => {
     const ctx = setup();
     const { user } = await openReports(ctx);
-    expect(screen.getByText(/ – /)).toBeTruthy();
+    expect(screen.getByText(/ – /).textContent).not.toMatch(/\d{4}-\d{2}-\d{2}/); // the date format of the settings
     await user.click(screen.getByRole('button', { name: 'Choose dates' }));
     fireEvent.change(await screen.findByLabelText('From'), { target: { value: '2026-12-31' } });
     fireEvent.change(screen.getByLabelText('To'), { target: { value: '2026-01-01' } });

@@ -17,7 +17,14 @@ import {
 import { useState } from 'react';
 import { useApp } from '../app/AppContext';
 import { useNav } from '../editor/nav';
-import { ADDITION_KEYS, NO_ADDITIONS, useReportMaker, type ReportKind, type ReportRequest } from '../reports/build';
+import {
+  ADDITION_KEYS,
+  dayStart,
+  NO_ADDITIONS,
+  useReportMaker,
+  type ReportKind,
+  type ReportRequest,
+} from '../reports/build';
 import { reportsEnv } from '../reports/env';
 import './screens.css';
 
@@ -123,7 +130,7 @@ export function Reports() {
                   <DateTimeField label={t('hist.to')} type="date" value={to} onChange={setTo} />
                 </>
               ) : (
-                <p className="app-note">{`${from} – ${to}`}</p>
+                <p className="app-note">{`${fmt.date(dayStart(from))} – ${fmt.date(dayStart(to))}`}</p>
               )}
               {from > to && from !== '' && to !== '' ? (
                 <p role="alert" className="app-banner">

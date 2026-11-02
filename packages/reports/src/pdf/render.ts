@@ -37,7 +37,7 @@ export function renderNeurologist(
       `${t('rep.generated')}: ${r.generated}`,
       `${t('rep.period')}: ${r.period.from} - ${r.period.to} (${t('rep.selectedDays', { count: r.period.days })})`,
     ],
-    right: { label: t('rep.preparedBy'), value: r.preparedBy, meta: r.forLines },
+    right: { label: t('rep.preparedBy'), value: r.preparedBy, meta: [r.preparedByPhone, ...r.forLines].filter(Boolean) },
   });
 
   flow.cards([

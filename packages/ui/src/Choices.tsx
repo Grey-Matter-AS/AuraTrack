@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useId, type ReactNode } from 'react';
 import { cx } from './cx';
 
 export interface Option<V extends string = string> {
@@ -23,6 +23,8 @@ export type ChipGroupProps<V extends string> = (SingleChips<V> | MultiChips<V>) 
   options: readonly Option<V>[];
   /** Names the group for a screen reader. */
   label: string;
+  /** Also shows the label above the chips, for a group that nothing else on the screen names. */
+  showLabel?: boolean;
   /** The chips share the row width. */
   fill?: boolean;
 };
@@ -34,8 +36,13 @@ export function ChipGroup<V extends string>(props: ChipGroupProps<V>) {
     if (!props.multiple) return props.onChange(v);
     props.onChange(props.value.includes(v) ? props.value.filter((x) => x !== v) : [...props.value, v]);
   };
-  return (
-    <div role="group" aria-label={props.label} className={cx('ui-chip-group', props.fill && 'ui-chip-group--fill')}>
+  const labelId = useId();
+  const chips = (
+    <div
+      role="group"
+      {...(props.showLabel ? { 'aria-labelledby': labelId } : { 'aria-label': props.label })}
+      className={cx('ui-chip-group', props.fill && 'ui-chip-group--fill')}
+    >
       {props.options.map((option) => (
         <button
           key={option.value}
@@ -47,6 +54,15 @@ export function ChipGroup<V extends string>(props: ChipGroupProps<V>) {
           {option.label}
         </button>
       ))}
+    </div>
+  );
+  if (!props.showLabel) return chips;
+  return (
+    <div className="ui-field-wrap">
+      <span className="ui-label" id={labelId}>
+        {props.label}
+      </span>
+      {chips}
     </div>
   );
 }

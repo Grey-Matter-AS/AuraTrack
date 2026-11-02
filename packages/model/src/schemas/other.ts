@@ -19,9 +19,15 @@ export const PatientSchema = z.object({
   name: ShortTextSchema,
   dateOfBirth: CalendarDaySchema.nullable(),
   emergencyContact: ShortTextSchema,
+  /** Optional: people saved before it was added have none. */
+  emergencyPhone: ShortTextSchema.optional(),
   color: z.string().max(20),
 });
 export type Patient = z.infer<typeof PatientSchema>;
+
+/** The emergency contact as one line, for the alert and the report: "Sam, 555 0100", or whichever of the two there is. */
+export const emergencyContactLine = (patient: Pick<Patient, 'emergencyContact' | 'emergencyPhone'>): string =>
+  [patient.emergencyContact, patient.emergencyPhone].filter(Boolean).join(', ');
 
 export const WellbeingEntrySchema = z.object({
   ...baseRecord,

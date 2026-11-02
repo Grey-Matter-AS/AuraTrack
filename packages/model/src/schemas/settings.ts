@@ -91,6 +91,9 @@ export const SETTING_DEFS = {
   videoCamera: { scope: 'device', schema: z.enum(['back', 'front']), default: 'back' },
   /** The carer's own name, for reports (F-601). */
   carerName: { scope: 'patient', schema: z.string().max(120), default: '' },
+  carerPhone: { scope: 'patient', schema: z.string().max(120), default: '' },
+  /** The carer is the emergency contact: reports take the carer's details from the contact. */
+  carerIsContact: { scope: 'patient', schema: z.boolean(), default: false },
   /** The clinician and the report (F-606). */
   neurologistName: { scope: 'patient', schema: z.string().max(120), default: '' },
   neurologistInstitution: { scope: 'patient', schema: z.string().max(120), default: '' },

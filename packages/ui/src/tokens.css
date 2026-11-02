@@ -61,6 +61,13 @@
   --warning-bg: #334155;
   --warning-text: #facc15;
   --warning-border: #f59e0b;
+  /* A fixed blue that does not follow the accent, with white on it: 6.7:1 */
+  --blue-solid: #1d4ed8;
+  --blue-solid-border: #1e40af;
+  /* Deep amber with black letters: 6.6:1 */
+  --amber-solid: #d97706;
+  --amber-solid-border: #b45309;
+  --on-amber: #000000;
 
   /* Accent (Settings → Appearance; blue by default). Everything that follows the accent is
      derived here; danger, success and warning stay fixed. */

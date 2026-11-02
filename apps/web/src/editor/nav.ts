@@ -32,6 +32,7 @@ export type ScreenName =
 export interface Nav {
   push: (name: ScreenName, props?: object) => void;
   replace: (name: ScreenName, props?: object) => void;
+  home: (name: ScreenName) => void;
   pop: () => void;
   depth: number;
 }

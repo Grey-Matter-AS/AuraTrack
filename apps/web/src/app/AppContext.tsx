@@ -686,6 +686,7 @@ export function AppProvider({
         }),
       lock: () =>
         guarded(async () => {
+          await beforeLockRef.current?.(); // Lock is on every screen, so what the editor holds is saved first
           await client.lock();
           setSeizures([]);
           setSettingRecords([]);

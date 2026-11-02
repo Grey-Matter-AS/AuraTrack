@@ -42,7 +42,7 @@ export {
   type TextFieldProps,
 } from './Fields';
 export { FilePicker, type FilePickerProps } from './FilePicker';
-export { AppHeader, type AppHeaderProps } from './Header';
+export { AppHeader, AppTopBar, type AppHeaderProps, type AppTopBarProps } from './Header';
 export { Logo, type LogoProps } from './Logo';
 export { Cluster, ScrollArea, Screen, Stack } from './Layout';
 export { NavBar, type NavBarItem, type NavBarProps } from './NavBar';
@@ -59,4 +59,4 @@ export { BottomSheet, Dialog, ToastProvider, useToast, type ToastTone } from './
 export { prefersReducedMotion, useReducedMotion } from './motion';
 export { ENGLISH, UiStringsProvider, useUiStrings, type UiStrings } from './strings';
 export { Tabs, type TabItem, type TabsProps } from './Tabs';
-export { BackIcon, CalendarIcon, ChevronDownIcon, ClockIcon, CloseIcon } from './icons';
+export { BackIcon, CalendarIcon, ChevronDownIcon, ClockIcon, CloseIcon, HomeIcon, LockIcon } from './icons';

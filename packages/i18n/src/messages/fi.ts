@@ -310,7 +310,7 @@ export const fi: Record<MessageKey, string> = {
   'settings.autoLock': 'Lukitse (poissaolon sekuntia)',
   'settings.passkey': 'Face ID tai sormenjälki',
   'settings.passkeyAdd': 'Ota käyttöön Face ID tai sormenjälki',
-  'settings.passkeyOn': 'Otettu käyttöön tässä puhelimessa',
+  'settings.passkeyOn': 'Otettu käyttöön tässä laitteessa',
   'settings.passkeyNone':
     'Tämä selain ei voi avata lukitusta Face ID:llä tai sormenjäljellä. PIN-koodi toimii edelleen.',
   'settings.passkeyPin': 'PIN-koodisi (käyttöönottoa varten)',
