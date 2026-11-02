@@ -18,6 +18,23 @@ function neurologist(over: Parameters<typeof neurologistInput>[0] = {}) {
   return surface;
 }
 
+describe('the logo in the header', () => {
+  it('is on the first page, left of the name, and on no other page', () => {
+    const s = neurologist();
+    const images = s.marks.filter((m) => m.kind === 'image');
+    expect(images).toHaveLength(1);
+    const [logo] = images;
+    const name = s.marks.find((m) => m.kind === 'text' && m.lines[0] === 'AuraTrack');
+    expect(logo?.page).toBe(1);
+    expect(logo && name && logo.kind === 'image' && name.kind === 'text' && logo.x + logo.w < name.x).toBe(true);
+  });
+  it('goes into a real PDF as a picture', () => {
+    const input = neurologistInput({});
+    const job = { kind: 'neurologist', language: 'en', model: buildNeurologistReport(input, ctx), alertSeconds: input.plan.alertSec } as const;
+    expect(new TextDecoder('latin1').decode(makePdf(job))).toContain('/Subtype /Image');
+  });
+});
+
 describe('the neurologist report as pages', () => {
   it('has every section in the order of 6.1', () => {
     const texts = neurologist().texts();

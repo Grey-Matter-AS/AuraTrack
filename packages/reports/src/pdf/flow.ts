@@ -1,3 +1,4 @@
+import { LOGO_PNG } from './logo';
 import type { Color, Surface, TextOptions } from './surface';
 
 // The page flow: a cursor that moves down the page, starts a new page when the next block does not fit, and draws the
@@ -24,6 +25,7 @@ export const hexColor = (hex: string): Color => {
 };
 
 const LH = 1.15;
+const LOGO_SIZE = 18;
 
 export interface Column {
   title: string;
@@ -96,14 +98,15 @@ export class Flow {
     this.y += 24;
   }
 
-  /** The brand header: the name and the title on the left, who it was prepared by on the right. */
+  /** The brand header: the logo, the name and the title on the left, who it was prepared by on the right. */
   header(options: {
     title: string;
     lines: string[];
     right?: { label: string; value: string; meta: string[] };
   }): void {
     const { s } = this;
-    s.text('AuraTrack', this.left, this.y + 12, { size: 12, bold: true, color: COLORS.accent });
+    s.image(LOGO_PNG, this.left, this.y, LOGO_SIZE, LOGO_SIZE);
+    s.text('AuraTrack', this.left + LOGO_SIZE + 5, this.y + 13, { size: 12, bold: true, color: COLORS.accent });
     s.text(options.title, this.left, this.y + 34, { size: 18, bold: true });
     let y = this.y + 48;
     for (const line of options.lines) {

@@ -135,6 +135,13 @@ export class CanvasSurface implements Surface {
       c.stroke();
     }
   }
+  image(png: string, x: number, y: number, w: number, h: number): void {
+    // A picture loads a moment later; by then this page may be finished, so it keeps its own page's context
+    const c = this.ctx();
+    const picture = new Image();
+    picture.onload = () => c.drawImage(picture, x, y, w, h);
+    picture.src = png;
+  }
   output(): Uint8Array {
     return new Uint8Array(0);
   }

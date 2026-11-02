@@ -190,7 +190,7 @@ export const fr: Record<MessageKey, string> = {
   'app.loading': 'Chargement …',
   'app.error': 'Un problème est survenu : {error}',
   'setup.title': 'Configurer AuraTrack',
-  'setup.intro': 'Tout reste sur ce téléphone, protégé par un code PIN. Rien n’est envoyé nulle part.',
+  'setup.intro': 'Tout reste sur cet appareil, protégé par un code PIN. Rien n’est envoyé nulle part.',
   'setup.name': 'Nom de la personne suivie',
   'setup.pin': 'Code PIN (au moins 4 chiffres)',
   'setup.pinAgain': 'Code PIN, encore une fois',

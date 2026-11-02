@@ -1,13 +1,31 @@
-import { AppHeader, BottomSheet, Button, Card, Screen, Stack, TextArea, TextField } from '@auratrack/ui';
+import { LANGUAGES } from '@auratrack/i18n';
+import { AppHeader, BottomSheet, Button, Card, Logo, Screen, Select, Stack, TextArea, TextField } from '@auratrack/ui';
 import { useState } from 'react';
 import { useApp } from '../app/AppContext';
 import { JoinSetup } from './JoinHousehold';
 import { Recording } from './Recording';
+import { LANGUAGE_NAMES } from './RecordingSettings';
 import './screens.css';
 
 // Before the app opens: first-run set-up, and the PIN screen. The PIN screen has a Start button, so a recording never waits
 // for the PIN (README 4.5); what is recorded there joins the records at the next unlock. The full lock screen (auto-lock,
 // passkey) comes in slice 9; this is the part the recording needs now.
+
+/** The language choice on the screens before the app opens: English until one is chosen. */
+export function LanguageChoice() {
+  const { t, language, actions } = useApp();
+  return (
+    <Select
+      label={t('settings.language')}
+      value={language}
+      onChange={(value) => {
+        const next = LANGUAGES.find((l) => l === value);
+        if (next) actions.chooseLanguage(next);
+      }}
+      options={Object.entries(LANGUAGE_NAMES).map(([value, label]) => ({ value, label }))}
+    />
+  );
+}
 
 export function Gate() {
   const app = useApp();
@@ -21,7 +39,7 @@ export function Gate() {
 }
 
 function Setup({ onJoin }: { onJoin: (pin: string) => void }) {
-  const { t, actions, busy } = useApp();
+  const { t, actions, busy, language } = useApp();
   const [name, setName] = useState('');
   const [pin, setPin] = useState('');
   const [again, setAgain] = useState('');
@@ -31,7 +49,9 @@ function Setup({ onJoin }: { onJoin: (pin: string) => void }) {
   return (
     <Screen>
       <Stack>
+        <Logo src="/icons/icon-192.png" size={72} />
         <AppHeader title={t('setup.title')} />
+        <LanguageChoice />
         <p className="app-note">{t('setup.intro')}</p>
         <TextField label={t('setup.name')} value={name} onChange={setName} autoComplete="off" />
         <TextField
@@ -57,7 +77,7 @@ function Setup({ onJoin }: { onJoin: (pin: string) => void }) {
           disabled={busy || name.trim() === ''}
           onClick={() => {
             setShown(true);
-            if (digits && pin === again) void actions.setup({ name, pin });
+            if (digits && pin === again) void actions.setup({ name, pin, language });
           }}
         >
           {t('setup.create')}

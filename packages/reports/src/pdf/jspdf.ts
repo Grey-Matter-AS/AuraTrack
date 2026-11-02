@@ -1,7 +1,7 @@
 import { jsPDF } from 'jspdf';
 import { pdfSafe, type Color, type LineOptions, type RectOptions, type Surface, type TextOptions } from './surface';
 
-// The real surface: a jsPDF document, A4, in points. Everything is vector (text stays text, charts are lines and shapes).
+// The real surface: a jsPDF document, A4, in points. Everything is vector (text stays text, charts are lines and shapes), apart from the logo.
 
 const INK: Color = [17, 24, 39];
 const LINE_HEIGHT = 1.15;
@@ -71,6 +71,7 @@ export function createJsPdfSurface(orientation: 'portrait' | 'landscape' = 'port
       doc.setLineWidth(o.lineWidth ?? 0.6);
       doc.circle(x, y, r, o.fill && o.stroke ? 'FD' : o.fill ? 'F' : 'S');
     },
+    image: (png, x, y, w, h) => void doc.addImage(png, 'PNG', x, y, w, h),
     output: () => new Uint8Array(doc.output('arraybuffer')),
   };
 }

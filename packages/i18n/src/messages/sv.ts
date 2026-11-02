@@ -190,7 +190,7 @@ export const sv: Record<MessageKey, string> = {
   'app.loading': 'Laddar …',
   'app.error': 'Något gick fel: {error}',
   'setup.title': 'Ställ in AuraTrack',
-  'setup.intro': 'Allt stannar på den här telefonen, skyddat av en PIN-kod. Inget skickas någonstans.',
+  'setup.intro': 'Allt stannar på den här enheten, skyddat av en PIN-kod. Inget skickas någonstans.',
   'setup.name': 'Namn på personen som följs',
   'setup.pin': 'PIN-kod (minst 4 siffror)',
   'setup.pinAgain': 'PIN-kod igen',

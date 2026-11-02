@@ -163,12 +163,12 @@ export function JoinScreen() {
 
 /** The join step of first-run set-up: choose a PIN, then the form; when it is done the app opens. */
 export function JoinSetup({ onCancel }: { onCancel: () => void }) {
-  const { t, actions } = useApp();
+  const { t, actions, language } = useApp();
   return (
     <Screen>
       <Stack>
         <AppHeader title={t('hh.joinTitle')} />
-        <JoinForm onJoined={() => void actions.finishJoin()} onCancel={onCancel} />
+        <JoinForm onJoined={() => void actions.finishJoin(language)} onCancel={onCancel} />
       </Stack>
     </Screen>
   );

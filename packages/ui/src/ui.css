@@ -859,6 +859,13 @@
     font-style: italic;
   }
 
+  /* ─── Logo ─── */
+  .ui-logo {
+    display: block;
+    margin-inline: auto;
+    max-width: 100%;
+  }
+
   /* ─── Header with the patient chip ─── */
   .ui-header {
     display: flex;

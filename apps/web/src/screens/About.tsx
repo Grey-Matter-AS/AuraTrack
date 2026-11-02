@@ -1,4 +1,4 @@
-import { AppHeader, Button, Card, Screen, Section, Stack } from '@auratrack/ui';
+import { AppHeader, Button, Card, Logo, Screen, Section, Stack } from '@auratrack/ui';
 import { useApp } from '../app/AppContext';
 import { isInstalled } from '../app/install';
 import { useNav } from '../editor/nav';
@@ -15,6 +15,7 @@ export function About() {
         <AppHeader title={t('more.about')} onBack={() => nav.pop()} />
         <Card>
           <Stack gap="0.5rem">
+            <Logo src="/icons/icon-512.png" size={120} />
             <p className="app-banner">AuraTrack</p>
             <p className="app-note">{t('about.version', { version: APP_VERSION })}</p>
             <p className="app-note">{t('about.tagline')}</p>

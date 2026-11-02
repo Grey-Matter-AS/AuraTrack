@@ -43,6 +43,7 @@ export {
 } from './Fields';
 export { FilePicker, type FilePickerProps } from './FilePicker';
 export { AppHeader, type AppHeaderProps } from './Header';
+export { Logo, type LogoProps } from './Logo';
 export { Cluster, ScrollArea, Screen, Stack } from './Layout';
 export { NavBar, type NavBarItem, type NavBarProps } from './NavBar';
 export {

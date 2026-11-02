@@ -316,6 +316,9 @@ describe('joining from set-up', () => {
     expect(await screen.findByRole('button', { name: 'Start timer' }, { timeout: 8000 })).toBeTruthy();
     await waitFor(() => expect(ctx.api.list({ type: 'seizure' })).toHaveLength(1), { timeout: 15_000 });
     expect(await screen.findByText('Alex', undefined, { timeout: 5000 })).toBeTruthy();
+    // The language the set-up screens were in is kept as this phone's setting, now that the store has a household
+    const saved = (await ctx.api.list({ type: 'setting' })) as unknown as { key: string; value: unknown }[];
+    expect(saved.find((r) => r.key === 'language')?.value).toBe('en');
     listener.close();
     inviterService.stop();
   }, 40_000);

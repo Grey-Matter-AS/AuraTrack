@@ -23,6 +23,7 @@
     "e2e:local": "playwright test --project=chromium --project=firefox --grep-invert \"layout audit|visual|kitchen sink\"",
     "mutation": "stryker run",
     "test:coverage": "vitest run --coverage",
+    "icons": "node scripts/build-icons.mjs",
     "audit": "playwright test audit --project=chromium",
     "visual": "playwright test visual --project=chromium",
     "hub": "pnpm --filter @auratrack/server build && node apps/server/dist/hub.mjs"

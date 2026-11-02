@@ -5,7 +5,7 @@ import { medicationFixture, stripBase } from '@auratrack/model/fixtures';
 import { TEST_PIN_KDF, createStoreApi } from '@auratrack/store';
 import { act, cleanup, render, screen, waitFor, within, configure } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { AppApi } from '../app/AppContext';
 import { fakeEnv, T0 } from '../recording/fakeEnv';
 import AppRoot from './AppRoot';
@@ -56,7 +56,11 @@ async function addDetailsThenBack(user: ReturnType<typeof userEvent.setup>) {
 
 const tick = (ctx: Ctx, ms: number) => act(async () => ctx.f.advance(ms, 1000));
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+  globalThis.localStorage.clear(); // the language is remembered there
+});
 
 describe('first run', () => {
   it('sets up the store and the first person, then shows Home', async () => {
@@ -487,6 +491,22 @@ describe('cancelled recordings and settings', () => {
     await user.selectOptions(await screen.findByLabelText('Language'), 'nb');
     expect(await screen.findByLabelText('Språk')).toBeTruthy();
     expect(globalThis.localStorage.getItem('auratrack.language')).toBe('nb');
+  });
+
+  it('starts in English, lets the language be chosen on the set-up screen, and keeps it afterwards', async () => {
+    const ctx = setup();
+    const user = userEvent.setup();
+    ctx.mount();
+    expect(await screen.findByText(/Everything stays on this device/)).toBeTruthy();
+    await user.selectOptions(screen.getByLabelText('Language'), 'nb');
+    expect(await screen.findByText(/Alt blir på denne enheten/)).toBeTruthy();
+    expect(globalThis.localStorage.getItem('auratrack.language')).toBe('nb'); // the screens before unlock use it too
+    await user.type(screen.getByLabelText(/Navn på/), 'Alex');
+    for (const field of screen.getAllByLabelText(/PIN/)) await user.type(field, PIN);
+    await user.click(screen.getByRole('button', { name: 'Opprett' }));
+    expect(await screen.findByRole('button', { name: 'Logg tidligere anfall' })).toBeTruthy(); // not switched back to English
+    const saved = (await ctx.client.list({ type: 'setting' })) as unknown as { key: string; value: unknown }[];
+    expect(saved.find((r) => r.key === 'language')?.value).toBe('nb'); // kept in the store for next time
   });
 
   it('cycles between people from the chip', async () => {

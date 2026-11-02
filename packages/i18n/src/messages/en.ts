@@ -189,7 +189,7 @@ export const en = {
   'app.loading': 'Loading…',
   'app.error': 'Something went wrong: {error}',
   'setup.title': 'Set up AuraTrack',
-  'setup.intro': 'Everything stays on this phone, protected by a PIN. Nothing is sent anywhere.',
+  'setup.intro': 'Everything stays on this device, protected by a PIN. Nothing is sent anywhere.',
   'setup.name': 'Name of the person being tracked',
   'setup.pin': 'PIN (at least 4 digits)',
   'setup.pinAgain': 'PIN again',

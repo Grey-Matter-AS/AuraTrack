@@ -190,7 +190,7 @@ export const nb: Record<MessageKey, string> = {
   'app.loading': 'Laster …',
   'app.error': 'Noe gikk galt: {error}',
   'setup.title': 'Sett opp AuraTrack',
-  'setup.intro': 'Alt blir på denne telefonen, beskyttet av en PIN-kode. Ingenting sendes noe sted.',
+  'setup.intro': 'Alt blir på denne enheten, beskyttet av en PIN-kode. Ingenting sendes noe sted.',
   'setup.name': 'Navn på personen som følges',
   'setup.pin': 'PIN-kode (minst 4 sifre)',
   'setup.pinAgain': 'PIN-kode igjen',

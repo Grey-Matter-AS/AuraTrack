@@ -42,6 +42,8 @@ export interface Surface {
   line(x1: number, y1: number, x2: number, y2: number, options?: LineOptions): void;
   polyline(points: readonly (readonly [number, number])[], options?: LineOptions): void;
   circle(x: number, y: number, r: number, options?: { fill?: Color; stroke?: Color; lineWidth?: number }): void;
+  /** A picture, from a PNG data URL. */
+  image(png: string, x: number, y: number, w: number, h: number): void;
   output(): Uint8Array;
 }
 
@@ -84,7 +86,8 @@ export type Mark =
   | { kind: 'rect'; page: number; x: number; y: number; w: number; h: number }
   | { kind: 'line'; page: number; x1: number; y1: number; x2: number; y2: number }
   | { kind: 'circle'; page: number; x: number; y: number; r: number }
-  | { kind: 'polyline'; page: number; points: [number, number][] };
+  | { kind: 'polyline'; page: number; points: [number, number][] }
+  | { kind: 'image'; page: number; x: number; y: number; w: number; h: number };
 
 /** A surface that draws nothing and keeps a list of what was drawn: for tests. Text is measured at 0.5 of the size per letter. */
 export class RecordingSurface implements Surface {
@@ -151,6 +154,9 @@ export class RecordingSurface implements Surface {
   circle(x: number, y: number, r: number): void {
     this.marks.push({ kind: 'circle', page: this.page, x, y, r });
   }
+  image(_png: string, x: number, y: number, w: number, h: number): void {
+    this.marks.push({ kind: 'image', page: this.page, x, y, w, h });
+  }
   output(): Uint8Array {
     return new Uint8Array(0);
   }
@@ -171,7 +177,7 @@ export class RecordingSurface implements Surface {
         const x1 = m.align === 'left' ? m.x : m.align === 'center' ? m.x - m.width / 2 : m.x - m.width;
         const lines = m.lines.length;
         inside(m.page, x1, m.y - m.size, x1 + m.width, m.y + (lines - 1) * m.size * 1.15, `"${(m.lines[0] ?? '').slice(0, 30)}"`);
-      } else if (m.kind === 'rect') inside(m.page, m.x, m.y, m.x + m.w, m.y + m.h, 'rect');
+      } else if (m.kind === 'rect' || m.kind === 'image') inside(m.page, m.x, m.y, m.x + m.w, m.y + m.h, m.kind);
       else if (m.kind === 'line') inside(m.page, Math.min(m.x1, m.x2), Math.min(m.y1, m.y2), Math.max(m.x1, m.x2), Math.max(m.y1, m.y2), 'line');
       else if (m.kind === 'circle') inside(m.page, m.x - m.r, m.y - m.r, m.x + m.r, m.y + m.r, 'circle');
       else for (const [x, y] of m.points) inside(m.page, x, y, x, y, 'point');

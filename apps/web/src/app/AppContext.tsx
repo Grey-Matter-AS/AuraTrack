@@ -74,12 +74,21 @@ export type Phase = 'loading' | 'setup' | 'joining' | 'locked' | 'ready' | 'erro
 
 const LANGUAGE_KEY = 'auratrack.language';
 const LANGUAGES: readonly Language[] = ['en', 'nb', 'nn', 'da', 'sv', 'fi', 'de', 'fr', 'es'];
-const asLanguage = (value: unknown): Language => LANGUAGES.find((l) => l === value) ?? 'en';
+// English until the person chooses a language on the set-up screen (or later in settings); the choice is kept here so the
+// screens before unlock use it too
 const storedLanguage = (): Language => {
   try {
-    return asLanguage(globalThis.localStorage?.getItem(LANGUAGE_KEY));
+    const stored = globalThis.localStorage?.getItem(LANGUAGE_KEY);
+    return LANGUAGES.find((l) => l === stored) ?? 'en';
   } catch {
     return 'en';
+  }
+};
+const rememberLanguage = (language: Language) => {
+  try {
+    globalThis.localStorage?.setItem(LANGUAGE_KEY, language);
+  } catch {
+    // private browsing: the language is simply not remembered before unlock
   }
 };
 
@@ -136,11 +145,15 @@ export interface AppState {
     unlockWithPasskey(): Promise<void>;
     /** Opens the app with the printed recovery kit and sets a new PIN. 'wrong_kit' when the kit is not this phone's. */
     unlockWithKit(kit: string, newPin: string): Promise<'ok' | 'wrong_kit'>;
-    setup(args: { name: string; pin: string }): Promise<void>;
+    /** The language of the screens before there is a store to keep a setting in (the set-up and join screens). */
+    chooseLanguage(language: Language): void;
+    /** Makes the store, and keeps the language the screens are in as its language setting. */
+    setup(args: { name: string; pin: string; language?: Language }): Promise<void>;
     /** Makes the store for a phone that will join a household (no person yet); the join screen follows. */
     beginJoin(pin: string): Promise<void>;
     /** The phone has joined: open the app. The people arrive with the first meeting. */
-    finishJoin(): Promise<void>;
+    /** Keeps the language the screens are in as this phone's language setting (it can only be saved once the household is adopted). */
+    finishJoin(language?: Language): Promise<void>;
     unlock(pin: string): Promise<void>;
     lock(): Promise<void>;
     startRecording(): void;
@@ -365,11 +378,7 @@ export function AppProvider({
     );
     const resolved = resolveSettings(records, wanted?.id ?? null);
     setLanguage(resolved.language);
-    try {
-      globalThis.localStorage?.setItem(LANGUAGE_KEY, resolved.language);
-    } catch {
-      // private browsing: the language is simply not remembered before unlock
-    }
+    rememberLanguage(resolved.language);
     await sweepDoses(client, sorted, meds, resolved, controller.now(), sweeping, setAllLogs);
     setRevision((n) => n + 1);
   }, [client, controller, loadLocked]);
@@ -558,11 +567,18 @@ export function AppProvider({
           values: { patientId: patient?.id ?? newId(), scope: SETTING_DEFS[key].scope, key, value },
         });
     };
+    const keepLanguage = (value: Language, patientId: string) =>
+      client.createRecord({ type: 'setting', values: { patientId, scope: 'device', key: 'language', value } });
     return {
-      setup: ({ name, pin }) =>
+      chooseLanguage: (next) => {
+        setLanguage(next);
+        rememberLanguage(next);
+      },
+      setup: ({ name, pin, language: chosen }) =>
         guarded(async () => {
           await client.create({ credential: { pin } });
           const id = newId();
+          if (chosen) await keepLanguage(chosen, id);
           await client.createRecord({
             type: 'patient',
             values: { id, patientId: id, name: name.trim(), dateOfBirth: null, emergencyContact: '', color: '#336699' },
@@ -581,8 +597,10 @@ export function AppProvider({
           await client.create({ credential: { pin } });
           setPhase('joining');
         }),
-      finishJoin: () =>
+      finishJoin: (chosen) =>
         guarded(async () => {
+          // Not before: a store that is to adopt a household must still be empty
+          if (chosen) await keepLanguage(chosen, newId());
           await loadAll();
           setRecovery(NO_RECOVERY);
           setPhase('ready');

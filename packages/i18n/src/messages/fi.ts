@@ -190,7 +190,7 @@ export const fi: Record<MessageKey, string> = {
   'app.loading': 'Ladataan …',
   'app.error': 'Jokin meni pieleen: {error}',
   'setup.title': 'Ota AuraTrack käyttöön',
-  'setup.intro': 'Kaikki pysyy tässä puhelimessa PIN-koodin suojaamana. Mitään ei lähetetä minnekään.',
+  'setup.intro': 'Kaikki pysyy tällä laitteella PIN-koodin suojaamana. Mitään ei lähetetä minnekään.',
   'setup.name': 'Seurattavan henkilön nimi',
   'setup.pin': 'PIN-koodi (vähintään 4 numeroa)',
   'setup.pinAgain': 'PIN-koodi uudelleen',
