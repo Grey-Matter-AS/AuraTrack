@@ -6,17 +6,40 @@ import {
   RECORD_SCHEMAS,
   compareHlc,
   decodeHlc,
+  emergencyPlan,
   encodeHlc,
   initialHlc,
   newId,
   receiveHlc,
+  reduceRecording,
+  seizurePatch,
+  newSeizureValues,
+  sessionFromSeizure,
+  settingValue,
+  settleRecording,
   tickHlc,
+  type RecordingSession,
+  type SettingKey,
   type ChangeLogEntry,
   type Hlc,
   type RecordOf,
   type RecordType,
 } from '@auratrack/model';
-import Dexie, { type EntityTable } from 'dexie';
+import Dexie from 'dexie';
+import { AuraDb } from './db';
+import {
+  UnreadableEntryError,
+  clearMarker,
+  ensureDropBoxKeys,
+  groupByRecording,
+  loadDropBoxPrivateKey,
+  openPosted,
+  readLockedScreen,
+  writeLockedScreen,
+  type LockedScreen,
+  type Posted,
+} from './dropbox';
+import type { DropBoxRow } from './db';
 import { buildRecoveryKit, newRecoverySecret, parseRecoveryKit } from './recovery';
 import {
   exportDeviceKey,
@@ -31,7 +54,6 @@ import {
   wrapDeviceKeyWithPin,
   wrapDeviceKeyWithSecret,
   type PinKdf,
-  type Sealed,
   type WrappedKey,
 } from './crypto';
 import {
@@ -53,36 +75,6 @@ import {
 export type StoredType = Exclude<RecordType, 'changeLog'>;
 const isAppendOnly = (type: string) => (APPEND_ONLY_TYPES as readonly string[]).includes(type);
 const isStoredType = (type: string): type is StoredType => type !== 'changeLog' && type in RECORD_SCHEMAS;
-
-interface RecordRow extends Sealed {
-  type: string;
-  id: string;
-  patientId: string | null;
-  at: number;
-}
-interface LogRow extends Sealed {
-  id: string;
-  stamp: string;
-  recordType: string;
-}
-interface MetaRow {
-  key: string;
-  value: unknown;
-}
-
-class AuraDb extends Dexie {
-  meta!: EntityTable<MetaRow, 'key'>;
-  records!: Dexie.Table<RecordRow, [string, string]>;
-  changeLog!: EntityTable<LogRow, 'id'>;
-  constructor(name: string) {
-    super(name);
-    this.version(1).stores({
-      meta: 'key',
-      records: '[type+id], type, patientId, at',
-      changeLog: 'id, stamp, recordType',
-    });
-  }
-}
 
 export class StoreError extends Error {
   constructor(message: string) {
@@ -106,6 +98,12 @@ export type Credential = { readonly pin: string } | { readonly secret: Uint8Arra
 /** What can unlock an existing store: a PIN, a passkey secret, or the printed recovery kit. */
 export type UnlockCredential = Credential | { readonly recoveryKit: string };
 
+/** Which passkey unlocks this store (base64url). */
+export interface PasskeyRecord {
+  credentialId: string;
+  prfSalt: string;
+}
+
 export interface StoreInfo {
   readonly householdId: string;
   readonly deviceId: string;
@@ -128,6 +126,18 @@ export interface ApplyResult {
   rejected: { entryId: string; reason: string }[];
   /** Append-only records that exist on two devices with different content: the choice is deterministic, and listed for review. */
   conflicts: string[];
+}
+
+/** What emptying the drop box did at the last unlock. */
+export interface DropBoxReport {
+  /** Recordings that were added to (or created in) the records. */
+  recordings: number;
+  /** Entries read and merged. */
+  events: number;
+  /** Entries that could not be read or were not valid: kept in the drop box, never deleted. */
+  quarantined: number;
+  /** Entries left in place because the write failed: tried again at the next unlock. */
+  failed: number;
 }
 
 export interface StoreOptions {
@@ -163,6 +173,8 @@ export class Store {
   private readonly logIds = new Set<string>();
   private queue: Promise<unknown> = Promise.resolve();
   private clock: Hlc;
+  /** What the drop box did at the last unlock. */
+  lastDropBox: DropBoxReport = { recordings: 0, events: 0, quarantined: 0, failed: 0 };
 
   private constructor(
     private readonly db: AuraDb,
@@ -210,6 +222,7 @@ export class Store {
       'pin' in credential
         ? await unlockWithPin(wrapped, credential.pin)
         : await unlockWithSecret(wrapped, credential.secret);
+    await ensureDropBoxKeys(db, unlocked);
     return Store.load(db, unlocked, info, initialHlc(info.deviceId), options);
   }
 
@@ -226,7 +239,9 @@ export class Store {
       const householdId = (await db.meta.get('householdId'))?.value as string;
       const deviceId = (await db.meta.get('deviceId'))?.value as string;
       const clock = decodeHlc((await db.meta.get('hlc'))?.value as string);
-      return await Store.load(db, key, { householdId, deviceId }, clock, options);
+      const store = await Store.load(db, key, { householdId, deviceId }, clock, options);
+      await store.afterUnlock();
+      return store;
     } catch (error) {
       db.close();
       throw error;
@@ -264,7 +279,15 @@ export class Store {
     extractable = false,
   ): Promise<CryptoKey> {
     if ('pin' in credential) return unlockWithPin(wrapped, credential.pin, extractable);
-    if ('secret' in credential) return unlockWithSecret(wrapped, credential.secret, extractable);
+    if ('secret' in credential) {
+      // A store made with a passkey keeps its first wrap under the secret; a PIN store keeps the passkey's wrap beside it
+      const passkey = (await db.meta.get('passkeyWrappedKey'))?.value as WrappedKey | undefined;
+      return unlockWithSecret(
+        wrapped.kdf.name === 'HKDF' ? wrapped : (passkey ?? wrapped),
+        credential.secret,
+        extractable,
+      );
+    }
     const kit = await parseRecoveryKit(credential.recoveryKit);
     const recovery = (await db.meta.get('recoveryWrappedKey'))?.value as WrappedKey | undefined;
     const householdId = (await db.meta.get('householdId'))?.value;
@@ -282,6 +305,37 @@ export class Store {
     const secret = newRecoverySecret();
     await this.db.meta.put({ key: 'recoveryWrappedKey', value: await wrapDeviceKeyWithSecret(key, secret) });
     return buildRecoveryKit(this.info.householdId, secret);
+  }
+
+  /**
+   * Adds unlocking with a passkey (Face ID, fingerprint): the device key wrapped a second time under the passkey's secret.
+   * Needs the current PIN, because the working key cannot be taken out of WebCrypto. The credential id and PRF salt are
+   * not secret: they are kept in the clear, so the right passkey can be asked for before the store is open.
+   */
+  async addPasskey(current: Credential, secret: Uint8Array, handle: PasskeyRecord): Promise<void> {
+    const wrapped = (await this.db.meta.get('wrappedKey'))?.value as WrappedKey;
+    const key = await Store.unwrapWith(this.db, wrapped, current, true);
+    const second = await wrapDeviceKeyWithSecret(key, secret);
+    await unlockWithSecret(second, secret); // proves it opens before it is kept
+    await this.db.meta.bulkPut([
+      { key: 'passkeyWrappedKey', value: second },
+      { key: 'passkey', value: handle },
+    ]);
+  }
+
+  async removePasskey(): Promise<void> {
+    await this.db.meta.bulkDelete(['passkeyWrappedKey', 'passkey']);
+  }
+
+  /** The passkey to ask for, if one is set up. Readable while the store is locked. */
+  static async passkeyOf(name: string): Promise<PasskeyRecord | null> {
+    if (!(await Dexie.exists(name))) return null;
+    const db = new AuraDb(name);
+    try {
+      return ((await db.meta.get('passkey'))?.value as PasskeyRecord | undefined) ?? null;
+    } finally {
+      db.close();
+    }
   }
 
   /** Sets a new PIN. Needs the current credential (or the recovery kit, if the PIN was forgotten). */
@@ -332,6 +386,144 @@ export class Store {
 
   private tick(): Hlc {
     return (this.clock = tickHlc(this.clock, this.now()));
+  }
+
+  // ---- the drop box (recordings started from the PIN screen)
+
+  /** After unlocking: make the drop-box key pair if this store has none, merge what was posted, and refresh the PIN screen. */
+  private async afterUnlock(): Promise<void> {
+    try {
+      await ensureDropBoxKeys(this.db, this.key);
+      this.lastDropBox = await this.mergeDropBox();
+      await this.publishLockedScreen();
+    } catch {
+      // Unlocking must never fail because of this. Nothing is deleted unless it was merged, so the next unlock tries again.
+    }
+  }
+
+  /**
+   * Reads what the locked app posted and adds it to the records. Replaying is safe to repeat (events carry ids), an entry is
+   * deleted only after the write that holds it is confirmed, and anything unreadable is kept apart, never thrown away.
+   */
+  async mergeDropBox(): Promise<DropBoxReport> {
+    const report: DropBoxReport = { recordings: 0, events: 0, quarantined: 0, failed: 0 };
+    const rows = (await this.db.dropbox.orderBy('seq').toArray()).filter((row) => row.quarantined === undefined);
+    if (rows.length === 0) {
+      await clearMarker(this.db);
+      return report;
+    }
+    const privateKey = await loadDropBoxPrivateKey(this.db, this.key);
+    if (!privateKey) return { ...report, failed: rows.length };
+    const entries: { row: DropBoxRow; posted: Posted }[] = [];
+    for (const row of rows) {
+      try {
+        entries.push({ row, posted: await openPosted(privateKey, row) });
+      } catch (error) {
+        if (!(error instanceof UnreadableEntryError)) throw error;
+        await this.quarantine([row], error.reason);
+        report.quarantined++;
+      }
+    }
+    for (const [seizureId, group] of groupByRecording(entries)) {
+      try {
+        const outcome = await this.mergeRecording(seizureId, group.events);
+        if (outcome === 'no_start') {
+          await this.quarantine(group.rows, 'has no start, so it belongs to no recording');
+          report.quarantined += group.rows.length;
+          continue;
+        }
+        await this.db.dropbox.bulkDelete(group.rows.map((row) => row.seq as number)); // only now that the write is confirmed
+        report.events += group.rows.length;
+        if (outcome === 'merged') report.recordings++;
+      } catch {
+        report.failed += group.rows.length;
+      }
+    }
+    if (report.failed === 0) await clearMarker(this.db);
+    return report;
+  }
+
+  private quarantine(rows: DropBoxRow[], reason: string): Promise<unknown> {
+    return this.db.dropbox.bulkUpdate(
+      rows.map((row) => ({ key: row.seq as number, changes: { quarantined: reason } })),
+    );
+  }
+
+  /** 'already' means the seizure was finished before (a repeat after a crash): nothing to add, nothing is overwritten. */
+  private async mergeRecording(
+    seizureId: string,
+    events: Posted['event'][],
+  ): Promise<'merged' | 'already' | 'no_start'> {
+    const versioned = this.versioned('seizure', seizureId);
+    if (versioned && isDeleted(versioned)) return 'already'; // the user deleted it: a repeat must not bring it back
+    const existing = this.get('seizure', seizureId);
+    let base: RecordingSession | null = null;
+    if (existing) {
+      base = sessionFromSeizure(existing);
+      if (!base) return 'already';
+    }
+    const replayed = events.reduce<RecordingSession | null>(reduceRecording, base);
+    if (!replayed) return 'no_start';
+    const session = settleRecording(replayed, this.now(), newId());
+    const values = { ...seizurePatch(session), recordedWhileLocked: true };
+    if (existing) await this.update('seizure', seizureId, values);
+    else await this.create('seizure', { id: seizureId, ...newSeizureValues(session), recordedWhileLocked: true });
+    return 'merged';
+  }
+
+  /** The emergency plan settings as the user set them, wherever they are kept (the plan clamps anything odd). */
+  private planSettings(): Record<string, unknown> {
+    const out: Record<string, unknown> = {};
+    for (const key of ['emergencyAlertMinutes', 'clusterMinCount', 'clusterWindowMinutes']) {
+      const newest = this.list('setting', (s) => s.key === key).sort((a, b) => b.createdAt - a.createdAt)[0];
+      if (newest) out[key] = newest.value;
+    }
+    return out;
+  }
+
+  /** The newest value of a device setting, or its default. */
+  deviceSetting<K extends SettingKey>(key: K): ReturnType<typeof settingValue<K>> {
+    const newest = this.list('setting', (s) => s.scope === 'device' && s.key === key).sort(
+      (a, b) => b.createdAt - a.createdAt,
+    )[0];
+    return settingValue(key, newest?.value);
+  }
+
+  /**
+   * Writes what the PIN screen may show: whether it has Start, which patient, and the alert card. The card is plain text
+   * on purpose (decision 5), so it holds only what the user's settings allow, and nothing when they say "nothing".
+   */
+  async publishLockedScreen(patientId?: string): Promise<LockedScreen> {
+    const previous = await readLockedScreen(this.db);
+    const patients = this.list('patient').sort((a, b) => a.createdAt - b.createdAt);
+    const wanted = patientId ?? previous.patientId;
+    const patient = patients.find((p) => p.id === wanted) ?? patients[0] ?? null;
+    const content = this.deviceSetting('lockedAlertContent');
+    const plan = emergencyPlan(this.planSettings());
+    const rescue = patient
+      ? this.list('medication', (m) => m.patientId === patient.id && m.active && (m.isRescue || m.showInEmergency)).map(
+          (m) => ({ name: m.name, dose: m.dose, unit: m.unit }),
+        )
+      : [];
+    const screen: LockedScreen = {
+      start: patient !== null && this.deviceSetting('lockedStart'),
+      patientId: patient?.id ?? null,
+      patientName: patient && this.deviceSetting('lockedShowName') ? patient.name : null,
+      plan: {
+        emergencyAlertMinutes: plan.alertMinutes,
+        clusterMinCount: plan.clusterMinCount,
+        clusterWindowMinutes: plan.clusterWindowMinutes,
+      },
+      card:
+        content === 'nothing' || !patient
+          ? null
+          : {
+              contact: content === 'rescue_and_contacts' && patient.emergencyContact ? patient.emergencyContact : null,
+              rescue,
+            },
+    };
+    await writeLockedScreen(this.db, screen);
+    return screen;
   }
 
   // ---- reading

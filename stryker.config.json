@@ -9,6 +9,7 @@
     "packages/model/src/rules/**/*.ts",
     "packages/store/src/merge.ts",
     "packages/store/src/crypto.ts",
+    "packages/store/src/dropbox.ts",
     "!**/*.test.ts"
   ],
   "coverageAnalysis": "perTest",

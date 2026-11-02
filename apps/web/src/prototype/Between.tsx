@@ -7,7 +7,7 @@ import { usePrototype } from './state';
 
 /** "Between seizures": a quick entry for symptoms that happen outside a seizure. */
 export function BetweenSheet({ onClose }: { onClose: () => void }) {
-  const { label } = usePrototype();
+  const { label, t } = usePrototype();
   const toast = useToast();
   const [group, setGroup] = useState('');
   const [symptom, setSymptom] = useState('');
@@ -18,7 +18,7 @@ export function BetweenSheet({ onClose }: { onClose: () => void }) {
   return (
     <>
       <BottomSheet
-        title="Between seizures"
+        title={t('home.between')}
         onClose={onClose}
         footer={
           <Button
@@ -26,46 +26,46 @@ export function BetweenSheet({ onClose }: { onClose: () => void }) {
             fullWidth
             disabled={symptom === ''}
             onClick={() => {
-              toast('Saved (prototype: nothing is stored)', 'success');
+              toast(t('common.saved'), 'success');
               onClose();
             }}
           >
-            Save
+            {t('common.save')}
           </Button>
         }
       >
         <Stack>
           <Select
-            label="Group"
+            label={t('between.group')}
             value={group}
             onChange={(v) => {
               setGroup(v);
               setSymptom('');
             }}
-            placeholder="Choose a group"
+            placeholder={t('picker.chooseGroup')}
             options={SYMPTOM_GROUPS.map((g) => ({ value: g.code, label: `${label(g.category)}: ${label(g.code)}` }))}
           />
           <Select
-            label="Symptom"
+            label={t('between.symptom')}
             value={symptom}
             onChange={setSymptom}
-            placeholder="Choose a symptom"
+            placeholder={t('between.chooseSymptom')}
             options={SYMPTOMS.filter((s) => s.group === group).map((s) => ({ value: s.code, label: label(s.code) }))}
           />
-          <DateTimeField label="When" type="datetime-local" value={when} onChange={setWhen} />
+          <DateTimeField label={t('between.when')} type="datetime-local" value={when} onChange={setWhen} />
           <Button onClick={() => setWhere(true)}>
-            {area ? `Where: ${areaText(area, label)}` : 'Where on the body'}
+            {area ? t('between.whereChosen', { area: areaText(area, label) }) : t('between.where')}
           </Button>
-          <TextArea label="Note" value={note} onChange={setNote} rows={3} />
+          <TextArea label={t('between.note')} value={note} onChange={setNote} rows={3} />
         </Stack>
       </BottomSheet>
       {where ? (
         <BottomSheet
-          title="Where on the body"
+          title={t('between.where')}
           onClose={() => setWhere(false)}
           footer={
             <Button variant="primary" fullWidth onClick={() => setWhere(false)}>
-              Done
+              {t('common.done')}
             </Button>
           }
         >

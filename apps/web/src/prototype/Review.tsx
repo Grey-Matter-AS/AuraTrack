@@ -7,20 +7,20 @@ import { usePrototype } from './state';
 export function Review() {
   const nav = useNav();
   const toast = useToast();
-  const { draft, label } = usePrototype();
+  const { draft, label, t } = usePrototype();
   return (
     <Screen>
       <Stack>
-        <AppHeader title="Review" onBack={() => nav.pop()} />
+        <AppHeader title={t('review.title')} onBack={() => nav.pop()} />
         <OverviewStrip draft={draft} />
         <Card compact>
-          <p className="proto-banner">{draft.typeCode ? label(draft.typeCode) : 'Seizure type not set'}</p>
+          <p className="proto-banner">{draft.typeCode ? label(draft.typeCode) : t('review.typeNotSet')}</p>
           {draft.notes ? <p className="proto-note">{draft.notes}</p> : null}
           {draft.findings.length > 0 ? (
-            <p className="proto-note">Afterwards: {draft.findings.map(label).join(', ')}</p>
+            <p className="proto-note">{t('review.afterwards', { list: draft.findings.map(label).join(', ') })}</p>
           ) : null}
           {draft.triggers.length > 0 ? (
-            <p className="proto-note">Triggers: {draft.triggers.map(label).join(', ')}</p>
+            <p className="proto-note">{t('review.triggers', { list: draft.triggers.map(label).join(', ') })}</p>
           ) : null}
         </Card>
         <Timeline draft={draft} />
@@ -29,13 +29,13 @@ export function Review() {
             variant="success"
             size="lg"
             onClick={() => {
-              toast('Saved (prototype: nothing is stored)', 'success');
+              toast(t('common.saved'), 'success');
               goHome(nav);
             }}
           >
-            Save
+            {t('common.save')}
           </Button>
-          <Button onClick={() => nav.pop()}>Back to editing</Button>
+          <Button onClick={() => nav.pop()}>{t('review.backToEditing')}</Button>
         </ButtonRow>
       </Stack>
     </Screen>

@@ -48,3 +48,5 @@ export const isDrafted = (language: Language, code: string): boolean =>
 
 /** Codes that have a label in the given language (used by tests and the review list). */
 export const labelledCodes = (language: Language): string[] => Object.keys(LABELS[language]);
+
+export { MESSAGE_KEYS, message, messageTemplate, type MessageKey, type MessageParams } from './messages';

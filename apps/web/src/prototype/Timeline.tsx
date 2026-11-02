@@ -1,3 +1,4 @@
+import type { MessageKey } from '@auratrack/i18n';
 import { Button, IconButton, Select } from '@auratrack/ui';
 import { areaText } from './BodyMap';
 import {
@@ -18,15 +19,7 @@ import { usePrototype } from './state';
 // The graphical timeline, vertical: a line with the phases, and the symptoms as boxes in the order they happened, with the
 // time between them written on the line. Phones: line on the left. This version has made-up behaviour for the prototype.
 
-const GAP_LABEL: Record<Gap, string> = {
-  same: 'At the same time',
-  few: 'A few seconds later',
-  s10: 'About 10 s later',
-  s30: 'About 30 s later',
-  m1: 'About 1 min later',
-  unknown: 'Time between not known',
-};
-const PHASE_LABEL: Record<PhaseName, string> = { before: 'Before', during: 'During', after: 'After' };
+const gapKey = (gap: Gap): MessageKey => `gap.${gap}`;
 
 export interface TimelineActions {
   move: (id: string, direction: -1 | 1) => void;
@@ -49,12 +42,12 @@ function Moment({
   last: boolean;
   actions?: TimelineActions | undefined;
 }) {
-  const { label, language } = usePrototype();
+  const { label, language, t } = usePrototype();
   const area = areaText(item.area, label);
   const rule = areaRule(item.code); // feelings and states have no place on the body; some symptoms are always in one place
   return (
     <>
-      {position > 0 ? <li className="proto-gap">{GAP_LABEL[item.gap]}</li> : null}
+      {position > 0 ? <li className="proto-gap">{t(gapKey(item.gap))}</li> : null}
       <li className={`proto-phase-${item.phase}`}>
         <div className="proto-moment">
           <p className="proto-moment__name">
@@ -62,33 +55,33 @@ function Moment({
             {label(item.code)}
           </p>
           <p className="proto-moment__meta" lang={language}>
-            {PHASE_LABEL[item.phase]}
+            {t(`tab.${item.phase}`)}
             {area ? ` · ${area}` : ''}
           </p>
           {actions ? (
             <>
               <div className="ui-cluster">
-                <IconButton label="Move up" onClick={() => actions.move(item.id, -1)} disabled={position === 0}>
+                <IconButton label={t('tl.up')} onClick={() => actions.move(item.id, -1)} disabled={position === 0}>
                   ↑
                 </IconButton>
-                <IconButton label="Move down" onClick={() => actions.move(item.id, 1)} disabled={last}>
+                <IconButton label={t('tl.down')} onClick={() => actions.move(item.id, 1)} disabled={last}>
                   ↓
                 </IconButton>
-                <IconButton label="Remove" tone="danger" onClick={() => actions.remove(item.id)}>
+                <IconButton label={t('tl.remove')} tone="danger" onClick={() => actions.remove(item.id)}>
                   ✕
                 </IconButton>
                 {rule.kind === 'ask' ? (
                   <Button size="md" onClick={() => actions.pickArea(item.id)}>
-                    {area ? 'Change area' : 'Add area'}
+                    {area ? t('tl.changeArea') : t('tl.addArea')}
                   </Button>
                 ) : null}
               </div>
               {position > 0 ? (
                 <Select
-                  label="Time since the one before"
+                  label={t('tl.gapLabel')}
                   value={item.gap}
                   onChange={(v) => actions.setGap(item.id, v as Gap)}
-                  options={GAPS.map((g) => ({ value: g, label: GAP_LABEL[g] }))}
+                  options={GAPS.map((g) => ({ value: g, label: t(gapKey(g)) }))}
                 />
               ) : null}
             </>
@@ -109,6 +102,7 @@ export function Timeline({
   actions?: TimelineActions | undefined;
   only?: PhaseName;
 }) {
+  const { t } = usePrototype();
   const ordered = inSeizureOrder(draft.items);
   const firstId = ordered[0]?.id;
   const rows = (phase: PhaseName) =>
@@ -133,15 +127,17 @@ export function Timeline({
     );
   if (only) return <ol className="proto-timeline">{rows(only)}</ol>;
   return (
-    <ol className="proto-timeline" aria-label="Seizure timeline">
-      {marker('Start', draft.start, 'aura')}
-      {prodromeText(draft) ? <li className="proto-gap">Warning signs began {prodromeText(draft)} before</li> : null}
+    <ol className="proto-timeline" aria-label={t('tl.aria')}>
+      {marker(t('tl.start'), draft.start, 'aura')}
+      {prodromeText(draft, t) ? (
+        <li className="proto-gap">{t('tl.warning', { time: prodromeText(draft, t) ?? '' })}</li>
+      ) : null}
       {rows('before')}
-      {marker('Aura ends', draft.auraEnd, 'aura')}
+      {marker(t('tl.auraEnds'), draft.auraEnd, 'aura')}
       {rows('during')}
-      {marker('Seizure ends', draft.seizureEnd, 'seizure')}
+      {marker(t('tl.seizureEnds'), draft.seizureEnd, 'seizure')}
       {rows('after')}
-      {marker('Back to normal', draft.recoveryEnd, 'recovery')}
+      {marker(t('rec.backToNormal'), draft.recoveryEnd, 'recovery')}
     </ol>
   );
 }
@@ -155,6 +151,7 @@ const phaseColour = (phase: string): string =>
 
 /** The whole seizure as one bar, shown above every tab so the full picture is always in view. */
 export function OverviewStrip({ draft, now }: { draft: Draft; now?: number }) {
+  const { t } = usePrototype();
   const end = draft.recoveryEnd ?? draft.seizureEnd ?? now ?? draft.start;
   const total = Math.max(1, end - draft.start);
   const auraMs = draft.auraEnd !== null ? Math.max(0, draft.auraEnd - draft.start) : 0;
@@ -163,7 +160,7 @@ export function OverviewStrip({ draft, now }: { draft: Draft; now?: number }) {
   const pct = (ms: number) => `${Math.round((ms / total) * 100)}%`;
   return (
     <div>
-      <div className="proto-strip" role="img" aria-label="Overview: aura, seizure, recovery">
+      <div className="proto-strip" role="img" aria-label={t('tl.overview')}>
         <span className="proto-aura" style={{ width: pct(auraMs) }} />
         <span className="proto-seizure" style={{ width: pct(seizureMs) }} />
         <span className="proto-recovery" style={{ width: pct(recoveryMs) }} />
@@ -171,19 +168,19 @@ export function OverviewStrip({ draft, now }: { draft: Draft; now?: number }) {
       <ul className="proto-legend">
         <li>
           <span className="proto-dot proto-aura" />
-          Aura {mmss(auraMs / 1000)}
+          {t('rec.aura')} {mmss(auraMs / 1000)}
         </li>
         <li>
           <span className="proto-dot proto-seizure" />
-          Seizure {mmss(seizureMs / 1000)}
+          {t('rec.seizure')} {mmss(seizureMs / 1000)}
         </li>
         <li>
           <span className="proto-dot proto-recovery" />
-          Recovery {mmss(recoveryMs / 1000)}
+          {t('rec.recovery')} {mmss(recoveryMs / 1000)}
         </li>
       </ul>
     </div>
   );
 }
 
-export { PHASES, PHASE_LABEL };
+export { PHASES };

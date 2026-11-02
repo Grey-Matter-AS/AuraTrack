@@ -1,0 +1,155 @@
+/* The seizure editor: overview strip, vertical timeline, body map (M3, slice 7). Colours and sizes come from the tokens. */
+/* Overview strip: the whole seizure at a glance, above every tab */
+.ed-strip {
+  display: flex;
+  width: 100%;
+  height: 0.75rem;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--bg-input);
+}
+.ed-strip > span {
+  display: block;
+  height: 100%;
+}
+.ed-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--fs-small);
+  font-weight: 700;
+}
+.ed-dot {
+  display: inline-block;
+  width: 0.75rem;
+  height: 0.75rem;
+  margin-inline-end: 0.375rem;
+  border-radius: 50%;
+}
+.ed-aura {
+  background: #d97706;
+}
+.ed-seizure {
+  background: var(--danger);
+}
+.ed-recovery {
+  background: var(--accent);
+}
+
+/* The vertical timeline: a line on the left, phase markers and symptom boxes on the right */
+.ed-timeline {
+  --line: var(--border);
+  position: relative;
+  margin: 0;
+  padding: 0 0 0 1.5rem;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.ed-timeline::before {
+  content: '';
+  position: absolute;
+  inset-block: 0.5rem;
+  inset-inline-start: 0.4375rem;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--line);
+}
+.ed-timeline > li {
+  position: relative;
+  min-width: 0;
+}
+.ed-timeline > li::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: -1.5rem;
+  top: 0.75rem;
+  width: 1rem;
+  height: 1rem;
+  box-sizing: border-box;
+  border-radius: 50%;
+  background: var(--phase, var(--text-dim));
+  border: 3px solid var(--bg-card);
+}
+.ed-marker {
+  font-size: var(--fs-small);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding-block: 0.5rem;
+  overflow-wrap: anywhere;
+}
+.ed-moment {
+  padding: 0.625rem 0.75rem;
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+  border-inline-start: 5px solid var(--phase, var(--border));
+  background: var(--bg-raised);
+  color: var(--text-on-raised);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.ed-moment__name {
+  margin: 0;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.ed-moment__meta {
+  margin: 0;
+  font-size: var(--fs-small);
+  color: var(--text-dim);
+  overflow-wrap: anywhere;
+}
+.ed-gap {
+  font-size: var(--fs-small);
+  color: var(--text-dim);
+  font-weight: 700;
+  padding-block: 0.25rem;
+}
+.ed-phase-before {
+  --phase: #d97706;
+}
+.ed-phase-during {
+  --phase: var(--danger);
+}
+.ed-phase-after {
+  --phase: var(--accent);
+}
+
+/* Body map */
+.ed-map {
+  display: block;
+  width: min(12rem, 60%);
+  height: auto;
+  margin-inline: auto;
+}
+.ed-map [role='button'] {
+  cursor: pointer;
+  outline: none;
+}
+.ed-map [role='button'] > * {
+  fill: var(--bg-input);
+  stroke: var(--text-dim);
+  stroke-width: 2;
+}
+.ed-map [role='button'][aria-pressed='true'] > * {
+  fill: var(--action);
+  stroke: var(--action-border);
+}
+.ed-map [role='button']:focus-visible > * {
+  stroke: var(--accent-text);
+  stroke-width: 4;
+}
+.ed-map text {
+  fill: var(--text-dim);
+  font-size: 11px;
+  font-weight: 800;
+  pointer-events: none;
+}

@@ -26,11 +26,7 @@ const QUICK: { value: string; area: Area }[] = [
     },
   },
 ];
-const QUICK_LABEL: Record<string, string> = {
-  whole: 'Whole body',
-  both: 'Both sides',
-  spread: 'Started one side, then spread',
-};
+const QUICK_KEY = { whole: 'map.whole', both: 'map.both', spread: 'map.spread' } as const;
 
 function Shape({
   label,
@@ -57,7 +53,7 @@ function Shape({
 }
 
 export function BodyMap({ value, onChange }: { value: Area | null; onChange: (area: Area | null) => void }) {
-  const { label } = usePrototype();
+  const { label, t } = usePrototype();
   const [side, setSide] = useState<'front' | 'back'>('front');
   const region = BODY_REGIONS.find((r) => r.code === value?.region);
   const sub = region?.subRegions.find((s) => s.code === value?.subRegion);
@@ -68,20 +64,20 @@ export function BodyMap({ value, onChange }: { value: Area | null; onChange: (ar
   const rightX = side === 'front' ? 14 : 86;
   const leftLegX = side === 'front' ? 62 : 38;
   const rightLegX = side === 'front' ? 38 : 62;
-  const L = side === 'front' ? 'R' : 'L';
-  const R = side === 'front' ? 'L' : 'R';
+  const L = side === 'front' ? t('map.right') : t('map.left');
+  const R = side === 'front' ? t('map.left') : t('map.right');
   return (
     <Stack>
       <ChipGroup
-        label="View"
+        label={t('map.view')}
         value={side}
         onChange={setSide}
         options={[
-          { value: 'front', label: 'Front' },
-          { value: 'back', label: 'Back' },
+          { value: 'front', label: t('map.front') },
+          { value: 'back', label: t('map.back') },
         ]}
       />
-      <svg className="proto-map" viewBox="0 0 120 232" role="group" aria-label="Body map">
+      <svg className="proto-map" viewBox="0 0 120 232" role="group" aria-label={t('map.aria')}>
         <Shape
           label={label('body.head_and_face')}
           pressed={on('body.head_and_face')}
@@ -132,22 +128,22 @@ export function BodyMap({ value, onChange }: { value: Area | null; onChange: (ar
         </text>
       </svg>
       <ChipGroup
-        label="Quick choices"
+        label={t('map.quick')}
         value={QUICK.find((q) => JSON.stringify(q.area) === JSON.stringify(value))?.value ?? null}
         onChange={(v) =>
           set(QUICK.find((q) => q.value === v)?.area ?? { region: 'body.whole_body', subRegion: null, part: null })
         }
-        options={QUICK.map((q) => ({ value: q.value, label: QUICK_LABEL[q.value] ?? q.value }))}
+        options={QUICK.map((q) => ({ value: q.value, label: t(QUICK_KEY[q.value as keyof typeof QUICK_KEY]) }))}
       />
       <ChipGroup
-        label="Area"
+        label={t('map.area')}
         value={value?.region ?? null}
         onChange={(v) => set({ region: v, subRegion: null, part: null })}
         options={BODY_REGIONS.map((r) => ({ value: r.code, label: label(r.code) }))}
       />
       {region && region.subRegions.length > 1 ? (
         <ChipGroup
-          label="Side or part"
+          label={t('map.sideOrPart')}
           value={value?.subRegion ?? null}
           onChange={(v) => set({ region: region.code, subRegion: v, part: null })}
           options={region.subRegions.map((s) => ({ value: s.code, label: label(s.code) }))}
@@ -155,14 +151,14 @@ export function BodyMap({ value, onChange }: { value: Area | null; onChange: (ar
       ) : null}
       {sub && sub.parts.length > 0 ? (
         <ChipGroup
-          label="Detail"
+          label={t('map.detail')}
           value={value?.part ?? null}
           onChange={(v) => set({ region: value?.region ?? '', subRegion: sub.code, part: v })}
           options={sub.parts.map((p) => ({ value: p.code, label: label(p.code) }))}
         />
       ) : null}
       <Button variant="ghost" onClick={() => onChange(null)} disabled={value === null}>
-        No area
+        {t('map.none')}
       </Button>
     </Stack>
   );

@@ -1,3 +1,4 @@
+import type { MessageKey, MessageParams } from '@auratrack/i18n';
 import { SEIZURE_TYPES, SYMPTOMS, SYMPTOM_GROUPS, bodyAreaFromLegacy } from '@auratrack/model';
 
 // Made-up data for the clickable prototype (M3, slice 4). Nothing here is real, and nothing is saved.
@@ -209,17 +210,18 @@ export const SAVED_SETS: SavedSet[] = [
   },
 ];
 
-export const QUICK_NOTES = ['FELL', 'BLUE', 'VOMITED', 'WET'] as const;
+export const QUICK_NOTE_KEYS = ['quick.fell', 'quick.blue', 'quick.vomited', 'quick.wet'] as const;
 export const RESCUE = {
   medication: 'Midazolam 10 mg, buccal',
   contact: 'Jordan (parent) · 555 0100',
   neurologist: 'Dr. Example · 555 0199',
 } as const;
 
+/** Made-up recent seizures: how many days ago and at what time, so the date is written in the chosen language. */
 export const RECENT = [
-  { id: 'r1', whenText: 'Yesterday 21:14', typeCode: 'seizure_type.focal_impaired', seconds: 94, flag: null },
-  { id: 'r2', whenText: 'Mon 07:52', typeCode: 'seizure_type.tonic_clonic', seconds: 312, flag: 'long' },
-  { id: 'r3', whenText: 'Sat 16:30', typeCode: 'seizure_type.absence', seconds: 18, flag: null },
+  { id: 'r1', daysAgo: 1, hour: 21, minute: 14, typeCode: 'seizure_type.focal_impaired', seconds: 94, flag: null },
+  { id: 'r2', daysAgo: 3, hour: 7, minute: 52, typeCode: 'seizure_type.tonic_clonic', seconds: 312, flag: 'long' },
+  { id: 'r3', daysAgo: 5, hour: 16, minute: 30, typeCode: 'seizure_type.absence', seconds: 18, flag: null },
 ] as const;
 
 export const mmss = (totalSeconds: number): string => {
@@ -245,10 +247,13 @@ export function localInputValue(ms: number): string {
   return `${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())}T${two(d.getHours())}:${two(d.getMinutes())}`;
 }
 
-const UNIT_SHORT = { seconds: 's', minutes: 'min', hours: 'h' } as const;
-/** "about 30 s", "about 2 h", or null when there was no warning. */
-export const prodromeText = (d: Pick<Draft, 'prodromeAmount' | 'prodromeUnit'>): string | null =>
-  d.prodromeAmount > 0 ? `about ${d.prodromeAmount} ${UNIT_SHORT[d.prodromeUnit]}` : null;
+const UNIT_KEY = { seconds: 'unit.sShort', minutes: 'unit.minShort', hours: 'unit.hShort' } as const;
+/** "about 30 s", "about 2 h", or null when there was no warning. `t` writes it in the chosen language. */
+export const prodromeText = (
+  d: Pick<Draft, 'prodromeAmount' | 'prodromeUnit'>,
+  t: (key: MessageKey, params?: MessageParams) => string,
+): string | null =>
+  d.prodromeAmount > 0 ? t('tl.about', { value: `${d.prodromeAmount} ${t(UNIT_KEY[d.prodromeUnit])}` }) : null;
 /** What the model stores: whole seconds. */
 export const prodromeSeconds = (d: Pick<Draft, 'prodromeAmount' | 'prodromeUnit'>): number =>
   d.prodromeAmount * { seconds: 1, minutes: 60, hours: 3600 }[d.prodromeUnit];

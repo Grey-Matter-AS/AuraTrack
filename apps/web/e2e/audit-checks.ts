@@ -111,7 +111,7 @@ export function auditInPage(options: AuditOptions): Violation[] {
   // ── Clipped: content that does not fit its own box and is cut off, or spills out of it
   if (run('clipped')) {
     for (const el of els) {
-      if (['INPUT', 'TEXTAREA', 'SELECT', 'svg', 'path', 'circle', 'rect'].includes(el.tagName)) continue;
+      if (['INPUT', 'TEXTAREA', 'SELECT', 'svg', 'path', 'circle', 'rect', 'text', 'g'].includes(el.tagName)) continue;
       const s = css(el);
       if (s.display === 'inline' || el.clientWidth === 0) continue;
       const ellipsis = s.textOverflow === 'ellipsis' && s.whiteSpace === 'nowrap';

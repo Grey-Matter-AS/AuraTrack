@@ -27,37 +27,29 @@ import { usePrototype } from './state';
 // which of them are shown). Every tab is always there with its state; the overview above shows the whole seizure; Save works
 // from any tab and Review shows everything in order before saving.
 
-const TAB_NAME: Record<TabId, string> = {
-  classification: 'Classification',
-  before: 'Before',
-  during: 'During',
-  after: 'After',
-  notes: 'Notes',
-};
-
 const NOT_SURE = [{ value: 'unknown', label: 'Not sure' }] as const;
 
 export function Editor() {
   const nav = useNav();
   const toast = useToast();
-  const { draft, setDraft, label } = usePrototype();
+  const { draft, setDraft, label, t } = usePrototype();
   const [tab, setTab] = useState<TabId>('classification');
   const [areaFor, setAreaFor] = useState<string | null>(null);
 
   const setItems = (update: (previous: Item[]) => Item[]) => setDraft((d) => ({ ...d, items: update(d.items) }));
   const count = (phase: PhaseName) => draft.items.filter((i) => i.phase === phase).length;
-  const added = (n: number) => (n === 0 ? 'not filled in yet' : `${n} added`);
+  const added = (n: number) => (n === 0 ? t('tab.notFilled') : t('tab.added', { n }));
 
   const ids = tabsFor(draft.typeCode);
   const active: TabId = ids.includes(tab) ? tab : 'classification'; // a tab the type does not show falls back to the first
   const state: Record<TabId, string> = {
-    classification: draft.typeCode ? label(draft.typeCode) : 'type not set',
-    before: prodromeText(draft) ? `${added(count('before'))} · ${prodromeText(draft)}` : added(count('before')),
+    classification: draft.typeCode ? label(draft.typeCode) : t('tab.typeNotSet'),
+    before: prodromeText(draft, t) ? `${added(count('before'))} · ${prodromeText(draft, t)}` : added(count('before')),
     during: added(count('during')),
     after: added(count('after') + draft.findings.length),
-    notes: draft.notes ? 'written' : 'nothing yet',
+    notes: draft.notes ? t('tab.written') : t('tab.nothingYet'),
   };
-  const tabs: TabItem[] = ids.map((id) => ({ id, label: TAB_NAME[id], state: state[id] }));
+  const tabs: TabItem[] = ids.map((id) => ({ id, label: t(`tab.${id}`), state: state[id] }));
 
   const actions: TimelineActions = {
     move: (id, direction) =>
@@ -76,7 +68,7 @@ export function Editor() {
   };
 
   const save = () => {
-    toast('Saved (prototype: nothing is stored)', 'success');
+    toast(t('common.saved'), 'success');
     goHome(nav);
   };
   const editing = draft.items.find((i) => i.id === areaFor);
@@ -85,21 +77,21 @@ export function Editor() {
     <Screen>
       <Stack>
         <AppHeader
-          title={draft.isPast ? 'Past seizure' : 'Seizure details'}
+          title={t(draft.isPast ? 'editor.titlePast' : 'editor.title')}
           onBack={() => nav.pop()}
           actions={
             <>
               <Button size="md" onClick={() => nav.push('review')}>
-                Review
+                {t('common.review')}
               </Button>
               <Button size="md" variant="primary" onClick={save}>
-                Save
+                {t('common.save')}
               </Button>
             </>
           }
         />
         <OverviewStrip draft={draft} />
-        <Tabs tabs={tabs} activeTab={active} onTabChange={(id) => setTab(id as TabId)} label="Seizure sections">
+        <Tabs tabs={tabs} activeTab={active} onTabChange={(id) => setTab(id as TabId)} label={t('editor.sections')}>
           {active === 'classification' ? <ClassificationTab /> : null}
           {active === 'before' ? <BeforeTab actions={actions} setItems={setItems} /> : null}
           {active === 'during' ? (
@@ -114,11 +106,11 @@ export function Editor() {
       </Stack>
       {editing ? (
         <BottomSheet
-          title={`Where: ${label(editing.code)}`}
+          title={t('area.where', { symptom: label(editing.code) })}
           onClose={() => setAreaFor(null)}
           footer={
             <Button variant="primary" fullWidth onClick={() => setAreaFor(null)}>
-              Done
+              {t('common.done')}
             </Button>
           }
         >
@@ -133,30 +125,26 @@ export function Editor() {
 }
 
 function ClassificationTab() {
-  const { draft, setDraft, label } = usePrototype();
+  const { draft, setDraft, label, t } = usePrototype();
   const focal = draft.onset === 'focal';
   return (
     <Stack>
-      <Section title="What kind of seizure was it?">
+      <Section title={t('cls.question')}>
         <Stack>
           <ChipGroup
-            label="Seizure type"
+            label={t('cls.typeLabel')}
             value={draft.typeCode}
             onChange={(typeCode) => setDraft((d) => ({ ...d, typeCode }))}
             options={SEIZURE_TYPES.map((t) => ({ value: t.code, label: label(t.code) }))}
           />
-          <p className="proto-note">
-            {draft.typeCode
-              ? 'The other tabs now follow this type: what they suggest, and which of them are shown.'
-              : 'Not sure? Leave it empty: everything still works, and you can set it later.'}
-          </p>
+          <p className="proto-note">{draft.typeCode ? t('cls.follow') : t('cls.notSureHint')}</p>
         </Stack>
       </Section>
-      <Section title="Classification (optional)">
+      <Section title={t('cls.section')}>
         <Stack>
-          <p className="proto-note">Answer what you can. "Not sure" is always fine and can be changed later.</p>
+          <p className="proto-note">{t('cls.intro')}</p>
           <ChipGroup
-            label="Where did it start?"
+            label={t('cls.onset')}
             value={draft.onset}
             onChange={(onset) => setDraft((d) => ({ ...d, onset }))}
             options={
@@ -169,7 +157,7 @@ function ClassificationTab() {
           />
           {focal ? (
             <ChipGroup
-              label="Awareness"
+              label={t('cls.awareness')}
               value={draft.awareness}
               onChange={(awareness) => setDraft((d) => ({ ...d, awareness }))}
               options={
@@ -182,7 +170,7 @@ function ClassificationTab() {
             />
           ) : null}
           <ChipGroup
-            label="Movement"
+            label={t('cls.movement')}
             value={draft.motor}
             onChange={(motor) => setDraft((d) => ({ ...d, motor }))}
             options={
@@ -198,7 +186,9 @@ function ClassificationTab() {
               label={label('ilae.spread_to_both_sides')}
               value={draft.spread}
               onChange={(spread) => setDraft((d) => ({ ...d, spread }))}
-              options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }, ...NOT_SURE] as const}
+              options={
+                [{ value: 'yes', label: t('common.yes') }, { value: 'no', label: t('common.no') }, ...NOT_SURE] as const
+              }
             />
           ) : null}
         </Stack>
@@ -208,35 +198,35 @@ function ClassificationTab() {
 }
 
 function BeforeTab({ actions, setItems }: { actions: TimelineActions; setItems: (u: (p: Item[]) => Item[]) => void }) {
-  const { draft, setDraft, label } = usePrototype();
+  const { draft, setDraft, label, t } = usePrototype();
   return (
     <Stack>
-      <Section title="Warning signs">
+      <Section title={t('before.warningSection')}>
         <Stack>
           <NumberField
-            label="How long before the seizure did the first warning sign start?"
-            help="Leave 0 if there was none"
+            label={t('before.howLong')}
+            help={t('before.leaveZero')}
             value={draft.prodromeAmount}
             max={999}
             maxLength={3}
             onChange={(prodromeAmount) => setDraft((d) => ({ ...d, prodromeAmount }))}
           />
           <ChipGroup
-            label="Unit of time"
+            label={t('before.unit')}
             value={draft.prodromeUnit}
             onChange={(prodromeUnit) => setDraft((d) => ({ ...d, prodromeUnit }))}
             options={[
-              { value: 'seconds', label: 'Seconds' },
-              { value: 'minutes', label: 'Minutes' },
-              { value: 'hours', label: 'Hours' },
+              { value: 'seconds', label: t('unit.seconds') },
+              { value: 'minutes', label: t('unit.minutes') },
+              { value: 'hours', label: t('unit.hours') },
             ]}
           />
         </Stack>
       </Section>
-      <Section title="Possible triggers">
+      <Section title={t('before.triggers')}>
         <ChipGroup
           multiple
-          label="Triggers"
+          label={t('before.triggersLabel')}
           value={draft.triggers}
           onChange={(triggers) => setDraft((d) => ({ ...d, triggers }))}
           options={TRIGGERS.map((t) => ({ value: t.code, label: label(t.code) }))}
@@ -249,39 +239,39 @@ function BeforeTab({ actions, setItems }: { actions: TimelineActions; setItems: 
 }
 
 function AfterTab({ actions, setItems }: { actions: TimelineActions; setItems: (u: (p: Item[]) => Item[]) => void }) {
-  const { draft, setDraft, label } = usePrototype();
+  const { draft, setDraft, label, t } = usePrototype();
   const [group, setGroup] = useState<string>(FINDING_GROUPS[0]?.code ?? '');
   const inGroup = FINDINGS.filter((f) => f.group === group);
   return (
     <Stack>
-      <Section title="How the person was afterwards">
+      <Section title={t('after.section')}>
         <Select
-          label="Group"
+          label={t('after.group')}
           value={group}
           onChange={setGroup}
           options={FINDING_GROUPS.map((g) => ({ value: g.code, label: label(g.code) }))}
         />
         <ChipGroup
           multiple
-          label="Findings"
+          label={t('after.findings')}
           value={draft.findings}
           onChange={(findings) => setDraft((d) => ({ ...d, findings }))}
           options={inGroup.map((f) => ({ value: f.code, label: label(f.code) }))}
         />
         {draft.findings.length > 0 ? (
-          <p className="proto-note">Chosen: {draft.findings.map(label).join(', ')}</p>
+          <p className="proto-note">{t('after.chosen', { list: draft.findings.map(label).join(', ') })}</p>
         ) : null}
       </Section>
-      <Section title="Recovery">
+      <Section title={t('after.recovery')}>
         <Stack>
           <Checkbox
             checked={draft.notBackYet}
             onChange={(notBackYet) => setDraft((d) => ({ ...d, notBackYet }))}
-            label="Not back to normal yet"
+            label={t('after.notBack')}
           />
           {draft.notBackYet ? null : (
             <NumberField
-              label="Back to normal after (minutes)"
+              label={t('after.backAfter')}
               value={draft.recoveryMinutes}
               max={1440}
               maxLength={4}
@@ -297,7 +287,7 @@ function AfterTab({ actions, setItems }: { actions: TimelineActions; setItems: (
 }
 
 function NotesTab() {
-  const { draft, setDraft } = usePrototype();
+  const { draft, setDraft, t } = usePrototype();
   const sec = (a: number | null, b: number | null) => (a === null || b === null ? 0 : Math.round((b - a) / 1000));
   const auraSec = sec(draft.start, draft.auraEnd);
   const seizureSec = sec(draft.auraEnd ?? draft.start, draft.seizureEnd);
@@ -310,39 +300,41 @@ function NotesTab() {
     });
   return (
     <Stack>
-      <Section title="Notes">
+      <Section title={t('notes.section')}>
         <TextArea
-          label="Notes for the neurologist"
+          label={t('notes.label')}
           value={draft.notes}
           onChange={(notes) => setDraft((d) => ({ ...d, notes }))}
           rows={4}
         />
         {draft.quickNotes.length > 0 ? (
-          <p className="proto-note">From recording: {draft.quickNotes.join(' ')}</p>
+          <p className="proto-note">{t('notes.fromRecording', { list: draft.quickNotes.join(' ') })}</p>
         ) : null}
       </Section>
-      <Section title="Times">
+      <Section title={t('times.section')}>
         <Stack>
           <p className="proto-note">
-            Started {clock(draft.start)} · {draft.source === 'timed' ? 'timed live' : 'entered later'}. Changing a time
-            marks it as edited.
+            {t('times.started', {
+              time: clock(draft.start),
+              source: t(draft.source === 'timed' ? 'times.timed' : 'times.enteredLater'),
+            })}
           </p>
           <NumberField
-            label="Aura (seconds)"
+            label={t('times.aura')}
             value={auraSec}
             max={3600}
             maxLength={4}
             onChange={(v) => setTimes(v, seizureSec, recoveryMin)}
           />
           <NumberField
-            label="Seizure (seconds)"
+            label={t('times.seizure')}
             value={seizureSec}
             max={7200}
             maxLength={4}
             onChange={(v) => setTimes(auraSec, v, recoveryMin)}
           />
           <NumberField
-            label="Recovery (minutes)"
+            label={t('times.recovery')}
             value={recoveryMin}
             max={1440}
             maxLength={4}

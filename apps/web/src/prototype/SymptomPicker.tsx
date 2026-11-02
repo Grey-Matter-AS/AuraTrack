@@ -16,7 +16,7 @@ export function SymptomPicker({
   items: readonly Item[];
   onItems: (update: (previous: Item[]) => Item[]) => void;
 }) {
-  const { label, draft } = usePrototype();
+  const { label, draft, t } = usePrototype();
   const [query, setQuery] = useState('');
   const [group, setGroup] = useState('');
   const here = items.filter((i) => i.phase === phase).map((i) => i.code);
@@ -57,7 +57,7 @@ export function SymptomPicker({
   return (
     <Stack>
       {sets.length > 0 ? (
-        <Section title="Saved sets">
+        <Section title={t('picker.sets')}>
           <div className="ui-cluster">
             {sets.map((s) => (
               <Button key={s.id} onClick={() => applySet(s.id)}>
@@ -67,37 +67,42 @@ export function SymptomPicker({
           </div>
         </Section>
       ) : null}
-      <Section title={draft.typeCode ? `Often for ${label(draft.typeCode)}` : 'Often for this patient'}>
+      <Section title={draft.typeCode ? t('picker.oftenFor', { type: label(draft.typeCode) }) : t('picker.often')}>
         <ChipGroup
           multiple
-          label="Often"
+          label={t('picker.oftenLabel')}
           value={here}
           onChange={toggle}
           options={chips(frequentFor(draft.typeCode, phase))}
         />
       </Section>
-      <Section title="Find a symptom">
-        <TextField label="Search" value={query} onChange={setQuery} placeholder="Type to search" />
+      <Section title={t('picker.find')}>
+        <TextField
+          label={t('picker.search')}
+          value={query}
+          onChange={setQuery}
+          placeholder={t('picker.searchPlaceholder')}
+        />
         {matches.length > 0 ? (
           <ChipGroup
             multiple
-            label="Search results"
+            label={t('picker.results')}
             value={here}
             onChange={toggle}
             options={chips(matches.map((m) => m.code))}
           />
         ) : null}
         <Select
-          label="Or browse by group"
+          label={t('picker.browse')}
           value={group}
           onChange={setGroup}
-          placeholder="Choose a group"
+          placeholder={t('picker.chooseGroup')}
           options={SYMPTOM_GROUPS.map((g) => ({ value: g.code, label: `${label(g.category)}: ${label(g.code)}` }))}
         />
         {inGroup.length > 0 ? (
           <ChipGroup
             multiple
-            label="Symptoms in this group"
+            label={t('picker.inGroup')}
             value={here}
             onChange={toggle}
             options={chips(inGroup.map((s) => s.code))}

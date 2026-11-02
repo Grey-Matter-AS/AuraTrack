@@ -7,13 +7,13 @@ import { expect, test, type Page } from '@playwright/test';
 async function openTab(page: Page, name: string) {
   const tab = page.getByRole('tab', { name });
   if (await tab.isVisible()) return tab.click();
-  await page.getByRole('button', { name: /\d of \d/ }).click();
+  await page.getByRole('button', { name: /\d (of|av) \d/ }).click();
   await page.getByRole('button', { name }).click();
 }
 const tabNames = async (page: Page): Promise<string[]> => {
   const wide = page.getByRole('tab');
   if (await wide.first().isVisible()) return (await wide.allInnerTexts()).map((t) => t.split('\n')[0] ?? '');
-  await page.getByRole('button', { name: /\d of \d/ }).click();
+  await page.getByRole('button', { name: /\d (of|av) \d/ }).click();
   const names = await page.getByRole('dialog').getByRole('button').allInnerTexts();
   await page.keyboard.press('Escape');
   return names.map((t) => t.split('\n')[0] ?? '').filter((t) => t.trim() !== ''); // the close button has no text
@@ -162,11 +162,30 @@ test.describe('prototype', () => {
     await expect(page.getByText(/Recording while the app is locked/)).toBeVisible();
   });
 
+  test('every screen follows the chosen language: Norwegian, then French for the emergency alert', async ({ page }) => {
+    await page.goto('/#/prototype');
+    await page.getByLabel('Language', { exact: true }).selectOption('nb');
+    await expect(page.getByRole('button', { name: 'Logg tidligere anfall' })).toBeVisible();
+    await page.getByRole('button', { name: 'Logg tidligere anfall' }).click();
+    await expect(page.getByRole('heading', { name: 'Tidligere anfall' })).toBeVisible();
+    await expect(page.getByText('Hva slags anfall var det?')).toBeVisible();
+    await expect(page.getByText(/1 av 5/)).toBeVisible(); // the kit's own "1 of 5", in Norwegian (narrow screens)
+    await page.getByRole('button', { name: 'Tilbake' }).click();
+
+    await page.getByLabel('Language', { exact: true }).selectOption('fr');
+    await page.getByRole('button', { name: 'Démarrer le chrono' }).click();
+    await page.getByRole('button', { name: 'To 3:50' }).click();
+    for (let i = 0; i < 3; i++) await page.getByRole('button', { name: '+30 s' }).click();
+    const alert = page.getByRole('alertdialog');
+    await expect(alert).toContainText("5 minutes : suivre le plan d'urgence");
+    await expect(alert).toContainText('Médicament de secours');
+  });
+
   test('the symptom and body labels follow the chosen language', async ({ page }) => {
     await page.goto('/#/prototype');
-    await page.getByLabel('Language of the symptom and body labels').selectOption('nb');
-    await page.getByRole('button', { name: 'Log past seizure' }).click();
-    await openTab(page, 'Before');
+    await page.getByLabel('Language', { exact: true }).selectOption('nb');
+    await page.getByRole('button', { name: 'Logg tidligere anfall' }).click();
+    await openTab(page, 'Før');
     await page
       .getByRole('button', { name: /Deja Vu|Déjà vu/i })
       .first()

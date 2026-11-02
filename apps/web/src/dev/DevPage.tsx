@@ -6,6 +6,7 @@ import { localDateKey, seizureSeconds, type Seizure } from '@auratrack/model';
 import type { ComparisonReport, ImportReport, RestoreReport, StoreApi, StoreStatus } from '@auratrack/store';
 import { connect, type PortLike } from '@auratrack/store/rpc';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import RecordingCheck from './RecordingCheck';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 const when = (ms: number) => {
@@ -148,6 +149,8 @@ export default function DevPage() {
         )}
       </section>
 
+      <RecordingCheck client={client} exists={status?.exists === true} unlocked={unlocked} onChange={refresh} />
+
       {unlocked && (
         <>
           <section className={box}>
@@ -274,6 +277,7 @@ export default function DevPage() {
                     <th className="pr-3">Seizure time</th>
                     <th className="pr-3">Symptoms</th>
                     <th className="pr-3">Status</th>
+                    <th className="pr-3">Locked?</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -284,6 +288,11 @@ export default function DevPage() {
                       <td className="pr-3">{seizureSeconds(s.phases) ?? '—'} s</td>
                       <td className="pr-3">{s.symptoms.length}</td>
                       <td className="pr-3">{s.status}</td>
+                      <td className="pr-3">
+                        {s.recordedWhileLocked ? 'recorded while locked' : ''}
+                        {s.cancelled ? ' · cancelled' : ''}
+                        {s.isEmergencyStop ? ' · auto-stopped' : ''}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

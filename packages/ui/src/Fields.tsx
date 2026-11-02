@@ -55,6 +55,8 @@ export interface TextFieldProps extends FieldFrame, NativeInput {
   onChange: (value: string) => void;
   id?: string;
   multiline?: false;
+  /** 'password' hides what is typed (a PIN); the default is plain text. */
+  type?: 'text' | 'password';
 }
 export interface TextAreaProps extends FieldFrame {
   value: string;
@@ -66,14 +68,24 @@ export interface TextAreaProps extends FieldFrame {
 }
 
 /** Never blank when empty: without a placeholder, the label is shown as the hint. */
-export function TextField({ label, help, error, id, value, onChange, placeholder, ...rest }: TextFieldProps) {
+export function TextField({
+  label,
+  help,
+  error,
+  id,
+  value,
+  onChange,
+  placeholder,
+  type = 'text',
+  ...rest
+}: TextFieldProps) {
   const generated = useId();
   const fieldId = id ?? generated;
   return (
     <Frame label={label} help={help} error={error} id={fieldId}>
       <input
         id={fieldId}
-        type="text"
+        type={type}
         className="ui-field"
         value={value}
         placeholder={placeholder ?? label}

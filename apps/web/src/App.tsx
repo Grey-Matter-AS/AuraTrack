@@ -6,11 +6,22 @@ const DevPage = lazy(() => import('./dev/DevPage'));
 
 const KitchenSink = lazy(() => import('./kitchen/KitchenSink'));
 const Prototype = lazy(() => import('./prototype/Prototype'));
+const AppRoot = lazy(() => import('./screens/AppRoot'));
 
 const isDevRoute = () => window.location.hash === '#/dev';
 const isKitchenRoute = () => window.location.hash.startsWith('#/kitchen');
 const isPrototypeRoute = () => window.location.hash.startsWith('#/prototype');
-const routeOf = () => (isDevRoute() ? 'dev' : isKitchenRoute() ? 'kitchen' : isPrototypeRoute() ? 'prototype' : 'home');
+const isAppRoute = () => window.location.hash.startsWith('#/app');
+const routeOf = () =>
+  isDevRoute()
+    ? 'dev'
+    : isKitchenRoute()
+      ? 'kitchen'
+      : isPrototypeRoute()
+        ? 'prototype'
+        : isAppRoute()
+          ? 'app'
+          : 'home';
 
 // M0 shell: proves the build, the PWA and the tokens work. Real screens arrive from M2 on.
 export function App() {
@@ -25,6 +36,13 @@ export function App() {
     return (
       <Suspense fallback={<p className="p-4 text-sm">Loading…</p>}>
         <KitchenSink />
+      </Suspense>
+    );
+  }
+  if (route === 'app') {
+    return (
+      <Suspense fallback={<p className="p-4 text-sm">Loading…</p>}>
+        <AppRoot />
       </Suspense>
     );
   }
@@ -51,9 +69,10 @@ export function App() {
         </p>
         <div className="mt-6">
           <Stack>
-            <Button variant="primary" onClick={() => (window.location.hash = '#/prototype')}>
-              Try the prototype
+            <Button variant="primary" onClick={() => (window.location.hash = '#/app')}>
+              Open the app (work in progress)
             </Button>
+            <Button onClick={() => (window.location.hash = '#/prototype')}>Try the prototype</Button>
             <Button onClick={() => (window.location.hash = '#/kitchen')}>Component kitchen sink</Button>
             <Button onClick={() => (window.location.hash = '#/dev')}>Developer page</Button>
           </Stack>

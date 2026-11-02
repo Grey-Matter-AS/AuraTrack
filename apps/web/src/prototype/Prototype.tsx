@@ -1,4 +1,6 @@
-import { ToastProvider, createScreenStack } from '@auratrack/ui';
+import { ToastProvider, UiStringsProvider, createScreenStack } from '@auratrack/ui';
+import { useMemo } from 'react';
+import { uiStringsFor } from '../uiStrings';
 import './prototype.css';
 import { Editor } from './Editor';
 import { Home } from './Home';
@@ -6,7 +8,7 @@ import { Lock } from './Lock';
 import { Recording } from './Recording';
 import { Review } from './Review';
 import { holder, type Nav } from './nav';
-import { PrototypeProvider } from './state';
+import { PrototypeProvider, usePrototype } from './state';
 
 // M3, slice 4: the clickable prototype of recording and logging. Made-up data; nothing is saved. It exists so the flow can
 // be tried on a phone and changed before the real build. Route: #/prototype.
@@ -14,12 +16,20 @@ import { PrototypeProvider } from './state';
 const stack = createScreenStack({ home: Home, record: Recording, editor: Editor, review: Review, lock: Lock });
 holder.useNavigator = stack.useNavigator as unknown as () => Nav;
 
+function Strings({ children }: { children: React.ReactNode }) {
+  const { language } = usePrototype();
+  const strings = useMemo(() => uiStringsFor(language), [language]);
+  return <UiStringsProvider strings={strings}>{children}</UiStringsProvider>;
+}
+
 export default function Prototype() {
   return (
     <PrototypeProvider>
-      <ToastProvider>
-        <stack.ScreenStack initial="home" />
-      </ToastProvider>
+      <Strings>
+        <ToastProvider>
+          <stack.ScreenStack initial="home" />
+        </ToastProvider>
+      </Strings>
     </PrototypeProvider>
   );
 }

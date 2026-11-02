@@ -1,7 +1,7 @@
 import { AUTO_STOP_AT_S, emergencyPlan, recordingState } from '@auratrack/model';
 import { AppHeader, Button, ButtonRow, Card, Dialog, Screen, Section, Stack } from '@auratrack/ui';
 import { useEffect, useRef, useState } from 'react';
-import { FREQUENT, PATIENTS, QUICK_NOTES, RESCUE, mmss, newItemId, startingArea } from './data';
+import { FREQUENT, PATIENTS, QUICK_NOTE_KEYS, RESCUE, mmss, newItemId, startingArea } from './data';
 import { goHome, useNav } from './nav';
 import { usePrototype } from './state';
 
@@ -11,7 +11,7 @@ import { usePrototype } from './state';
 
 export function Recording({ locked = false }: { locked?: boolean }) {
   const nav = useNav();
-  const { draft, setDraft, label, selfMode, symptomStrip, patient } = usePrototype();
+  const { draft, setDraft, label, t, selfMode, symptomStrip, patient } = usePrototype();
   const [wall, setWall] = useState(() => Date.now());
   const [skip, setSkip] = useState(0); // seconds added by the prototype controls
   const [alertSeen, setAlertSeen] = useState(false);
@@ -74,49 +74,56 @@ export function Recording({ locked = false }: { locked?: boolean }) {
   return (
     <Screen>
       <Stack>
-        <AppHeader title="Recording" patient={PATIENTS[patient] ?? PATIENTS[0]} />
+        <AppHeader title={t('rec.title')} patient={PATIENTS[patient] ?? PATIENTS[0]} />
         {locked ? (
           <Card tone="accent">
-            <p className="proto-note">
-              Recording while the app is locked: everything is written to a protected buffer and joins your records when
-              you unlock.
-            </p>
+            <p className="proto-note">{t('rec.lockedNote')}</p>
           </Card>
         ) : null}
-        <p className="proto-timer" role="timer" aria-label="Time since start">
+        <p className="proto-timer" role="timer" aria-label={t('rec.timeSince')}>
           {mmss(total / 1000)}
         </p>
         <ul className="proto-phase-times">
-          {selfMode ? null : <li>Aura {mmss(aura)}</li>}
-          <li>Seizure {mmss(seizure)}</li>
-          {draft.seizureEnd !== null ? <li>Recovery {mmss(recovery)}</li> : null}
+          {selfMode ? null : (
+            <li>
+              {t('rec.aura')} {mmss(aura)}
+            </li>
+          )}
+          <li>
+            {t('rec.seizure')} {mmss(seizure)}
+          </li>
+          {draft.seizureEnd !== null ? (
+            <li>
+              {t('rec.recovery')} {mmss(recovery)}
+            </li>
+          ) : null}
         </ul>
 
         {state === 'warning' ? (
           <Card tone="danger">
-            <p className="proto-banner">One minute to the emergency alert time</p>
+            <p className="proto-banner">{t('rec.warning')}</p>
           </Card>
         ) : null}
         {draft.emergencyStop ? (
           <Card tone="danger">
-            <p className="proto-banner">Stopped at 12 minutes. A possible status epilepticus note is saved.</p>
+            <p className="proto-banner">{t('rec.stoppedNote')}</p>
           </Card>
         ) : null}
 
         {running ? (
           selfMode ? (
             <Button variant="danger" size="lg" fullWidth onClick={() => endSeizure()}>
-              Stop
+              {t('rec.stop')}
             </Button>
           ) : (
             <ButtonRow stack>
               {draft.auraEnd === null ? (
                 <Button variant="warning" size="lg" onClick={() => setDraft((d) => ({ ...d, auraEnd: stampNow() }))}>
-                  End aura
+                  {t('rec.endAura')}
                 </Button>
               ) : null}
               <Button variant="danger" size="lg" onClick={() => endSeizure()}>
-                End seizure
+                {t('rec.endSeizure')}
               </Button>
             </ButtonRow>
           )
@@ -124,17 +131,17 @@ export function Recording({ locked = false }: { locked?: boolean }) {
           <ButtonRow stack>
             {draft.recoveryEnd === null && !selfMode ? (
               <Button variant="success" size="lg" onClick={() => setDraft((d) => ({ ...d, recoveryEnd: stampNow() }))}>
-                Back to normal
+                {t('rec.backToNormal')}
               </Button>
             ) : null}
             <Button variant="primary" size="lg" onClick={finish}>
-              Add details
+              {t('rec.addDetails')}
             </Button>
           </ButtonRow>
         )}
 
         {symptomStrip && !selfMode ? (
-          <Section title="Symptoms (one tap, timed automatically)">
+          <Section title={t('rec.symptomStrip')}>
             <div className="ui-cluster">
               {FREQUENT.during.slice(0, 4).map((code) => (
                 <Button key={code} onClick={() => addSymptom(code)}>
@@ -145,16 +152,16 @@ export function Recording({ locked = false }: { locked?: boolean }) {
           </Section>
         ) : null}
 
-        <Section title="Quick notes">
+        <Section title={t('rec.quickNotes')}>
           <div className="ui-cluster">
-            {QUICK_NOTES.map((note) => (
-              <Button key={note} onClick={() => addNote(note)}>
-                {note}
+            {QUICK_NOTE_KEYS.map((key) => (
+              <Button key={key} onClick={() => addNote(t(key))}>
+                {t(key)}
               </Button>
             ))}
           </div>
           {draft.quickNotes.length > 0 ? (
-            <ul className="proto-note" aria-label="Notes so far">
+            <ul className="proto-note" aria-label={t('rec.notesSoFar')}>
               {draft.quickNotes.map((n, i) => (
                 <li key={i}>{n}</li>
               ))}
@@ -183,28 +190,24 @@ export function Recording({ locked = false }: { locked?: boolean }) {
       {state === 'alert' && !alertSeen ? (
         <Dialog
           tone="emergency"
-          title={selfMode ? 'This seizure has lasted 5 minutes' : '5 minutes: follow the emergency plan'}
+          title={t(selfMode ? 'alert.selfTitle' : 'alert.carerTitle', { minutes: plan.alertMinutes })}
           dismissible={false}
-          message={
-            selfMode
-              ? 'If someone is with you, show them this screen.'
-              : 'Seizure time, not counting aura or recovery. Call for help if the plan says so.'
-          }
+          message={t(selfMode ? 'alert.selfMessage' : 'alert.carerMessage')}
           actions={
             <Button variant="primary" fullWidth onClick={() => setAlertSeen(true)}>
-              Dismiss
+              {t('common.dismiss')}
             </Button>
           }
         >
           <Stack>
             <p>
-              <strong>Rescue medication:</strong> {RESCUE.medication}
+              <strong>{t('alert.rescue')}:</strong> {RESCUE.medication}
             </p>
             <p>
-              <strong>Emergency contact:</strong> {RESCUE.contact}
+              <strong>{t('alert.contact')}:</strong> {RESCUE.contact}
             </p>
             <p>
-              <strong>Neurologist:</strong> {RESCUE.neurologist}
+              <strong>{t('alert.neurologist')}:</strong> {RESCUE.neurologist}
             </p>
           </Stack>
         </Dialog>
@@ -212,9 +215,9 @@ export function Recording({ locked = false }: { locked?: boolean }) {
       {draft.emergencyStop && !stopSeen ? (
         <Dialog
           tone="emergency"
-          title="Recording stopped at 12 minutes"
+          title={t('stop.title')}
           dismissible={false}
-          message="This is a long seizure. A note for possible status epilepticus is saved with it. Your quick notes are kept."
+          message={t('stop.message')}
           actions={
             <Button
               variant="primary"
@@ -224,7 +227,7 @@ export function Recording({ locked = false }: { locked?: boolean }) {
                 finish();
               }}
             >
-              Add details
+              {t('rec.addDetails')}
             </Button>
           }
         />

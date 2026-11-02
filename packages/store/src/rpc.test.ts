@@ -146,7 +146,7 @@ describe('the store through the worker interface', () => {
 
   it('is locked until a PIN is given, and then reads and writes records', async () => {
     const { client, close } = setup();
-    expect(await client.status()).toEqual({ exists: false, unlocked: false, info: null });
+    expect(await client.status()).toEqual({ exists: false, unlocked: false, info: null, passkey: null });
     await expect(client.list({ type: 'seizure' })).rejects.toMatchObject({ name: 'StoreError' });
     const info = await client.create({ credential: { pin: '2468' } });
     expect(await client.status()).toMatchObject({ exists: true, unlocked: true, info });

@@ -5,6 +5,8 @@ export default defineConfig({
   test: {
     include: ['packages/*/src/**/*.test.{ts,tsx}', 'apps/*/src/**/*.test.{ts,tsx}'],
     passWithNoTests: true,
+    // The screen tests drive the real store and many taps; they are slower under coverage
+    testTimeout: 30_000,
     coverage: {
       provider: 'v8',
       include: ['packages/*/src/**'],

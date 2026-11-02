@@ -12,7 +12,7 @@ const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9'] as const;
 export function Lock() {
   const nav = useNav();
   const toast = useToast();
-  const { lockedAlert, setLockedAlert, setDraft } = usePrototype();
+  const { lockedAlert, setLockedAlert, setDraft, t } = usePrototype();
   const [pin, setPin] = useState('');
   const [wrong, setWrong] = useState(false);
 
@@ -22,7 +22,7 @@ export function Lock() {
     setPin(next);
     if (next.length === 4) {
       if (next === '2468') {
-        toast('Unlocked', 'success');
+        toast(t('common.unlocked'), 'success');
         nav.pop();
       } else {
         setWrong(true);
@@ -34,7 +34,7 @@ export function Lock() {
   return (
     <Screen>
       <Stack>
-        <AppHeader title="AuraTrack is locked" onBack={() => nav.pop()} />
+        <AppHeader title={t('lock.title')} onBack={() => nav.pop()} />
         <RoundButton
           tone="danger"
           onClick={() => {
@@ -42,17 +42,17 @@ export function Lock() {
             nav.push('record', { locked: true });
           }}
         >
-          Start timer
+          {t('home.start')}
         </RoundButton>
-        <p className="proto-note">Starting a recording never needs the PIN.</p>
+        <p className="proto-note">{t('lock.startNote')}</p>
 
-        <p className="proto-pin-dots" aria-label={`${pin.length} of 4 digits entered`}>
+        <p className="proto-pin-dots" aria-label={t('lock.digits', { n: pin.length })}>
           {'●'.repeat(pin.length)}
           {'○'.repeat(4 - pin.length)}
         </p>
         {wrong ? (
           <p className="proto-banner" role="alert">
-            That PIN is not right. Try again.
+            {t('lock.wrong')}
           </p>
         ) : null}
         <div className="proto-pin">
@@ -76,19 +76,27 @@ export function Lock() {
         <Card compact>
           <Stack>
             <Select
-              label="While locked, the alert shows"
+              label={t('lock.alertSetting')}
               value={lockedAlert}
               onChange={(v) => setLockedAlert(v === 'nothing' || v === 'rescue' ? v : 'rescue_and_contacts')}
               options={[
-                { value: 'nothing', label: 'Nothing personal' },
-                { value: 'rescue', label: 'Rescue medication' },
-                { value: 'rescue_and_contacts', label: 'Rescue medication and contacts' },
+                { value: 'nothing', label: t('lock.optNothing') },
+                { value: 'rescue', label: t('lock.optRescue') },
+                { value: 'rescue_and_contacts', label: t('lock.optBoth') },
               ]}
             />
-            <p className="proto-banner">Preview of the alert while locked</p>
-            <p>5 minutes: follow the emergency plan.</p>
-            {lockedAlert !== 'nothing' ? <p>Rescue medication: {RESCUE.medication}</p> : null}
-            {lockedAlert === 'rescue_and_contacts' ? <p>Emergency contact: {RESCUE.contact}</p> : null}
+            <p className="proto-banner">{t('lock.preview')}</p>
+            <p>{t('alert.carerTitle', { minutes: 5 })}.</p>
+            {lockedAlert !== 'nothing' ? (
+              <p>
+                {t('alert.rescue')}: {RESCUE.medication}
+              </p>
+            ) : null}
+            {lockedAlert === 'rescue_and_contacts' ? (
+              <p>
+                {t('alert.contact')}: {RESCUE.contact}
+              </p>
+            ) : null}
           </Stack>
         </Card>
       </Stack>

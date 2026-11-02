@@ -2,3 +2,4 @@ export * from './dates';
 export * from './doses';
 export * from './emergency';
 export * from './regimen';
+export * from './recording';

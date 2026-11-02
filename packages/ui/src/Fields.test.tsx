@@ -9,6 +9,11 @@ import { UiStringsProvider } from './strings';
 afterEach(cleanup);
 
 describe('TextField and TextArea', () => {
+  it('hides what is typed when it is a password', () => {
+    render(<TextField label="PIN" type="password" value="1234" onChange={() => {}} />);
+    expect((screen.getByLabelText('PIN') as HTMLInputElement).type).toBe('password');
+  });
+
   it('ties the label to the input, and reports typing', async () => {
     const onChange = vi.fn();
     render(<TextField label="Name" value="" onChange={onChange} />);

@@ -9,3 +9,5 @@ export * from './rpc';
 export * from './recovery';
 export * from './backup';
 export * from './import6x';
+export * from './dropbox';
+export * from './recording';

@@ -11,6 +11,7 @@ export const BodyAreaSchema = z.object({
 export type BodyArea = z.infer<typeof BodyAreaSchema>;
 
 export const PhaseSourceSchema = z.enum(['timed', 'edited', 'entered-later']);
+export type PhaseSource = z.infer<typeof PhaseSourceSchema>;
 export const PhaseMarkSchema = z.object({ at: InstantSchema, source: PhaseSourceSchema });
 export type PhaseMark = z.infer<typeof PhaseMarkSchema>;
 
@@ -62,6 +63,10 @@ export const SymptomEntrySchema = z.object({
 });
 export type SymptomEntry = z.infer<typeof SymptomEntrySchema>;
 
+/** A quick-note button tapped while recording: the button's label (the user's own words) and when it was tapped. */
+export const QuickNoteSchema = z.object({ id: IdSchema, at: InstantSchema, label: z.string().min(1).max(24) });
+export type QuickNote = z.infer<typeof QuickNoteSchema>;
+
 export const FindingEntrySchema = z.object({
   code: CodeSchema,
   /** For a finding the user wrote in their own words (code `after.custom`). */
@@ -92,6 +97,12 @@ export const SeizureSchema = z.object({
     .max(7 * 24 * 3600)
     .nullable()
     .optional(),
+  /** Added in 7.0.3: the quick-note buttons tapped during the recording, in the order tapped. */
+  quickNotes: z.array(QuickNoteSchema).max(200).optional(),
+  /** Added in 7.0.3: the recording was started from the PIN screen and merged after unlock. */
+  recordedWhileLocked: z.boolean().optional(),
+  /** Added in 7.0.3: the recording was cancelled. It is kept, and the user is asked later whether to delete it. */
+  cancelled: z.boolean().optional(),
   recoveryMinutes: z.number().int().nonnegative().nullable(),
   recoveryOngoing: z.boolean(),
   triggerCodes: z.array(CodeSchema).max(50),

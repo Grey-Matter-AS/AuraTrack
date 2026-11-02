@@ -33,6 +33,13 @@ const LANGUAGE_NAMES: Record<string, string> = {
 export function Home() {
   const nav = useNav();
   const p = usePrototype();
+  const { t } = p;
+  const [now] = useState(() => Date.now());
+  const when = (daysAgo: number, hour: number, minute: number) => {
+    const day = new Date(now - daysAgo * 86_400_000);
+    day.setHours(hour, minute, 0, 0);
+    return new Intl.DateTimeFormat(p.language, { weekday: 'short', hour: '2-digit', minute: '2-digit' }).format(day);
+  };
   const [between, setBetween] = useState(false);
   const [help, setHelp] = useState(false);
 
@@ -62,7 +69,7 @@ export function Home() {
           onPatientClick={() => p.setPatient((p.patient + 1) % PATIENTS.length)}
           actions={
             <Button size="md" onClick={() => nav.push('lock')}>
-              Lock
+              {t('common.lock')}
             </Button>
           }
         />
@@ -79,14 +86,14 @@ export function Home() {
 
         <div className="proto-round-row">
           <RoundButton tone="danger" onClick={start}>
-            Start timer
+            {t('home.start')}
           </RoundButton>
           <RoundButton tone="warning" onClick={() => past()}>
-            Log past seizure
+            {t('home.logPast')}
           </RoundButton>
         </div>
 
-        <Section title="Recent seizures">
+        <Section title={t('home.recent')}>
           <Stack>
             {RECENT.map((r) => (
               <Card compact key={r.id}>
@@ -94,12 +101,12 @@ export function Home() {
                   <div>
                     <p className="proto-banner">{p.label(r.typeCode)}</p>
                     <p className="proto-note">
-                      {r.whenText} · {mmss(r.seconds)}
-                      {r.flag === 'long' ? ' · long seizure' : ''}
+                      {when(r.daysAgo, r.hour, r.minute)} · {mmss(r.seconds)}
+                      {r.flag === 'long' ? ` · ${t('home.longSeizure')}` : ''}
                     </p>
                   </div>
                   <Button size="md" onClick={() => past(r.seconds, r.typeCode)}>
-                    Edit
+                    {t('common.edit')}
                   </Button>
                 </div>
               </Card>
@@ -107,9 +114,9 @@ export function Home() {
           </Stack>
         </Section>
 
-        <Section title="Between seizures">
+        <Section title={t('home.between')}>
           <Button fullWidth onClick={() => setBetween(true)}>
-            Log a symptom between seizures
+            {t('home.betweenLog')}
           </Button>
         </Section>
 
@@ -132,7 +139,7 @@ export function Home() {
               help="Off by default in the real app"
             />
             <Select
-              label="Language of the symptom and body labels"
+              label="Language"
               value={p.language}
               onChange={(v) => p.setLanguage(LANGUAGES.find((l) => l === v) ?? 'en')}
               options={LANGUAGES.map((l) => ({ value: l, label: LANGUAGE_NAMES[l] ?? l }))}
@@ -161,7 +168,7 @@ export function Home() {
               and the time between, then Review.
             </p>
             <p>3. Lock: Start works from the lock screen. The PIN here is 2468.</p>
-            <p>4. Change the language in the settings below to see the symptom and body labels.</p>
+            <p>4. Change the language in the settings below to see the screens in that language.</p>
           </Stack>
         </BottomSheet>
       ) : null}

@@ -1,12 +1,14 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
 import type { Language } from '@auratrack/i18n';
-import { labelText } from '@auratrack/i18n';
+import { labelText, message, type MessageKey, type MessageParams } from '@auratrack/i18n';
 import { emptyDraft, type Draft } from './data';
 
 interface PrototypeState {
   language: Language;
   setLanguage: (language: Language) => void;
   label: (code: string) => string;
+  /** A sentence or button text of the screens, in the chosen language. */
+  t: (key: MessageKey, params?: MessageParams) => string;
   draft: Draft;
   setDraft: (update: Draft | ((previous: Draft) => Draft)) => void;
   patient: number;
@@ -35,6 +37,7 @@ export function PrototypeProvider({ children }: { children: ReactNode }) {
       language,
       setLanguage,
       label: (code) => labelText(language, code),
+      t: (key, params) => message(language, key, params),
       draft,
       setDraft,
       patient,
