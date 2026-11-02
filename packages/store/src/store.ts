@@ -49,6 +49,7 @@ import {
   open,
   openBytes,
   seal,
+  type Sealed,
   sealBytes,
   unlockWithPin,
   unlockWithSecret,
@@ -746,6 +747,91 @@ export class Store {
     });
   }
 
+  /** Kept for sync: which patient and stamp each log entry has, read once and then kept up to date. */
+  private logMeta: Map<string, { stamp: string; patientId: string | null; type: string; recordId: string }> | null =
+    null;
+
+  private async syncMeta() {
+    if (this.logMeta) return this.logMeta;
+    const meta = new Map<string, { stamp: string; patientId: string | null; type: string; recordId: string }>();
+    for (const entry of await this.changesSince(null))
+      meta.set(entry.id, {
+        stamp: entry.stamp,
+        patientId: entry.patientId,
+        type: entry.recordType,
+        recordId: entry.recordId,
+      });
+    this.logMeta = meta;
+    return meta;
+  }
+
+  /** Settings of one device (theme, lock, text size) stay on that device: they are not a household's to share. */
+  private staysOnDevice(type: string, recordId: string): boolean {
+    if (type !== 'setting') return false;
+    const record = this.set.get('setting')?.get(recordId);
+    const values = record ? currentValues(record) : null;
+    return values?.scope === 'device';
+  }
+
+  /** The entries of one scope that may leave this device: 'household' (no patient) or a patient id. */
+  async syncIndex(scope: string): Promise<{ id: string; stamp: string }[]> {
+    const meta = await this.syncMeta();
+    const out: { id: string; stamp: string }[] = [];
+    for (const [id, m] of meta) {
+      const inScope = scope === 'household' ? m.patientId === null : m.patientId === scope;
+      if (inScope && !this.staysOnDevice(m.type, m.recordId)) out.push({ id, stamp: m.stamp });
+    }
+    return out;
+  }
+
+  /** Those entries, by id. Unknown ids are left out. */
+  async syncEntries(ids: readonly string[]): Promise<ChangeLogEntry[]> {
+    const out: ChangeLogEntry[] = [];
+    for (const id of ids) {
+      const row = await this.db.changeLog.get(id);
+      if (row) out.push(JSON.parse(await open(this.key, row, `changeLog:${row.id}`)) as ChangeLogEntry);
+    }
+    return out.filter((e) => !this.staysOnDevice(e.recordType, e.recordId));
+  }
+
+  /** Entries from another household device. A device's own settings are refused; the rest goes through the normal merge. */
+  async applySynced(entries: readonly ChangeLogEntry[]): Promise<ApplyResult> {
+    const refused: ApplyResult['rejected'] = [];
+    const allowed = entries.filter((e) => {
+      const deviceSetting =
+        e.recordType === 'setting' && (e.fields?.scope === 'device' || this.staysOnDevice('setting', e.recordId));
+      if (deviceSetting) refused.push({ entryId: e.id, reason: 'a setting of the other device' });
+      return !deviceSetting;
+    });
+    const result = await this.applyChanges(allowed);
+    return { ...result, rejected: [...result.rejected, ...refused] };
+  }
+
+  /** What the household keeps here, sealed under this device's key: the device list and the shared keys. */
+  async getSecret<T>(name: string): Promise<T | null> {
+    const row = (await this.db.meta.get(`secret:${name}`))?.value as Sealed | undefined;
+    return row ? (JSON.parse(await open(this.key, row, `secret:${name}`)) as T) : null;
+  }
+
+  async putSecret(name: string, value: unknown): Promise<void> {
+    await this.db.meta.put({
+      key: `secret:${name}`,
+      value: await seal(this.key, JSON.stringify(value), `secret:${name}`),
+    });
+  }
+
+  /** Is there nothing here yet: no record, no change? Only then can this store become part of another household. */
+  isEmpty(): boolean {
+    return this.logIds.size === 0 && [...this.set.values()].every((bucket) => bucket.size === 0);
+  }
+
+  /** Takes on the household id of the household this device joins. Only for a store with nothing in it. */
+  async adoptHousehold(householdId: string): Promise<void> {
+    if (!this.isEmpty()) throw new StoreError('This phone already has records, so it cannot join another household.');
+    await this.db.meta.put({ key: 'householdId', value: householdId });
+    (this.info as { householdId: string }).householdId = householdId;
+  }
+
   /** The change log from a stamp on, oldest first: what is sent to a device that has not seen it yet. */
   async changesSince(stamp: string | null = null): Promise<ChangeLogEntry[]> {
     const rows = await (stamp === null
@@ -796,6 +882,7 @@ export class Store {
     });
     this.bucket(type).set(entry.recordId, merged);
     this.logIds.add(entry.id);
+    this.logMeta?.set(entry.id, { stamp: entry.stamp, patientId: entry.patientId, type, recordId: entry.recordId });
     return conflict;
   }
 }

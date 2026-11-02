@@ -1,3 +1,9 @@
-// @auratrack/sync — Household device registry, pairing and sync transports (meeting, hub).
-// Built in the milestone plans (docs/plan); intentionally empty in M0.
-export {};
+// @auratrack/sync: the household registry, pairing and the meeting protocol between devices (docs/plan/M6-plan.md).
+export * from './seal';
+export * from './membership';
+export * from './reconcile';
+export * from './session';
+export * from './memory';
+export * from './pairing';
+export * from './update';
+export * from './storeContext';

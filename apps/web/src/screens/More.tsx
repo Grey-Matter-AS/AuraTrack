@@ -34,6 +34,9 @@ export function More() {
         <Button fullWidth onClick={() => nav.push('reports')}>
           {t('more.reports')}
         </Button>
+        <Button fullWidth onClick={() => nav.push('household')}>
+          {t('more.household')}
+        </Button>
         <Button fullWidth onClick={() => nav.push('backup')}>
           {t('more.backup')}
         </Button>

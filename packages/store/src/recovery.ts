@@ -51,3 +51,9 @@ export function recoveryKitMatrix(kit: string): { size: number; dark: boolean[] 
   const code = QRCode.create(kit, { errorCorrectionLevel: 'M' });
   return { size: code.modules.size, dark: Array.from(code.modules.data, (v) => v === 1) };
 }
+
+/** Any short text as a grid of squares (the invite code, the frames of an update). `L` holds the most text. */
+export function qrMatrixOf(text: string, level: 'L' | 'M' = 'M'): { size: number; dark: boolean[] } {
+  const code = QRCode.create(text, { errorCorrectionLevel: level });
+  return { size: code.modules.size, dark: Array.from(code.modules.data, (bit) => bit === 1) };
+}

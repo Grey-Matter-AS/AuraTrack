@@ -2,11 +2,13 @@ import type { MessageKey } from './en';
 import { extraTr } from './extra';
 import { m4en } from './m4/en';
 import { m5en } from './m5/en';
+import { m6en } from './m6/en';
 
 // Drafted by Claude (2026-11-02); not yet checked by a native speaker (see ../labels/drafted.json for the same note on labels).
 export const da: Record<MessageKey, string> = {
   ...m4en, // English until the translation in ./extra has the message
   ...m5en,
+  ...m6en,
   ...extraTr.da,
   'common.save': 'Gem',
   'common.review': 'Gennemse',

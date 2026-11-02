@@ -4,6 +4,14 @@
   "version": "0.0.0",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./testing": "./src/testing.ts"
+  },
+  "dependencies": {
+    "@auratrack/model": "workspace:*"
+  },
+  "devDependencies": {
+    "@auratrack/store": "workspace:*",
+    "fake-indexeddb": "^6.2.7"
   }
 }

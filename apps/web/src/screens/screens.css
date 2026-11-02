@@ -114,3 +114,12 @@
   font-family: var(--font-mono);
   word-break: break-all;
 }
+
+.app-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 1.5rem;
+  letter-spacing: 0.08em;
+  text-align: center;
+  overflow-wrap: anywhere;
+  margin: 0;
+}

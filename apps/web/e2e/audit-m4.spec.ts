@@ -251,7 +251,75 @@ for (const device of MATRIX) {
     await back();
     await page.getByRole('button', { name: 'About', exact: true }).click();
     await look('about');
+    await back();
 
+    // Reports, the preview and backup (M5), then the household (M6)
+    await page.getByRole('button', { name: 'Reports', exact: true }).click();
+    await look('reports');
+    await page.getByRole('button', { name: 'Preview', exact: true }).click();
+    await page.locator('canvas.app-page').first().waitFor({ timeout: 30_000 });
+    await look('report preview');
+    await back();
+    await back();
+    await page.getByRole('button', { name: 'Backup and restore' }).click();
+    await look('backup and restore');
+    await back();
+    await page.getByRole('button', { name: 'Household', exact: true }).click();
+    await look('household, none yet');
+    await sheet('start a household', () => page.getByRole('button', { name: 'Start a household' }).click());
+    await page.getByRole('button', { name: 'Start a household' }).click();
+    const startSheet = page.getByRole('dialog', { name: 'Start a household' });
+    await startSheet.getByLabel('Name of the household').fill('Home');
+    await startSheet.getByLabel('Name of this device').fill('Kitchen tablet');
+    await startSheet.getByRole('button', { name: 'Start' }).click();
+    await page.getByText('Kitchen tablet · This device').waitFor();
+    await look('household, one device');
+    await sheet('rename this device', () => page.getByRole('button', { name: 'Rename', exact: true }).click());
+    await sheet('people this device keeps', () =>
+      page.getByRole('button', { name: 'People this device keeps' }).click(),
+    );
+    await page.getByRole('button', { name: 'Add a device' }).click();
+    await look('add a device, choose');
+    await page.getByRole('button', { name: 'Add a device' }).click();
+    await page.getByLabel('Code', { exact: true }).waitFor();
+    await look('add a device, code');
+    await back();
+    await page.getByRole('button', { name: 'Household up to date?' }).click();
+    await look('household up to date');
+    await back();
+    await page.getByRole('button', { name: 'Update by file or QR' }).click();
+    await page.getByRole('button', { name: 'Make an update' }).first().click();
+    await page.getByRole('button', { name: 'Save the update file' }).waitFor();
+    await look('update by file');
+
+    await context.close();
+    c.report(device.name);
+  });
+
+  test(`M6 audit, joining a household: ${device.name} (${device.width} x ${device.height})`, async ({ browser }) => {
+    test.setTimeout(120_000);
+    const context = await browser.newContext({
+      viewport: { width: device.width, height: device.height },
+      hasTouch: true,
+      reducedMotion: 'reduce',
+      serviceWorkers: 'block',
+    });
+    const page = await context.newPage();
+    const c = collector(page);
+    await page.goto('/#/app');
+    await page.getByLabel('PIN (at least 4 digits)').fill(PIN);
+    await page.getByLabel('PIN again').fill(PIN);
+    await c.look('set-up with the join button');
+    await page.getByRole('button', { name: 'Join a household instead' }).click();
+    await page.getByLabel('Code from the other device').waitFor();
+    await c.look('join form');
+    await page.getByLabel('Code from the other device').fill('not a code');
+    await c.look('join form, bad code');
+    await page.getByLabel('Code from the other device').fill('ABCD-EFGH-JKLM-NPQR');
+    await page.getByLabel('Name of this device').fill('Mum’s phone');
+    await page.getByRole('button', { name: 'Join', exact: true }).click();
+    await page.getByText(/The device was not found/).waitFor({ timeout: 30_000 });
+    await c.look('join form, not found');
     await context.close();
     c.report(device.name);
   });

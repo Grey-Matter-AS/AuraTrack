@@ -3,10 +3,12 @@
 // (symptoms, body areas, triggers, ...) are not here: they live in ../labels.
 import { m4en } from './m4/en';
 import { m5en } from './m5/en';
+import { m6en } from './m6/en';
 
 export const en = {
   ...m4en,
   ...m5en,
+  ...m6en,
   'common.save': 'Save',
   'common.review': 'Review',
   'common.done': 'Done',

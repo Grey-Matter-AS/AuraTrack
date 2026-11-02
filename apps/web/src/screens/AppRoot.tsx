@@ -6,6 +6,7 @@ import type { RecordingEnv } from '../recording/controller';
 import { uiStringsFor } from '../uiStrings';
 import { Gate } from './Gate';
 import { EditorHost } from '../editor/EditorContext';
+import { HouseholdProvider } from '../household/HouseholdContext';
 import { Recording } from './Recording';
 import { stack } from './stack';
 import './screens.css';
@@ -17,7 +18,7 @@ function Shell() {
   const { phase, recording, t, error } = useApp();
   if (phase === 'loading') return <p className="app-note">{t('app.loading')}</p>;
   if (phase === 'error') return <p role="alert">{t('app.error', { error: error ?? '' })}</p>;
-  if (phase === 'setup' || phase === 'locked') return <Gate />;
+  if (phase === 'setup' || phase === 'joining' || phase === 'locked') return <Gate />;
   return recording.session ? <Recording /> : <stack.ScreenStack initial="home" />;
 }
 
@@ -41,9 +42,11 @@ export default function AppRoot({
     <AppProvider client={api} {...(env ? { env } : {})} {...(passkeyEnv !== undefined ? { passkeyEnv } : {})}>
       <Strings>
         <ToastProvider>
-          <EditorHost>
-            <Shell />
-          </EditorHost>
+          <HouseholdProvider>
+            <EditorHost>
+              <Shell />
+            </EditorHost>
+          </HouseholdProvider>
         </ToastProvider>
       </Strings>
     </AppProvider>

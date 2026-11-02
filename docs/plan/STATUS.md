@@ -3,7 +3,8 @@
 **Read this first in every session.** Then read the current milestone's file (`M<n>.md`) and continue with "Next step".
 
 - **Current milestone:** M3, Recording and the new logging (branch `7.0.3---M3`, approved 2026-11-01). **All ten slices are built (2026-11-02); M3 waits for your phone check and your test seizures.** M0, M1 and M2 are closed.
-- **M4 and M5 are built (2026-11-02, branch `7.0.4---M4`, nothing committed);** they wait for your checks, see "Next step" and `M4-signoff.md`, `M5-signoff.md`.
+- **M6 is built (2026-11-02, branch to be made by you: `7.0.5---M6`, nothing committed)** in one run: household, pairing, sync by meeting, the update by file or QR; sign-off in `M6-signoff.md`. 7.0 waits for your use of two devices, your phone checks, the translation review and the version bump.
+- **M4 and M5 are built (2026-11-02, branch `7.0.4---M4`, committed by you);** they wait for your checks, see "Next step" and `M4-signoff.md`, `M5-signoff.md`.
 - **Last updated:** 2026-11-02
 
 ## M3 slices
@@ -124,6 +125,8 @@
 - Real medical data (reports, backups, exports) is never committed. Reference material is generated from made-up test data.
 
 ## Next step
+- **7.0.6 (2026-11-02):** version bumped to 7.0.6 (root and `apps/web` package.json, `version.ts`). **The app is now the main page** (`/`; `#/app` still works). The old landing page is at `#/options` (Open the app, prototype, kitchen sink, developer page).
+- **M6 (2026-11-02):** read `M6-signoff.md` (what is outside the plan: one CSP line for the signalling broker, no relay, keys not in backups, joining needs an empty phone, no Android background sync). Then: pair two of your real devices, use them together for some days, check iPhone, review Norwegian, bump to 7.0, tag.
 - **M4 and M5 built in one run (2026-11-02), approved plan `M4-M5-plan.md`.** All slices are in: shell, people, settings, History (list, chart, timeline), medicines and dose panel, EEG diary, video, install/backup/what's new cards, wellbeing, reports (R-1 to R-5, preview, save, share), backup, restore, import and recovery kit, and 12 report additions. 735 new messages in 9 languages (drafted by Claude). 950 unit and component tests pass; e2e on Chromium and Firefox pass; lint and typecheck clean. Sign-off notes: `M4-signoff.md`, `M5-signoff.md`.
 - **Your next steps:** (1) turn on the report additions one by one in Reports, look at the preview, tell me which to keep (dropped ones are removed from the code); (2) compare the report with 6.1 on your real data on your computer; (3) rehearse backup, restore and the 6.1 import; (4) phone checks: camera and video on the iPhone, install card, reminders; (5) use v7 next to 6.1 for a few days; (6) bump the version (still 7.0.2) and commit.
 - **Decision to confirm:** missed and assumed doses now show only after the 90-minute grace (they used to show straight away).

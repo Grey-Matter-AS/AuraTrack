@@ -25,10 +25,16 @@ test('set up a passkey with the PIN, lock, and unlock with the passkey', async (
   await page.getByRole('button', { name: 'Create' }).click();
   await expect(page.getByRole('button', { name: 'Start timer' })).toBeVisible({ timeout: 30_000 });
 
+  await page.getByRole('navigation', { name: 'Main menu' }).getByRole('button', { name: 'More', exact: true }).click();
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await page.getByRole('button', { name: 'Lock', exact: true }).click();
   await page.getByLabel('Your PIN (to set it up)').fill('2468');
   await page.getByRole('button', { name: 'Set up Face ID or fingerprint' }).click();
   await expect(page.getByText('Face ID or fingerprint is set up')).toBeVisible();
 
+  await page.getByRole('button', { name: 'Back', exact: true }).click();
+  await page.getByRole('button', { name: 'Back', exact: true }).click();
+  await page.getByRole('navigation', { name: 'Main menu' }).getByRole('button', { name: 'Home', exact: true }).click();
   await page.getByRole('button', { name: 'Lock', exact: true }).click();
   await page.getByRole('button', { name: 'Unlock with Face ID or fingerprint' }).click();
   await expect(page.getByRole('button', { name: 'Start timer' })).toBeVisible({ timeout: 30_000 });

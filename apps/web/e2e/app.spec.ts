@@ -159,12 +159,16 @@ test('between seizures: log one and see it on Home; saved sets: save from the ed
   await sheet.getByRole('button', { name: 'Save' }).click();
   await expect(page.getByRole('button', { name: 'Delete' })).toBeVisible();
 
+  await page.getByRole('navigation', { name: 'Main menu' }).getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('button', { name: 'Symptom sets and your own symptoms' }).click();
   await expect(page.getByText('No sets yet. Save one from the seizure editor.')).toBeVisible();
 });
 
 test('the app locks when it goes to the background, and Start still works from the PIN screen', async ({ page }) => {
   await firstRun(page);
+  await page.getByRole('navigation', { name: 'Main menu' }).getByRole('button', { name: 'More', exact: true }).click();
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await page.getByRole('button', { name: 'Lock', exact: true }).click();
   await page.getByLabel('Lock after (seconds away)').fill('0');
   await page.getByLabel('Lock after (seconds away)').blur();
   await page.waitForTimeout(500);

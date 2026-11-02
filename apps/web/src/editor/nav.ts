@@ -22,7 +22,12 @@ export type ScreenName =
   | 'wellbeing'
   | 'backup'
   | 'reports'
-  | 'reportPreview';
+  | 'reportPreview'
+  | 'household'
+  | 'addDevice'
+  | 'joinHousehold'
+  | 'upToDate'
+  | 'updateFile';
 
 export interface Nav {
   push: (name: ScreenName, props?: object) => void;

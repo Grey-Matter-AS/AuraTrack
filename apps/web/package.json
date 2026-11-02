@@ -1,7 +1,7 @@
 {
   "name": "@auratrack/web",
   "private": true,
-  "version": "7.0.2",
+  "version": "7.0.6",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -13,7 +13,10 @@
     "@auratrack/model": "workspace:*",
     "@auratrack/reports": "workspace:*",
     "@auratrack/store": "workspace:*",
+    "@auratrack/sync": "workspace:*",
     "@auratrack/ui": "workspace:*",
+    "jsqr": "^1.4.0",
+    "peerjs": "^1.5.5",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },

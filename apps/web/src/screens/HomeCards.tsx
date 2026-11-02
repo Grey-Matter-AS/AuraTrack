@@ -7,6 +7,7 @@ import { useRecords } from '../app/records';
 import { backupReminder, SNOOZE_MS } from '../app/backupReminder';
 import { install, isInstalled, isIos } from '../app/install';
 import { useNav } from '../editor/nav';
+import { useHouseholdOptional } from '../household/HouseholdContext';
 import { APP_VERSION } from '../version';
 import './screens.css';
 
@@ -113,6 +114,36 @@ export function WellbeingCard({ onCheckIn }: { onCheckIn: () => void }) {
           </Button>
         ) : null}
       </div>
+    </Card>
+  );
+}
+
+/** Household (M6): a quiet note when another device's changes came in, and the wait for the first meeting on a phone that just joined. */
+export function HouseholdCard() {
+  const { t, patients } = useApp();
+  const hh = useHouseholdOptional();
+  const nav = useNav();
+  if (!hh) return null;
+  const waiting = patients.length === 0 && hh.snapshot.household !== null;
+  if (!waiting && !hh.note) return null;
+  return (
+    <Card tone="accent" compact>
+      {waiting ? <p className="app-banner">{t('hh.joinWaitingFirst')}</p> : null}
+      {hh.note ? (
+        <>
+          <p className="app-banner" role="status">
+            {t('hh.note', { name: hh.note.name, count: hh.note.count })}
+          </p>
+          <div className="ui-cluster">
+            <Button size="md" onClick={() => nav.push('history')}>
+              {t('hh.noteOpen')}
+            </Button>
+            <Button size="md" onClick={hh.dismissNote}>
+              {t('hh.noteDismiss')}
+            </Button>
+          </div>
+        </>
+      ) : null}
     </Card>
   );
 }

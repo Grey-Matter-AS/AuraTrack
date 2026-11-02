@@ -12,7 +12,7 @@ const AppRoot = lazy(() => import('./screens/AppRoot'));
 const isDevRoute = () => window.location.hash === '#/dev';
 const isKitchenRoute = () => window.location.hash.startsWith('#/kitchen');
 const isPrototypeRoute = () => window.location.hash.startsWith('#/prototype');
-const isAppRoute = () => window.location.hash.startsWith('#/app');
+const isOptionsRoute = () => window.location.hash.startsWith('#/options');
 const routeOf = () =>
   isDevRoute()
     ? 'dev'
@@ -20,9 +20,9 @@ const routeOf = () =>
       ? 'kitchen'
       : isPrototypeRoute()
         ? 'prototype'
-        : isAppRoute()
-          ? 'app'
-          : 'home';
+        : isOptionsRoute()
+          ? 'options'
+          : 'app'; // the app is the main page: no hash, or #/app as before
 
 // M0 shell: proves the build, the PWA and the tokens work. Real screens arrive from M2 on.
 export function App() {
@@ -70,8 +70,8 @@ export function App() {
         </p>
         <div className="mt-6">
           <Stack>
-            <Button variant="primary" onClick={() => (window.location.hash = '#/app')}>
-              Open the app (work in progress)
+            <Button variant="primary" onClick={() => (window.location.hash = '#/')}>
+              Open the app
             </Button>
             <Button onClick={() => (window.location.hash = '#/prototype')}>Try the prototype</Button>
             <Button onClick={() => (window.location.hash = '#/kitchen')}>Component kitchen sink</Button>

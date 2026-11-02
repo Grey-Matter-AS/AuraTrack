@@ -5,8 +5,8 @@ const placeholders = (text: string): string[] => [...text.matchAll(/\{(\w+)\}/g)
 const others = LANGUAGES.filter((l): l is Exclude<Language, 'en'> => l !== 'en');
 
 describe('screen messages', () => {
-  it('has 1,035 messages, each with a key that says which screen it belongs to', () => {
-    expect(MESSAGE_KEYS).toHaveLength(1035);
+  it('has 1,148 messages, each with a key that says which screen it belongs to', () => {
+    expect(MESSAGE_KEYS).toHaveLength(1148);
     expect(new Set(MESSAGE_KEYS).size).toBe(MESSAGE_KEYS.length);
     for (const key of MESSAGE_KEYS) expect(key, key).toMatch(/^[a-z]+(\.[A-Za-z0-9_]+)+$/);
   });

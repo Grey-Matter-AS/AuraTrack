@@ -9,7 +9,7 @@ import { LogPast } from './LogPast';
 import { Recovery } from './Recovery';
 import { UpdateCard } from './UpdateCard';
 import { DosePanel } from './DosePanel';
-import { BackupCard, InstallCard, WellbeingCard, WhatsNewCard } from './HomeCards';
+import { HouseholdCard, BackupCard, InstallCard, WellbeingCard, WhatsNewCard } from './HomeCards';
 import { CheckIn } from './Wellbeing';
 import { ActivitySheet, RunningCard, StartSession } from './Eeg';
 import { MainNav } from './MainNav';
@@ -71,6 +71,7 @@ export function Home() {
         <WhatsNewCard />
         <BackupCard />
         <InstallCard />
+        <HouseholdCard />
         {app.video.notice ? (
           <Card tone={app.video.notice === 'failed' ? 'danger' : 'accent'} compact>
             <div className="app-row">

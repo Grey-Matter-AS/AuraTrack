@@ -70,7 +70,7 @@ import { resolveSettings, settingRecord, type ResolvedSettings } from './setting
 // Screens read this and call its actions; none of them talks to the store directly.
 
 export type AppApi = Client<StoreApi>;
-export type Phase = 'loading' | 'setup' | 'locked' | 'ready' | 'error';
+export type Phase = 'loading' | 'setup' | 'joining' | 'locked' | 'ready' | 'error';
 
 const LANGUAGE_KEY = 'auratrack.language';
 const LANGUAGES: readonly Language[] = ['en', 'nb', 'nn', 'da', 'sv', 'fi', 'de', 'fr', 'es'];
@@ -137,6 +137,10 @@ export interface AppState {
     /** Opens the app with the printed recovery kit and sets a new PIN. 'wrong_kit' when the kit is not this phone's. */
     unlockWithKit(kit: string, newPin: string): Promise<'ok' | 'wrong_kit'>;
     setup(args: { name: string; pin: string }): Promise<void>;
+    /** Makes the store for a phone that will join a household (no person yet); the join screen follows. */
+    beginJoin(pin: string): Promise<void>;
+    /** The phone has joined: open the app. The people arrive with the first meeting. */
+    finishJoin(): Promise<void>;
     unlock(pin: string): Promise<void>;
     lock(): Promise<void>;
     startRecording(): void;
@@ -568,6 +572,17 @@ export function AppProvider({
             type: 'setting',
             values: { patientId: id, scope: 'device', key: 'whatsNewSeen', value: APP_VERSION },
           });
+          await loadAll();
+          setRecovery(NO_RECOVERY);
+          setPhase('ready');
+        }),
+      beginJoin: (pin) =>
+        guarded(async () => {
+          await client.create({ credential: { pin } });
+          setPhase('joining');
+        }),
+      finishJoin: () =>
+        guarded(async () => {
           await loadAll();
           setRecovery(NO_RECOVERY);
           setPhase('ready');

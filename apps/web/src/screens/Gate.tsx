@@ -1,6 +1,7 @@
 import { AppHeader, BottomSheet, Button, Card, Screen, Stack, TextArea, TextField } from '@auratrack/ui';
 import { useState } from 'react';
 import { useApp } from '../app/AppContext';
+import { JoinSetup } from './JoinHousehold';
 import { Recording } from './Recording';
 import './screens.css';
 
@@ -10,14 +11,16 @@ import './screens.css';
 
 export function Gate() {
   const app = useApp();
-  if (app.phase === 'setup') return <Setup />;
+  const [joinPin, setJoinPin] = useState('');
+  if (app.phase === 'setup') return <Setup onJoin={setJoinPin} />;
+  if (app.phase === 'joining') return <JoinSetup onCancel={() => void app.actions.eraseAll(joinPin)} />;
   const session = app.recording.session;
   // A recording made from the PIN screen carries on there, with the same screen and the same buttons
   if (session) return <Recording />;
   return <Locked />;
 }
 
-function Setup() {
+function Setup({ onJoin }: { onJoin: (pin: string) => void }) {
   const { t, actions, busy } = useApp();
   const [name, setName] = useState('');
   const [pin, setPin] = useState('');
@@ -58,6 +61,19 @@ function Setup() {
           }}
         >
           {t('setup.create')}
+        </Button>
+        <Button
+          fullWidth
+          disabled={busy}
+          onClick={() => {
+            setShown(true);
+            if (digits && pin === again) {
+              onJoin(pin);
+              void actions.beginJoin(pin);
+            }
+          }}
+        >
+          {t('hh.joinInstead')}
         </Button>
       </Stack>
     </Screen>

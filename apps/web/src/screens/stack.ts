@@ -3,14 +3,17 @@ import { Editor } from '../editor/Editor';
 import { holder, type Nav } from '../editor/nav';
 import { Review } from '../editor/Review';
 import { About } from './About';
+import { AddDevice } from './AddDevice';
 import { Backup } from './Backup';
 import { Detail } from './Detail';
 import { DoseGrid } from './DoseGrid';
 import { Eeg } from './Eeg';
 import { EegSession } from './EegSession';
 import { Help } from './Help';
+import { Household } from './Household';
 import { History } from './History';
 import { Home } from './Home';
+import { JoinScreen } from './JoinHousehold';
 import { MedDetail } from './MedDetail';
 import { MedEdit } from './MedEdit';
 import { Medicines } from './Medicines';
@@ -20,6 +23,8 @@ import { ReportPreview } from './ReportPreview';
 import { Reports } from './Reports';
 import { Settings, SettingsGroup } from './Settings';
 import { Sets } from './Sets';
+import { UpdateFile } from './UpdateFile';
+import { UpToDate } from './UpToDate';
 import { Wellbeing } from './Wellbeing';
 
 // The screens: the main places (Home, History, Medicines, More), and what opens from them. Recording takes over the whole
@@ -36,6 +41,11 @@ export const stack = createScreenStack({
   settings: Settings,
   settingsGroup: SettingsGroup,
   help: Help,
+  household: Household,
+  addDevice: AddDevice,
+  joinHousehold: JoinScreen,
+  upToDate: UpToDate,
+  updateFile: UpdateFile,
   about: About,
   backup: Backup,
   reports: Reports,

@@ -13,7 +13,7 @@ import { import6x, type ImportReport } from './import6x/import';
 import { AuraDb } from './db';
 import { LockedRecorder, NO_LOCKED_SCREEN, type LockedScreen, type LockedStatus } from './dropbox';
 import { RecordingService, type RecoveryReport } from './recording';
-import { recoveryKitMatrix, recoveryKitQr } from './recovery';
+import { qrMatrixOf, recoveryKitMatrix, recoveryKitQr } from './recovery';
 import type { RecordingEvent, RecordingSession } from '@auratrack/model';
 import {
   Store,
@@ -292,6 +292,35 @@ export function createStoreApi(config: StoreApiConfig) {
     },
     changePin(arg: { current: UnlockCredential; newPin: string }): Promise<void> {
       return current().changePin(arg.current, arg.newPin);
+    },
+    qrMatrix(arg: { text: string; level?: 'L' | 'M' }): { size: number; dark: boolean[] } {
+      return qrMatrixOf(arg.text, arg.level);
+    },
+    // Household sync (docs/plan/M6-plan.md). What a meeting between two devices asks of the store.
+    syncIndex(arg: { scope: string }): Promise<{ id: string; stamp: string }[]> {
+      return current().syncIndex(arg.scope);
+    },
+    syncEntries(arg: { ids: string[] }): Promise<ChangeLogEntry[]> {
+      return current().syncEntries(arg.ids);
+    },
+    async applySynced(arg: {
+      entries: ChangeLogEntry[];
+    }): Promise<{ applied: number; duplicates: number; rejected: number }> {
+      const result = await current().applySynced(arg.entries);
+      return { applied: result.applied, duplicates: result.duplicates, rejected: result.rejected.length };
+    },
+    householdState(): Promise<unknown> {
+      return current().getSecret('household');
+    },
+    async saveHouseholdState(arg: { state: unknown }): Promise<void> {
+      await current().putSecret('household', arg.state);
+    },
+    storeIsEmpty(): boolean {
+      return current().isEmpty();
+    },
+    async adoptHousehold(arg: { householdId: string }): Promise<StoreInfo> {
+      await current().adoptHousehold(arg.householdId);
+      return current().info;
     },
     /** Counts per record type, for the developer page and for checking an import or a restore. */
     counts(): Partial<Record<RecordType, number>> {
