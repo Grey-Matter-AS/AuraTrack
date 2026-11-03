@@ -346,3 +346,286 @@ describe('between seizures, wellbeing and the EEG diary', () => {
     expect((await checkCsvImport(store, text, options)).problems[0]?.reason).toMatch(/no EEG session "nope"/);
   });
 });
+
+describe('every row it cannot read is named, with its reason', () => {
+  const reasons = async (text: string, extra: Partial<CsvImportOptions> = {}) => {
+    const { store, options } = await setup();
+    const report = await checkCsvImport(store, text, { ...options, ...extra });
+    expect(report.unaccounted).toBe(0);
+    return report.problems.map((p) => p.reason);
+  };
+
+  it('times, dates, numbers and words in seizure rows', async () => {
+    const ok = { date: '2026-10-05', time: '14:05' };
+    const text = file({
+      SEIZURES: [
+        { date: 'yesterday', time: '14:05' },
+        { date: '2026-10-05', time: 'noon' },
+        { date: '2026-10-05', time: '13:00 PM' },
+        { date: '2026-10-05', time: '24:30' },
+        { date: '', time: '14:05' },
+        { ...ok, seizureSeconds: '1.5' },
+        { ...ok, seizureSeconds: 'about a minute' },
+        { ...ok, autoStopped: 'maybe' },
+        { ...ok, notes: 'x'.repeat(5001) },
+        { ...ok, auraEnd: '14:06' },
+        { ...ok, symptoms: 'Muscle Flickering (left arm)' },
+        { ...ok, afterFindingCodes: 'after.custom' },
+        { ...ok, recordedBy: 'nurse' },
+        { ...ok, symptomCodes: 'symptom.small_twitching.muscle_flickering@body.tail' },
+        { ...ok, symptomCodes: 'symptom.not_a_symptom' },
+      ],
+    });
+    expect(await reasons(text)).toEqual([
+      expect.stringMatching(/date: "yesterday" is not a date/),
+      expect.stringMatching(/time: "noon" is not a time/),
+      expect.stringMatching(/time: "13:00 PM" is not a time/),
+      expect.stringMatching(/time: "24:30" is not a time/),
+      expect.stringMatching(/date: is empty/),
+      expect.stringMatching(/seizureSeconds: 1.5 is not a whole number/),
+      expect.stringMatching(/seizureSeconds: "about a minute" is not a number/),
+      expect.stringMatching(/autoStopped: "maybe" is not yes or no/),
+      expect.stringMatching(/notes: longer than 5000/),
+      expect.stringMatching(/auraEnd: "14:06" needs a date and a time/),
+      expect.stringMatching(/write the body area in symptomCodes/),
+      expect.stringMatching(/words for your own finding are missing/),
+      expect.stringMatching(/recordedBy: "nurse" is not one of carer, self/),
+      expect.stringMatching(/"body.tail" is not a body area/),
+      expect.stringMatching(/"symptom.not_a_symptom" is not a known code/),
+    ]);
+  });
+
+  it('a line outside any block, and the rows of a block it does not know', async () => {
+    const text = `1,2,3\n\n${file({ SEIZURES: [{ date: '2026-10-05', time: '14:05' }] })}\n\nOLD_STUFF\na,b\n1,2`;
+    const { store, options } = await setup();
+    const report = await checkCsvImport(store, text, options);
+    expect(report.problems).toEqual([
+      { section: 'file', line: 1, reason: expect.stringMatching(/not under a block title/) },
+    ]);
+    expect(report.unknownSections).toEqual(['OLD_STUFF']);
+    expect(report.totals).toMatchObject({ found: 1, ready: 1 });
+  });
+
+  it('medicines, changes and doses', async () => {
+    const med = { name: 'Lamotrigine', dose: '100', unit: 'mg', frequency: 'BD', scheduledTimes: '08:00|20:00' };
+    const text = file({
+      MEDICATIONS: [
+        { ...med, id: 'm1' },
+        { ...med, id: 'm2', name: 'Levetiracetam', frequency: 'every now and then' },
+        { ...med, id: 'm3', name: 'Topiramate', scheduledDays: '7' },
+        { ...med, id: 'm4', name: 'Zonisamide', slotDoses: '08:00=lots' },
+        { ...med, id: 'm5', name: '' },
+        { ...med, id: 'm6', name: 'Perampanel' },
+      ],
+      MEDICATION_CHANGES: [
+        { medicationId: 'm6', type: 'changed', effectiveAt: '2026-02-01 08:00', dose: '150' },
+        { medicationId: 'm2', type: 'started', effectiveAt: '2026-02-01 08:00' },
+      ],
+      MEDICATION_LOGS: [
+        { medication: 'Nothing like it', takenAt: '2026-10-05 08:10', status: 'taken' },
+        { medicationId: 'm1', takenAt: '', status: 'taken' },
+        { medicationId: 'm1', takenAt: '2026-10-05 08:10', status: 'gulped' },
+      ],
+    });
+    expect(await reasons(text)).toEqual([
+      expect.stringMatching(/frequency: "every now and then" is not one of/),
+      expect.stringMatching(/scheduledDays: "7" is not 0 to 6/),
+      expect.stringMatching(/slotDoses: "08:00=lots" is not a time=dose pair/),
+      expect.stringMatching(/the name is empty/),
+      expect.stringMatching(/the first change of Perampanel must be its start/),
+      expect.stringMatching(/could not be brought in/),
+      expect.stringMatching(/no medicine "Nothing like it"/),
+      expect.stringMatching(/takenAt: is empty/),
+      expect.stringMatching(/status: "gulped" is not one of/),
+    ]);
+  });
+
+  it('two medicines with the same name in the app need the id', async () => {
+    const { store, patientId, options } = await setup();
+    for (const dose of [10, 20])
+      await store.create('medication', { ...stripBase(medicationFixture({ patientId, name: 'Clobazam', dose })) });
+    const text = file({
+      MEDICATION_LOGS: [{ medication: 'Clobazam', takenAt: '2026-10-05 08:10', status: 'taken' }],
+    });
+    const report = await checkCsvImport(store, text, options);
+    expect(report.problems[0]?.reason).toMatch(/more than one medicine is called "Clobazam"; use medicationId/);
+  });
+
+  it('wellbeing and the EEG diary', async () => {
+    const seizureId = newId();
+    const text = file({
+      WELLBEING_ENTRIES: [
+        { recordedAt: '', moodCode: 'mood.happy' },
+        { recordedAt: '2026-10-04 21:00' },
+        { recordedAt: '2026-10-04 22:00', moodCode: 'mood.happy', factorCodes: 'factor.sleep_hours' },
+        { recordedAt: '2026-10-04 23:00', moodCode: 'mood.happy', factorCodes: 'factor.sleep_hours=lots' },
+        { recordedAt: '2026-10-05 07:00', moodCode: 'mood.happy', intensity: '5' },
+      ],
+      EEG_SESSIONS: [
+        { id: 'e1', startTime: '' },
+        { id: 'e2', startTime: '2026-10-05 20:00' },
+      ],
+      EEG_ACTIVITIES: [
+        { sessionId: '', startTime: '2026-10-05 22:00' },
+        { sessionId: 'e2', startTime: '' },
+        { sessionId: 'e2', startTime: '2026-10-05 22:00', linkedSeizureId: seizureId },
+        { sessionId: 'e2', kind: 'nap', startTime: '2026-10-05 22:00' },
+      ],
+    });
+    expect(await reasons(text)).toEqual([
+      expect.stringMatching(/recordedAt: is empty/),
+      expect.stringMatching(/moodCode: is empty/),
+      expect.stringMatching(/factors: "factor.sleep_hours" is not name=value/),
+      expect.stringMatching(/factors: "factor.sleep_hours=lots" has no number or yes\/no/),
+      expect.stringMatching(/intensity: 5 is not a whole number from 1/),
+      expect.stringMatching(/startTime: is empty/),
+      expect.stringMatching(/sessionId: is empty/),
+      expect.stringMatching(/startTime: is empty/),
+      expect.stringMatching(/linkedSeizureId: no seizure/),
+      expect.stringMatching(/kind: "nap" is not one of/),
+    ]);
+  });
+});
+
+describe('what it reads besides the plain columns', () => {
+  it('names in place of codes, a time zone, only a total time, yes in Norwegian, and the formula guard', async () => {
+    const { store, options } = await setup();
+    const text = file({
+      SEIZURES: [
+        {
+          date: '2026-10-05',
+          time: '14:05',
+          timeZone: 'Europe/Stockholm',
+          totalSeconds: '120',
+          auraEnd: '2026-10-05 14:05',
+          triggers: 'Stress',
+          afterFindings: 'Confused / disoriented',
+          symptoms: 'Muscle Flickering',
+          autoStopped: 'ja',
+          recordedBy: 'Self',
+          notes: "'=SUM(A1)",
+        },
+      ],
+    });
+    const report = await importCsv(store, text, options);
+    expect(report.problems).toEqual([]);
+    const start = at(2026, 10, 5, 14, 5);
+    expect(store.list('seizure')[0]).toMatchObject({
+      timeZone: 'Europe/Stockholm',
+      phases: { auraEnd: null, seizureEnd: { at: start + 120_000 }, recoveryEnd: null },
+      triggerCodes: ['trigger.stress'],
+      afterFindings: [{ code: 'after.confused' }],
+      symptoms: [{ code: 'symptom.small_twitching.muscle_flickering' }],
+      isEmergencyStop: true,
+      recordedBy: 'self',
+      notes: '=SUM(A1)',
+    });
+  });
+
+  it('a household word of its own, by name', async () => {
+    const { store, patientId, options } = await setup();
+    await store.create('customCode', {
+      id: newId(),
+      patientId,
+      kind: 'trigger',
+      code: 'custom.trigger.loud_music',
+      label: 'Loud music',
+      parentCode: null,
+    });
+    const text = file({ SEIZURES: [{ date: '2026-10-05', time: '14:05', triggers: 'loud music' }] });
+    await importCsv(store, text, options);
+    expect(store.list('seizure')[0]?.triggerCodes).toEqual(['custom.trigger.loud_music']);
+  });
+
+  it('a file saved with tabs, a 12-hour time past noon, and a day and seconds', async () => {
+    const { store, options } = await setup();
+    const text = file(
+      {
+        SEIZURES: [{ date: '2026/10/05', time: '12:30:15 AM' }],
+        WELLBEING_ENTRIES: [
+          {
+            recordedAt: '2026-10-05T07:00',
+            day: '2026-10-04',
+            mood: 'Happy',
+            factors: 'Sleep hours=6|Sleep quality=true',
+          },
+        ],
+      },
+      '\t',
+    );
+    const report = await importCsv(store, text, options);
+    expect(report.delimiter).toBe('\t');
+    expect(report.problems).toEqual([]);
+    expect(store.list('seizure')[0]?.phases.start.at).toBe(new Date(2026, 9, 5, 0, 30, 15).getTime());
+    expect(store.list('wellbeingEntry')[0]).toMatchObject({ dayKey: '2026-10-04', moodCode: 'mood.happy' });
+  });
+
+  it('doses with their own amount, and a medicine already in the app found by its name', async () => {
+    const { store, patientId, options } = await setup();
+    await store.create('medication', { ...stripBase(medicationFixture({ patientId, name: 'Clobazam' })) });
+    const text = file({
+      MEDICATIONS: [{ name: 'clobazam', dose: '10', unit: 'mg', frequency: 'OD', scheduledTimes: '08:00' }],
+      MEDICATION_LOGS: [
+        {
+          medication: 'Clobazam',
+          takenAt: '2026-10-05 08:10',
+          status: 'taken',
+          dose: '5',
+          unit: 'ml',
+          scheduledTime: '8:00',
+        },
+      ],
+    });
+    const report = await importCsv(store, text, options);
+    expect(report.sections.MEDICATIONS).toMatchObject({ duplicates: 1 });
+    expect(store.list('doseLog')[0]).toMatchObject({ doseSnapshot: 5, unitSnapshot: 'ml', scheduledTime: '08:00' });
+    const again = await importCsv(store, text, options);
+    expect(again.sections.MEDICATION_LOGS).toMatchObject({ duplicates: 1 });
+  });
+
+  it('a medicine whose changes end in a stop, with times, days and slot doses', async () => {
+    const { store, options } = await setup();
+    const regimen = {
+      name: 'Lamotrigine',
+      dose: '100',
+      unit: 'mg',
+      frequency: 'BD',
+      scheduledTimes: '08:00|20:00',
+      scheduledDays: '1|3|5',
+      slotDoses: '08:00=50|20:00=50',
+    };
+    const text = file({
+      MEDICATIONS: [{ ...regimen, id: 'm1', active: 'no' }],
+      MEDICATION_CHANGES: [
+        { ...regimen, id: newId(), medicationId: 'm1', type: 'started', effectiveAt: '2026-01-01 08:00' },
+        { medicationId: 'm1', type: 'stopped', effectiveAt: '2026-05-01 08:00', note: 'Side effects' },
+      ],
+    });
+    const report = await importCsv(store, text, options);
+    expect(report.problems).toEqual([]);
+    expect(store.list('medication')[0]).toMatchObject({
+      active: false,
+      scheduledDays: [1, 3, 5],
+      slotDoses: { '08:00': 50, '20:00': 50 },
+    });
+    const again = await checkCsvImport(store, text, options);
+    expect(again.sections.MEDICATIONS).toMatchObject({ duplicates: 1 });
+  });
+
+  it('an EEG session already in the app takes new activities by its id', async () => {
+    const { store, options } = await setup();
+    const text = file({
+      EEG_SESSIONS: [{ id: 'e1', startTime: '2026-10-05 20:00', status: 'active', customHours: '6' }],
+    });
+    await importCsv(store, text, options);
+    const later = file({
+      EEG_SESSIONS: [{ id: 'e1', startTime: '2026-10-05 20:00' }],
+      EEG_ACTIVITIES: [{ sessionId: 'e1', activity: 'Sleeping', mood: 'Happy', startTime: '2026-10-05 22:00' }],
+    });
+    const report = await importCsv(store, later, options);
+    expect(report.sections.EEG_SESSIONS).toMatchObject({ duplicates: 1 });
+    expect(report.sections.EEG_ACTIVITIES).toMatchObject({ ready: 1 });
+    expect(store.list('eegActivity')[0]).toMatchObject({ activityCode: 'activity.sleeping', moodCode: 'mood.happy' });
+    expect((await checkCsvImport(store, later, options)).sections.EEG_ACTIVITIES).toMatchObject({ duplicates: 1 });
+  });
+});

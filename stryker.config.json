@@ -22,7 +22,7 @@
     "low": 80,
     "break": 80
   },
-  "ignorePatterns": ["reports", "docs", "dist", "coverage", ".git"],
+  "ignorePatterns": ["/reports", "docs", "dist", "coverage", ".git"],
   "tempDirName": ".stryker-tmp",
   "cleanTempDir": true,
   "plugins": ["@stryker-mutator/vitest-runner"]

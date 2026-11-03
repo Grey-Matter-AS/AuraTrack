@@ -1,5 +1,10 @@
 # AuraTrack v7: status
 
+> **The PWA is paused (2026-11-03).** The main work is now the native apps, named AuraTrack7: see `docs/AuraTrack7/STATUS.md` and `docs/AuraTrack7/ROADMAP.md`. The PWA stays as the reference implementation (its tests must stay green) and gets security fixes and the small "Moving to the app" guide (native milestone N15). The open PWA items below are done only if you want them:
+> - M3: your phone check and test seizures; PIN timing on your phones (`/#/dev`)
+> - M4, M5, M6: your checks (see their sign-off files); translation review; version bump and the 7.0 tag
+> - M7: the hub on your computer and phones, real push, the desktop pieces not run here, the alert-from-the-PIN-screen decision, the 7.1 tag
+
 **Read this first in every session.** Then read the current milestone's file (`M<n>.md`) and continue with "Next step".
 
 - **Current milestone:** M3, Recording and the new logging (branch `7.0.3---M3`, approved 2026-11-01). **All ten slices are built (2026-11-02); M3 waits for your phone check and your test seizures.** M0, M1 and M2 are closed.

@@ -98,13 +98,18 @@ export function ImportCsv() {
                 onClick={() => {
                   if (!file) return;
                   setBusy(true);
-                  void Promise.resolve(api.csvImport({ text: file.text, ...options() }))
-                    .then(async (r) => {
-                      setDone(r.applied);
+                  // The lists are refreshed before the result shows, so nothing is still running behind it.
+                  void Promise.resolve(api.csvImport({ text: file.text, ...options() })).then(
+                    async (r) => {
                       await actions.refresh();
-                    })
-                    .catch(() => setProblem(t('csv.failed')))
-                    .finally(() => setBusy(false));
+                      setBusy(false);
+                      setDone(r.applied);
+                    },
+                    () => {
+                      setBusy(false);
+                      setProblem(t('csv.failed'));
+                    },
+                  );
                 }}
               >
                 {t('csv.import', { count: check.totals.ready })}
