@@ -216,7 +216,7 @@ describe('through the store interface', () => {
     const { api } = createStoreApi({ name: dbName() });
     expect(await api.lockedStatus()).toEqual({
       available: false,
-      screen: { start: false, patientId: null, patientName: null, card: null, plan: expect.any(Object) },
+      screen: { start: false, patientId: null, patientName: null, card: null, plan: expect.any(Object), video: null },
       session: null,
       waiting: 0,
       recentStarts: [],

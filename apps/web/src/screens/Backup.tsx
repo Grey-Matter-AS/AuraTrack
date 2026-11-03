@@ -16,6 +16,7 @@ import { useState } from 'react';
 import { useApp } from '../app/AppContext';
 import { useNav } from '../editor/nav';
 import { reportsEnv } from '../reports/env';
+import { ImportCsv } from './ImportCsv';
 import { QrSvg } from './QrSvg';
 import './screens.css';
 
@@ -31,7 +32,7 @@ type Checked = {
 
 const errorName = (e: unknown): string => (e instanceof Error ? e.name : '');
 
-/** Backup, restore, moving to a new phone, bringing in a 6.1 backup, and the recovery kit (F-801, F-802, F-806). */
+/** Backup, restore, moving to a new device, bringing in a 6.1 backup or a spreadsheet, and the recovery kit (F-801, F-802, F-806). */
 export function Backup() {
   const { t } = useApp();
   const nav = useNav();
@@ -51,6 +52,7 @@ export function Backup() {
         </Section>
         <Restore />
         <ImportLegacy />
+        <ImportCsv />
         <RecoveryKit />
       </Stack>
     </Screen>

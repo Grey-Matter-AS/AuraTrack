@@ -26,6 +26,8 @@ export const SETTING_DEFS = {
   lockedStart: { scope: 'device', schema: z.boolean(), default: true },
   /** Show the patient's name on the PIN screen (off: the screen says only "Recording"). */
   lockedShowName: { scope: 'device', schema: z.boolean(), default: false },
+  /** Film a recording started from the PIN screen too (needs videoEnabled). Off at first: anyone holding the device could. */
+  lockedVideo: { scope: 'device', schema: z.boolean(), default: false },
   /** A beep with the emergency alert. Off by default; some phones mute it with the silent switch. */
   alertSound: { scope: 'device', schema: z.boolean(), default: false },
   /** A short vibration on taps while recording, where the browser allows it (not on iPhone). */

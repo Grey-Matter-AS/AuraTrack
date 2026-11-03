@@ -10,6 +10,7 @@ import {
 } from './backup';
 import { compareImport, type ComparisonReport } from './import6x/compare';
 import { import6x, type ImportReport } from './import6x/import';
+import { checkCsvImport, importCsv, type CsvImportOptions, type CsvImportReport } from './importCsv';
 import { AuraDb } from './db';
 import { LockedRecorder, NO_LOCKED_SCREEN, type LockedScreen, type LockedStatus } from './dropbox';
 import { RecordingService, type RecoveryReport } from './recording';
@@ -20,6 +21,7 @@ import {
   StoreError,
   type ApplyResult,
   type DropBoxReport,
+  type LockedClipReport,
   type Credential,
   type PasskeyRecord,
   type StoreInfo,
@@ -138,6 +140,14 @@ export function createStoreApi(config: StoreApiConfig) {
         return { available: false, screen: NO_LOCKED_SCREEN, session: null, waiting: 0, recentStarts: [] };
       return lockedRecorder().status();
     },
+    /** Keeps the video of a recording started from the PIN screen, sealed until the unlock. Works while the store is locked. */
+    lockedClip(arg: { recording: string; mime: string; fileName: string; bytes: Uint8Array }): Promise<void> {
+      return lockedRecorder().postClip(arg);
+    },
+    /** What happened to the videos filmed while locked, at the last unlock. */
+    lockedClipReport(): LockedClipReport {
+      return current().lastLockedClips;
+    },
     /** Posts an event of a recording started from the PIN screen. Works while the store is locked. */
     lockedPost(arg: { event: RecordingEvent }): Promise<RecordingSession | null> {
       return lockedRecorder().post(arg.event);
@@ -232,6 +242,16 @@ export function createStoreApi(config: StoreApiConfig) {
       };
       const { report, legacy } = await import6x(current(), arg.text, options);
       return { report, comparison: await compareImport(current(), legacy, report) };
+    },
+    /** Reads a CSV file in the export's format and says what importing it would do. Writes nothing. */
+    csvCheck(arg: { text: string } & CsvImportOptions): Promise<CsvImportReport> {
+      const { text, ...options } = arg;
+      return checkCsvImport(current(), text, options);
+    },
+    /** Brings in the rows of a CSV file that are ready. The same file a second time adds nothing. */
+    csvImport(arg: { text: string } & CsvImportOptions): Promise<CsvImportReport> {
+      const { text, ...options } = arg;
+      return importCsv(current(), text, options);
     },
     /** The encrypted backup file as text, and the name to save it under. */
     async backup(arg: { passphrase: string; patientId?: string }): Promise<{ fileName: string; text: string }> {

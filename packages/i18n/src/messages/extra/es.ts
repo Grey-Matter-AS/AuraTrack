@@ -94,6 +94,9 @@ export const es: Extra = {
   'settings.camera': 'Cámara',
   'settings.cameraBack': 'Cámara trasera',
   'settings.cameraFront': 'Cámara frontal',
+  'settings.lockedVideo': 'Grabar también cuando se pulsa Iniciar en la pantalla del PIN',
+  'settings.lockedVideoHelp':
+    'Cualquiera que tenga este dispositivo podrá grabar sin el PIN. El vídeo queda sellado hasta que se desbloquee la app y entonces se une a la crisis.',
   'settings.assume': 'Dar las tomas por hechas',
   'settings.assumeHelp':
     'Una toma que no se marque en 90 minutos se cuenta como supuestamente tomada, no como olvidada.',
@@ -388,6 +391,7 @@ export const es: Extra = {
   'video.denied': 'No se permitió la cámara, así que este registro no tiene vídeo.',
   'video.unavailable': 'La cámara no está disponible, así que este registro no tiene vídeo.',
   'video.saved': 'El vídeo se guardó con la crisis.',
+  'video.waiting': 'El vídeo queda sellado y se une a la crisis cuando se desbloquea la app.',
   'video.download': 'No había espacio para el vídeo en la app, así que se guardó como archivo.',
   'video.failed': 'No se pudo guardar el vídeo.',
   'det.videoElsewhere': 'El vídeo no está en este dispositivo. Se queda en el dispositivo que lo grabó.',
@@ -414,7 +418,7 @@ export const es: Extra = {
   'backup.turnOff': 'Desactivar',
   'whatsnew.title': 'Novedades de la versión {version}',
   'whatsnew.text':
-    'Los medicamentos y el registro de tomas, el historial con línea de tiempo, el diario de EEG, el vídeo, los informes y la copia de seguridad.',
+    'Inicio y Bloquear en cada pantalla, teléfonos del contacto de emergencia y del cuidador, vídeo desde la pantalla del PIN (si lo elige) y registros desde un archivo de hoja de cálculo.',
   'backup.make': 'Crear copia de seguridad',
   'backup.makeHelp':
     'Un archivo cifrado con todas las personas y todos los registros de este dispositivo. Guarde la frase de contraseña en un lugar seguro: sin ella nadie puede abrir el archivo, ni nosotros.',
@@ -681,6 +685,22 @@ export const es: Extra = {
   'import.help':
     'Elija un archivo de copia de seguridad de AuraTrack versión 6. Cada entrada se trae y se contrasta con las cifras del archivo. Es seguro repetirlo.',
   'import.choose': 'Elegir archivo de copia de seguridad de la versión 6',
+  'csv.title': 'Registros desde una hoja de cálculo (CSV)',
+  'csv.help':
+    'Descargue la plantilla, ponga sus registros en sus columnas (una fila cada uno) y elija el archivo. También sirve un archivo de hoja de cálculo exportado desde Informes. Primero se revisa el archivo: no se añade nada hasta que pulse Importar, y los registros que ya están en la app nunca se cambian.',
+  'csv.template': 'Descargar la plantilla',
+  'csv.codeList': 'Descargar la lista de códigos',
+  'csv.choose': 'Elegir un archivo CSV',
+  'csv.checked':
+    'Listas para añadir: {ready} de {found} filas. Ya en la app: {duplicates}. Con un problema, dejadas fuera: {rejected}.',
+  'csv.example': 'La línea {line} se lee como {read}.',
+  'csv.problem': '{section}, línea {line}: {reason}',
+  'csv.more': 'Y {count} más.',
+  'csv.unknown': 'Bloques dejados fuera porque su título no se conoce: {names}',
+  'csv.backupFirst': 'Haga antes una copia de seguridad: una importación no se puede deshacer de una vez.',
+  'csv.import': 'Importar {count}',
+  'csv.done': 'Añadidos: {count}.',
+  'csv.failed': 'No se pudo leer el archivo.',
   'import.passphrase': 'Frase de contraseña (si el archivo la tiene)',
   'import.passphraseHelp': 'Déjelo vacío si el archivo no tiene frase de contraseña.',
   'import.button': 'Traer',

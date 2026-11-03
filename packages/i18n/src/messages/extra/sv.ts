@@ -94,6 +94,9 @@ export const sv: Extra = {
   'settings.camera': 'Kamera',
   'settings.cameraBack': 'Bakre kamera',
   'settings.cameraFront': 'Främre kamera',
+  'settings.lockedVideo': 'Filma även när Start trycks på pinkodsskärmen',
+  'settings.lockedVideoHelp':
+    'Den som håller enheten kan då filma utan pinkoden. Videon förblir förseglad tills appen låses upp och läggs då till anfallet.',
   'settings.assume': 'Anta att doser togs',
   'settings.assumeHelp': 'En dos som inte markeras inom 90 minuter räknas som antagen, inte missad.',
   'settings.doseReminders': 'Dospåminnelser',
@@ -383,6 +386,7 @@ export const sv: Extra = {
   'video.denied': 'Kameran tilläts inte, så den här registreringen har ingen video.',
   'video.unavailable': 'Kameran är inte tillgänglig, så den här registreringen har ingen video.',
   'video.saved': 'Videon är sparad tillsammans med anfallet.',
+  'video.waiting': 'Videon hålls förseglad och läggs till anfallet när appen låses upp.',
   'video.download': 'Det fanns inte plats för videon i appen, så den sparades som en fil i stället.',
   'video.failed': 'Videon kunde inte sparas.',
   'det.videoElsewhere': 'Videon finns inte på den här enheten. Den stannar på enheten som filmade.',
@@ -409,7 +413,7 @@ export const sv: Extra = {
   'backup.turnOff': 'Stäng av',
   'whatsnew.title': 'Nytt i version {version}',
   'whatsnew.text':
-    'Läkemedel och dospanelen, Historik med tidslinje, EEG-dagboken, video, rapporter och säkerhetskopia.',
+    'Hem och Lås på alla skärmar, telefonnummer till kontaktperson och anhörig, video från pinkodsskärmen (om du väljer det) och uppgifter från en kalkylbladsfil.',
   'backup.make': 'Ta en säkerhetskopia',
   'backup.makeHelp':
     'En krypterad fil med alla personer och alla registreringar på den här enheten. Förvara lösenfrasen säkert: utan den kan ingen öppna filen, inte heller vi.',
@@ -675,6 +679,22 @@ export const sv: Extra = {
   'import.help':
     'Välj en säkerhetskopiefil från AuraTrack version 6. Varje registrering hämtas över och kontrolleras mot siffrorna i filen. Det är säkert att göra om.',
   'import.choose': 'Välj en säkerhetskopiefil från version 6',
+  'csv.title': 'Uppgifter från ett kalkylblad (CSV)',
+  'csv.help':
+    'Ladda ned mallen, fyll i dina uppgifter i dess kolumner (en rad var) och välj filen. En kalkylbladsfil exporterad från Rapporter fungerar också. Filen kontrolleras först: inget läggs till förrän du trycker Hämta in, och uppgifter som redan finns i appen ändras aldrig.',
+  'csv.template': 'Ladda ned mallen',
+  'csv.codeList': 'Ladda ned kodlistan',
+  'csv.choose': 'Välj en CSV-fil',
+  'csv.checked':
+    'Redo att läggas till: {ready} av {found} rader. Redan i appen: {duplicates}. Med ett problem, utelämnade: {rejected}.',
+  'csv.example': 'Rad {line} läses som {read}.',
+  'csv.problem': '{section}, rad {line}: {reason}',
+  'csv.more': 'Och {count} till.',
+  'csv.unknown': 'Avsnitt som utelämnats eftersom rubriken är okänd: {names}',
+  'csv.backupFirst': 'Gör en säkerhetskopia först: en import kan inte ångras i ett steg.',
+  'csv.import': 'Hämta in {count}',
+  'csv.done': 'Tillagda: {count}.',
+  'csv.failed': 'Filen kunde inte läsas.',
   'import.passphrase': 'Lösenfras (om filen har en)',
   'import.passphraseHelp': 'Lämna tomt för en fil utan lösenfras.',
   'import.button': 'Hämta in',

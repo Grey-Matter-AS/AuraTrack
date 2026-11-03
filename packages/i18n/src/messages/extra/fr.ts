@@ -94,6 +94,9 @@ export const fr: Extra = {
   'settings.camera': 'Caméra',
   'settings.cameraBack': 'Caméra arrière',
   'settings.cameraFront': 'Caméra avant',
+  'settings.lockedVideo': 'Filmer aussi quand Démarrer est touché sur l’écran du code PIN',
+  'settings.lockedVideoHelp':
+    'Toute personne qui tient cet appareil peut alors filmer sans le code PIN. La vidéo reste scellée jusqu’au déverrouillage de l’appli, puis rejoint la crise.',
   'settings.assume': 'Considérer les prises comme faites',
   'settings.assumeHelp':
     'Une prise non marquée dans les 90 minutes est comptée comme présumée prise, et non comme oubliée.',
@@ -388,6 +391,7 @@ export const fr: Extra = {
   'video.denied': 'La caméra n’a pas été autorisée, cet enregistrement n’a donc pas de vidéo.',
   'video.unavailable': 'La caméra n’est pas disponible, cet enregistrement n’a donc pas de vidéo.',
   'video.saved': 'La vidéo a été enregistrée avec la crise.',
+  'video.waiting': 'La vidéo reste scellée et rejoint la crise au déverrouillage de l’appli.',
   'video.download': 'Il n’y avait pas de place pour la vidéo dans l’appli, elle a donc été enregistrée comme fichier.',
   'video.failed': 'La vidéo n’a pas pu être enregistrée.',
   'det.videoElsewhere': 'La vidéo n’est pas sur cet appareil. Elle reste sur l’appareil qui a filmé.',
@@ -415,7 +419,7 @@ export const fr: Extra = {
   'backup.turnOff': 'Désactiver',
   'whatsnew.title': 'Nouveau dans la version {version}',
   'whatsnew.text':
-    'Les médicaments et le suivi des prises, l’historique avec frise, le journal EEG, la vidéo, les rapports et la sauvegarde.',
+    'Accueil et Verrouiller sur chaque écran, numéros de téléphone du contact d’urgence et de l’aidant, vidéo depuis l’écran du code PIN (si vous le choisissez) et enregistrements depuis un fichier tableur.',
   'backup.make': 'Créer une sauvegarde',
   'backup.makeHelp':
     'Un fichier chiffré avec toutes les personnes et tous les enregistrements de cet appareil. Gardez la phrase secrète en lieu sûr : sans elle, personne ne peut ouvrir le fichier, nous non plus.',
@@ -686,6 +690,22 @@ export const fr: Extra = {
   'import.help':
     'Choisissez un fichier de sauvegarde d’AuraTrack version 6. Chaque entrée est reprise et comparée aux chiffres du fichier. Vous pouvez le refaire sans risque.',
   'import.choose': 'Choisir un fichier de sauvegarde de la version 6',
+  'csv.title': 'Enregistrements depuis un tableur (CSV)',
+  'csv.help':
+    'Téléchargez le modèle, saisissez vos enregistrements dans ses colonnes (une ligne chacun) et choisissez le fichier. Un fichier tableur exporté depuis Rapports fonctionne aussi. Le fichier est d’abord vérifié : rien n’est ajouté avant que vous touchiez Importer, et les enregistrements déjà dans l’appli ne sont jamais modifiés.',
+  'csv.template': 'Télécharger le modèle',
+  'csv.codeList': 'Télécharger la liste des codes',
+  'csv.choose': 'Choisir un fichier CSV',
+  'csv.checked':
+    'Prêtes à être ajoutées : {ready} lignes sur {found}. Déjà dans l’appli : {duplicates}. Avec un problème, laissées de côté : {rejected}.',
+  'csv.example': 'La ligne {line} est lue comme {read}.',
+  'csv.problem': '{section}, ligne {line} : {reason}',
+  'csv.more': 'Et {count} de plus.',
+  'csv.unknown': 'Blocs laissés de côté car leur titre est inconnu : {names}',
+  'csv.backupFirst': 'Faites d’abord une sauvegarde : une importation ne peut pas être annulée en une fois.',
+  'csv.import': 'Importer {count}',
+  'csv.done': 'Ajoutés : {count}.',
+  'csv.failed': 'Le fichier n’a pas pu être lu.',
   'import.passphrase': 'Phrase secrète (si le fichier en a une)',
   'import.passphraseHelp': 'Laissez vide pour un fichier sans phrase secrète.',
   'import.button': 'Reprendre',

@@ -387,6 +387,14 @@ function Recording() {
               ]}
             />
           ) : null}
+          {settings.videoEnabled && settings.lockedStart ? (
+            <Checkbox
+              checked={settings.lockedVideo}
+              onChange={(on) => void actions.setSetting('lockedVideo', on)}
+              label={t('settings.lockedVideo')}
+              help={t('settings.lockedVideoHelp')}
+            />
+          ) : null}
         </Stack>
       </Section>
       <Button fullWidth onClick={() => nav.push('sets')}>

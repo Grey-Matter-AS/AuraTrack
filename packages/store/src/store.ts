@@ -39,6 +39,7 @@ import {
   writeLockedScreen,
   type LockedScreen,
   type Posted,
+  openClip,
 } from './dropbox';
 import type { DropBoxRow } from './db';
 import { buildRecoveryKit, newRecoverySecret, parseRecoveryKit } from './recovery';
@@ -132,6 +133,16 @@ export interface ApplyResult {
   conflicts: string[];
 }
 
+/** What happened to the videos filmed while locked, at the last unlock. */
+export interface LockedClipReport {
+  /** Joined to their seizure. */
+  videos: number;
+  /** Left waiting: their recording is not in the records yet (tried again at the next unlock). */
+  waiting: number;
+  /** Kept apart: unreadable, or the seizure already had a video. Never deleted. */
+  quarantined: number;
+}
+
 /** What emptying the drop box did at the last unlock. */
 export interface DropBoxReport {
   /** Recordings that were added to (or created in) the records. */
@@ -179,6 +190,7 @@ export class Store {
   private clock: Hlc;
   /** What the drop box did at the last unlock. */
   lastDropBox: DropBoxReport = { recordings: 0, events: 0, quarantined: 0, failed: 0 };
+  lastLockedClips: LockedClipReport = { videos: 0, waiting: 0, quarantined: 0 };
 
   private constructor(
     private readonly db: AuraDb,
@@ -421,6 +433,7 @@ export class Store {
     try {
       await ensureDropBoxKeys(this.db, this.key);
       this.lastDropBox = await this.mergeDropBox();
+      this.lastLockedClips = await this.mergeLockedClips();
       await this.publishLockedScreen();
     } catch {
       // Unlocking must never fail because of this. Nothing is deleted unless it was merged, so the next unlock tries again.
@@ -466,6 +479,44 @@ export class Store {
       }
     }
     if (report.failed === 0) await clearMarker(this.db);
+    return report;
+  }
+
+  /**
+   * Joins the videos filmed while locked to their seizures, after the recordings themselves were merged. A clip is deleted only
+   * once its video is saved; one that cannot be read, or whose seizure already has a video, is kept apart and never deleted.
+   */
+  async mergeLockedClips(): Promise<LockedClipReport> {
+    const report: LockedClipReport = { videos: 0, waiting: 0, quarantined: 0 };
+    const rows = (await this.db.lockedClips.toArray()).filter((row) => row.quarantined === undefined);
+    if (rows.length === 0) return report;
+    const privateKey = await loadDropBoxPrivateKey(this.db, this.key);
+    const keepApart = async (recording: string, reason: string) => {
+      await this.db.lockedClips.update(recording, { quarantined: reason });
+      report.quarantined++;
+    };
+    for (const row of rows) {
+      if (!privateKey || !this.get('seizure', row.recording)) {
+        report.waiting++;
+        continue;
+      }
+      if (await this.db.videos.get(row.recording)) {
+        await keepApart(row.recording, 'the seizure already has a video');
+        continue;
+      }
+      let bytes: Uint8Array;
+      try {
+        bytes = await openClip(privateKey, row);
+      } catch (error) {
+        if (!(error instanceof UnreadableEntryError)) throw error;
+        await keepApart(row.recording, error.reason);
+        continue;
+      }
+      await this.putVideo(row.recording, row.mime, bytes);
+      await this.update('seizure', row.recording, { video: { fileName: row.fileName } } as never);
+      await this.db.lockedClips.delete(row.recording); // only now that the video is saved
+      report.videos++;
+    }
     return report;
   }
 
@@ -540,6 +591,13 @@ export class Store {
         clusterMinCount: plan.clusterMinCount,
         clusterWindowMinutes: plan.clusterWindowMinutes,
       },
+      video:
+        patient &&
+        this.deviceSetting('lockedStart') &&
+        this.deviceSetting('lockedVideo') &&
+        this.deviceSetting('videoEnabled')
+          ? { facing: this.deviceSetting('videoCamera') }
+          : null,
       card:
         content === 'nothing' || !patient
           ? null

@@ -93,6 +93,9 @@ export const fi: Extra = {
   'settings.camera': 'Kamera',
   'settings.cameraBack': 'Takakamera',
   'settings.cameraFront': 'Etukamera',
+  'settings.lockedVideo': 'Kuvaa myös, kun Aloita painetaan PIN-näytöllä',
+  'settings.lockedVideoHelp':
+    'Kuka tahansa laitetta pitelevä voi silloin kuvata ilman PIN-koodia. Video pysyy sinetöitynä, kunnes sovelluksen lukitus avataan, ja liitetään silloin kohtaukseen.',
   'settings.assume': 'Oleta annosten tulleen otetuiksi',
   'settings.assumeHelp': 'Annos, jota ei ole merkitty 90 minuutin kuluessa, lasketaan oletetuksi, ei unohdetuksi.',
   'settings.doseReminders': 'Annosmuistutukset',
@@ -382,6 +385,7 @@ export const fi: Extra = {
   'video.denied': 'Kameraa ei sallittu, joten tässä kirjauksessa ei ole videota.',
   'video.unavailable': 'Kamera ei ole käytettävissä, joten tässä kirjauksessa ei ole videota.',
   'video.saved': 'Video on tallennettu kohtauksen yhteyteen.',
+  'video.waiting': 'Video pidetään sinetöitynä, ja se liitetään kohtaukseen, kun sovelluksen lukitus avataan.',
   'video.download': 'Videolle ei ollut tilaa sovelluksessa, joten se tallennettiin tiedostona.',
   'video.failed': 'Videota ei voitu tallentaa.',
   'det.videoElsewhere': 'Video ei ole tässä laitteessa. Se pysyy laitteessa, jolla se kuvattiin.',
@@ -407,7 +411,8 @@ export const fi: Extra = {
   'backup.snooze': 'Muistuta 3 päivän päästä',
   'backup.turnOff': 'Poista käytöstä',
   'whatsnew.title': 'Uutta versiossa {version}',
-  'whatsnew.text': 'Lääkkeet ja annospaneeli, Historia aikajanalla, EEG-päiväkirja, video, raportit ja varmuuskopio.',
+  'whatsnew.text':
+    'Etusivu ja lukitus jokaisella näytöllä, puhelinnumerot hätäyhteyshenkilölle ja läheiselle, video PIN-näytöltä (jos valitset sen) ja tiedot laskentataulukkotiedostosta.',
   'backup.make': 'Tee varmuuskopio',
   'backup.makeHelp':
     'Yksi salattu tiedosto, jossa on kaikki tämän laitteen henkilöt ja kirjaukset. Säilytä salalause turvassa: ilman sitä kukaan ei voi avata tiedostoa, emme mekään.',
@@ -673,6 +678,22 @@ export const fi: Extra = {
   'import.help':
     'Valitse varmuuskopiotiedosto AuraTrackin versiosta 6. Jokainen kirjaus tuodaan ja tarkistetaan tiedoston lukuja vastaan. Sen voi turvallisesti tehdä uudelleen.',
   'import.choose': 'Valitse version 6 varmuuskopiotiedosto',
+  'csv.title': 'Tiedot laskentataulukosta (CSV)',
+  'csv.help':
+    'Lataa malli, kirjoita tietosi sen sarakkeisiin (yksi rivi kutakin) ja valitse tiedosto. Raporteista viety laskentataulukkotiedosto käy myös. Tiedosto tarkistetaan ensin: mitään ei lisätä ennen kuin painat Tuo, eikä sovelluksessa jo olevia tietoja koskaan muuteta.',
+  'csv.template': 'Lataa malli',
+  'csv.codeList': 'Lataa koodiluettelo',
+  'csv.choose': 'Valitse CSV-tiedosto',
+  'csv.checked':
+    'Valmiina lisättäväksi: {ready}/{found} riviä. Jo sovelluksessa: {duplicates}. Ongelman vuoksi pois jätetyt: {rejected}.',
+  'csv.example': 'Rivi {line} luetaan muodossa {read}.',
+  'csv.problem': '{section}, rivi {line}: {reason}',
+  'csv.more': 'Ja {count} muuta.',
+  'csv.unknown': 'Pois jätetyt osiot, koska otsikkoa ei tunneta: {names}',
+  'csv.backupFirst': 'Tee ensin varmuuskopio: tuontia ei voi perua yhdellä kertaa.',
+  'csv.import': 'Tuo {count}',
+  'csv.done': 'Lisätty: {count}.',
+  'csv.failed': 'Tiedostoa ei voitu lukea.',
   'import.passphrase': 'Salalause (jos tiedostolla on)',
   'import.passphraseHelp': 'Jätä tyhjäksi, jos tiedostolla ei ole salalausetta.',
   'import.button': 'Tuo',

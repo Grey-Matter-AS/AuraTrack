@@ -320,3 +320,39 @@ describe('the recovery kit', () => {
     await screen.findByRole('button', { name: 'Start timer' });
   });
 });
+
+describe('records from a spreadsheet', () => {
+  it('saves the template and the list of codes', async () => {
+    const ctx = setup();
+    await seed(ctx);
+    const user = await openBackup(ctx);
+    await user.click(screen.getByRole('button', { name: 'Download the template' }));
+    await user.click(screen.getByRole('button', { name: 'Download the list of codes' }));
+    await waitFor(() => expect(saved).toHaveLength(2));
+    expect(saved[0]).toMatchObject({ fileName: 'auratrack-template.csv', mime: 'text/csv' });
+    expect(String(saved[0]?.bytes)).toMatch(/^SEIZURES\nid,date,time,/);
+    expect(String(saved[1]?.bytes)).toMatch(/seizure_type\.absence/);
+  });
+
+  it('checks the file when it is chosen, adds nothing until Import, then adds the rows that are ready', async () => {
+    const ctx = setup();
+    await seed(ctx);
+    const user = await openBackup(ctx);
+    const text = [
+      'SEIZURES',
+      'date,time,typeCode,seizureSeconds,notes',
+      '2026-10-05,14:05,seizure_type.absence,60,From paper',
+      '2026-10-06,25:00,,60,',
+    ].join('\n');
+    choose('Choose a CSV file', 'diary.csv', text);
+    const status = await screen.findByRole('status');
+    expect(status.textContent).toBe('Ready to add: 1 of 2 rows. Already in the app: 0. With a problem, left out: 1.');
+    expect(screen.getByText('Line 3 is read as 2026-10-05 14:05.')).toBeTruthy();
+    expect(screen.getByText(/SEIZURES, line 4: time: "25:00" is not a time/)).toBeTruthy();
+    expect(await ctx.client.list({ type: 'seizure' })).toHaveLength(0);
+    await user.click(screen.getByRole('button', { name: 'Import 1' }));
+    expect(await screen.findByText('Added: 1.')).toBeTruthy();
+    const seizures = (await ctx.client.list({ type: 'seizure' })) as unknown as { notes: string }[];
+    expect(seizures.map((s) => s.notes)).toEqual(['From paper']);
+  });
+});

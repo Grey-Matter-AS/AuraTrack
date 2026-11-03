@@ -94,6 +94,9 @@ export const da: Extra = {
   'settings.camera': 'Kamera',
   'settings.cameraBack': 'Bagkamera',
   'settings.cameraFront': 'Frontkamera',
+  'settings.lockedVideo': 'Film også, når der trykkes på Start på pinkodeskærmen',
+  'settings.lockedVideoHelp':
+    'Enhver, der holder enheden, kan så filme uden pinkoden. Videoen forbliver forseglet, indtil appen låses op, og føjes så til anfaldet.',
   'settings.assume': 'Antag, at doser blev taget',
   'settings.assumeHelp': 'En dosis, der ikke er markeret inden for 90 minutter, tæller som antaget, ikke som glemt.',
   'settings.doseReminders': 'Dosispåmindelser',
@@ -383,6 +386,7 @@ export const da: Extra = {
   'video.denied': 'Kameraet blev ikke tilladt, så denne optagelse har ingen video.',
   'video.unavailable': 'Kameraet er ikke tilgængeligt, så denne optagelse har ingen video.',
   'video.saved': 'Videoen er gemt sammen med anfaldet.',
+  'video.waiting': 'Videoen holdes forseglet og føjes til anfaldet, når appen låses op.',
   'video.download': 'Der var ikke plads til videoen i appen, så den blev gemt som en fil i stedet.',
   'video.failed': 'Videoen kunne ikke gemmes.',
   'det.videoElsewhere': 'Videoen er ikke på denne enhed. Den bliver på den enhed, der filmede.',
@@ -408,7 +412,8 @@ export const da: Extra = {
   'backup.snooze': 'Mind mig om 3 dage',
   'backup.turnOff': 'Slå fra',
   'whatsnew.title': 'Nyt i version {version}',
-  'whatsnew.text': 'Medicin og dosispanelet, Historik med tidslinje, EEG-dagbogen, video, rapporter og sikkerhedskopi.',
+  'whatsnew.text':
+    'Hjem og Lås på alle skærme, telefonnumre til kontaktperson og pårørende, video fra pinkodeskærmen (hvis du vælger det) og oplysninger fra en regnearksfil.',
   'backup.make': 'Tag en sikkerhedskopi',
   'backup.makeHelp':
     'Én krypteret fil med alle personer og alle optegnelser på denne enhed. Opbevar adgangssætningen sikkert: uden den kan ingen åbne filen, heller ikke os.',
@@ -674,6 +679,22 @@ export const da: Extra = {
   'import.help':
     'Vælg en sikkerhedskopifil fra AuraTrack version 6. Hver optegnelse hentes over og tjekkes mod tallene i filen. Det er sikkert at gøre igen.',
   'import.choose': 'Vælg en sikkerhedskopifil fra version 6',
+  'csv.title': 'Oplysninger fra et regneark (CSV)',
+  'csv.help':
+    'Hent skabelonen, skriv dine oplysninger i dens kolonner (én række hver), og vælg filen. En regnearksfil eksporteret fra Rapporter virker også. Filen tjekkes først: intet tilføjes, før du trykker Hent ind, og oplysninger, der allerede er i appen, ændres aldrig.',
+  'csv.template': 'Hent skabelonen',
+  'csv.codeList': 'Hent kodelisten',
+  'csv.choose': 'Vælg en CSV-fil',
+  'csv.checked':
+    'Klar til at blive tilføjet: {ready} af {found} rækker. Allerede i appen: {duplicates}. Med et problem, udeladt: {rejected}.',
+  'csv.example': 'Linje {line} læses som {read}.',
+  'csv.problem': '{section}, linje {line}: {reason}',
+  'csv.more': 'Og {count} mere.',
+  'csv.unknown': 'Afsnit udeladt, fordi titlen er ukendt: {names}',
+  'csv.backupFirst': 'Tag en sikkerhedskopi først: en indhentning kan ikke fortrydes i ét trin.',
+  'csv.import': 'Hent ind {count}',
+  'csv.done': 'Tilføjet: {count}.',
+  'csv.failed': 'Filen kunne ikke læses.',
   'import.passphrase': 'Adgangssætning (hvis filen har en)',
   'import.passphraseHelp': 'Lad feltet stå tomt for en fil uden adgangssætning.',
   'import.button': 'Hent ind',

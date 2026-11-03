@@ -94,6 +94,9 @@ export const nb: Extra = {
   'settings.camera': 'Kamera',
   'settings.cameraBack': 'Bakre kamera',
   'settings.cameraFront': 'Fremre kamera',
+  'settings.lockedVideo': 'Film også når Start trykkes på PIN-skjermen',
+  'settings.lockedVideoHelp':
+    'Alle som holder enheten, kan da filme uten PIN-koden. Videoen forblir forseglet til appen låses opp, og legges da til anfallet.',
   'settings.assume': 'Anta at doser ble tatt',
   'settings.assumeHelp': 'En dose som ikke er markert innen 90 minutter, regnes som antatt, ikke glemt.',
   'settings.doseReminders': 'Dosepåminnelser',
@@ -383,6 +386,7 @@ export const nb: Extra = {
   'video.denied': 'Kameraet ble ikke tillatt, så denne registreringen har ingen video.',
   'video.unavailable': 'Kameraet er ikke tilgjengelig, så denne registreringen har ingen video.',
   'video.saved': 'Videoen er lagret sammen med anfallet.',
+  'video.waiting': 'Videoen holdes forseglet og legges til anfallet når appen låses opp.',
   'video.download': 'Det var ikke plass til videoen i appen, så den ble lagret som en fil i stedet.',
   'video.failed': 'Videoen kunne ikke lagres.',
   'det.videoElsewhere': 'Videoen er ikke på denne enheten. Den blir på enheten som filmet.',
@@ -408,7 +412,7 @@ export const nb: Extra = {
   'backup.turnOff': 'Slå av',
   'whatsnew.title': 'Nytt i versjon {version}',
   'whatsnew.text':
-    'Medisiner og dosepanelet, Historikk med tidslinje, EEG-dagboken, video, rapporter og sikkerhetskopi.',
+    'Hjem og Lås på alle skjermer, telefonnumre til kontaktperson og pårørende, video fra PIN-skjermen (hvis du velger det), og opplysninger fra en regnearkfil.',
   'backup.make': 'Ta en sikkerhetskopi',
   'backup.makeHelp':
     'Én kryptert fil med alle personer og alle registreringer på denne enheten. Ta godt vare på passfrasen: uten den kan ingen åpne filen, heller ikke vi.',
@@ -673,6 +677,22 @@ export const nb: Extra = {
   'import.help':
     'Velg en sikkerhetskopifil fra AuraTrack versjon 6. Hver registrering hentes over og kontrolleres mot tallene i filen. Det er trygt å gjøre om igjen.',
   'import.choose': 'Velg en sikkerhetskopifil fra versjon 6',
+  'csv.title': 'Opplysninger fra et regneark (CSV)',
+  'csv.help':
+    'Last ned malen, før opplysningene inn i kolonnene (én rad hver), og velg filen. En regnearkfil eksportert fra Rapporter virker også. Filen kontrolleres først: ingenting legges til før du trykker Hent inn, og opplysninger som allerede er i appen, endres aldri.',
+  'csv.template': 'Last ned malen',
+  'csv.codeList': 'Last ned kodelisten',
+  'csv.choose': 'Velg en CSV-fil',
+  'csv.checked':
+    'Klar til å legges til: {ready} av {found} rader. Allerede i appen: {duplicates}. Med et problem, utelatt: {rejected}.',
+  'csv.example': 'Linje {line} leses som {read}.',
+  'csv.problem': '{section}, linje {line}: {reason}',
+  'csv.more': 'Og {count} til.',
+  'csv.unknown': 'Deler som er utelatt fordi tittelen er ukjent: {names}',
+  'csv.backupFirst': 'Ta en sikkerhetskopi først: en innhenting kan ikke angres i ett steg.',
+  'csv.import': 'Hent inn {count}',
+  'csv.done': 'Lagt til: {count}.',
+  'csv.failed': 'Filen kunne ikke leses.',
   'import.passphrase': 'Passfrase (hvis filen har en)',
   'import.passphraseHelp': 'La stå tomt for en fil uten passfrase.',
   'import.button': 'Hent inn',

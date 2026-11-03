@@ -209,6 +209,22 @@ export const m5en = {
   'import.help':
     'Choose a backup file from AuraTrack version 6. Every record is brought across and checked against the numbers in that file. It is safe to do again.',
   'import.choose': 'Choose a version 6 backup file',
+  'csv.title': 'Records from a spreadsheet (CSV)',
+  'csv.help':
+    'Download the template, put your records in its columns (one row each), and choose the file. A spreadsheet file exported from Reports works too. The file is checked first: nothing is added until you press Import, and records already in the app are never changed.',
+  'csv.template': 'Download the template',
+  'csv.codeList': 'Download the list of codes',
+  'csv.choose': 'Choose a CSV file',
+  'csv.checked':
+    'Ready to add: {ready} of {found} rows. Already in the app: {duplicates}. With a problem, left out: {rejected}.',
+  'csv.example': 'Line {line} is read as {read}.',
+  'csv.problem': '{section}, line {line}: {reason}',
+  'csv.more': 'And {count} more.',
+  'csv.unknown': 'Blocks left out because their title is not known: {names}',
+  'csv.backupFirst': 'Make a backup first: an import cannot be undone in one step.',
+  'csv.import': 'Import {count}',
+  'csv.done': 'Added: {count}.',
+  'csv.failed': 'The file could not be read.',
   'import.passphrase': 'Passphrase (if the file has one)',
   'import.passphraseHelp': 'Leave empty for a file without a passphrase.',
   'import.button': 'Bring it in',

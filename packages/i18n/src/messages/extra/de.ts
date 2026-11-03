@@ -94,6 +94,9 @@ export const de: Extra = {
   'settings.camera': 'Kamera',
   'settings.cameraBack': 'Rückkamera',
   'settings.cameraFront': 'Frontkamera',
+  'settings.lockedVideo': 'Auch filmen, wenn auf dem PIN-Bildschirm Start gedrückt wird',
+  'settings.lockedVideoHelp':
+    'Wer das Gerät hält, kann dann ohne PIN filmen. Das Video bleibt versiegelt, bis die App entsperrt wird, und kommt dann zum Anfall.',
   'settings.assume': 'Dosen als genommen annehmen',
   'settings.assumeHelp':
     'Eine Dosis, die nicht innerhalb von 90 Minuten markiert wird, zählt als angenommen, nicht als vergessen.',
@@ -387,6 +390,7 @@ export const de: Extra = {
   'video.denied': 'Die Kamera wurde nicht erlaubt, daher hat diese Erfassung kein Video.',
   'video.unavailable': 'Die Kamera ist nicht verfügbar, daher hat diese Erfassung kein Video.',
   'video.saved': 'Das Video wurde beim Anfall gespeichert.',
+  'video.waiting': 'Das Video bleibt versiegelt und kommt zum Anfall, wenn die App entsperrt wird.',
   'video.download': 'Für das Video war in der App kein Platz, daher wurde es stattdessen als Datei gespeichert.',
   'video.failed': 'Das Video konnte nicht gespeichert werden.',
   'det.videoElsewhere': 'Das Video ist nicht auf diesem Gerät. Es bleibt auf dem Gerät, das gefilmt hat.',
@@ -413,7 +417,7 @@ export const de: Extra = {
   'backup.turnOff': 'Ausschalten',
   'whatsnew.title': 'Neu in Version {version}',
   'whatsnew.text':
-    'Medikamente und das Dosis-Feld, Verlauf mit Zeitleiste, das EEG-Tagebuch, Video, Berichte und Sicherung.',
+    'Start und Sperren auf jedem Bildschirm, Telefonnummern für Notfallkontakt und Betreuungsperson, Video vom PIN-Bildschirm (wenn Sie es wählen) und Einträge aus einer Tabellendatei.',
   'backup.make': 'Sicherung erstellen',
   'backup.makeHelp':
     'Eine verschlüsselte Datei mit allen Personen und allen Einträgen auf diesem Gerät. Bewahren Sie die Passphrase sicher auf: ohne sie kann niemand die Datei öffnen, auch wir nicht.',
@@ -685,6 +689,23 @@ export const de: Extra = {
   'import.help':
     'Wählen Sie eine Sicherungsdatei aus AuraTrack Version 6. Jeder Eintrag wird übernommen und mit den Zahlen in der Datei abgeglichen. Es ist sicher, das erneut zu tun.',
   'import.choose': 'Sicherungsdatei aus Version 6 wählen',
+  'csv.title': 'Einträge aus einer Tabelle (CSV)',
+  'csv.help':
+    'Laden Sie die Vorlage herunter, tragen Sie Ihre Einträge in ihre Spalten ein (je eine Zeile) und wählen Sie die Datei. Eine aus Berichte exportierte Tabellendatei geht auch. Die Datei wird zuerst geprüft: Nichts wird hinzugefügt, bevor Sie Übernehmen drücken, und Einträge, die schon in der App sind, werden nie geändert.',
+  'csv.template': 'Vorlage herunterladen',
+  'csv.codeList': 'Codeliste herunterladen',
+  'csv.choose': 'CSV-Datei wählen',
+  'csv.checked':
+    'Bereit zum Hinzufügen: {ready} von {found} Zeilen. Schon in der App: {duplicates}. Mit einem Problem, ausgelassen: {rejected}.',
+  'csv.example': 'Zeile {line} wird als {read} gelesen.',
+  'csv.problem': '{section}, Zeile {line}: {reason}',
+  'csv.more': 'Und {count} weitere.',
+  'csv.unknown': 'Ausgelassene Abschnitte, weil der Titel unbekannt ist: {names}',
+  'csv.backupFirst':
+    'Machen Sie zuerst eine Sicherung: Eine Übernahme lässt sich nicht in einem Schritt rückgängig machen.',
+  'csv.import': '{count} übernehmen',
+  'csv.done': 'Hinzugefügt: {count}.',
+  'csv.failed': 'Die Datei konnte nicht gelesen werden.',
   'import.passphrase': 'Passphrase (falls die Datei eine hat)',
   'import.passphraseHelp': 'Leer lassen bei einer Datei ohne Passphrase.',
   'import.button': 'Übernehmen',

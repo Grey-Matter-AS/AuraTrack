@@ -127,7 +127,11 @@ export interface AppState {
   controller: RecordingController;
   recording: RecordingSnapshot;
   /** The camera during a recording (F-209): its state, the picture for a small preview, and what happened to the clip. */
-  video: { status: VideoStatus; stream: MediaStream | null; notice: 'saved' | 'download' | 'failed' | null };
+  video: {
+    status: VideoStatus;
+    stream: MediaStream | null;
+    notice: 'saved' | 'waiting' | 'download' | 'failed' | null;
+  };
   busy: boolean;
   wrongPin: boolean;
   /** The store, for screens that read a record type of their own (see useRecords), and a number that changes whenever data did. */
@@ -707,14 +711,17 @@ export function AppProvider({
           recordedBy: settings.recordedBy,
           timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         });
-        // The camera opens after Start has answered, and only with the app unlocked (a video is sealed with the data key)
-        if (phase === 'ready' && settings.videoEnabled) {
+        // The camera opens after Start has answered. Unlocked, the video is sealed with the data key; from the PIN screen (when
+        // chosen) it is sealed for the drop box and joins the seizure at the unlock
+        const lockedVideo = phase === 'ready' ? null : (locked?.screen.video ?? null);
+        const facing = lockedVideo?.facing ?? settings.videoCamera;
+        if ((phase === 'ready' && settings.videoEnabled) || lockedVideo) {
           const camera = (recorderRef.current ??= new VideoRecorder());
           clipRef.current = null;
           setVideo({ status: 'starting', stream: null, notice: null });
           void camera
             .start({
-              facing: settings.videoCamera,
+              facing,
               startAt: startedAt,
               label: fmt.when(startedAt),
               now: () => controller.now(),
@@ -731,16 +738,13 @@ export function AppProvider({
           const clip = filming ? await (clipRef.current ?? camera.stop()) : null;
           clipRef.current = null;
           await controller.settled();
-          if (clip && seizureId && phase === 'ready') {
+          if (clip && seizureId) {
             const name = videoFileName(controller.getSnapshot().session?.start ?? controller.now(), clip.mime);
             try {
-              await client.videoPut({
-                seizureId,
-                mime: clip.mime,
-                bytes: new Uint8Array(await clip.blob.arrayBuffer()),
-                fileName: name,
-              });
-              setVideo({ status: 'off', stream: null, notice: 'saved' });
+              const bytes = new Uint8Array(await clip.blob.arrayBuffer());
+              if (phase === 'ready') await client.videoPut({ seizureId, mime: clip.mime, bytes, fileName: name });
+              else await client.lockedClip({ recording: seizureId, mime: clip.mime, bytes, fileName: name });
+              setVideo({ status: 'off', stream: null, notice: phase === 'ready' ? 'saved' : 'waiting' });
             } catch {
               // The phone could not keep it (no space): the person gets the file instead of losing it
               try {

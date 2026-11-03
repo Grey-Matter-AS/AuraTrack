@@ -50,3 +50,24 @@ export const isDrafted = (language: Language, code: string): boolean =>
 export const labelledCodes = (language: Language): string[] => Object.keys(LABELS[language]);
 
 export { MESSAGE_KEYS, message, messageTemplate, type MessageKey, type MessageParams } from './messages';
+
+const foldLabel = (text: string): string => text.normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase('en');
+let byLabel: Map<string, Set<string>> | null = null;
+
+/**
+ * The codes whose label is this text, in any of the nine languages (case and spacing do not matter). For reading a file a
+ * person filled in by hand: more than one code means the name is not enough to tell which is meant.
+ */
+export function codesForLabel(text: string): string[] {
+  if (!byLabel) {
+    byLabel = new Map();
+    for (const language of LANGUAGES)
+      for (const [code, label] of Object.entries(LABELS[language])) {
+        const key = foldLabel(label);
+        const codes = byLabel.get(key) ?? new Set<string>();
+        codes.add(code);
+        byLabel.set(key, codes);
+      }
+  }
+  return [...(byLabel.get(foldLabel(text)) ?? [])];
+}

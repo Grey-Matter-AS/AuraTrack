@@ -39,12 +39,28 @@ export interface DropBoxRow extends Sealed {
   quarantined?: string;
 }
 
+/** A video filmed while locked: sealed with its own one-time key for the drop box's public key, like an entry. */
+export interface LockedClipRow {
+  /** The recording (the seizure id) it belongs to. */
+  recording: string;
+  epk: string;
+  iv: Uint8Array;
+  data: Uint8Array;
+  mime: string;
+  fileName: string;
+  size: number;
+  savedAt: number;
+  /** Set when it could not be read or not joined to its seizure: kept, never deleted. */
+  quarantined?: string;
+}
+
 export class AuraDb extends Dexie {
   meta!: EntityTable<MetaRow, 'key'>;
   records!: Dexie.Table<RecordRow, [string, string]>;
   changeLog!: EntityTable<LogRow, 'id'>;
   dropbox!: Dexie.Table<DropBoxRow, number>;
   videos!: Dexie.Table<VideoRow, string>;
+  lockedClips!: Dexie.Table<LockedClipRow, string>;
   constructor(name: string) {
     super(name);
     this.version(1).stores({
@@ -56,5 +72,7 @@ export class AuraDb extends Dexie {
     this.version(2).stores({ dropbox: '++seq' });
     // 7.0.4: seizure videos, sealed, one per seizure. A new table only, so no existing row is touched.
     this.version(3).stores({ videos: 'seizureId' });
+    // 7.0.7: videos filmed while locked, waiting for the unlock. A new table only, so no existing row is touched.
+    this.version(4).stores({ lockedClips: 'recording' });
   }
 }

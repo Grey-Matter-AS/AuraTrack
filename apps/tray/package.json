@@ -1,7 +1,7 @@
 {
   "name": "@auratrack/tray",
   "private": true,
-  "version": "7.0.6",
+  "version": "7.0.7",
   "type": "module",
   "scripts": {
     "build": "node scripts/build.mjs",

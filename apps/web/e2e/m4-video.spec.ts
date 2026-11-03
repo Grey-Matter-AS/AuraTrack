@@ -56,3 +56,27 @@ test('is filmed during a recording and kept with the seizure', async ({ page }) 
   await expect(page.locator('video.app-video')).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText(/AuraTrack-seizure-.*\.webm/)).toBeVisible();
 });
+
+test('is filmed from the PIN screen when chosen, kept sealed, and joins the seizure at unlock', async ({ page }) => {
+  await firstRun(page);
+  await place(page, 'More');
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await page.getByRole('button', { name: 'Recording and emergency plan', exact: true }).click();
+  await page.getByRole('checkbox', { name: /^Video during a seizure/ }).click();
+  await page.getByRole('checkbox', { name: /^Also film when Start is pressed on the PIN screen/ }).click();
+  await expect(page.getByRole('checkbox', { name: /^Also film when Start/ })).toBeChecked();
+  await page.getByRole('button', { name: 'Lock the app', exact: true }).click();
+  await expect(page.getByText('AuraTrack is locked')).toBeVisible();
+  await page.getByRole('button', { name: 'Start timer without the PIN' }).click();
+  await expect(page.getByText('Filming', { exact: true }).first()).toBeVisible({ timeout: 15_000 });
+  await page.waitForTimeout(2500);
+  await page.getByRole('button', { name: 'End seizure' }).click();
+  await page.getByRole('button', { name: 'Save and close' }).click();
+  await expect(page.getByText('AuraTrack is locked')).toBeVisible();
+  await page.getByLabel('PIN', { exact: true }).fill(PIN);
+  await page.getByRole('button', { name: 'Unlock' }).click();
+  await place(page, 'History');
+  await page.getByRole('button', { name: 'Open', exact: true }).click();
+  await expect(page.locator('video.app-video')).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText(/AuraTrack-seizure-.*\.webm/)).toBeVisible();
+});

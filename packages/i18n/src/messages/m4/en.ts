@@ -94,6 +94,9 @@ export const m4en = {
   'settings.camera': 'Camera',
   'settings.cameraBack': 'Back camera',
   'settings.cameraFront': 'Front camera',
+  'settings.lockedVideo': 'Also film when Start is pressed on the PIN screen',
+  'settings.lockedVideoHelp':
+    'Anyone holding this device can then film without the PIN. The video stays sealed until the app is unlocked, and then joins the seizure.',
   'settings.assume': 'Assume doses were taken',
   'settings.assumeHelp': 'A dose that is not marked within 90 minutes counts as assumed, not missed.',
   'settings.doseReminders': 'Dose reminders',
@@ -383,6 +386,7 @@ export const m4en = {
   'video.denied': 'The camera was not allowed, so this recording has no video.',
   'video.unavailable': 'The camera is not available, so this recording has no video.',
   'video.saved': 'The video is saved with the seizure.',
+  'video.waiting': 'The video is kept sealed and joins the seizure when the app is unlocked.',
   'video.download': 'There was no room to keep the video in the app, so it was saved as a file instead.',
   'video.failed': 'The video could not be saved.',
   'det.videoElsewhere': 'The video is not on this device. It stays on the device that filmed it.',
@@ -407,7 +411,8 @@ export const m4en = {
   'backup.snooze': 'Remind me in 3 days',
   'backup.turnOff': 'Turn off',
   'whatsnew.title': 'New in version {version}',
-  'whatsnew.text': 'Medicines and the dose panel, History with a timeline, the EEG diary, video, reports and backup.',
+  'whatsnew.text':
+    'Home and Lock on every screen, phone numbers for the emergency contact and the carer, video from the PIN screen (if you choose it), and records from a spreadsheet file.',
   'backup.make': 'Make a backup',
   'backup.makeHelp':
     'One encrypted file with every person and every record on this device. Keep the passphrase safe: without it nobody can open the file, not even us.',

@@ -94,18 +94,24 @@ export async function loadDropBoxPrivateKey(db: AuraDb, deviceKey: CryptoKey): P
 
 // ---- sealing and opening one entry
 
-/** Seals a posted event for the key holder. Needs only the public key. */
-export async function sealPosted(publicKey: string, posted: Posted): Promise<DropBoxRow> {
-  const eid = newId();
+/** A fresh one-time key for the key holder: the AES key to seal with, and the public half to keep beside the ciphertext. */
+async function oneTimeKey(publicKey: string): Promise<{ key: CryptoKey; epk: Bytes }> {
   const ephemeral = (await subtle().generateKey(ECDH, true, ['deriveBits'])) as CryptoKeyPair;
   const epk = new Uint8Array(await subtle().exportKey('raw', ephemeral.publicKey));
   const recipient = await subtle().importKey('raw', fromBase64Url(publicKey), ECDH, false, []);
   const shared = new Uint8Array(
     await subtle().deriveBits({ name: 'ECDH', public: recipient }, ephemeral.privateKey, 256),
   );
-  const iv = randomBytes(12);
   const key = await entryKey(shared, epk);
   shared.fill(0);
+  return { key, epk };
+}
+
+/** Seals a posted event for the key holder. Needs only the public key. */
+export async function sealPosted(publicKey: string, posted: Posted): Promise<DropBoxRow> {
+  const eid = newId();
+  const { key, epk } = await oneTimeKey(publicKey);
+  const iv = randomBytes(12);
   const ct = await subtle().encrypt(
     { name: 'AES-GCM', iv, additionalData: aadOf(eid) },
     key,
@@ -150,6 +156,43 @@ export async function openPosted(privateKey: CryptoKey, row: DropBoxRow): Promis
   return parsed.data;
 }
 
+// ---- a video filmed while locked
+
+/** The largest clip kept while locked. Twelve minutes at the recorder's rate is about 140 MB. */
+export const MAX_CLIP_BYTES = 400 * 1_048_576;
+const clipAad = (recording: string): Bytes => utf8(`dropbox-video:${recording}`);
+
+export async function sealClip(
+  publicKey: string,
+  recording: string,
+  bytes: Bytes,
+): Promise<{ epk: string; iv: Uint8Array; data: Uint8Array }> {
+  const { key, epk } = await oneTimeKey(publicKey);
+  const iv = randomBytes(12);
+  const data = await subtle().encrypt({ name: 'AES-GCM', iv, additionalData: clipAad(recording) }, key, bytes);
+  return { epk: toBase64Url(epk), iv, data: new Uint8Array(data) };
+}
+
+export async function openClip(
+  privateKey: CryptoKey,
+  row: { recording: string; epk: string; iv: Uint8Array; data: Uint8Array },
+): Promise<Uint8Array> {
+  try {
+    const epk = fromBase64Url(row.epk);
+    const sender = await subtle().importKey('raw', epk, ECDH, false, []);
+    const shared = new Uint8Array(await subtle().deriveBits({ name: 'ECDH', public: sender }, privateKey, 256));
+    const key = await entryKey(shared, epk);
+    shared.fill(0);
+    const iv = new Uint8Array(row.iv);
+    const data = new Uint8Array(row.data);
+    return new Uint8Array(
+      await subtle().decrypt({ name: 'AES-GCM', iv, additionalData: clipAad(row.recording) }, key, data),
+    );
+  } catch {
+    throw new UnreadableEntryError('could not be decrypted: damaged, or not posted with this key');
+  }
+}
+
 // ---- what the PIN screen may show
 
 /** The rescue medication and the contact on the alert card. Written in the clear, by choice (decision 5). */
@@ -168,6 +211,8 @@ export interface LockedScreen {
   card: AlertCard | null;
   /** The user's own emergency plan, so the locked alert fires at the same minute as the unlocked one. */
   plan: { emergencyAlertMinutes: number; clusterMinCount: number; clusterWindowMinutes: number };
+  /** Film a recording started here, with this camera; null when not chosen. */
+  video: { facing: 'back' | 'front' } | null;
 }
 
 export const NO_LOCKED_SCREEN: LockedScreen = {
@@ -176,6 +221,7 @@ export const NO_LOCKED_SCREEN: LockedScreen = {
   patientName: null,
   card: null,
   plan: { ...EMERGENCY_PLAN_DEFAULTS },
+  video: null,
 };
 
 export async function readLockedScreen(db: AuraDb): Promise<LockedScreen> {
@@ -288,6 +334,37 @@ export class LockedRecorder {
     });
     this.session = next;
     return next;
+  }
+
+  /** Keeps the video of the recording made here, sealed for the key holder, until the unlock joins it to the seizure. */
+  postClip(arg: { recording: string; mime: string; fileName: string; bytes: Uint8Array }): Promise<void> {
+    const run = this.queue.then(() => this.writeClip(arg));
+    this.queue = run.catch(() => undefined);
+    return run;
+  }
+
+  private async writeClip(arg: {
+    recording: string;
+    mime: string;
+    fileName: string;
+    bytes: Uint8Array;
+  }): Promise<void> {
+    const status = await this.status();
+    if (!status.available || !status.screen.video)
+      throw new DropBoxUnavailableError('Filming without the PIN is not on');
+    if (status.session?.seizureId !== arg.recording)
+      throw new DropBoxUnavailableError('A video is kept only for the recording made on this PIN screen');
+    if (arg.bytes.byteLength > MAX_CLIP_BYTES) throw new DropBoxUnavailableError('The video is too large to keep');
+    const publicKey = (await this.db.meta.get(PUBLIC_KEY))?.value as string;
+    const sealed = await sealClip(publicKey, arg.recording, new Uint8Array(arg.bytes));
+    await this.db.lockedClips.put({
+      recording: arg.recording,
+      ...sealed,
+      mime: arg.mime.slice(0, 100),
+      fileName: arg.fileName.slice(0, 255),
+      size: arg.bytes.byteLength,
+      savedAt: this.now(),
+    });
   }
 }
 

@@ -5,7 +5,7 @@ import { STALE_BACKUP_MS, trayModel, type HubStatusJson } from './model';
 const NOW = 1_800_000_000_000;
 const status = (over: Partial<HubStatusJson> = {}): HubStatusJson => ({
   name: 'AuraTrack Hub',
-  version: '7.0.6',
+  version: '7.0.7',
   devices: [
     { id: 'a', name: 'Kitchen', lastSeen: NOW, revokedAt: null },
     { id: 'b', name: 'Old', lastSeen: null, revokedAt: NOW },

@@ -94,6 +94,9 @@ export const nn: Extra = {
   'settings.camera': 'Kamera',
   'settings.cameraBack': 'Bakre kamera',
   'settings.cameraFront': 'Fremre kamera',
+  'settings.lockedVideo': 'Film òg når Start blir trykt på PIN-skjermen',
+  'settings.lockedVideoHelp':
+    'Alle som held eininga, kan då filme utan PIN-koden. Videoen blir verande forsegla til appen blir låst opp, og blir då lagd til anfallet.',
   'settings.assume': 'Rekn med at dosar vart tekne',
   'settings.assumeHelp': 'Ein dose som ikkje er markert innan 90 minutt, tel som antatt, ikkje gløymd.',
   'settings.doseReminders': 'Dosepåminningar',
@@ -384,6 +387,7 @@ export const nn: Extra = {
   'video.denied': 'Kameraet vart ikkje tillate, så denne registreringa har ingen video.',
   'video.unavailable': 'Kameraet er ikkje tilgjengeleg, så denne registreringa har ingen video.',
   'video.saved': 'Videoen er lagra saman med anfallet.',
+  'video.waiting': 'Videoen blir halden forsegla og blir lagd til anfallet når appen blir låst opp.',
   'video.download': 'Det var ikkje plass til videoen i appen, så han vart lagra som ei fil i staden.',
   'video.failed': 'Videoen kunne ikkje lagrast.',
   'det.videoElsewhere': 'Videoen er ikkje på denne eininga. Han blir på eininga som filma.',
@@ -408,7 +412,8 @@ export const nn: Extra = {
   'backup.snooze': 'Minn meg om 3 dagar',
   'backup.turnOff': 'Slå av',
   'whatsnew.title': 'Nytt i versjon {version}',
-  'whatsnew.text': 'Medisinar og dosepanelet, Historikk med tidslinje, EEG-dagboka, video, rapportar og tryggingskopi.',
+  'whatsnew.text':
+    'Heim og Lås på alle skjermar, telefonnummer til kontaktperson og pårørande, video frå PIN-skjermen (viss du vel det), og opplysningar frå ei reknearkfil.',
   'backup.make': 'Ta ein tryggingskopi',
   'backup.makeHelp':
     'Éi kryptert fil med alle personar og alle registreringar på denne eininga. Ta godt vare på passfrasen: utan henne kan ingen opne fila, heller ikkje vi.',
@@ -673,6 +678,22 @@ export const nn: Extra = {
   'import.help':
     'Vel ei tryggingskopifil frå AuraTrack versjon 6. Kvar registrering vert henta over og kontrollert mot tala i fila. Det er trygt å gjere om att.',
   'import.choose': 'Vel ei tryggingskopifil frå versjon 6',
+  'csv.title': 'Opplysningar frå eit rekneark (CSV)',
+  'csv.help':
+    'Last ned malen, før opplysningane inn i kolonnane (éi rad kvar), og vel fila. Ei reknearkfil eksportert frå Rapportar verkar òg. Fila vert kontrollert først: ingenting vert lagt til før du trykkjer Hent inn, og opplysningar som alt er i appen, vert aldri endra.',
+  'csv.template': 'Last ned malen',
+  'csv.codeList': 'Last ned kodelista',
+  'csv.choose': 'Vel ei CSV-fil',
+  'csv.checked':
+    'Klar til å leggjast til: {ready} av {found} rader. Alt i appen: {duplicates}. Med eit problem, utelate: {rejected}.',
+  'csv.example': 'Linje {line} vert lesen som {read}.',
+  'csv.problem': '{section}, linje {line}: {reason}',
+  'csv.more': 'Og {count} til.',
+  'csv.unknown': 'Delar som er utelate fordi tittelen er ukjend: {names}',
+  'csv.backupFirst': 'Ta ein tryggingskopi først: ei innhenting kan ikkje angrast i eitt steg.',
+  'csv.import': 'Hent inn {count}',
+  'csv.done': 'Lagt til: {count}.',
+  'csv.failed': 'Fila kunne ikkje lesast.',
   'import.passphrase': 'Passfrase (viss fila har ei)',
   'import.passphraseHelp': 'La stå tomt for ei fil utan passfrase.',
   'import.button': 'Hent inn',

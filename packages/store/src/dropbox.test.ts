@@ -143,6 +143,7 @@ describe('what the PIN screen may show', () => {
       patientName: null,
       plan: { emergencyAlertMinutes: 5, clusterMinCount: 3, clusterWindowMinutes: 8 },
       card: { contact: 'Sam 555 0100', rescue: [{ name: 'Midazolam', dose: 10, unit: 'mg' }] },
+      video: null,
     });
   });
 
@@ -598,6 +599,98 @@ describe('merging after unlock', () => {
     await lockedPage(name).post(startEvent(patientId, second, T0 + 100 * S));
     const viaPin = await Store.unlock(name, { pin: '1357' }, { ...options, now: () => T0 + 200 * S });
     expect(viaPin.get('seizure', second)).toMatchObject({ status: 'in_progress' });
+  });
+});
+
+describe('video filmed while locked', () => {
+  async function filming(over: { video?: boolean } = {}) {
+    const { name, store, patientId, options } = await setup();
+    const put = (key: string, value: unknown) =>
+      store.create('setting', { patientId, scope: 'device', key, value: value as never });
+    if (over.video !== false) {
+      await put('videoEnabled', true);
+      await put('lockedVideo', true);
+      await put('videoCamera', 'front');
+    }
+    const screen = await store.publishLockedScreen();
+    store.close();
+    const seizureId = newId();
+    const page = lockedPage(name);
+    await page.post(startEvent(patientId, seizureId));
+    await page.post(tap('end_seizure', T0 + 60 * S));
+    return { name, options, seizureId, page, screen };
+  }
+  const clip = (size = 4096) => Uint8Array.from({ length: size }, (_, i) => i % 251);
+
+  it('tells the PIN screen which camera, only when filming without the PIN is chosen', async () => {
+    expect((await filming()).screen.video).toEqual({ facing: 'front' });
+    expect((await filming({ video: false })).screen.video).toBeNull();
+  });
+
+  it('keeps the clip sealed, and joins it to the seizure at the unlock', async () => {
+    const { name, options, seizureId, page } = await filming();
+    await page.postClip({
+      recording: seizureId,
+      mime: 'video/webm',
+      fileName: 'AuraTrack-seizure.webm',
+      bytes: clip(),
+    });
+    const raw = new AuraDb(name);
+    const row = await raw.lockedClips.get(seizureId);
+    expect(row?.size).toBe(4096);
+    expect(Buffer.from(row!.data).includes(Buffer.from(clip().subarray(0, 64)))).toBe(false); // nothing readable
+    const store = await Store.unlock(name, { pin: PIN }, options);
+    expect(store.lastLockedClips).toEqual({ videos: 1, waiting: 0, quarantined: 0 });
+    expect(store.get('seizure', seizureId)?.video).toEqual({ fileName: 'AuraTrack-seizure.webm' });
+    expect(await store.getVideo(seizureId)).toEqual({ mime: 'video/webm', bytes: clip() });
+    expect(await raw.lockedClips.count()).toBe(0);
+  });
+
+  it('refuses a clip when filming without the PIN is off, or for another recording', async () => {
+    const off = await filming({ video: false });
+    await expect(
+      off.page.postClip({ recording: off.seizureId, mime: 'video/webm', fileName: 'a.webm', bytes: clip() }),
+    ).rejects.toThrow(DropBoxUnavailableError);
+    const on = await filming();
+    await expect(
+      on.page.postClip({ recording: newId(), mime: 'video/webm', fileName: 'a.webm', bytes: clip() }),
+    ).rejects.toThrow(DropBoxUnavailableError);
+  });
+
+  it('keeps a damaged clip apart instead of deleting it, and never replaces a video the seizure has', async () => {
+    const damaged = await filming();
+    await damaged.page.postClip({
+      recording: damaged.seizureId,
+      mime: 'video/webm',
+      fileName: 'a.webm',
+      bytes: clip(),
+    });
+    const raw = new AuraDb(damaged.name);
+    const row = (await raw.lockedClips.get(damaged.seizureId))!;
+    row.data[0] = (row.data[0]! + 1) % 256;
+    await raw.lockedClips.put(row);
+    const store = await Store.unlock(damaged.name, { pin: PIN }, damaged.options);
+    expect(store.lastLockedClips).toEqual({ videos: 0, waiting: 0, quarantined: 1 });
+    expect((await raw.lockedClips.get(damaged.seizureId))?.quarantined).toMatch(/could not be decrypted/);
+
+    const twice = await filming();
+    await twice.page.postClip({ recording: twice.seizureId, mime: 'video/webm', fileName: 'a.webm', bytes: clip() });
+    const opened = await Store.unlock(twice.name, { pin: PIN }, twice.options);
+    expect(opened.lastLockedClips.videos).toBe(1);
+    // the same clip posted again, as if a page reload repeated it: kept apart, the saved video stays
+    const raw2 = new AuraDb(twice.name);
+    await raw2.lockedClips.put({
+      recording: twice.seizureId,
+      epk: 'x',
+      iv: new Uint8Array(12),
+      data: new Uint8Array(8),
+      mime: 'video/webm',
+      fileName: 'b.webm',
+      size: 8,
+      savedAt: T0,
+    });
+    expect(await opened.mergeLockedClips()).toEqual({ videos: 0, waiting: 0, quarantined: 1 });
+    expect((await opened.getVideo(twice.seizureId))?.bytes).toEqual(clip());
   });
 });
 
