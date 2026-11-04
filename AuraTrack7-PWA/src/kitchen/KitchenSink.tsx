@@ -33,7 +33,7 @@ import {
   useToast,
 } from '@auratrack/ui';
 
-// Every component of the kit in every state, on one page. It is what the layout audit walks (apps/web/e2e/audit.spec.ts)
+// Every component of the kit in every state, on one page. It is what the layout audit walks (AuraTrack7-PWA/e2e/audit.spec.ts)
 // and what the visual baselines photograph, in each device size, theme, accent colour and text size.
 // The texts include the longest labels of the nine languages, because those are what break a layout.
 

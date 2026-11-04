@@ -8,13 +8,13 @@ Without a hub everything still works: devices update each other when two of them
 
 ## Run it
 
-- `pnpm build` (builds the app and `apps/server/dist/hub.mjs`), then `node apps/server/dist/hub.mjs` (Node 24 or newer), or `pnpm hub`.
+- `pnpm build` (builds the app and `AuraTrack7-Server/hub/dist/hub.mjs`), then `node AuraTrack7-Server/hub/dist/hub.mjs` (Node 24 or newer), or `pnpm hub`.
 - Open `http://localhost:8420/status` on that computer: it shows the setup code, the devices, what the hub holds and how to reach it.
 - In the app: More, Household, Hub, Connect a hub: the hub's address and the setup code.
 - Start with the computer: the script for your system in `scripts/boot/` (systemd user service, launchd agent, Windows scheduled task).
-- Tray icon: `apps/tray` (a coloured dot, a few facts, a shortcut to the status page). The status page always works without it.
+- Tray icon: `AuraTrack7-Server/tray` (a coloured dot, a few facts, a shortcut to the status page). The status page always works without it.
 - One folder to hand out: `pnpm --filter @auratrack/server package`. A single executable (no Node needed): `pnpm --filter @auratrack/server sea`
-  (built for the system it runs on; `.github/workflows/hub-release.yml` builds all three). Docker: `apps/server/Dockerfile`.
+  (built for the system it runs on; `.github/workflows/hub-release.yml` builds all three). Docker: `AuraTrack7-Server/hub/Dockerfile`.
 
 ## Settings (environment)
 

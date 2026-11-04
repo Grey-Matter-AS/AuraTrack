@@ -2,10 +2,11 @@
 // script and everything it preloads), gzipped. Fails CI when over budget (docs/plan/README.md §4.6).
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
 
 const BUDGET_KB = 180;
-const dist = 'apps/web/dist';
+const dist = fileURLToPath(new URL('../dist', import.meta.url));
 const html = readFileSync(join(dist, 'index.html'), 'utf8');
 const files = new Set([...html.matchAll(/(?:src|href)="\/(assets\/[^"]+\.js)"/g)].map((m) => m[1]));
 let total = 0;

@@ -1,6 +1,6 @@
 // Generates the 6.1 report reference from MADE-UP data only (seeded random, fixed clock).
 // Runs the built 6.x app read-only; nothing is written into the 6.x folder.
-// Usage: node scripts/gen-6x-reference.mjs <6.x app url> <output dir>
+// Usage: node AuraTrack7-Shared/scripts/gen-6x-reference.mjs <6.x app url> <output dir>
 import { chromium } from '@playwright/test';
 import { readFileSync, mkdirSync } from 'node:fs';
 

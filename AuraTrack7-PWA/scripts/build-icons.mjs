@@ -1,5 +1,5 @@
-// Draws every app icon from the official logo in docs/brand, into apps/web/public/icons.
-// Also writes the small copy the PDF reports carry inside them (packages/reports/src/pdf/logo.ts: a worker makes the PDF,
+// Draws every app icon from the official logo in docs/brand, into AuraTrack7-PWA/public/icons.
+// Also writes the small copy the PDF reports carry inside them (AuraTrack7-Shared/packages/reports/src/pdf/logo.ts: a worker makes the PDF,
 // offline, so the picture must be in the code). Run by hand after a logo changes: `pnpm icons`. The bird is black, so it always sits on a light tile: on the
 // app's navy it would disappear. The browser does the drawing, so there is no image library to install.
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
@@ -7,8 +7,8 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from '@playwright/test';
 
-const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const out = join(root, 'apps/web/public/icons');
+const root = join(dirname(fileURLToPath(import.meta.url)), '../..');
+const out = join(root, 'AuraTrack7-PWA/public/icons');
 
 // box is the bird inside its file; fill is the share of the tile it takes; radius is the tile's corner, as a share
 const mark = { file: 'logo-mark.png', box: [140, 125, 934, 931] };
@@ -59,7 +59,7 @@ const report = await page.evaluate(draw, {
   url: `data:image/png;base64,${bytes.toString('base64')}`,
 });
 await writeFile(
-  join(root, 'packages/reports/src/pdf/logo.ts'),
+  join(root, 'AuraTrack7-Shared/packages/reports/src/pdf/logo.ts'),
   `// Made by \`pnpm icons\` from docs/brand/logo-mark.png. Do not edit.\nexport const LOGO_PNG =\n  '${report}';\n`,
 );
 await browser.close();

@@ -1,7 +1,7 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 
 // The few words the kit itself shows. Labels for everything else come from the screens, which get them from
-// packages/i18n; the app wraps itself in <UiStringsProvider> with the current language. English is the default.
+// AuraTrack7-Shared/packages/i18n; the app wraps itself in <UiStringsProvider> with the current language. English is the default.
 export interface UiStrings {
   close: string;
   back: string;

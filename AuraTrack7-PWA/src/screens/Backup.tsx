@@ -132,17 +132,22 @@ function MakeBackup() {
             onClick={() => {
               setBusy(true);
               setProblem(undefined);
-              void Promise.resolve(api.backup({ passphrase: phrase, ...(who === 'all' ? {} : { patientId: who }) }))
-                .then(async (file) => {
+              // One async function, so busy clears in the same step as the last change and nothing runs on behind it.
+              void (async () => {
+                try {
+                  const file = await api.backup({ passphrase: phrase, ...(who === 'all' ? {} : { patientId: who }) });
                   const result = await reportsEnv.save(file.text, file.fileName, 'application/octet-stream');
                   if (result === 'cancelled') return;
                   await actions.setSetting('lastBackupAt', app.controller.now());
                   toast(t('backup.done'), 'success');
                   setPhrase('');
                   setAgain('');
-                })
-                .catch(() => setProblem(t('backup.failed')))
-                .finally(() => setBusy(false));
+                } catch {
+                  setProblem(t('backup.failed'));
+                } finally {
+                  setBusy(false);
+                }
+              })();
             }}
           >
             {t('backup.button')}
@@ -221,10 +226,15 @@ function Restore() {
               onClick={() => {
                 setBusy(true);
                 setProblem(undefined);
-                void Promise.resolve(api.checkBackup({ text: file.text, passphrase: phrase }))
-                  .then((c) => setChecked(c as Checked))
-                  .catch(fail)
-                  .finally(() => setBusy(false));
+                void (async () => {
+                  try {
+                    setChecked((await api.checkBackup({ text: file.text, passphrase: phrase })) as Checked);
+                  } catch (e) {
+                    fail(e);
+                  } finally {
+                    setBusy(false);
+                  }
+                })();
               }}
             >
               {t('restore.check')}
@@ -255,13 +265,18 @@ function Restore() {
                   if (!file) return;
                   setBusy(true);
                   setProblem(undefined);
-                  void Promise.resolve(api.restore({ text: file.text, passphrase: phrase }))
-                    .then(async (r) => {
-                      setResult(r);
+                  // The lists are refreshed before the result shows (refresh never throws).
+                  void (async () => {
+                    try {
+                      const r = await api.restore({ text: file.text, passphrase: phrase });
                       await actions.refresh();
-                    })
-                    .catch(fail)
-                    .finally(() => setBusy(false));
+                      setResult(r);
+                    } catch (e) {
+                      fail(e);
+                    } finally {
+                      setBusy(false);
+                    }
+                  })();
                 }}
               >
                 {t('restore.button')}
@@ -341,19 +356,21 @@ function ImportLegacy() {
                 if (!file) return;
                 setBusy(true);
                 setProblem(undefined);
-                void Promise.resolve(api.importLegacy({ text: file.text, ...(phrase ? { passphrase: phrase } : {}) }))
-                  .then(async (r) => {
-                    setDone(r);
+                void (async () => {
+                  try {
+                    const r = await api.importLegacy({ text: file.text, ...(phrase ? { passphrase: phrase } : {}) });
                     await actions.refresh();
-                  })
-                  .catch((e: unknown) =>
+                    setDone(r);
+                  } catch (e) {
                     setProblem(
                       errorName(e) === 'DecryptError' || /passphrase/i.test(String(e))
                         ? t('restore.wrongPassphrase')
                         : t('import.failed'),
-                    ),
-                  )
-                  .finally(() => setBusy(false));
+                    );
+                  } finally {
+                    setBusy(false);
+                  }
+                })();
               }}
             >
               {t('import.button')}
@@ -427,15 +444,16 @@ function RecoveryKit() {
                 onClick={() => {
                   setBusy(true);
                   setProblem(undefined);
-                  void Promise.resolve(api.recoveryKit({ credential: { pin } }))
-                    .then((k) => {
-                      setKit(k);
+                  void (async () => {
+                    try {
+                      setKit(await api.recoveryKit({ credential: { pin } }));
                       setPin('');
-                    })
-                    .catch((e: unknown) =>
-                      setProblem(errorName(e) === 'WrongSecretError' ? t('lock.wrong') : t('kit.failed')),
-                    )
-                    .finally(() => setBusy(false));
+                    } catch (e) {
+                      setProblem(errorName(e) === 'WrongSecretError' ? t('lock.wrong') : t('kit.failed'));
+                    } finally {
+                      setBusy(false);
+                    }
+                  })();
                 }}
               >
                 {t('kit.make')}

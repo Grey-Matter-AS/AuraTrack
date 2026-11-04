@@ -221,82 +221,26 @@ importers:
         specifier: 5.0.5
         version: 5.0.5(@types/node@26.6.6)(@vitest/coverage-v8@5.0.5)(jsdom@30.1.3(@noble/hashes@1.8.0))(vite@8.3.5(@types/node@26.6.6)(jiti@2.7.0)(terser@5.51.2))
 
-  apps/server:
-    dependencies:
-      '@auratrack/sync':
-        specifier: workspace:*
-        version: link:../../packages/sync
-      express:
-        specifier: ^5.1.0
-        version: 5.3.0
-      peer:
-        specifier: ^1.0.2
-        version: 1.0.2
-      ws:
-        specifier: ^8.18.3
-        version: 8.22.1
-    devDependencies:
-      '@auratrack/model':
-        specifier: workspace:*
-        version: link:../../packages/model
-      '@auratrack/store':
-        specifier: workspace:*
-        version: link:../../packages/store
-      '@types/express':
-        specifier: ^5.0.3
-        version: 5.0.6
-      '@types/node':
-        specifier: ^24.0.0
-        version: 24.19.2
-      '@types/ws':
-        specifier: ^8.18.1
-        version: 8.18.2
-      esbuild:
-        specifier: ^0.25.0
-        version: 0.25.12
-      fake-indexeddb:
-        specifier: ^6.2.7
-        version: 6.2.7
-      postject:
-        specifier: ^1.0.0-alpha.6
-        version: 1.0.0-alpha.6
-      selfsigned:
-        specifier: ^5.5.0
-        version: 5.5.0
-
-  apps/tray:
-    dependencies:
-      systray2:
-        specifier: ^2.1.4
-        version: 2.1.4
-    devDependencies:
-      '@types/node':
-        specifier: ^24.0.0
-        version: 24.19.2
-      esbuild:
-        specifier: ^0.25.0
-        version: 0.25.12
-
-  apps/web:
+  AuraTrack7-PWA:
     dependencies:
       '@auratrack/i18n':
         specifier: workspace:*
-        version: link:../../packages/i18n
+        version: link:../AuraTrack7-Shared/packages/i18n
       '@auratrack/model':
         specifier: workspace:*
-        version: link:../../packages/model
+        version: link:../AuraTrack7-Shared/packages/model
       '@auratrack/reports':
         specifier: workspace:*
-        version: link:../../packages/reports
+        version: link:../AuraTrack7-Shared/packages/reports
       '@auratrack/store':
         specifier: workspace:*
-        version: link:../../packages/store
+        version: link:../AuraTrack7-Shared/packages/store
       '@auratrack/sync':
         specifier: workspace:*
-        version: link:../../packages/sync
+        version: link:../AuraTrack7-Shared/packages/sync
       '@auratrack/ui':
         specifier: workspace:*
-        version: link:../../packages/ui
+        version: link:../AuraTrack7-Shared/packages/ui
       jsqr:
         specifier: ^1.4.0
         version: 1.4.0
@@ -338,19 +282,75 @@ importers:
         specifier: 7.4.1
         version: 7.4.1
 
-  packages/i18n:
+  AuraTrack7-Server/hub:
+    dependencies:
+      '@auratrack/sync':
+        specifier: workspace:*
+        version: link:../../AuraTrack7-Shared/packages/sync
+      express:
+        specifier: ^5.1.0
+        version: 5.3.0
+      peer:
+        specifier: ^1.0.2
+        version: 1.0.2
+      ws:
+        specifier: ^8.18.3
+        version: 8.22.1
+    devDependencies:
+      '@auratrack/model':
+        specifier: workspace:*
+        version: link:../../AuraTrack7-Shared/packages/model
+      '@auratrack/store':
+        specifier: workspace:*
+        version: link:../../AuraTrack7-Shared/packages/store
+      '@types/express':
+        specifier: ^5.0.3
+        version: 5.0.6
+      '@types/node':
+        specifier: ^24.0.0
+        version: 24.19.2
+      '@types/ws':
+        specifier: ^8.18.1
+        version: 8.18.2
+      esbuild:
+        specifier: ^0.25.0
+        version: 0.25.12
+      fake-indexeddb:
+        specifier: ^6.2.7
+        version: 6.2.7
+      postject:
+        specifier: ^1.0.0-alpha.6
+        version: 1.0.0-alpha.6
+      selfsigned:
+        specifier: ^5.5.0
+        version: 5.5.0
+
+  AuraTrack7-Server/tray:
+    dependencies:
+      systray2:
+        specifier: ^2.1.4
+        version: 2.1.4
+    devDependencies:
+      '@types/node':
+        specifier: ^24.0.0
+        version: 24.19.2
+      esbuild:
+        specifier: ^0.25.0
+        version: 0.25.12
+
+  AuraTrack7-Shared/packages/i18n:
     devDependencies:
       '@auratrack/model':
         specifier: workspace:*
         version: link:../model
 
-  packages/model:
+  AuraTrack7-Shared/packages/model:
     dependencies:
       zod:
         specifier: ^4.6.7
         version: 4.6.7
 
-  packages/reports:
+  AuraTrack7-Shared/packages/reports:
     dependencies:
       '@auratrack/i18n':
         specifier: workspace:*
@@ -362,7 +362,7 @@ importers:
         specifier: ^4.2.1
         version: 4.2.1
 
-  packages/store:
+  AuraTrack7-Shared/packages/store:
     dependencies:
       '@auratrack/i18n':
         specifier: workspace:*
@@ -390,7 +390,7 @@ importers:
         specifier: ^6.2.7
         version: 6.2.7
 
-  packages/sync:
+  AuraTrack7-Shared/packages/sync:
     dependencies:
       '@auratrack/model':
         specifier: workspace:*
@@ -403,7 +403,7 @@ importers:
         specifier: ^6.2.7
         version: 6.2.7
 
-  packages/ui:
+  AuraTrack7-Shared/packages/ui:
     dependencies:
       react:
         specifier: 19.3.1
@@ -6367,7 +6367,7 @@ snapshots:
 
   '@types/qrcode@1.5.6':
     dependencies:
-      '@types/node': 26.6.6
+      '@types/node': 24.19.2
 
   '@types/qs@6.15.1': {}
 

@@ -4,6 +4,8 @@
 > - M3: your phone check and test seizures; PIN timing on your phones (`/#/dev`)
 > - M4, M5, M6: your checks (see their sign-off files); translation review; version bump and the 7.0 tag
 > - M7: the hub on your computer and phones, real push, the desktop pieces not run here, the alert-from-the-PIN-screen decision, the 7.1 tag
+>
+> **Paths moved (N0, 2026-11-03):** `apps/web` is now `AuraTrack7-PWA`, `apps/server` and `apps/tray` are `AuraTrack7-Server/hub` and `AuraTrack7-Server/tray`, `packages/*` is `AuraTrack7-Shared/packages/*`. The files in this folder keep the old paths as written.
 
 **Read this first in every session.** Then read the current milestone's file (`M<n>.md`) and continue with "Next step".
 

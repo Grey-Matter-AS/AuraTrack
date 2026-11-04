@@ -32,4 +32,4 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: auratrack-hub-${{ matrix.os }}
-          path: apps/server/dist/package/
+          path: AuraTrack7-Server/hub/dist/package/

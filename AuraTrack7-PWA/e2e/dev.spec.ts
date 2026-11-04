@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { makeBackup, plainFile } from '../../../packages/store/src/import6x/legacy.fixture';
+import { makeBackup, plainFile } from '../../AuraTrack7-Shared/packages/store/src/import6x/legacy.fixture';
 
 // M1: the data core in a real browser, through the developer page. Made-up 6.1 data only.
 test('creates an encrypted store, imports a 6.1 backup, checks it against 6.1, backs up, restores and survives a reload', async ({

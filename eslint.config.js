@@ -10,7 +10,7 @@ const noIsoDay = {
   message: 'toISOString() gives the UTC date. Use the local-date helpers.',
 };
 
-// Screens are built from the kit (packages/ui) only: no raw controls, no own overlays, no browser dialogs
+// Screens are built from the kit (AuraTrack7-Shared/packages/ui) only: no raw controls, no own overlays, no browser dialogs
 const rawControls = {
   selector: 'JSXOpeningElement[name.name=/^(button|input|select|textarea|dialog|form|a)$/]',
   message:
@@ -41,7 +41,7 @@ export default tseslint.config(
       '**/.stryker-tmp',
       'reports',
       'docs',
-      'apps/web/public',
+      'AuraTrack7-PWA/public',
     ],
   },
   js.configs.recommended,
@@ -57,24 +57,24 @@ export default tseslint.config(
   },
   {
     // Product screens (everything in the app except the developer page and the tests)
-    files: ['apps/web/src/**/*.tsx'],
-    ignores: ['apps/web/src/dev/**', 'apps/web/src/main.tsx', '**/*.test.tsx'],
+    files: ['AuraTrack7-PWA/src/**/*.tsx'],
+    ignores: ['AuraTrack7-PWA/src/dev/**', 'AuraTrack7-PWA/src/main.tsx', '**/*.test.tsx'],
     rules: { 'no-restricted-syntax': ['error', noIsoDay, noIsoAtAll, rawControls, ownOverlays, browserDialogs] },
   },
   {
     // Tests read values they have just written: a non-null assertion there is the clearer form
-    files: ['**/*.test.{ts,tsx}', 'apps/web/e2e/**'],
+    files: ['**/*.test.{ts,tsx}', 'AuraTrack7-PWA/e2e/**'],
     rules: { '@typescript-eslint/no-non-null-assertion': 'off' },
   },
   {
     files: [
       '*.config.{js,ts}',
       '**/vite.config.ts',
-      'scripts/**',
-      'apps/*/scripts/**',
-      'e2e-trial/**',
-      'playwright.config.ts',
-      'apps/web/e2e/**',
+      'AuraTrack7-PWA/scripts/**',
+      'AuraTrack7-Shared/scripts/**',
+      'AuraTrack7-Server/*/scripts/**',
+      'AuraTrack7-PWA/playwright.config.ts',
+      'AuraTrack7-PWA/e2e/**',
     ],
     languageOptions: { globals: { ...globals.node } },
   },

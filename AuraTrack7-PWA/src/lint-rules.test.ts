@@ -7,7 +7,7 @@ const lint = async (code: string, filePath: string): Promise<string[]> => {
   const [result] = await eslint.lintText(code, { filePath });
   return (result?.messages ?? []).filter((m) => m.ruleId === 'no-restricted-syntax').map((m) => m.message);
 };
-const screen = 'apps/web/src/screens/Example.tsx';
+const screen = 'AuraTrack7-PWA/src/screens/Example.tsx';
 
 describe('lint rules for screens', () => {
   it.each([
@@ -55,9 +55,11 @@ describe('lint rules for screens', () => {
   });
 
   it('does not apply to the developer page, the entry file or tests', async () => {
-    expect(await lint('export const A = () => <button>x</button>;', 'apps/web/src/dev/DevPage.tsx')).toEqual([]);
-    expect(await lint('export const A = () => <button>x</button>;', 'apps/web/src/main.tsx')).toEqual([]);
-    expect(await lint('export const A = () => <button>x</button>;', 'apps/web/src/screens/A.test.tsx')).toEqual([]);
+    expect(await lint('export const A = () => <button>x</button>;', 'AuraTrack7-PWA/src/dev/DevPage.tsx')).toEqual([]);
+    expect(await lint('export const A = () => <button>x</button>;', 'AuraTrack7-PWA/src/main.tsx')).toEqual([]);
+    expect(await lint('export const A = () => <button>x</button>;', 'AuraTrack7-PWA/src/screens/A.test.tsx')).toEqual(
+      [],
+    );
   });
 });
 
@@ -66,11 +68,13 @@ describe('lint rule for calendar days, everywhere', () => {
     'refuses toISOString().%s',
     async (call) => {
       const code = `export const f = () => new Date().toISOString().${call};`;
-      expect((await lint(code, 'packages/store/src/x.ts'))[0]).toContain('local-date helpers');
+      expect((await lint(code, 'AuraTrack7-Shared/packages/store/src/x.ts'))[0]).toContain('local-date helpers');
     },
   );
 
   it('allows toISOString for a timestamp outside screens', async () => {
-    expect(await lint('export const f = () => new Date().toISOString();', 'packages/store/src/x.ts')).toEqual([]);
+    expect(
+      await lint('export const f = () => new Date().toISOString();', 'AuraTrack7-Shared/packages/store/src/x.ts'),
+    ).toEqual([]);
   });
 });

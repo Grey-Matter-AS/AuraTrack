@@ -5,11 +5,11 @@
     "configFile": "vitest.config.ts"
   },
   "mutate": [
-    "packages/model/src/hlc.ts",
-    "packages/model/src/rules/**/*.ts",
-    "packages/store/src/merge.ts",
-    "packages/store/src/crypto.ts",
-    "packages/store/src/dropbox.ts",
+    "AuraTrack7-Shared/packages/model/src/hlc.ts",
+    "AuraTrack7-Shared/packages/model/src/rules/**/*.ts",
+    "AuraTrack7-Shared/packages/store/src/merge.ts",
+    "AuraTrack7-Shared/packages/store/src/crypto.ts",
+    "AuraTrack7-Shared/packages/store/src/dropbox.ts",
     "!**/*.test.ts"
   ],
   "coverageAnalysis": "perTest",

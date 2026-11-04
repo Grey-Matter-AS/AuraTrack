@@ -1,4 +1,4 @@
-The tray icon is a separate small program (`tray.mjs`, built from `apps/tray`). Start it after you log in, the same way as the hub:
+The tray icon is a separate small program (`tray.mjs`, built from `AuraTrack7-Server/tray`). Start it after you log in, the same way as the hub:
 
 - Linux (desktops with a tray): add `node /path/to/tray.mjs` to your desktop's startup programs.
 - macOS: add it to Login Items, or copy `install-macos.sh` and change the label and the file.

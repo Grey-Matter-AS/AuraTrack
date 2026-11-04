@@ -1,9 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
 
-// End-to-end tests for the v7 app (decision: docs/decisions/e2e-tool.md).
+// End-to-end tests for the v7 app (decision: docs/decisions/e2e-tool.md). Paths here are relative to this folder.
 // Locally: Chromium and Firefox (`pnpm e2e:local`). In CI: all three engines, WebKit included.
 export default defineConfig({
-  testDir: 'apps/web/e2e',
+  testDir: 'e2e',
   retries: 0,
   reporter: process.env.CI ? 'github' : 'list',
   use: { baseURL: 'http://127.0.0.1:4173', trace: 'retain-on-failure' },
@@ -11,13 +11,13 @@ export default defineConfig({
     { command: 'pnpm preview', url: 'http://127.0.0.1:4173', reuseExistingServer: !process.env.CI },
     // A hub of our own for the hub tests (the built hub, an empty folder, port 9420): needs `pnpm build` first
     {
-      command: 'node apps/web/e2e/support/hub.mjs',
+      command: 'node e2e/support/hub.mjs',
       url: 'http://127.0.0.1:9420/v1/health',
       reuseExistingServer: !process.env.CI,
     },
     // A signalling server of our own for the household tests: they never use the public one
     {
-      command: 'node apps/web/e2e/support/peer-server.mjs',
+      command: 'node e2e/support/peer-server.mjs',
       url: 'http://127.0.0.1:9199/',
       reuseExistingServer: !process.env.CI,
     },

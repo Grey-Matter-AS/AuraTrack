@@ -2,15 +2,31 @@
 
 **Read this first in every native session.** Then read `ROADMAP.md` (Part A is binding) and the current milestone's `N<n>.md`, and continue with "Next step".
 
-- **Current milestone:** N0, The move to six folders (Part A), then accounts, machines, decisions (Part B). **Part A in progress: slice A1 (checks before the move) is done and green; A2 (the move) is next.**
+- **Current milestone:** N0, The move to six folders (Part A), then accounts, machines, decisions (Part B). **Part A: slices A1 to A4 are built on branch `n0-move` and green locally. Waiting for your commit, the Vercel preview and production.**
 - **Roadmap:** approved 2026-11-03 (`ROADMAP.md`).
 - **PWA:** paused 2026-11-03. Its open checks are listed in `docs/plan/STATUS.md`.
 - **Last updated:** 2026-11-03 (WSL)
 
 ## Next step
-1. **You:** commit the work so far (A1 fixes, `docs/AuraTrack7/`, CLAUDE.md), so the move gets a commit of its own.
-2. **Claude (WSL):** slices A2 to A4: the move with `git mv`, the paths, then the same checks as below with the same numbers.
-3. **After Part A is in production:** Part B (accounts, D-U-N-S, Apple and Google enrolment, toolchains).
+1. **You, before pushing:** in Vercel, Project Settings → Build and Deployment → **Root Directory** = `AuraTrack7-PWA` (keep "Include files outside the root directory" on). From then on `main` (old layout) would fail to build, so don't push to `main` until the merge in step 4.
+2. **You:** on branch `n0-move`: `git add -A`, commit (one commit, so it can be reverted in one step), `git push -u origin n0-move`.
+3. **You:** open the Vercel preview on your phone and check:
+   - [ ] the app loads and shows Home
+   - [ ] start and stop a test recording; it's in History
+   - [ ] airplane mode, reload: it still opens (offline after one visit)
+   - [ ] an installed copy of production picks up the update after the merge (step 3)
+   - [ ] GitHub CI is green on the branch
+4. **You:** merge to `main`, check production the same way, CI green on `main`. Then Part A is done.
+5. **Then:** Part B (accounts, D-U-N-S, Apple and Google enrolment, toolchains).
+
+## N0 A2–A4: the move (2026-11-03, WSL)
+- `git mv`: `apps/web` → `AuraTrack7-PWA`, `apps/server` → `AuraTrack7-Server/hub`, `apps/tray` → `AuraTrack7-Server/tray`, `packages/*` → `AuraTrack7-Shared/packages/*`. Package names unchanged.
+- Paths updated in: `pnpm-workspace.yaml`, `tsconfig.json` and every package's `extends`, `vitest.config.ts`, `playwright.config.ts`, `stryker.config.json`, `eslint.config.js`, `lint-rules.test.ts`, the e2e support files and `dev.spec.ts`, `package.json` (`pnpm hub`), `scripts/*.mjs`, the hub's `package.mjs`, `Dockerfile` and `README.md`, `hub-release.yml`, `vercel.json` (`outputDirectory: AuraTrack7-PWA/dist`), `CLAUDE.md` (with a layout note). `ci.yml` and `mutation.yml` needed nothing. History in `docs/plan/` and `docs/decisions/` keeps the old paths; `docs/plan/STATUS.md` says so.
+- Lockfile: only the workspace links changed, no dependency version. `--frozen-lockfile` passes.
+- Found and fixed on the way: `Backup.tsx` had the same flaky pattern as `ImportCsv` (busy cleared one step after the test ended; seen in `cards.test.tsx`). Its five handlers are now one `async` function each with `try/finally`; restore and the 6.x import refresh the lists before showing the result.
+- After the move (same as A1): format, typecheck, lint pass; 92 files, 1215 tests; coverage statements 97.42%, branches 90.55%, functions 98.01%, lines 98.7%; build passes; size 75.7 KB; e2e Chromium (app, recording, shell, m4, household, date-fields, passkey, dev; no audit) 28 passed; Stryker dry run: the same 15 files and 2343 mutants; hub + tray package builds with the app inside.
+- Then, at your request, more out of the root: `playwright.config.ts`, `vercel.json` (`outputDirectory: dist`), `check-size.mjs`, `build-icons.mjs` into `AuraTrack7-PWA` (scripts in `AuraTrack7-PWA/scripts`); `build-catalogue.mjs`, `gen-6x-reference.mjs` into `AuraTrack7-Shared/scripts`; `e2e-trial/` removed. Root commands unchanged (`pnpm e2e`, `audit`, `visual` pass `-c AuraTrack7-PWA`). Checked again: static checks, 1215 tests, size 75.7 KB, e2e 28 passed, and a Vercel-style install and build inside `AuraTrack7-PWA`.
+- Not checked here: the Docker image (no Docker on WSL); the hub single executable (`sea`, built by `hub-release.yml`).
 
 ## N0 A1: checks before the move (2026-11-03, WSL)
 First run: branch coverage 88.98%, below the 90% threshold. Fixed before moving anything:
@@ -81,3 +97,4 @@ Baseline (all green):
 | 2026-11-03 | WSL | Discussion of the native apps; roadmap approved and written into `docs/AuraTrack7/` |
 | 2026-11-03 | WSL | `N0.md` drafted; the six-folder move brought forward into N0 Part A, before the accounts |
 | 2026-11-03 | WSL | N0 A1: coverage brought back over 90%, flaky CSV import test fixed, baseline recorded (session crashed once, resumed) |
+| 2026-11-03 | WSL | N0 A2–A4: the move on branch `n0-move`, paths updated, all checks green; waiting for your commit and the Vercel preview |

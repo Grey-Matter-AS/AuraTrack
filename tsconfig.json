@@ -2,31 +2,31 @@
   "files": [],
   "references": [
     {
-      "path": "packages/model"
+      "path": "AuraTrack7-Shared/packages/model"
     },
     {
-      "path": "packages/store"
+      "path": "AuraTrack7-Shared/packages/store"
     },
     {
-      "path": "packages/sync"
+      "path": "AuraTrack7-Shared/packages/sync"
     },
     {
-      "path": "packages/ui"
+      "path": "AuraTrack7-Shared/packages/ui"
     },
     {
-      "path": "packages/reports"
+      "path": "AuraTrack7-Shared/packages/reports"
     },
     {
-      "path": "packages/i18n"
+      "path": "AuraTrack7-Shared/packages/i18n"
     },
     {
-      "path": "apps/web"
+      "path": "AuraTrack7-PWA"
     },
     {
-      "path": "apps/server"
+      "path": "AuraTrack7-Server/hub"
     },
     {
-      "path": "apps/tray"
+      "path": "AuraTrack7-Server/tray"
     }
   ]
 }

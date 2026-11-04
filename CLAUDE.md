@@ -15,14 +15,14 @@ AuraTrack is a privacy-first seizure-tracking app for people with epilepsy and t
 
 - **Milestone by milestone.** The user approves a milestone's plan before it starts. The user commits.
 - **Medical data integrity first.** Never lose or silently change a record.
-- **Codes, not English text, in stored data.** Labels come from `packages/i18n`, in 9 languages: en, nb, nn, da, sv, fi, de, fr, es.
+- **Codes, not English text, in stored data.** Labels come from `AuraTrack7-Shared/packages/i18n`, in 9 languages: en, nb, nn, da, sv, fi, de, fr, es.
 - **Clinical rules are settled** (see the overview). Don't change them without asking:
   - emergency plan: alert 5 min, cluster 3 in 8 min, both settings
   - 12-minute auto-stop
   - no extra buttons on the recording screen
   - a detected seizure (watch detection, hidden until regulatory approval) starts a recording counted from the estimated onset
 - **UI:**
-  - PWA: only `packages/ui` components.
+  - PWA: only `AuraTrack7-Shared/packages/ui` components.
   - Native: only the platform's own components (SwiftUI, Compose) plus the small AuraTrack7 kit (`AuraKit`, `:core:designsystem`) for what the platform lacks. Features are copied from the PWA; its look is not. Follow the platform's design guidelines and the most widely approved coding practices.
   - Nothing may overlap, clip or leave the screen on any device in the matrix; the layout audits enforce this.
 - **Tests:** a feature isn't done until its unit, component (UI) and end-to-end tests pass (see the testing strategy in the overview); native features also on both platforms, with the shared test vectors passing.
@@ -34,6 +34,7 @@ AuraTrack is a privacy-first seizure-tracking app for people with epilepsy and t
 
 ## Tools
 
+- Layout (since N0): `AuraTrack7-PWA` (the PWA), `AuraTrack7-Server/hub` and `/tray`, `AuraTrack7-Shared/packages/*` (model, store, sync, i18n, reports, ui; package names unchanged, `@auratrack/*`). `AuraTrack7-Apple`, `AuraTrack7-Android` and `AuraTrack7-Relay` come later. Paths in `docs/plan/` and `docs/decisions/` are the old ones (`apps/web`, `apps/server`, `apps/tray`, `packages/*`).
 - pnpm (`~/.local/bin`, through corepack), Node 24, TypeScript strict.
 - Scripts at the root: `pnpm dev`, `pnpm build`, `pnpm test`, `pnpm lint`, `pnpm typecheck`.
 - Native: Xcode 26.x and Swift 6 on the Mac; Kotlin 2, Gradle and the Android SDK on WSL, Android Studio on Windows (details in `docs/AuraTrack7/ROADMAP.md` Part B).

@@ -1,5 +1,5 @@
 // Puts everything a household needs for the hub in one folder: dist/package/auratrack-hub-<version>/
-//   hub.mjs, tray.mjs, the start-on-boot scripts, a short README, and (if apps/web/dist exists) the app itself in app/, so
+//   hub.mjs, tray.mjs, the start-on-boot scripts, a short README, and (if AuraTrack7-PWA/dist exists) the app itself in app/, so
 //   the hub can serve the app from its own address (HUB_APP=app). Run after `pnpm build`.
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -11,7 +11,7 @@ mkdirSync(out, { recursive: true });
 cpSync('dist/hub.mjs', join(out, 'hub.mjs'));
 if (existsSync('../tray/dist/tray.mjs')) cpSync('../tray/dist/tray.mjs', join(out, 'tray.mjs'));
 cpSync('scripts/boot', join(out, 'boot'), { recursive: true });
-if (existsSync('../web/dist')) cpSync('../web/dist', join(out, 'app'), { recursive: true });
+if (existsSync('../../AuraTrack7-PWA/dist')) cpSync('../../AuraTrack7-PWA/dist', join(out, 'app'), { recursive: true });
 writeFileSync(
   join(out, 'README.txt'),
   `AuraTrack Hub ${version}

@@ -1,6 +1,7 @@
 packages:
-  - apps/*
-  - packages/*
+  - AuraTrack7-PWA
+  - AuraTrack7-Server/*
+  - AuraTrack7-Shared/packages/*
 
 # Install scripts we do not run: core-js only prints a donation notice, and jsPDF works without it
 allowBuilds:
