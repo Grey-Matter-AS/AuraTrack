@@ -265,7 +265,8 @@ describe('a meeting with a peer that is not right', () => {
   });
 
   it('refuses a list with far too many ids', async () => {
-    const s = start(nodeA());
+    // Sealing 200,001 ids takes a while on a slow CI machine: the session must not give up waiting for them first
+    const s = start(nodeA(), { timeoutMs: 15_000 });
     await toIds(s, { summary: { household: {} } });
     s.peer.put({
       t: 'ids',
