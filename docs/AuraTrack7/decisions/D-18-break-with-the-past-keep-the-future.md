@@ -3,17 +3,17 @@
 **Decided:** 2026-11-06, by you ("I am happy to make breaking changes even to the PWA. Let's not consider anything sacred unless it is actually correct"). Applies to the PWA, the shared packages and both native apps.
 
 ## Decision
-1. **No compatibility with versions before 7.2.** Nobody else uses the app yet, and your earlier neurologist reports are kept. Old shapes of data are not read, guessed at or converted:
-   - the three symptom phases of 7.0–7.1 (`before`, `during`, `after`) are no longer read as aura, seizure and recovery ("before" could have been a warning sign or an aura); a record that still has them is kept and counted as "cannot be shown"
+1. **No compatibility with versions before 7.0.8.** Nobody else uses the app yet, and your earlier neurologist reports are kept. Old shapes of data are not read, guessed at or converted:
+   - the three symptom phases of 7.0.1–7.0.7 (`before`, `during`, `after`) are no longer read as aura, seizure and recovery ("before" could have been a warning sign or an aura); a record that still has them is kept and counted as "cannot be shown"
    - the CSV columns `seizureSeconds` and `totalSeconds` are gone; the CSV uses the app's own terms (`lengthSeconds`: start to end of the seizure, aura included; `recoverySeconds`: from the end of the seizure)
    - the M3 clickable prototype (`#/prototype`) is removed: it showed an editor and phases the app no longer has
-   - the native apps read only the current format (the 7.2 backup and CSV); no legacy paths are specified in N2
+   - the native apps read only the current format (the 7.0.8 backup and CSV); no legacy paths are specified in N2
 2. **Forward compatibility is kept, because the household will always mix versions** (iPhone, Android, PWA, hub, each updated on its own day):
    - a record of a type this version does not know is **kept**, sealed, passed on in sync and in backups (it used to be refused)
    - a record that does not fit this version's schema is never dropped and never edited away
    - the app **says how many records it cannot show** (Home: "Records this device cannot show yet: n …"), so nothing disappears without a word
-   - **every record carries `dataVersion`** (2 = the model of 7.2, filled in by the store). It is what tells an old record from a newer one
-4. **Records from before 7.2 are deleted, with a notice (decided 2026-11-06: "there should be no records hidden without notice; if they are legacy records purge and delete them"):** every time the app loads its data, a record without `dataVersion` (saved before 7.2, or brought in by an old backup or an old device) is deleted as a tombstone, so the other devices delete it too, and Home says "Records from a version before 7.2 removed: n". A record *with* a data version is never deleted for not fitting: from 7.2 on, a version that changes the model must convert the records it changes, and a record from a newer version is kept and counted until this device is updated.
+   - **every record carries `dataVersion`** (2 = the model of 7.0.8, filled in by the store). It is what tells an old record from a newer one
+4. **Records from before 7.0.8 are deleted, with a notice (decided 2026-11-06: "there should be no records hidden without notice; if they are legacy records purge and delete them"):** every time the app loads its data, a record without `dataVersion` (saved before 7.0.8, or brought in by an old backup or an old device) is deleted as a tombstone, so the other devices delete it too, and Home says "Records from a version before 7.0.8 removed: n". A record *with* a data version is never deleted for not fitting: from 7.0.8 on, a version that changes the model must convert the records it changes, and a record from a newer version is kept and counted until this device is updated.
    - every reader (Swift, Kotlin, TypeScript) follows the same rule; it is written into `AuraTrack7-Shared/spec/data-model.md` in N2 with vectors
 3. **Everything superseded is removed (decided 2026-11-06: "ILAE 2017 should not be present anywhere, only ILAE 2025"; "no point in keeping them for the app base or for the PWA"):**
    - **ILAE 2017 is gone everywhere:** the `ilae` answers on seizures, the 2017 codes in the catalogue, the 2017 rows in the neurologist report, the editor's "recorded before ILAE 2025" section, and their messages in 9 languages. ILAE 2025 (D-17) is the only classification.

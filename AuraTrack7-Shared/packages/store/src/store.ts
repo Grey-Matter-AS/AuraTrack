@@ -665,10 +665,10 @@ export class Store {
     return out;
   }
 
-  // ---- records from before 7.2 (D-18)
+  // ---- records from before 7.0.8 (D-18)
 
   /**
-   * Deletes every record saved before 7.2: one without a data version (`dataVersion`) that does not fit today's model, or
+   * Deletes every record saved before 7.0.8: one without a data version (`dataVersion`) that does not fit today's model, or
    * of a type that no longer exists. Each goes as a tombstone, so the other devices remove it too. A record with a data
    * version is never removed here, even when this version cannot show it (it may come from a newer one). Returns how many
    * were removed, so the app can say so.

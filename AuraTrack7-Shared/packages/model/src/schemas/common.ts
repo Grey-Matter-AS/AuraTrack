@@ -20,9 +20,9 @@ export const ShortTextSchema = z.string().max(120);
 
 /** Every record says whose it is and who wrote it (README 4.1). */
 /**
- * The version of the data model that wrote a record (D-18). 2 is the model of 7.2, the first one the native apps share. A
- * record without it was saved before 7.2: it is removed at the next load (with a notice), never shown. A record with a
- * version is never removed for not fitting: from 7.2 on, a new version must convert what it changes, and a record from a
+ * The version of the data model that wrote a record (D-18). 2 is the model of 7.0.8, the first one the native apps share. A
+ * record without it was saved before 7.0.8: it is removed at the next load (with a notice), never shown. A record with a
+ * version is never removed for not fitting: from 7.0.8 on, a new version must convert what it changes, and a record from a
  * newer version is kept and counted until this device is updated.
  */
 export const DATA_VERSION = 2;

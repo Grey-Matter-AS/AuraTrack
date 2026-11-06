@@ -1,4 +1,4 @@
-# AuraTrack 7.0: a clean rebuild — overview
+# AuraTrack 7.0.x: a clean rebuild — overview
 
 The detailed plan of each milestone is in its own file next to this one (M0.md … M7.md). Progress is tracked in [STATUS.md](STATUS.md).
 
@@ -24,7 +24,7 @@ Every 6.1 feature is kept, but rewritten. The clinical rules decided in 6.x stay
 ---
 
 ## Review: suggested changes (each needs your OK; folded into the sections below)
-1. **Write the full 6.1 feature list first (M0)** and use it as the acceptance checklist for 7.0. "Every feature kept" is easy to get wrong in a rewrite. The list covers the less visible features too:
+1. **Write the full 6.1 feature list first (M0)** and use it as the acceptance checklist for 7.0.6. "Every feature kept" is easy to get wrong in a rewrite. The list covers the less visible features too:
    - backup and update reminders
    - wake lock
    - haptics
@@ -52,7 +52,7 @@ Every 6.1 feature is kept, but rewritten. The clinical rules decided in 6.x stay
     - They're too large to sync or put in backups.
     - The record notes which device has the video.
     - Later option: store videos encrypted on the hub.
-12. **Translation review:** medical wording in the 9 languages should be checked by a native speaker, at least for Norwegian, before 7.0.
+12. **Translation review:** medical wording in the 9 languages should be checked by a native speaker, at least for Norwegian, before 7.0.6.
 13. **Strict privacy on the website:** strict security headers (CSP), no analytics, no third-party scripts, pinned dependencies.
 14. **If you ever share AuraTrack with other families:** an app that gives emergency alerts may count as a medical device under EU rules. That doesn't affect personal use; the "not a medical device" notice stays.
 
@@ -64,7 +64,7 @@ Every 6.1 feature is kept, but rewritten. The clinical rules decided in 6.x stay
   1. On switch-over day, make a full 6.1 backup (the 31 October PDF can be kept as a record). 6.1 stays in daily use until then.
   2. v7 imports that backup once (section 4.7), so the history continues: trends, medication history and cluster checks need it.
   3. The import is the **only** compatibility code in v7, kept apart in its own module and removable later.
-- **Deploying:** the same static hosting as now (no data on the website), on a new address, or the same one once 7.0 replaces 6.x.
+- **Deploying:** the same static hosting as now (no data on the website), on a new address, or the same one once 7.0.6 replaces 6.x.
 
 ## 2. Stack and project layout (standardised)
 - **TypeScript, strict.** Every record type is defined once as a schema (zod). The same definition checks data at runtime and gives compile-time types, shared by the app, sync and the server.
@@ -304,7 +304,7 @@ The only preparation in v7 is that report data comes from the coded model, so a 
 
 ---
 
-## Milestones (7.0 when M1–M6 are done; the server and push are 7.1)
+## Milestones (7.0.6 when M1–M6 are done; the server and push are 7.0.7)
 - **M0:** new repo, CI, tooling, design tokens; 6.x archived; the full 6.1 feature list as the acceptance checklist.
 - **M1:** model, codes catalogue, encrypted store, change log, HLC merge, and the 6.1 importer, tested on your real backup.
 - **M2:** design system and the layout audit in CI across the device matrix.
@@ -312,14 +312,14 @@ The only preparation in v7 is that report data comes from the coded model, so a 
 - **M4:** history, event detail, medications (change history, doses, reminders), wellbeing, EEG diary, video, patients.
 - **M5:** reports, starting from the 6.1 PDF layout, with the additions you approve (more detail, better graphics), generated in a worker; Save as PDF and Share; backup and restore.
 - **M6:** household without a hub (registry, pairing, sync by meeting).
-- **M7 (7.1):** AuraTrack Hub for a household computer (plus Docker for a Pi or NAS), with background sync and push alerts.
+- **M7 (7.0.7):** AuraTrack Hub for a household computer (plus Docker for a Pi or NAS), with background sync and push alerts.
 
 **Working milestone by milestone (decided):**
 1. Every milestone's detailed plan is written now (M0.md … M7.md). Before each one starts, you approve it, or change it.
 2. Each milestone ends with a working app you can try on your phone, with all its tests passing.
 3. You check it on your devices and commit; then the next milestone starts.
 
-The 6.x app stays in use until 7.0 passes your own check against real data.
+The 6.x app stays in use until 7.0.6 passes your own check against real data.
 
 ## If the session or tokens run out (how work carries over)
 Nothing depends on this conversation staying alive:

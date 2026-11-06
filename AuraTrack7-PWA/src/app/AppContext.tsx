@@ -142,7 +142,7 @@ export interface AppState {
   revision: number;
   /** Records kept on this device that it cannot show (from another device or a newer version): Home says how many. */
   hiddenRecords: number;
-  /** Records saved before 7.2 that were deleted since the app opened (D-18): Home says how many. */
+  /** Records saved before 7.0.8 that were deleted since the app opened (D-18): Home says how many. */
   purgedRecords: number;
   /** The passkey that unlocks this store (Face ID, fingerprint), and whether this browser can use one. */
   passkey: PasskeyRecord | null;
@@ -353,7 +353,7 @@ export function AppProvider({
    */
   const loadChain = useRef<Promise<unknown>>(Promise.resolve());
   const loadAllNow = useCallback(async () => {
-    // Records saved before 7.2 are deleted first (also when an old backup or an old device brought them), with a notice
+    // Records saved before 7.0.8 are deleted first (also when an old backup or an old device brought them), with a notice
     const purge = await client.purgeLegacy();
     if (purge.removed > 0) setPurgedRecords((n) => n + purge.removed);
     const list = (await client.list({ type: 'patient' })) as unknown as Patient[];

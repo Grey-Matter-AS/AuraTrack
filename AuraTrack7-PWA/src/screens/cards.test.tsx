@@ -163,7 +163,7 @@ describe('records this device cannot show', () => {
     expect(await screen.findByText(/^Records this device cannot show yet: 1\./)).toBeTruthy();
   });
 
-  it('deletes records saved before 7.2 and says how many', async () => {
+  it('deletes records saved by an earlier version and says how many', async () => {
     const ctx = setup();
     await seed(ctx);
     const [entry] = await ctx.client.changesSince({ stamp: null });
@@ -171,7 +171,7 @@ describe('records this device cannot show', () => {
     await ctx.client.applyChanges({ entries: [{ ...entry!, id: newId(), recordId: newId(), fields: oldFields }] });
     ctx.mount();
     await screen.findByRole('button', { name: 'Start timer' });
-    expect(await screen.findByText(/^Records from a version before 7\.2 removed: 1\./)).toBeTruthy();
+    expect(await screen.findByText(/^Records saved by an earlier version of the app removed: 1\./)).toBeTruthy();
     expect(screen.queryByText(/^Records this device cannot show yet/)).toBeNull();
   });
 

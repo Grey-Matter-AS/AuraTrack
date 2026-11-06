@@ -189,7 +189,7 @@ export const m8en = {
   'hist.legendCount':
     'The number in a circle is how many seizures it holds; seizures on the same day share one circle.',
   'home.purged':
-    'Records from a version before 7.2 removed: {count}. Since 7.2 records are kept in a new form, and older ones are not read.',
+    'Records saved by an earlier version of the app removed: {count}. This version keeps records in a new form and does not read older ones.',
   'home.hidden':
     'Records this device cannot show yet: {count}. They came from another device or a newer version. They are kept, shared with the household and included in backups. Updating the app on this device shows them.',
 } as const;

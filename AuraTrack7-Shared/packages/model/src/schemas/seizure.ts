@@ -76,8 +76,8 @@ export type ProfileSnapshot = z.infer<typeof ProfileSnapshotSchema>;
 /**
  * Which phase a symptom belongs to, the same four phases as the times (ILAE semiology glossary): `prodrome` (warning signs
  * before the seizure; not part of it), `aura` (felt first; part of the seizure), `seizure`, `recovery` (post-ictal, until
- * back to usual self). Nothing else is read: the three phases of 7.0–7.1 (before, during, after) are not mapped, because
- * "before" could have been a warning sign or an aura (decided 2026-11-06: no compatibility with versions before 7.2).
+ * back to usual self). Nothing else is read: the three phases of 7.0.1–7.0.7 (before, during, after) are not mapped, because
+ * "before" could have been a warning sign or an aura (decided 2026-11-06: no compatibility with versions before 7.0.8).
  */
 export const PHASE_NAMES = ['prodrome', 'aura', 'seizure', 'recovery'] as const;
 export const PhaseNameSchema = z.enum(PHASE_NAMES);

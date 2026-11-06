@@ -33,7 +33,7 @@ describe('CSV tokens', () => {
       phase: 'seizure',
     });
     expect(parseSymptomToken('symptom.x#prodrome')?.phase).toBe('prodrome');
-    // Only the four phases: the three of 7.0–7.1 are not guessed at
+    // Only the four phases: the three of 7.0.1–7.0.7 are not guessed at
     for (const old of ['before', 'during', 'after'])
       expect(parseSymptomToken(`symptom.x#${old}`)).toMatchObject({ phase: null, badPhase: old });
     expect(symptomToken('symptom.x', null)).toBe('symptom.x');

@@ -6,7 +6,7 @@ import { serve } from './http';
 
 // AuraTrack Hub: `node hub.mjs`. Settings by environment: HUB_PORT (8420), HUB_DATA (folder for the database),
 // HUB_BACKUPS (folder for the daily copies), HUB_CERT and HUB_KEY (https), HUB_APP (a folder with the built app to serve).
-export const VERSION = '7.0.7';
+export const VERSION = '7.0.8';
 
 async function main() {
   const port = Number(process.env.HUB_PORT ?? 8420);

@@ -2,7 +2,7 @@
 
 Every feature of the PWA (IDs from `docs/plan/feature-checklist.md`) with the native milestone that rebuilds it and how each platform does it. **This is the acceptance list:** a feature is done when its tests pass on Apple **and** Android and the shared vectors pass. "Dropped" means the platform makes it unnecessary (reason given).
 
-**Updated 2026-11-06** to the PWA as it is after M8 (all of `docs/plan/STATUS.md` up to that day), D-18 (no compatibility before 7.2; records from newer versions kept and counted) and D-19 (cluster rule). When the PWA changes, this list changes in the same session.
+**Updated 2026-11-06** to the PWA as it is after M8 (all of `docs/plan/STATUS.md` up to that day), D-18 (no compatibility before 7.0.8; records from newer versions kept and counted) and D-19 (cluster rule). When the PWA changes, this list changes in the same session.
 
 ## Definitions both apps take from the PWA (spec in N2, with vectors)
 - **Four phases** for times and symptoms: `prodrome` (warning signs; before the seizure, not part of it), `aura` (part of the seizure), `seizure`, `recovery` (until back to usual self). Nothing else is read (D-18).
@@ -164,7 +164,7 @@ Columns: **ID · feature · milestone · Apple · Android · state**
 | F-1003 | Start from the lock screen | N7 | Live Activity, Control Center, Lock Screen widget, App Intents, Action Button | QS tile, lock-screen shortcut, `showWhenLocked`, ongoing notification | not started |
 | F-1004 | Field-level merge and audit trail | N5 | Vectors | Vectors | not started |
 | F-1005 | Crash-proof recording | N6 | One write per tap | One write per tap | not started |
-| F-1007 | Records this device cannot show (from a newer version) are kept, synced, backed up and counted on Home; records from before 7.2 (no `dataVersion`) are deleted at load, with a notice (D-18) | N5, N12 | Store keeps unknown types and values | Store keeps unknown types and values | not started |
+| F-1007 | Records this device cannot show (from a newer version) are kept, synced, backed up and counted on Home; records from before 7.0.8 (no `dataVersion`) are deleted at load, with a notice (D-18) | N5, N12 | Store keeps unknown types and values | Store keeps unknown types and values | not started |
 | F-1006 | 6.1 importer | removed (D-18) | | | removed |
 
 ## Household (F-1100)

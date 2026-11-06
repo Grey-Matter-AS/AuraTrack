@@ -529,7 +529,7 @@ describe('two devices', () => {
     expect((await b.snapshot()).records.some((r) => r.id === newer.recordId)).toBe(true);
   });
 
-  it('deletes records saved before 7.2 (no data version), keeps newer ones, and the delete reaches the other device', async () => {
+  it('deletes records saved before 7.0.8 (no data version), keeps newer ones, and the delete reaches the other device', async () => {
     const { a, b } = await pair();
     const kept = await a.create('seizure', seizure());
     expect(kept.dataVersion).toBe(2);

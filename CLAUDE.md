@@ -15,7 +15,7 @@ AuraTrack is a privacy-first seizure-tracking app for people with epilepsy and t
 
 - **Milestone by milestone.** The user approves a milestone's plan before it starts. The user commits.
 - **Medical data integrity first.** Never lose or silently change a record.
-- **No compatibility before 7.2; forward compatibility always** (D-18). Old shapes are not read or guessed at, and superseded items are removed, not kept: ILAE 2025 is the only classification (no ILAE 2017, no plain-language type), there is no 6.1 importer, and every record has one shape (no field may be missing because old records lacked it). Every record carries `dataVersion` (2). A record of an unknown type, or with a value this version doesn't know, is kept, synced, backed up and counted on Home; never dropped. A record without `dataVersion` is from before 7.2: it is deleted at load, with a notice on Home. Nothing is ever hidden without a notice. A CSV value the import can't read is listed as a problem, never dropped.
+- **No compatibility before 7.0.8; forward compatibility always** (D-18). Old shapes are not read or guessed at, and superseded items are removed, not kept: ILAE 2025 is the only classification (no ILAE 2017, no plain-language type), there is no 6.1 importer, and every record has one shape (no field may be missing because old records lacked it). Every record carries `dataVersion` (2). A record of an unknown type, or with a value this version doesn't know, is kept, synced, backed up and counted on Home; never dropped. A record without `dataVersion` is from before 7.0.8: it is deleted at load, with a notice on Home. Nothing is ever hidden without a notice. A CSV value the import can't read is listed as a problem, never dropped.
 - **Codes, not English text, in stored data.** Labels come from `AuraTrack7-Shared/packages/i18n`, in 9 languages: en, nb, nn, da, sv, fi, de, fr, es.
 - **Clinical rules are settled** (see the overview). Don't change them without asking:
   - emergency plan: alert 5 min (counted from Start, aura included), cluster 3 inside one 8-minute window (D-19), both settings
@@ -33,6 +33,7 @@ AuraTrack is a privacy-first seizure-tracking app for people with epilepsy and t
 - **Health data:** read from HealthKit and Health Connect only; never write.
 - **Platform-only features** state what they need and what happens without it (`docs/AuraTrack7/extras.md`, D-20); safety never depends on one.
 - **Dates:** never use `toISOString()` for a calendar day; use the local-date helpers.
+- **Versions always have three parts** (`7.0.8`, never `7.2` or `7.0`). The PWA is 7.0.N, N following the milestone (M8 = 7.0.8); the version lives in the root, PWA, hub and tray `package.json`, `AuraTrack7-PWA/src/version.ts` and `AuraTrack7-Server/hub/src/main.ts`.
 
 ## Tools
 

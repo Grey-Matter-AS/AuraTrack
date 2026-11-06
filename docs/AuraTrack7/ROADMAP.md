@@ -63,7 +63,7 @@ Root scripts (`pnpm dev`, `build`, `test`, `lint`, `typecheck`) keep working ove
 - **Main way in:** the encrypted **v7 backup file** from the PWA (lossless), followed by a comparison report.
 - **Also:** CSV import in the v7 format (for spreadsheets; lossy by nature).
 - No 6.1 importer anywhere (removed from the PWA too, D-18): 6.1 data is not carried over.
-- **Only the current format is read** (the 7.2 backup and CSV): no legacy paths, aliases or guesses (D-18).
+- **Only the current format is read** (the 7.0.8 backup and CSV): no legacy paths, aliases or guesses (D-18).
 - No Argon2id natively (keys sit in hardware). v7 backups stay PBKDF2-SHA256 (600,000 rounds) + AES-GCM, so any backup opens on any platform.
 
 ## A5. Household, hub, alerts
@@ -99,8 +99,8 @@ Root scripts (`pnpm dev`, `build`, `test`, `lint`, `typecheck`) keep working ove
 - **The PWA is the reference while it still changes.** Any change to it is carried into `parity.md` (and `docs/plan/feature-checklist.md`) in the same session.
 
 ## A9. Compatibility and platform-only features (binding; D-18, D-19, D-20)
-- **No compatibility with versions before 7.2**, in the PWA or natively (D-18). Superseded items are removed, not kept: ILAE 2025 is the only classification (no ILAE 2017, no plain-language type); no 6.1 importer; every record has one shape (no fields that may be missing because old records lacked them); medicine forms are codes.
-- **Forward compatibility always:** every record carries `dataVersion` (2 since 7.2). A record of an unknown type or with a value this version does not know is kept, synced, backed up and counted on Home ("Records this device cannot show yet"), never dropped or edited away. A record **without** a data version is from before 7.2 and is deleted at load, with a notice on Home (D-18). From 7.2 on, a model change converts the records it changes. Same rules in Swift, Kotlin and TypeScript, with vectors.
+- **No compatibility with versions before 7.0.8**, in the PWA or natively (D-18). Superseded items are removed, not kept: ILAE 2025 is the only classification (no ILAE 2017, no plain-language type); no 6.1 importer; every record has one shape (no fields that may be missing because old records lacked them); medicine forms are codes.
+- **Forward compatibility always:** every record carries `dataVersion` (2 since 7.0.8). A record of an unknown type or with a value this version does not know is kept, synced, backed up and counted on Home ("Records this device cannot show yet"), never dropped or edited away. A record **without** a data version is from before 7.0.8 and is deleted at load, with a notice on Home (D-18). From 7.0.8 on, a model change converts the records it changes. Same rules in Swift, Kotlin and TypeScript, with vectors.
 - **The cluster rule counts inside one window** (default 3 seizures within 8 minutes of each other, first to last) (D-19).
 - **Every platform-only extra states what it needs and what happens without it** (`extras.md`); safety never depends on an extra; missing permissions the alert relies on are shown in Set-up and in the recording settings (D-20).
 - **Data from a platform-only feature gets a shared code in the spec before it is built**, so the other platform, the PWA and older versions can show or count it (e.g. start source `detected`).
@@ -159,7 +159,7 @@ Sizes: S (days), M (1–2 weeks), L (2–4 weeks), XL (more). Each milestone get
 
 ### N2 · Specification and test vectors (L, WSL)
 The contract. Written from the TS reference, generated vectors checked by the TS tests themselves.
-- `AuraTrack7-Shared/spec/data-model.md`: every record type (from `packages/model/src/schemas/`), canonical JSON, ids, HLC, `dataVersion`; the forward-compatibility rule (unknown types and values kept, synced, backed up and counted) and the purge of records without a data version (D-18); only the 7.2 shapes.
+- `AuraTrack7-Shared/spec/data-model.md`: every record type (from `packages/model/src/schemas/`), canonical JSON, ids, HLC, `dataVersion`; the forward-compatibility rule (unknown types and values kept, synced, backed up and counted) and the purge of records without a data version (D-18); only the 7.0.8 shapes.
 - `AuraTrack7-Shared/spec/codes.md` + `AuraTrack7-Shared/spec/vectors/catalogue.json`: the codes catalogue.
 - `AuraTrack7-Shared/spec/crypto.md`: per-record AES-GCM with AAD, device key, the v7 backup format, recovery kit, dropbox (locked start), sealing for sync.
 - `AuraTrack7-Shared/spec/merge.md`: field-level merge, dose rank, tombstones, change log.
@@ -258,7 +258,7 @@ The contract. Written from the TS reference, generated vectors checked by the TS
 ### N15 · Import, backup and the move from the PWA (M)
 - Restore from a PWA v7 backup file (Files app, share sheet, "Open in AuraTrack7"), with the comparison report; CSV import with the same checks as the PWA (`AuraTrack7-Shared/packages/store/src/importCsv.ts`: problems listed, nothing written until confirmed, duplicates skipped); backup creation and reminders.
 - In the PWA (a small change, allowed while paused): a "Moving to the app" guide that makes the backup and explains the steps.
-- **Done when:** F-801, F-802, F-805 pass; your own PWA data (7.2 or later) moves to both platforms with a matching comparison report.
+- **Done when:** F-801, F-802, F-805 pass; your own PWA data (7.0.8 or later) moves to both platforms with a matching comparison report.
 
 ### N16 · Household sync, native (XL)
 - Create and join by QR (camera) and PIN across platforms; device names; follow patients; remove a device (key replaced); sync by meeting on the same Wi-Fi (Bonjour/NSD + TLS); the hub client (HTTPS); update by QR or file; "Household up to date?"; conflict notes.
@@ -333,7 +333,7 @@ The contract. Written from the TS reference, generated vectors checked by the TS
 ## PWA track (paused)
 - Stays the reference implementation: its packages must keep passing the vectors; CI stays green.
 - Security fixes only, plus the small "Moving to the app" guide (N15).
-- The open PWA checks (M3/M6/M7 phone checks, translation review, 7.0/7.1 tags) are listed in `docs/plan/STATUS.md` and done only if you want them.
+- The open PWA checks (M3/M6/M7 phone checks, translation review, 7.0.6/7.0.7 tags) are listed in `docs/plan/STATUS.md` and done only if you want them.
 - After the first native release: N27 decides its new role.
 
 ---
@@ -375,7 +375,7 @@ Each extra states what it needs and what happens without it (D-20; `extras.md`).
 - **Both:** X-701 health data views and statistics · X-702 dose reminders with "Taken" from the notification · X-703 real background alerts.
 
 # Decisions recorded (one note each in `decisions/`)
-D-1 native apps named AuraTrack7, PWA paused · D-2 tools and minimum OS · D-3 monorepo in six folders (PWA, Apple, Android, Server, Relay, Shared) and spec-with-vectors · D-4 privacy rules (A3) · D-5 hosted-server rule wording and the sealed relay (Cloud Run, europe-north1) · D-6 generic hub · D-7 GPL-3.0 + app-store exception + name policy (™, §7(e), registration later) · D-8 Class I self-declared, regulatory track · D-9 Play + F-Droid builds · D-10 v7 backup main import, CSV too, no 6.1 natively · D-11 native ↔ PWA through the hub or file · D-12 watches with the phones; detection early, hidden; auto-start from estimated onset · D-13 health data read-only, views + simple statistics · D-14 GitHub Actions only, signing via API key · D-15 parallel platforms per milestone · D-16 type fills in ILAE answers (replaced) · D-17 ILAE 2025 and seizure profiles · D-18 break with the past (nothing before 7.2), keep the future (unknown records kept and counted) · D-19 cluster rule inside one window · D-20 platform-only features state their needs and fallbacks.
+D-1 native apps named AuraTrack7, PWA paused · D-2 tools and minimum OS · D-3 monorepo in six folders (PWA, Apple, Android, Server, Relay, Shared) and spec-with-vectors · D-4 privacy rules (A3) · D-5 hosted-server rule wording and the sealed relay (Cloud Run, europe-north1) · D-6 generic hub · D-7 GPL-3.0 + app-store exception + name policy (™, §7(e), registration later) · D-8 Class I self-declared, regulatory track · D-9 Play + F-Droid builds · D-10 v7 backup main import, CSV too, no 6.1 natively · D-11 native ↔ PWA through the hub or file · D-12 watches with the phones; detection early, hidden; auto-start from estimated onset · D-13 health data read-only, views + simple statistics · D-14 GitHub Actions only, signing via API key · D-15 parallel platforms per milestone · D-16 type fills in ILAE answers (replaced) · D-17 ILAE 2025 and seizure profiles · D-18 break with the past (nothing before 7.0.8), keep the future (unknown records kept and counted) · D-19 cluster rule inside one window · D-20 platform-only features state their needs and fallbacks.
 
 # How sessions carry on (multi-session, two machines)
 - Every native session starts by reading `docs/AuraTrack7/STATUS.md`, then the current `N<n>.md`.
@@ -391,6 +391,6 @@ The roadmap changes only with your approval. Each change is logged here with its
 | 2026-11-03 | First version, approved |
 | 2026-11-04 | D-17: ILAE 2025 replaces 2017 and seizure profiles replace the type row (N2, N4, N8); built first in the PWA as M8 |
 | 2026-11-03 | The move to six folders moved from N1 to N0 (Part A, first), at your request: the PWA runs from the new layout on Vercel before accounts and money are spent |
-| 2026-11-06 | D-18 point 4: records from before 7.2 (no `dataVersion`) are deleted at load with a notice; every record carries `dataVersion`; profiles over the limit after a sync are all kept and shown, with a note |
+| 2026-11-06 | D-18 point 4: records from before 7.0.8 (no `dataVersion`) are deleted at load with a notice; every record carries `dataVersion`; profiles over the limit after a sync are all kept and shown, with a note |
 | 2026-11-06 | D-18 extended at your request: everything superseded removed in the PWA and the plan (ILAE 2017, the plain-language type, `recoveryMinutes`, the 6.1 importer, legacy optional fields, unused messages); catalogue version 2 edited by hand; medicine forms as codes; bundle id `eu.greymatter.auratrack7` approved |
-| 2026-11-06 | Review against the PWA, at your request: A4 and new A9 (D-18 no compatibility before 7.2 and forward compatibility; D-19 cluster rule; D-20 platform needs and fallbacks); N2, N3, N5, N6, N8, N10, N11 updated to the PWA after M8 (four phases, seizure length, one-timeline editor, profiles up to 12, seconds, per-time units, History chart); missing F-IDs added to the done-when lists (F-103, F-214, F-584, F-803, F-804, F-1001, F-1002, F-1004, F-1007, F-1204); F-110 in N12; bundle id `eu.greymatter.auratrack7`; new extras X-109, X-110, X-408 |
+| 2026-11-06 | Review against the PWA, at your request: A4 and new A9 (D-18 no compatibility before 7.0.8 and forward compatibility; D-19 cluster rule; D-20 platform needs and fallbacks); N2, N3, N5, N6, N8, N10, N11 updated to the PWA after M8 (four phases, seizure length, one-timeline editor, profiles up to 12, seconds, per-time units, History chart); missing F-IDs added to the done-when lists (F-103, F-214, F-584, F-803, F-804, F-1001, F-1002, F-1004, F-1007, F-1204); F-110 in N12; bundle id `eu.greymatter.auratrack7`; new extras X-109, X-110, X-408 |

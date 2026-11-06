@@ -58,7 +58,7 @@ describe('emergencyContactLine', () => {
     expect(emergencyContactLine({ emergencyContact: '', emergencyPhone: '555' })).toBe('555');
     expect(emergencyContactLine({ emergencyContact: '', emergencyPhone: '' })).toBe('');
   });
-  it('a person without the phone field is refused (no records from before 7.2, D-18)', () => {
+  it('a person without the phone field is refused (no records from before 7.0.8, D-18)', () => {
     const old = { ...base(), name: 'A', dateOfBirth: null, emergencyContact: 'Sam 555', color: 'blue' };
     expect(PatientSchema.safeParse(old).success).toBe(false);
     expect(PatientSchema.safeParse({ ...old, emergencyPhone: '' }).success).toBe(true);
@@ -295,7 +295,7 @@ describe('added in 7.0.3: phases on symptoms, prodrome hours, between-seizures e
     ...over,
   });
 
-  it('refuses a symptom without its phase and a seizure without the 7.2 fields (D-18)', () => {
+  it('refuses a symptom without its phase and a seizure without the 7.0.8 fields (D-18)', () => {
     expect(SeizureSchema.safeParse(seizureFixture({ symptoms: [symptom()] as never })).success).toBe(false);
     for (const field of [
       'prodromeSecondsBefore',
@@ -314,7 +314,7 @@ describe('added in 7.0.3: phases on symptoms, prodrome hours, between-seizures e
     for (const phase of ['prodrome', 'aura', 'seizure', 'recovery']) {
       expect(SeizureSchema.safeParse(seizureFixture({ symptoms: [symptom({ phase })] as never })).success).toBe(true);
     }
-    // The phases of 7.0–7.1 are not guessed at: "before" could have been a warning sign or an aura
+    // The phases of 7.0.1–7.0.7 are not guessed at: "before" could have been a warning sign or an aura
     for (const phase of ['before', 'during', 'after'])
       expect(SeizureSchema.safeParse(seizureFixture({ symptoms: [symptom({ phase })] as never })).success).toBe(false);
     expect(SeizureSchema.safeParse(seizureFixture({ symptoms: [symptom({ phase: 'later' })] as never })).success).toBe(

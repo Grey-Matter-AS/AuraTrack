@@ -9,7 +9,7 @@ const nb: Tr = {
   'prof.over':
     'Det finnes {count} profiler, flere enn de {max} det kan være: to enheter la til noen før de møttes. Alle beholdes; fjern dem du ikke trenger for å legge til nye.',
   'home.purged':
-    'Oppføringer fra en versjon før 7.2 fjernet: {count}. Fra 7.2 lagres oppføringer på en ny måte, og eldre leses ikke.',
+    'Oppføringer lagret av en tidligere versjon av appen fjernet: {count}. Denne versjonen lagrer oppføringer på en ny måte og leser ikke eldre.',
   'home.hidden':
     'Oppføringer denne enheten ikke kan vise ennå: {count}. De kom fra en annen enhet eller en nyere versjon. De er tatt vare på, deles med husstanden og er med i sikkerhetskopier. Oppdater appen på denne enheten for å se dem.',
   'hist.legendCount': 'Tallet i en sirkel er hvor mange anfall den viser; anfall samme dag deler én sirkel.',
@@ -197,7 +197,7 @@ const nn: Tr = {
   'prof.over':
     'Det finst {count} profilar, fleire enn dei {max} det kan vere: to einingar la til nokre før dei møttest. Alle blir haldne; fjern dei du ikkje treng for å leggje til nye.',
   'home.purged':
-    'Oppføringar frå ein versjon før 7.2 fjerna: {count}. Frå 7.2 blir oppføringar lagra på ein ny måte, og eldre blir ikkje lesne.',
+    'Oppføringar lagra av ein tidlegare versjon av appen fjerna: {count}. Denne versjonen lagrar oppføringar på ein ny måte og les ikkje eldre.',
   'home.hidden':
     'Oppføringar denne eininga ikkje kan vise enno: {count}. Dei kom frå ei anna eining eller ein nyare versjon. Dei er tekne vare på, blir delte med hushaldet og er med i tryggingskopiar. Oppdater appen på denne eininga for å sjå dei.',
   'hist.legendCount': 'Talet i ein sirkel er kor mange anfall han viser; anfall same dag deler éin sirkel.',
@@ -384,7 +384,7 @@ const da: Tr = {
   'prof.over':
     'Der er {count} profiler, flere end de {max}, der kan være: to enheder tilføjede nogle, før de mødtes. Alle beholdes; fjern dem, du ikke har brug for, for at tilføje nye.',
   'home.purged':
-    'Poster fra en version før 7.2 fjernet: {count}. Fra 7.2 gemmes poster på en ny måde, og ældre læses ikke.',
+    'Poster gemt af en tidligere version af appen fjernet: {count}. Denne version gemmer poster på en ny måde og læser ikke ældre.',
   'home.hidden':
     'Poster denne enhed ikke kan vise endnu: {count}. De kom fra en anden enhed eller en nyere version. De gemmes, deles med husstanden og er med i sikkerhedskopier. Opdater appen på denne enhed for at se dem.',
   'hist.legendCount': 'Tallet i en cirkel er, hvor mange anfald den viser; anfald samme dag deler én cirkel.',
@@ -575,7 +575,7 @@ const sv: Tr = {
   'prof.over':
     'Det finns {count} profiler, fler än de {max} som får finnas: två enheter lade till några innan de möttes. Alla behålls; ta bort dem du inte behöver för att lägga till nya.',
   'home.purged':
-    'Poster från en version före 7.2 borttagna: {count}. Från 7.2 sparas poster på ett nytt sätt, och äldre läses inte.',
+    'Poster sparade av en tidigare version av appen borttagna: {count}. Den här versionen sparar poster på ett nytt sätt och läser inte äldre.',
   'home.hidden':
     'Poster som den här enheten inte kan visa ännu: {count}. De kom från en annan enhet eller en nyare version. De sparas, delas med hushållet och ingår i säkerhetskopior. Uppdatera appen på den här enheten för att se dem.',
   'hist.legendCount': 'Siffran i en cirkel är hur många anfall den visar; anfall samma dag delar en cirkel.',
@@ -763,7 +763,7 @@ const fi: Tr = {
   'prof.over':
     'Profiileja on {count}, enemmän kuin sallitut {max}: kaksi laitetta lisäsi niitä ennen kuin ne kohtasivat. Kaikki säilytetään; poista tarpeettomat, jotta voit lisätä uusia.',
   'home.purged':
-    'Ennen versiota 7.2 tallennettuja merkintöjä poistettu: {count}. Versiosta 7.2 alkaen merkinnät tallennetaan uudella tavalla, eikä vanhempia lueta.',
+    'Sovelluksen aiemman version tallentamia merkintöjä poistettu: {count}. Tämä versio tallentaa merkinnät uudella tavalla eikä lue vanhempia.',
   'home.hidden':
     'Merkinnät, joita tämä laite ei vielä voi näyttää: {count}. Ne tulivat toiselta laitteelta tai uudemmasta versiosta. Ne säilytetään, jaetaan kotitalouden kanssa ja ovat mukana varmuuskopioissa. Päivitä sovellus tällä laitteella nähdäksesi ne.',
   'hist.legendCount': 'Ympyrän luku kertoo, montako kohtausta siinä on; saman päivän kohtaukset jakavat yhden ympyrän.',
@@ -953,7 +953,7 @@ const de: Tr = {
   'prof.over':
     'Es gibt {count} Profile, mehr als die {max} möglichen: Zwei Geräte haben welche hinzugefügt, bevor sie sich trafen. Alle bleiben erhalten; entfernen Sie nicht benötigte, um neue hinzuzufügen.',
   'home.purged':
-    'Einträge aus einer Version vor 7.2 entfernt: {count}. Seit 7.2 werden Einträge in neuer Form gespeichert, ältere werden nicht gelesen.',
+    'Einträge einer früheren Version der App entfernt: {count}. Diese Version speichert Einträge in neuer Form und liest ältere nicht.',
   'home.hidden':
     'Einträge, die dieses Gerät noch nicht anzeigen kann: {count}. Sie stammen von einem anderen Gerät oder einer neueren Version. Sie bleiben erhalten, werden mit dem Haushalt geteilt und sind in Sicherungen enthalten. Aktualisieren Sie die App auf diesem Gerät, um sie zu sehen.',
   'hist.legendCount':
@@ -1143,7 +1143,7 @@ const fr: Tr = {
   'prof.over':
     'Il y a {count} profils, plus que les {max} possibles : deux appareils en ont ajouté avant de se rencontrer. Tous sont conservés ; supprimez ceux dont vous n’avez pas besoin pour en ajouter.',
   'home.purged':
-    'Entrées d’une version antérieure à 7.2 supprimées : {count}. Depuis la 7.2, les entrées sont enregistrées sous une nouvelle forme et les anciennes ne sont pas lues.',
+    'Entrées enregistrées par une version antérieure de l’app supprimées : {count}. Cette version enregistre les entrées sous une nouvelle forme et ne lit pas les anciennes.',
   'home.hidden':
     'Entrées que cet appareil ne peut pas encore afficher : {count}. Elles viennent d’un autre appareil ou d’une version plus récente. Elles sont conservées, partagées avec le foyer et incluses dans les sauvegardes. Mettez à jour l’app sur cet appareil pour les voir.',
   'hist.legendCount':
@@ -1333,7 +1333,7 @@ const es: Tr = {
   'prof.over':
     'Hay {count} perfiles, más de los {max} posibles: dos dispositivos añadieron algunos antes de encontrarse. Se conservan todos; elimine los que no necesite para añadir otros nuevos.',
   'home.purged':
-    'Registros de una versión anterior a la 7.2 eliminados: {count}. Desde la 7.2 los registros se guardan de una forma nueva y los anteriores no se leen.',
+    'Registros guardados por una versión anterior de la app eliminados: {count}. Esta versión guarda los registros de una forma nueva y no lee los anteriores.',
   'home.hidden':
     'Registros que este dispositivo aún no puede mostrar: {count}. Vienen de otro dispositivo o de una versión más reciente. Se conservan, se comparten con el hogar y se incluyen en las copias de seguridad. Actualice la app en este dispositivo para verlos.',
   'hist.legendCount': 'El número en un círculo es cuántas crisis reúne; las crisis del mismo día comparten un círculo.',

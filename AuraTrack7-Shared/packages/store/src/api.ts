@@ -228,7 +228,7 @@ export function createStoreApi(config: StoreApiConfig) {
     incomplete(): { type: string; id: string }[] {
       return current().incomplete();
     },
-    /** Deletes the records saved before 7.2 (D-18) and says how many there were. */
+    /** Deletes the records saved before 7.0.8 (D-18) and says how many there were. */
     purgeLegacy(): Promise<{ removed: number; types: Record<string, number> }> {
       return current().purgeLegacy();
     },

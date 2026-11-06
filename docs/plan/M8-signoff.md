@@ -1,6 +1,6 @@
-# M8 sign-off: ILAE 2025 and seizure profiles (7.2)
+# M8 sign-off: ILAE 2025 and seizure profiles (7.0.8)
 
-Written 2026-11-04, after the one build run (plan `M8-plan.md`, decision `docs/AuraTrack7/decisions/D-17-ilae-2025-and-seizure-profiles.md`). Built on branch `7.2.0---M8`; the work and its later additions are on `main` (merged before 2026-11-06; the additions of 2026-11-04 to 06 were committed straight to `main`). Test kinds as in `M4-signoff.md`. **7.2 is not tagged:** that needs your own look at the editor and the profiles screen on your phones, the translation review, and the version bump.
+Written 2026-11-04, after the one build run (plan `M8-plan.md`, decision `docs/AuraTrack7/decisions/D-17-ilae-2025-and-seizure-profiles.md`). Built on branch `7.2.0---M8`; the work and its later additions are on `main` (merged before 2026-11-06; the additions of 2026-11-04 to 06 were committed straight to `main`). Test kinds as in `M4-signoff.md`. **7.0.8 is not tagged:** that needs your own look at the editor and the profiles screen on your phones, the translation review, and the version bump.
 
 | Slice | What | Where it is tested |
 |---|---|---|
@@ -27,4 +27,4 @@ Written 2026-11-04, after the one build run (plan `M8-plan.md`, decision `docs/A
 ## Left for you
 - Try the editor and the profiles screen on your phones.
 - Translation review of the new messages (8 languages).
-- Version bump to 7.2, commit, tag.
+- Version bump to 7.0.8, commit, tag.
