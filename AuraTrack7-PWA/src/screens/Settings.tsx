@@ -132,7 +132,7 @@ function Identity() {
     (name.trim() !== patient.name ||
       (dob || null) !== patient.dateOfBirth ||
       contact.trim() !== patient.emergencyContact ||
-      phone.trim() !== (patient.emergencyPhone ?? '') ||
+      phone.trim() !== patient.emergencyPhone ||
       same !== settings.carerIsContact ||
       carerShown.trim() !== settings.carerName ||
       carerPhoneShown.trim() !== settings.carerPhone);

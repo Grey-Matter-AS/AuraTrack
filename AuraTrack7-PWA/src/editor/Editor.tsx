@@ -42,7 +42,6 @@ import {
   withRecovery,
   TABS,
   movedToPhase,
-  type Draft,
   type Gap,
   type Item,
   type PhaseName,
@@ -82,10 +81,7 @@ export function Editor() {
   const ids = TABS;
   const active: TabId = tab;
   const state: Record<TabId, string> = {
-    classification:
-      draft.profile?.name ??
-      ilae2025Name(draft.ilae2025, t) ??
-      (draft.typeCode ? label(draft.typeCode) : t('tab.typeNotSet')),
+    classification: draft.profile?.name ?? ilae2025Name(draft.ilae2025, t) ?? t('tab.typeNotSet'),
     timeline: added(draft.items.length),
     notes: draft.notes ? t('tab.written') : t('tab.nothingYet'),
   };
@@ -210,7 +206,7 @@ export function Editor() {
 }
 
 function ClassificationTab() {
-  const { draft, setDraft, t, label, profiles } = useEditor();
+  const { draft, setDraft, t, profiles } = useEditor();
   const app = useApp();
   const toast = useToast();
   const [all, setAll] = useState(false);
@@ -233,7 +229,6 @@ function ClassificationTab() {
     const to = profiles.find((p) => p.id === id) ?? null;
     setDraft((d) => chooseProfile(d, to, profiles));
   };
-  const earlier = earlierAnswers(draft, label);
   const keep = async () => {
     if (!app.patient) return;
     const created = await app.actions.createRecord('seizureProfile', {
@@ -250,11 +245,6 @@ function ClassificationTab() {
   };
   return (
     <Stack>
-      {draft.typeCode || earlier ? (
-        <Section title={t('classify.earlier', { type: draft.typeCode ? label(draft.typeCode) : t('home.untyped') })}>
-          {earlier ? <p className="app-note">{t('classify.earlier2017', { answers: earlier })}</p> : null}
-        </Section>
-      ) : null}
       <Section title={t('prof.row')}>
         <Stack>
           {/* With no profile saved yet there is nothing to start from: only the hint shows */}
@@ -312,17 +302,6 @@ function ClassificationTab() {
 }
 
 const DIFFERENT = 'different';
-
-/** The ILAE 2017 answers of a seizure recorded before 7.2, in words, or null when it has none. */
-function earlierAnswers(d: Draft, label: (code: string) => string): string | null {
-  const parts = [
-    d.onset ? label(`ilae.onset.${d.onset}`) : null,
-    d.awareness ? label(`ilae.awareness.${d.awareness}`) : null,
-    d.motor && d.motor !== 'unknown' ? label(`ilae.motor.${d.motor}`) : null,
-    d.spread === 'yes' ? label('ilae.spread_to_both_sides') : null,
-  ].filter((x): x is string => x !== null);
-  return parts.length > 0 ? parts.join(', ') : null;
-}
 
 /** The lengths of the phases, kept as marks: aura, then seizure, then recovery; changing one moves the marks after it. */
 function usePhaseTimes() {
@@ -538,13 +517,10 @@ function NotesTab() {
       [
         'phases',
         'symptoms',
-        'typeCode',
-        'ilae',
         'triggerCodes',
         'afterFindings',
         'notes',
         'prodromeSecondsBefore',
-        'recoveryMinutes',
         'status',
         'quickNotes',
         'ilae2025',

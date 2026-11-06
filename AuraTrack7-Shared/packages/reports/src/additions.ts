@@ -79,13 +79,8 @@ export interface AdditionsData {
   periodTimeline?: PeriodTimelineData;
   between?: { symptoms: { label: string; count: number }[]; weekly: { day: string; count: number }[]; total: number };
   bodyMap?: BodyMapData;
-  /** ILAE 2025 types counted; `earlier`: the ILAE 2017 answers of seizures recorded before 7.2, apart. */
-  ilae?: {
-    rows: { label: string; count: number }[];
-    recorded: number;
-    total: number;
-    earlier: { rows: { label: string; count: number }[]; recorded: number };
-  };
+  /** ILAE 2025 types counted. */
+  ilae?: { rows: { label: string; count: number }[]; recorded: number; total: number };
   recovery?: { n: number; median: number | null; min: number | null; max: number | null; buckets: { label: string; count: number }[] };
   timeOfDay?: { hours: number[]; periods: { label: string; count: number }[] };
   clusters?: { episodes: { from: string; to: string; count: number }[]; long: { when: string; duration: string }[] };
@@ -190,14 +185,14 @@ export function buildAdditions(
       to: input.to,
       plan: input.plan,
     });
-    // One colour per kind of seizure (profile, ILAE 2025 type, or older type), in the order they first appear
+    // One colour per kind of seizure (profile or ILAE 2025 type), in the order they first appear
     const typeSeries: Record<string, number> = {};
     const titles: Record<string, string> = {};
     for (const s of [...period].sort((a, b) => a.phases.start.at - b.phases.start.at)) {
       const key = seizureKindKey(s);
       if (key && !(key in typeSeries)) {
         typeSeries[key] = (Object.keys(typeSeries).length % 7) + 1;
-        titles[key] = seizureTitle(s, t, label);
+        titles[key] = seizureTitle(s, t);
       }
     }
     const days = Math.max(1, Math.round((input.to - input.from) / DAY_MS));
@@ -249,33 +244,17 @@ export function buildAdditions(
   }
 
   if (flags.ilae) {
-    // ILAE 2025 types counted; the ILAE 2017 answers of older seizures listed apart, never merged with them (D-17)
     const types = new Map<string, number>();
     for (const s of period) {
       const name = ilae2025Text(s, t);
       if (name) types.set(name, (types.get(name) ?? 0) + 1);
     }
-    const counts = new Map<string, number>();
-    let recorded = 0;
-    const bump = (k: string) => counts.set(k, (counts.get(k) ?? 0) + 1);
-    for (const s of period) {
-      const i = s.ilae;
-      if (ilae2025Text(s, t) !== null) continue;
-      if (!i || (i.onset === null && i.awareness === null && i.motor === null && i.feature === null)) continue;
-      recorded += 1;
-      if (i.onset) bump(`${t('rep.ilaeOnset')}: ${t(`rep.ilae.${i.onset}` as never)}`);
-      if (i.awareness) bump(`${t('rep.ilaeAwareness')}: ${t(`rep.ilae.${i.awareness}` as never)}`);
-      if (i.motor) bump(`${t('rep.ilaeMotor')}: ${t(`rep.ilae.${i.motor}` as never)}`);
-      if (i.feature) bump(`${t('rep.ilaeFeature')}: ${label(i.feature)}`);
-      if (i.spreadToBothSides) bump(t('rep.ilaeSpread'));
-    }
-    const rows = (m: Map<string, number>) =>
-      [...m].map(([l, count]) => ({ label: l, count })).sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
     data.ilae = {
-      rows: rows(types),
+      rows: [...types]
+        .map(([l, count]) => ({ label: l, count }))
+        .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label)),
       recorded: [...types.values()].reduce((a, b) => a + b, 0),
       total: period.length,
-      earlier: { rows: rows(counts), recorded },
     };
   }
 
@@ -284,7 +263,6 @@ export function buildAdditions(
     for (const s of period) {
       const p = s.phases;
       if (p.seizureEnd && p.recoveryEnd) minutes.push((p.recoveryEnd.at - p.seizureEnd.at) / 60_000);
-      else if (s.recoveryMinutes !== null) minutes.push(s.recoveryMinutes);
     }
     const edges: [string, number, number][] = [
       ['< 5 min', 0, 5],

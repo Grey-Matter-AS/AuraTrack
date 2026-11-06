@@ -1,3 +1,4 @@
+import type { AutoFields } from '../schemas/common';
 import type { DoseLog, Medication, MedicationChange, Regimen } from '../schemas';
 import { RegimenSchema } from '../schemas';
 import { localDateKey, nextLocalDay, startOfLocalDay } from './dates';
@@ -12,8 +13,8 @@ export type MedicationFlags = Pick<Medication, 'isRescue' | 'showInEmergency' | 
 export type ChangeType = MedicationChange['type'];
 
 /** The values to store a medicine with (what `store.create('medication', ...)` is given, minus the ids). */
-export type MedicationValues = Omit<Medication, 'id' | 'householdId' | 'deviceId' | 'createdAt'>;
-export type ChangeValues = Omit<MedicationChange, 'id' | 'householdId' | 'deviceId' | 'createdAt'>;
+export type MedicationValues = Omit<Medication, AutoFields>;
+export type ChangeValues = Omit<MedicationChange, AutoFields>;
 
 export type ChangeProblem = 'name_empty' | 'future' | 'no_times' | 'no_change' | 'already_stopped' | 'not_stopped';
 
@@ -210,7 +211,7 @@ export function dosePanel(input: {
   });
 }
 
-export type DoseLogValues = Omit<DoseLog, 'id' | 'householdId' | 'deviceId' | 'createdAt'>;
+export type DoseLogValues = Omit<DoseLog, AutoFields>;
 
 /** The log for a scheduled dose marked as taken at `takenAt`: 'taken' within 90 minutes of the slot, 'late' after. */
 export function takenDose(row: DosePanelRow, patientId: string, takenAt: number, note = ''): DoseLogValues {

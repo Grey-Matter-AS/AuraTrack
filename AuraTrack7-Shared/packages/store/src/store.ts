@@ -1,5 +1,7 @@
+import type { AutoFields } from '@auratrack/model';
 import {
   APPEND_ONLY_TYPES,
+  DATA_VERSION,
   ChangeLogEntrySchema,
   ClockDriftError,
   MERGE_RULES,
@@ -80,6 +82,11 @@ import {
 export type StoredType = Exclude<RecordType, 'changeLog'>;
 const isAppendOnly = (type: string) => (APPEND_ONLY_TYPES as readonly string[]).includes(type);
 const isStoredType = (type: string): type is StoredType => type !== 'changeLog' && type in RECORD_SCHEMAS;
+/**
+ * A record type this version does not know yet (written by a newer version or another platform). It is kept, sealed like
+ * any other, passed on in sync and backups, and counted by `incomplete()`, so nothing a newer device wrote is lost here.
+ */
+const isKeptType = (type: string): boolean => type !== 'changeLog' && /^[a-z][A-Za-z0-9]{0,39}$/.test(type);
 
 export class StoreError extends Error {
   constructor(message: string) {
@@ -375,9 +382,9 @@ export class Store {
   ): Promise<Store> {
     const store = new Store(db, key, info, clock, options.now ?? Date.now, options.pinKdf);
     for (const row of await db.records.toArray()) {
-      if (!isStoredType(row.type)) continue;
+      if (!isStoredType(row.type) && !isKeptType(row.type)) continue;
       const record = JSON.parse(await open(key, row, `${row.type}:${row.id}`)) as VersionedRecord;
-      store.bucket(row.type).set(row.id, record);
+      store.bucket(row.type as StoredType).set(row.id, record);
     }
     for (const id of await db.changeLog.toCollection().primaryKeys()) store.logIds.add(id);
     return store;
@@ -629,8 +636,10 @@ export class Store {
 
   private parse<T extends StoredType>(type: T, record: VersionedRecord): RecordOf<T> | null {
     const values = currentValues(record);
-    if (!values) return null;
-    const result = RECORD_SCHEMAS[type].safeParse(values);
+    // A type this version does not know (kept from a newer one) has no schema: it cannot be shown
+    const schema = (RECORD_SCHEMAS as unknown as Record<string, (typeof RECORD_SCHEMAS)[T] | undefined>)[type];
+    if (!values || !schema) return null;
+    const result = schema.safeParse(values);
     return result.success ? (result.data as RecordOf<T>) : null;
   }
 
@@ -643,7 +652,10 @@ export class Store {
     return [...this.set.values()].flatMap((bucket) => [...bucket.values()]);
   }
 
-  /** Records that arrived but are not valid (for instance a change that is still waiting for the rest of its record). */
+  /**
+   * Records that are kept but cannot be shown: a change still waiting for the rest of its record, a value or a record type
+   * from a newer version or another platform. The app says how many there are; they stay in sync and in backups.
+   */
   incomplete(): { type: string; id: string }[] {
     const out: { type: string; id: string }[] = [];
     for (const [type, bucket] of this.set) {
@@ -653,13 +665,39 @@ export class Store {
     return out;
   }
 
+  // ---- records from before 7.2 (D-18)
+
+  /**
+   * Deletes every record saved before 7.2: one without a data version (`dataVersion`) that does not fit today's model, or
+   * of a type that no longer exists. Each goes as a tombstone, so the other devices remove it too. A record with a data
+   * version is never removed here, even when this version cannot show it (it may come from a newer one). Returns how many
+   * were removed, so the app can say so.
+   */
+  purgeLegacy(): Promise<{ removed: number; types: Record<string, number> }> {
+    return this.serial(async () => {
+      const types: Record<string, number> = {};
+      let removed = 0;
+      for (const [type, bucket] of this.set) {
+        for (const record of [...bucket.values()]) {
+          if (isDeleted(record)) continue;
+          const values = currentValues(record);
+          if (values && typeof values.dataVersion === 'number') continue;
+          if (isStoredType(type) && this.parse(type, record)) continue;
+          await this.commit(this.entry('delete', type, record.id, null, this.patientOf(values ?? {})));
+          types[type] = (types[type] ?? 0) + 1;
+          removed++;
+        }
+      }
+      return { removed, types };
+    });
+  }
+
   // ---- writing
 
   /** Makes a record. `id`, `householdId`, `deviceId` and `createdAt` are filled in if missing. Invalid records are refused. */
   create<T extends StoredType>(
     type: T,
-    values: Omit<RecordOf<T>, 'id' | 'householdId' | 'deviceId' | 'createdAt'> &
-      Partial<Pick<RecordOf<T>, 'id' | 'householdId' | 'deviceId' | 'createdAt'>>,
+    values: Omit<RecordOf<T>, AutoFields> & Partial<Pick<RecordOf<T>, AutoFields>>,
   ): Promise<RecordOf<T>> {
     return this.serial(async () => {
       const full = {
@@ -667,6 +705,7 @@ export class Store {
         householdId: this.info.householdId,
         deviceId: this.info.deviceId,
         createdAt: this.now(),
+        dataVersion: DATA_VERSION,
         ...values,
       } as Record<string, JsonValue>;
       const id = full.id as string;
@@ -756,7 +795,7 @@ export class Store {
           result.duplicates++;
           continue;
         }
-        if (!isStoredType(entry.recordType)) {
+        if (!isStoredType(entry.recordType) && !isKeptType(entry.recordType)) {
           result.rejected.push({ entryId: entry.id, reason: `unknown record type ${entry.recordType}` });
           continue;
         }
@@ -776,7 +815,7 @@ export class Store {
   }
 
   /**
-   * Adds records that come from outside (the 6.1 importer). Each draft carries a fixed id, so importing the same file twice
+   * Adds records that come from outside (the CSV import). Each draft carries a fixed id, so importing the same file twice
    * adds nothing the second time. Drafts are stamped now, in order, like any other local change.
    */
   importDrafts(drafts: readonly ImportDraft[]): Promise<{ applied: number; duplicates: number; conflicts: string[] }> {

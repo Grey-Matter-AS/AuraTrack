@@ -101,6 +101,7 @@ export default function RecordingCheck({
         name: 'Test patient',
         dateOfBirth: null,
         emergencyContact: 'Test contact 555 0100',
+        emergencyPhone: '',
         color: '#336699',
       },
     });

@@ -2,6 +2,7 @@ import { type EegActivity } from '@auratrack/model';
 import { AppHeader, Button, Card, Screen, Section, Stack, TextArea, TextField } from '@auratrack/ui';
 import { useState } from 'react';
 import { useApp } from '../app/AppContext';
+import { isClassified, seizureName } from '../app/seizureName';
 import { useNav } from '../editor/nav';
 import { ActivitySheet, ConfirmDelete, RunningCard, hms } from './Eeg';
 import './screens.css';
@@ -10,6 +11,11 @@ import './screens.css';
 export function EegSession({ id }: { id: string }) {
   const app = useApp();
   const { t, fmt, label, eegSessions, eegActivities, actions } = app;
+  // A seizure reference is named by the seizure itself (its profile or ILAE 2025 type), as everywhere else
+  const seizureRefLabel = (a: EegActivity) => {
+    const seizure = app.seizures.find((x) => x.id === a.linkedSeizureId);
+    return seizure && isClassified(seizure) ? `${t('eeg.seizure')} · ${seizureName(seizure, t)}` : t('eeg.seizure');
+  };
   const nav = useNav();
   const session = eegSessions.find((s) => s.id === id);
   // What is typed shows until it is saved; then the saved text shows again
@@ -71,7 +77,7 @@ export function EegSession({ id }: { id: string }) {
                   <Stack gap="0.25rem">
                     <p className="app-banner">
                       {a.kind === 'seizure_reference'
-                        ? `${t('eeg.seizure')}${a.activityCode ? ` · ${label(a.activityCode)}` : ''}`
+                        ? seizureRefLabel(a)
                         : a.customText || label(a.activityCode ?? '')}
                     </p>
                     <p className="app-note">

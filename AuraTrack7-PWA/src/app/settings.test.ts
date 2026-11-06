@@ -10,6 +10,7 @@ const setting = (key: string, value: unknown, over: Partial<Setting> = {}): Sett
   patientId: ids.patient,
   deviceId: ids.device,
   createdAt: 1,
+  dataVersion: 2,
   scope: 'device',
   key,
   value: value as never,
@@ -39,8 +40,8 @@ describe('resolving settings', () => {
 
   it('takes the newest valid value, and ignores a wrong one', () => {
     const records = [
-      setting('wakeLock', true, { createdAt: 1 }),
-      setting('wakeLock', false, { createdAt: 5 }),
+      setting('wakeLock', true, { createdAt: 1, dataVersion: 2 }),
+      setting('wakeLock', false, { createdAt: 5, dataVersion: 2 }),
       setting('alertSound', 'loud'),
     ];
     const resolved = resolveSettings(records, ids.patient);
@@ -67,14 +68,14 @@ describe('resolving settings', () => {
   });
 
   it('finds the record to change for a setting', () => {
-    const records = [setting('wakeLock', true), setting('wakeLock', false, { createdAt: 9 })];
+    const records = [setting('wakeLock', true), setting('wakeLock', false, { createdAt: 9, dataVersion: 2 })];
     expect(settingRecord(records, 'wakeLock', ids.patient)?.createdAt).toBe(9);
     expect(settingRecord(records, 'alertSound', ids.patient)).toBeUndefined();
   });
 });
 
 describe('the symptom strip choices', () => {
-  const entry = (code: string, phase?: 'prodrome' | 'aura' | 'seizure' | 'recovery') => ({
+  const entry = (code: string, phase: 'prodrome' | 'aura' | 'seizure' | 'recovery') => ({
     id: newId(),
     code,
     area: null,
@@ -82,13 +83,13 @@ describe('the symptom strip choices', () => {
     order: 0,
     sincePrevious: { kind: 'unknown' as const, ms: null },
     isFirst: false,
-    ...(phase ? { phase } : {}),
+    phase,
   });
 
   it('lists the symptoms seen most often during seizures, most common first, up to the count', () => {
     const seizures = [
       seizureFixture({ symptoms: [entry('symptom.a', 'seizure'), entry('symptom.b', 'seizure')] }),
-      seizureFixture({ symptoms: [entry('symptom.b'), entry('symptom.c', 'aura')] }),
+      seizureFixture({ symptoms: [entry('symptom.b', 'seizure'), entry('symptom.c', 'aura')] }),
       seizureFixture({ symptoms: [entry('symptom.b', 'seizure'), entry('symptom.a', 'seizure')] }),
     ];
     expect(usualSymptoms(seizures)).toEqual(['symptom.b', 'symptom.a']);

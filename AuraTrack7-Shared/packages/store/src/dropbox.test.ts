@@ -36,6 +36,7 @@ async function setup(over: Partial<{ now: () => number; name: string }> = {}) {
     name: 'Alex Example',
     dateOfBirth: null,
     emergencyContact: 'Sam 555 0100',
+    emergencyPhone: '',
     color: '#336699',
   });
   await store.publishLockedScreen();
@@ -184,6 +185,7 @@ describe('what the PIN screen may show', () => {
       name: 'B',
       dateOfBirth: null,
       emergencyContact: '',
+      emergencyPhone: '',
       color: '#000',
     });
     expect((await store.publishLockedScreen()).patientId).toBe(patientId);
@@ -460,14 +462,14 @@ describe('merging after unlock', () => {
     const store = await Store.unlock(name, { pin: PIN }, options);
     const merged = store.get('seizure', seizureId);
     // the user then edits the details...
-    await store.update('seizure', seizureId, { typeCode: 'seizure_type.focal_aware', notes: 'my edit' });
+    await store.update('seizure', seizureId, { triggerCodes: ['trigger.stress'], notes: 'my edit' });
     store.close();
     // ...and the entries reappear, as if the delete had not happened before a crash
     await raw.dropbox.bulkAdd(copy.map((row) => ({ ...row, seq: undefined }) as never));
     raw.close();
     const again = await Store.unlock(name, { pin: PIN }, options);
     expect(again.get('seizure', seizureId)).toMatchObject({
-      typeCode: 'seizure_type.focal_aware',
+      triggerCodes: ['trigger.stress'],
       notes: 'my edit',
       phases: merged?.phases,
     });

@@ -38,7 +38,15 @@ async function seed(ctx: Ctx, settings: Record<string, unknown> = {}) {
   const patientId = newId();
   await ctx.api.createRecord({
     type: 'patient',
-    values: { id: patientId, patientId, name: 'Alex', dateOfBirth: null, emergencyContact: '', color: '#336699' },
+    values: {
+      id: patientId,
+      patientId,
+      name: 'Alex',
+      dateOfBirth: null,
+      emergencyContact: '',
+      emergencyPhone: '',
+      color: '#336699',
+    },
   });
   for (const [key, value] of Object.entries(settings))
     await ctx.api.createRecord({ type: 'setting', values: { patientId, scope: 'device', key, value } });
@@ -156,11 +164,10 @@ describe('locking by itself', () => {
           recoveryEnd: null,
         },
         status: 'recorded',
-        typeCode: null,
-        ilae: null,
+        ilae2025: null,
+        profile: null,
         symptoms: [],
         afterFindings: [],
-        recoveryMinutes: null,
         recoveryOngoing: false,
         triggerCodes: [],
         notes: '',
@@ -169,6 +176,10 @@ describe('locking by itself', () => {
         isEmergencyStop: false,
         recordedBy: 'carer',
         eegSessionId: null,
+        prodromeSecondsBefore: null,
+        quickNotes: [],
+        recordedWhileLocked: false,
+        cancelled: false,
       },
     })) as { id: string };
     const user = userEvent.setup();

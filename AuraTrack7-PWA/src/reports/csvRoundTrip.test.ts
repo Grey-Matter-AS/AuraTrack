@@ -14,7 +14,7 @@ const at = (y: number, m: number, d: number, h: number, mi: number) => new Date(
 
 async function store(patientId: string) {
   const s = await Store.create(`roundtrip-${Date.now()}-${counter++}`, { pin: '2468' }, { pinKdf: TEST_PIN_KDF });
-  await s.create('patient', { id: patientId, patientId, name: 'Alex', dateOfBirth: null, emergencyContact: '', color: '#336699' });
+  await s.create('patient', { id: patientId, patientId, name: 'Alex', dateOfBirth: null, emergencyContact: '', emergencyPhone: '', color: '#336699' });
   return s;
 }
 
@@ -34,16 +34,13 @@ describe('CSV export, then import', () => {
         recoveryEnd: { at: start + 300 * S, source: 'timed' },
       },
       status: 'complete',
-      typeCode: 'seizure_type.absence',
-      ilae: null,
       ilae2025: { class: 'unknown', recall: 'yes', responsive: 'unknown', bilateralTonicClonic: 'no', observable: 'yes', generalized: null },
       profile: { id: newId(), name: 'Usual seizure' },
       symptoms: [
-        { id: newId(), code: 'symptom.small_twitching.muscle_flickering', area, moment: 0, order: 0, sincePrevious: { kind: 'unknown', ms: null }, isFirst: true, phase: 'during' },
+        { id: newId(), code: 'symptom.small_twitching.muscle_flickering', area, moment: 0, order: 0, sincePrevious: { kind: 'unknown', ms: null }, isFirst: true, phase: 'seizure' },
       ],
       afterFindings: [{ code: 'after.confused', customLabel: null, areas: [area] }],
       prodromeSecondsBefore: 120,
-      recoveryMinutes: 15,
       recoveryOngoing: false,
       triggerCodes: ['trigger.stress'],
       notes: 'Line one, "two"\nand three',
@@ -52,26 +49,29 @@ describe('CSV export, then import', () => {
       isEmergencyStop: false,
       recordedBy: 'self',
       eegSessionId: null,
+      quickNotes: [],
+      recordedWhileLocked: false,
+      cancelled: false,
     } as never)) as unknown as Seizure;
     await from.create('interictalEvent', {
       patientId, occurredAt: at(2026, 10, 4, 10, 0), timeZone: 'Europe/Oslo',
       symptomCode: 'symptom.small_twitching.muscle_flickering', area, notes: 'Morning', recordedBy: 'carer',
     } as never);
     // A medicine started, then raised, the way the Medicines screen does it
-    const regimen = { name: 'Lamotrigine', activeIngredient: 'lamotrigine', form: 'tablet', dose: 100, unit: 'mg', slotDoses: {}, frequency: 'BD' as const, scheduledTimes: ['08:00', '20:00'], scheduledDays: [] };
+    const regimen = { name: 'Lamotrigine', activeIngredient: 'lamotrigine', form: 'form.tablet', dose: 100, unit: 'mg', slotDoses: {}, slotUnits: {}, frequency: 'BD' as const, scheduledTimes: ['08:00', '20:00'], scheduledDays: [] };
     const flags = { isRescue: false, showInEmergency: false, reminderEnabled: true };
     const started = planMedicationChange({ patientId, before: null, next: { ...regimen, ...flags }, type: 'started', effectiveAt: at(2026, 1, 1, 8, 0), recordedAt: Date.now(), note: '' });
     if ('problem' in started || !('create' in started.medication)) throw new Error('not planned');
     const med = (await from.create('medication', started.medication.create as never)) as unknown as Medication;
     await from.create('medicationChange', { ...started.change, medicationId: med.id } as never);
-    const raised = planMedicationChange({ patientId, before: med, next: { ...regimen, dose: 150, ...flags }, type: 'changed', effectiveAt: at(2026, 3, 1, 8, 0), recordedAt: Date.now(), note: 'Raised' });
+    const raised = planMedicationChange({ patientId, before: med, next: { ...regimen, dose: 150, slotDoses: { '08:00': 150, '20:00': 1 }, slotUnits: { '20:00': 'tablet' }, ...flags }, type: 'changed', effectiveAt: at(2026, 3, 1, 8, 0), recordedAt: Date.now(), note: 'Raised' });
     if ('problem' in raised || 'create' in raised.medication) throw new Error('not planned');
     await from.update('medication', med.id, raised.medication.patch as never);
     await from.create('medicationChange', raised.change as never);
     await from.create('doseLog', { patientId, medicationId: med.id, scheduledTime: '08:00', takenAt: at(2026, 10, 5, 8, 10), status: 'late', note: '', doseSnapshot: 150, unitSnapshot: 'mg' } as never);
     await from.create('wellbeingEntry', { patientId, recordedAt: at(2026, 10, 4, 21, 0), dayKey: '2026-10-04', moodCode: 'mood.happy', intensity: 2, factors: { 'factor.sleep_hours': 7.5 }, notes: '' } as never);
     const session = (await from.create('eegSession', { patientId, startTime: at(2026, 10, 5, 13, 0), plannedEndTime: null, actualEndTime: null, durationPreset: '24h', customHours: null, title: 'EEG', notes: '', status: 'completed' } as never)) as unknown as { id: string };
-    await from.create('eegActivity', { patientId, sessionId: session.id, kind: 'seizure_reference', activityCode: 'seizure_type.absence', customText: '', moodCode: null, notes: '', startTime: start, endTime: null, durationSec: null, linkedSeizureId: seizure.id } as never);
+    await from.create('eegActivity', { patientId, sessionId: session.id, kind: 'seizure_reference', activityCode: null, customText: '', moodCode: null, notes: '', startTime: start, endTime: null, durationSec: null, linkedSeizureId: seizure.id } as never);
 
     const list = <T>(s: Store, type: Parameters<Store['list']>[0]) => s.list(type) as unknown as T[];
     const text = buildCsv({
@@ -97,13 +97,11 @@ describe('CSV export, then import', () => {
     expect(back.id).toBe(seizure.id);
     expect(Object.values(back.phases).map((m) => m?.at ?? null)).toEqual(Object.values(seizure.phases).map((m) => m?.at ?? null));
     const keep = (s: Seizure) => ({
-      typeCode: s.typeCode,
       ilae2025: s.ilae2025,
       symptoms: s.symptoms.map((x) => [x.code, x.area, x.phase]),
       afterFindings: s.afterFindings,
       triggerCodes: s.triggerCodes,
       prodromeSecondsBefore: s.prodromeSecondsBefore,
-      recoveryMinutes: s.recoveryMinutes,
       notes: s.notes,
       recordedBy: s.recordedBy,
       status: s.status,
@@ -120,12 +118,14 @@ describe('CSV export, then import', () => {
     expect(into.list('interictalEvent').map(strip)).toEqual(from.list('interictalEvent').map(strip));
     expect(into.list('wellbeingEntry').map(strip)).toEqual(from.list('wellbeingEntry').map(strip));
     expect(into.list('doseLog').map(strip)).toEqual(from.list('doseLog').map(strip));
-    const regimenOf = (m: Medication) => ({ name: m.name, dose: m.dose, frequency: m.frequency, scheduledTimes: m.scheduledTimes, active: m.active, startedAt: m.startedAt });
+    const regimenOf = (m: Medication) => ({ name: m.name, dose: m.dose, unit: m.unit, slotDoses: m.slotDoses, slotUnits: m.slotUnits ?? null, frequency: m.frequency, scheduledTimes: m.scheduledTimes, active: m.active, startedAt: m.startedAt });
+    // each time keeps its own unit: 150 mg in the morning, 1 tablet at night
+    expect(into.list('medication')[0]?.slotUnits).toEqual({ '20:00': 'tablet' });
     expect(into.list('medication').map(regimenOf)).toEqual(from.list('medication').map(regimenOf));
     const history = (s: Store) =>
-      s.list('medicationChange').sort((a, b) => a.effectiveAt - b.effectiveAt).map((c) => [c.type, c.effectiveAt, c.from?.dose ?? null, c.to?.dose ?? null, c.note]);
+      s.list('medicationChange').sort((a, b) => a.effectiveAt - b.effectiveAt).map((c) => [c.type, c.effectiveAt, c.from?.dose ?? null, c.to?.dose ?? null, c.to?.slotDoses ?? null, c.to?.slotUnits ?? null, c.note]);
     expect(history(into)).toEqual(history(from));
-    expect(into.list('eegActivity')[0]).toMatchObject({ sessionId: session.id, linkedSeizureId: seizure.id, activityCode: 'seizure_type.absence' });
+    expect(into.list('eegActivity')[0]).toMatchObject({ sessionId: session.id, linkedSeizureId: seizure.id, activityCode: null });
 
     // and the same file again adds nothing
     expect((await importCsv(into, text, { patientId, dateOrder: 'dmy' })).applied).toBe(0);

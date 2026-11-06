@@ -101,7 +101,15 @@ describe('a household of real stores', () => {
     const second = crypto.randomUUID();
     await a.api.createRecord({
       type: 'patient',
-      values: { id: second, patientId: second, name: 'Sam', dateOfBirth: null, emergencyContact: '', color: '#aa3366' },
+      values: {
+        id: second,
+        patientId: second,
+        name: 'Sam',
+        dateOfBirth: null,
+        emergencyContact: '',
+        emergencyPhone: '',
+        color: '#aa3366',
+      },
     });
     await registerPatient(a.api, second, Date.now());
     await a.api.createRecord({ type: 'seizure', values: stripBase(seizureFixture({ patientId: second })) });
@@ -115,7 +123,15 @@ describe('a household of real stores', () => {
     const second = crypto.randomUUID();
     await a.api.createRecord({
       type: 'patient',
-      values: { id: second, patientId: second, name: 'Sam', dateOfBirth: null, emergencyContact: '', color: '#aa3366' },
+      values: {
+        id: second,
+        patientId: second,
+        name: 'Sam',
+        dateOfBirth: null,
+        emergencyContact: '',
+        emergencyPhone: '',
+        color: '#aa3366',
+      },
     });
     await registerPatient(a.api, second, Date.now());
     await a.api.createRecord({ type: 'seizure', values: stripBase(seizureFixture({ patientId: second })) });

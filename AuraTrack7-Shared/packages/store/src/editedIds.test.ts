@@ -34,7 +34,15 @@ describe('looking into a backup without changing anything', () => {
     const id = (ids as { patient: string }).patient;
     await api.createRecord({
       type: 'patient',
-      values: { id, patientId: id, name: 'Alex', dateOfBirth: null, emergencyContact: '', color: '#336699' },
+      values: {
+        id,
+        patientId: id,
+        name: 'Alex',
+        dateOfBirth: null,
+        emergencyContact: '',
+        emergencyPhone: '',
+        color: '#336699',
+      },
     });
     await api.createRecord({ type: 'seizure', values: stripBase(seizureFixture({ patientId: id })) });
     const file = await api.backup({ passphrase: 'a long passphrase' });

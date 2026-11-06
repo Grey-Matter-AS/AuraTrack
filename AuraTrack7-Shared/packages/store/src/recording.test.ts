@@ -38,6 +38,7 @@ async function setup(now = () => T0 + 60 * S) {
     name: 'Alex',
     dateOfBirth: null,
     emergencyContact: '',
+    emergencyPhone: '',
     color: '#000',
   });
   return { name, store, patientId, service: new RecordingService(store, now), now };
@@ -206,6 +207,7 @@ describe('through the store interface', () => {
         name: 'Alex Example',
         dateOfBirth: null,
         emergencyContact: 'Sam 555 0100',
+        emergencyPhone: '',
         color: '#000',
       },
     });

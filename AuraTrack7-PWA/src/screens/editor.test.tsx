@@ -42,11 +42,10 @@ const base = (patientId: string, over: Record<string, unknown> = {}) => ({
     recoveryEnd: null,
   },
   status: 'recorded' as const,
-  typeCode: null,
-  ilae: null,
+  ilae2025: null,
+  profile: null,
   symptoms: [],
   afterFindings: [],
-  recoveryMinutes: null,
   recoveryOngoing: false,
   triggerCodes: [],
   notes: '',
@@ -55,6 +54,10 @@ const base = (patientId: string, over: Record<string, unknown> = {}) => ({
   isEmergencyStop: false,
   recordedBy: 'carer' as const,
   eegSessionId: null,
+  prodromeSecondsBefore: null,
+  quickNotes: [],
+  recordedWhileLocked: false,
+  cancelled: false,
   ...over,
 });
 
@@ -63,7 +66,15 @@ async function seed(ctx: Ctx, seizure: Record<string, unknown> | null = {}) {
   const patientId = newId();
   await ctx.api.createRecord({
     type: 'patient',
-    values: { id: patientId, patientId, name: 'Alex', dateOfBirth: null, emergencyContact: '', color: '#336699' },
+    values: {
+      id: patientId,
+      patientId,
+      name: 'Alex',
+      dateOfBirth: null,
+      emergencyContact: '',
+      emergencyPhone: '',
+      color: '#336699',
+    },
   });
   let id: string | null = null;
   if (seizure)
@@ -151,8 +162,6 @@ describe('the editor, tab by tab', () => {
     expect(saved.profile ?? null).toBeNull();
     expect(saved).toMatchObject({
       status: 'complete',
-      typeCode: null,
-      ilae: null,
       ilae2025: {
         class: 'generalized',
         recall: null,
@@ -232,26 +241,11 @@ describe('the editor, tab by tab', () => {
     expect((await get(ctx, id!)).profile).toEqual({ id: kept[0]!.id, name: 'Big seizure' });
   });
 
-  it('shows an older seizure’s type and ILAE 2017 answers as recorded, and never changes them', async () => {
+  it('a seizure that is aura-like by its ILAE 2025 answers has no Seizure section on its timeline', async () => {
     const ctx = setup();
-    const ilae = { onset: 'focal', awareness: 'aware', motor: null, feature: null, spreadToBothSides: null };
-    const { id } = await seed(ctx, { typeCode: 'seizure_type.focal_aware', ilae });
-    const user = await openEditor(ctx);
-    expect(screen.getByText('Recorded before ILAE 2025 as: Focal Aware')).toBeTruthy();
-    expect(screen.getByText('ILAE 2017 answers: Focal onset, Aware')).toBeTruthy();
-    await answer(user, START, 'Focal');
-    await user.click(screen.getByRole('button', { name: 'Save' }));
-    await screen.findByRole('button', { name: 'Start timer' });
-    expect(await get(ctx, id!)).toMatchObject({
-      typeCode: 'seizure_type.focal_aware',
-      ilae,
-      ilae2025: { ...NO_ANSWERS, class: 'focal' },
+    await seed(ctx, {
+      ilae2025: { ...NO_ANSWERS, class: 'focal', recall: 'yes', responsive: 'yes', observable: 'no' },
     });
-  });
-
-  it('an older seizure recorded as aura only has no Seizure section on its timeline', async () => {
-    const ctx = setup();
-    await seed(ctx, { typeCode: 'seizure_type.aura_only' });
     const user = await openEditor(ctx);
     await user.click(tab('Timeline'));
     expect(screen.queryByRole('listitem', { name: 'Seizure' })).toBeNull();
@@ -350,7 +344,6 @@ describe('the editor, tab by tab', () => {
     const saved = await get(ctx, id!);
     expect(saved.triggerCodes).toHaveLength(1);
     expect(saved.afterFindings).toEqual([{ code: 'after.custom', customLabel: 'Wanted to sleep', areas: [] }]);
-    expect(saved.recoveryMinutes).toBe(20);
     expect(saved.phases.recoveryEnd!.at - saved.phases.seizureEnd!.at).toBe(20 * 60_000);
   });
 
@@ -375,6 +368,7 @@ describe('the editor, tab by tab', () => {
         order: 1,
         sincePrevious: { kind: 'exact', ms: 12_345 },
         isFirst: false,
+        phase: 'seizure',
       },
     ];
     const { id } = await seed(ctx, { symptoms });
@@ -384,7 +378,7 @@ describe('the editor, tab by tab', () => {
     await user.click(screen.getByRole('button', { name: 'Save' }));
     await screen.findByRole('button', { name: 'Start timer' });
     const saved = await get(ctx, id!);
-    expect(saved.symptoms).toEqual(symptoms); // not one value changed, not even the phase that was never set
+    expect(saved.symptoms).toEqual(symptoms); // not one value changed
     expect(saved.notes).toBe('Slept after');
   });
 

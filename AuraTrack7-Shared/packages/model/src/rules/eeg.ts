@@ -1,3 +1,4 @@
+import type { AutoFields } from '../schemas/common';
 import type { EegActivity, EegSession, Seizure } from '../schemas';
 import { seizureLengthSeconds } from './emergency';
 
@@ -27,7 +28,7 @@ export const activeSession = (sessions: readonly EegSession[], patientId: string
 export const runningActivity = (activities: readonly EegActivity[], sessionId: string): EegActivity | null =>
   activities.find((a) => a.sessionId === sessionId && a.kind === 'activity' && a.endTime === null) ?? null;
 
-export type ActivityValues = Omit<EegActivity, 'id' | 'householdId' | 'deviceId' | 'createdAt'>;
+export type ActivityValues = Omit<EegActivity, AutoFields>;
 
 export interface EegLink {
   seizureId: string;
@@ -35,12 +36,11 @@ export interface EegLink {
   /** The reference to add to the diary. */
   reference: ActivityValues;
 }
-/** A reference whose seizure has since ended or got a type: the diary entry catches up. */
+/** A reference whose seizure has since ended or changed length: the diary entry catches up. */
 export interface EegRefresh {
   activityId: string;
   endTime: number | null;
   durationSec: number | null;
-  activityCode: string | null;
 }
 export interface EegStop {
   activityId: string;
@@ -67,15 +67,12 @@ export function planEegLinks(input: {
     if (reference) {
       const endTime = seizure.phases.seizureEnd?.at ?? null;
       const durationSec = seizureLengthSeconds(seizure.phases);
-      if (
-        reference.endTime !== endTime ||
-        reference.durationSec !== durationSec ||
-        reference.activityCode !== seizure.typeCode
-      )
-        refreshes.push({ activityId: reference.id, endTime, durationSec, activityCode: seizure.typeCode });
+      // The kind of seizure is not copied: the diary names it from the seizure itself (profile or ILAE 2025)
+      if (reference.endTime !== endTime || reference.durationSec !== durationSec)
+        refreshes.push({ activityId: reference.id, endTime, durationSec });
       continue;
     }
-    if (seizure.eegSessionId !== null || seizure.cancelled === true) continue;
+    if (seizure.eegSessionId !== null || seizure.cancelled) continue;
     const at = seizure.phases.start.at;
     const session = input.sessions.find(
       (s) =>
@@ -92,7 +89,7 @@ export function planEegLinks(input: {
         patientId: seizure.patientId,
         sessionId: session.id,
         kind: 'seizure_reference',
-        activityCode: seizure.typeCode,
+        activityCode: null,
         customText: '',
         moodCode: null,
         notes: '',

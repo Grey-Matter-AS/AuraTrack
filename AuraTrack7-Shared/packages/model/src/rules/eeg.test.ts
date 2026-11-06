@@ -10,6 +10,7 @@ const session = (over: Partial<EegSession> = {}): EegSession => ({
   householdId: 'h',
   deviceId: 'd',
   createdAt: 0,
+  dataVersion: 2,
   patientId: 'p1',
   startTime: T,
   plannedEndTime: null,
@@ -26,6 +27,7 @@ const activity = (over: Partial<EegActivity> = {}): EegActivity => ({
   householdId: 'h',
   deviceId: 'd',
   createdAt: 0,
+  dataVersion: 2,
   patientId: 'p1',
   sessionId: 's1',
   kind: 'activity',
@@ -51,7 +53,10 @@ const seizure = (id: string, start: number, over: Partial<Seizure> = {}): Seizur
     patientId: 'p1',
     phases: phases(start, 60),
     eegSessionId: null,
-    typeCode: 'seizure_type.focal_aware',
+    prodromeSecondsBefore: null,
+    quickNotes: [],
+    recordedWhileLocked: false,
+    cancelled: false,
   }),
   ...over,
 });
@@ -84,7 +89,7 @@ describe('finding the running session and activity', () => {
 describe('tying seizures to a session', () => {
   const base = { sessions: [session()], activities: [] as EegActivity[], now: T + 10 * H };
 
-  it('adds a reference for a seizure that began during the session, with its type and length', () => {
+  it('adds a reference for a seizure that began during the session, with its length (the diary names it from the seizure)', () => {
     const { links } = planEegLinks({ ...base, seizures: [seizure('z1', T + 2 * H)] });
     expect(links).toHaveLength(1);
     expect(links[0]).toMatchObject({
@@ -93,7 +98,7 @@ describe('tying seizures to a session', () => {
       reference: {
         kind: 'seizure_reference',
         linkedSeizureId: 'z1',
-        activityCode: 'seizure_type.focal_aware',
+        activityCode: null,
         durationSec: 60,
         startTime: T + 2 * H,
       },
@@ -123,7 +128,7 @@ describe('tying seizures to a session', () => {
       id: 'r',
       kind: 'seizure_reference',
       linkedSeizureId: 'z1',
-      activityCode: 'seizure_type.focal_aware',
+      activityCode: null,
       endTime: T + 2 * H + 60_000,
       durationSec: 60,
     });
@@ -132,7 +137,7 @@ describe('tying seizures to a session', () => {
     expect(out.refreshes).toEqual([]);
   });
 
-  it('brings a reference up to date when its seizure has ended or been given a type', () => {
+  it('brings a reference up to date when its seizure has ended', () => {
     const ref = activity({
       id: 'r',
       kind: 'seizure_reference',
@@ -142,9 +147,7 @@ describe('tying seizures to a session', () => {
       durationSec: null,
     });
     const out = planEegLinks({ ...base, activities: [ref], seizures: [seizure('z1', T + 2 * H)] });
-    expect(out.refreshes).toEqual([
-      { activityId: 'r', endTime: T + 2 * H + 60_000, durationSec: 60, activityCode: 'seizure_type.focal_aware' },
-    ]);
+    expect(out.refreshes).toEqual([{ activityId: 'r', endTime: T + 2 * H + 60_000, durationSec: 60 }]);
   });
 
   it('stops the activity that was running when the seizure began, at that moment', () => {

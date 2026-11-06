@@ -1,6 +1,7 @@
 import { codesForLabel } from '@auratrack/i18n';
 import {
   CSV_LIST,
+  DATA_VERSION,
   ILAE_2025_GENERALIZED,
   ilae2025ForSaving,
   CSV_SECTIONS,
@@ -24,7 +25,7 @@ import {
   type Regimen,
   type SymptomEntry,
 } from '@auratrack/model';
-import { derivedId } from './import6x/ids';
+import { derivedId } from './derivedId';
 
 const ANSWERS = ['yes', 'no', 'unknown'] as const;
 import type { JsonValue } from './merge';
@@ -34,7 +35,7 @@ import type { ImportDraft, Store, StoredType } from './store';
 // file edited in a spreadsheet. It is checked first and nothing is written until the person says so. Nothing is guessed:
 // a value that cannot be read exactly is a problem with its line and reason, and the row is left out. Records already in
 // the app are never changed: a row whose id is there, or that has the same time as one that is, is counted as already there.
-// Every imported record keeps its CSV row (in `legacy`), and the same file imported twice adds nothing the second time.
+// Every imported record keeps its CSV row (in `importedFrom`), and the same file imported twice adds nothing the second time.
 
 export type CsvDateOrder = 'dmy' | 'mdy' | 'ymd';
 
@@ -330,9 +331,9 @@ class Row {
 
 // ---- codes
 
-type Kind = 'seizureType' | 'symptom' | 'trigger' | 'finding' | 'mood' | 'activity' | 'factor' | 'body';
+type Kind = 'form' | 'symptom' | 'trigger' | 'finding' | 'mood' | 'activity' | 'factor' | 'body';
 const PREFIX: Record<Kind, string> = {
-  seizureType: 'seizure_type.',
+  form: 'form.',
   symptom: 'symptom.',
   trigger: 'trigger.',
   finding: 'after.',
@@ -458,14 +459,14 @@ export async function planCsvImport(
     if (report.examples.filter((e) => e.section === section).length < 3)
       report.examples.push({ section, line, read: shown(at) });
   };
-  const base = (id: string) => ({ id, householdId, patientId, deviceId, createdAt: now });
+  const base = (id: string) => ({ id, householdId, patientId, deviceId, createdAt: now, dataVersion: DATA_VERSION });
   /** The id a row asks for (kept when it is a valid id), or one made from what identifies it, so a repeat is the same. */
   const idFor = async (row: Row, type: string, ...key: string[]) => {
     const own = row.text('id').trim();
     return UUID.test(own) ? own.toLowerCase() : derivedId(householdId, 'csv', type, patientId, ...key);
   };
   const emit = async (section: CsvSection, row: Row, type: StoredType, values: Record<string, unknown>) => {
-    const fields = { ...values, legacy: { csv: row.values } } as unknown as Record<string, JsonValue>;
+    const fields = { ...values, importedFrom: { csv: row.values } } as unknown as Record<string, JsonValue>;
     const checked = (
       RECORD_SCHEMAS[type] as {
         safeParse(v: unknown): { success: boolean; error?: { issues: { path: PropertyKey[]; message: string }[] } };
@@ -514,21 +515,29 @@ export async function planCsvImport(
     let auraEnd = row.stamp('auraEnd');
     let seizureEnd = row.stamp('seizureEnd');
     let recoveryEnd = row.stamp('recoveryEnd');
-    const seizureSec = row.whole('seizureSeconds');
-    const totalSec = row.whole('totalSeconds');
-    if (seizureEnd === null && seizureSec !== null) seizureEnd = (auraEnd ?? start) + seizureSec * 1000;
-    if (recoveryEnd === null && totalSec !== null && seizureEnd !== null && totalSec * 1000 > seizureEnd - start)
-      recoveryEnd = start + totalSec * 1000;
-    if (seizureEnd === null && totalSec !== null) seizureEnd = start + totalSec * 1000; // only the total: all of it the seizure
+    // The seizure length counts from the start, aura included; the recovery follows the end of the seizure
+    const lengthSec = row.whole('lengthSeconds');
+    const recoverySec = row.whole('recoverySeconds');
+    if (seizureEnd === null && lengthSec !== null) seizureEnd = start + lengthSec * 1000;
+    if (recoveryEnd === null && recoverySec !== null) {
+      const end =
+        seizureEnd ?? fail('recoverySeconds: the end of the seizure is needed first (seizureEnd or lengthSeconds)');
+      recoveryEnd = end + recoverySec * 1000;
+    }
     const marks = [start, auraEnd, seizureEnd, recoveryEnd].filter((x): x is number => x !== null);
     if (marks.some((at, i) => i > 0 && at < (marks[i - 1] as number)))
-      fail('the times are not in order: start, end of aura, end of seizure, back to normal');
+      fail('the times are not in order: start, end of aura, end of seizure, back to usual self');
     if (auraEnd === start) auraEnd = null;
     const status = row.oneOf('status', ['recorded', 'complete', 'in_progress'] as const, 'recorded');
     if (status === 'in_progress') fail('status: an unfinished recording cannot be brought in');
     const symptoms: SymptomEntry[] = [];
     const tokens = row.has('symptomCodes')
-      ? row.list('symptomCodes').map((t) => parseSymptomToken(t))
+      ? row.list('symptomCodes').map((t) => {
+          const parsed = parseSymptomToken(t);
+          return parsed.badPhase === undefined
+            ? parsed
+            : fail(`symptomCodes: "${parsed.badPhase}" is not a phase (prodrome, aura, seizure or recovery)`);
+        })
       : row
           .list('symptoms')
           .map((name) =>
@@ -545,7 +554,8 @@ export async function planCsvImport(
         order: i,
         sincePrevious: { kind: 'unknown', ms: null },
         isFirst: i === 0,
-        ...(t.phase ? { phase: t.phase } : {}),
+        // A symptom given without its phase belongs to the seizure, as in the editor
+        phase: t.phase ?? 'seizure',
       });
     const triggers = row.has('triggerCodes')
       ? row.list('triggerCodes').map((c) => codes.code(c, 'trigger', 'triggerCodes'))
@@ -574,8 +584,6 @@ export async function planCsvImport(
         recoveryEnd: mark(recoveryEnd),
       },
       status,
-      typeCode: codes.either(row, 'typeCode', 'type', 'seizureType'),
-      ilae: null,
       // The ILAE 2025 answers come back; the profile does not (a spreadsheet cannot say which profile record it was)
       ilae2025: ilae2025ForSaving({
         class: row.choice('ilae2025Start', ['focal', 'generalized', 'unknown']),
@@ -588,7 +596,6 @@ export async function planCsvImport(
       symptoms,
       afterFindings: findings,
       prodromeSecondsBefore: row.whole('warningSecondsBefore', 0, 7 * 24 * 3600),
-      recoveryMinutes: row.whole('recoveryMinutes'),
       recoveryOngoing: false,
       triggerCodes: triggers,
       notes: row.text('notes'),
@@ -597,6 +604,11 @@ export async function planCsvImport(
       isEmergencyStop: row.bool('autoStopped', false),
       recordedBy: row.oneOf('recordedBy', ['carer', 'self'] as const, 'carer'),
       eegSessionId: null,
+      // A spreadsheet cannot say which profile record it was; the profile's name is in the file for reading only
+      profile: null,
+      quickNotes: [],
+      recordedWhileLocked: row.bool('recordedWhileLocked', false),
+      cancelled: false,
     });
     existing.seizureMinutes.add(minute(start));
     existing.seizures.add(id);
@@ -636,10 +648,22 @@ export async function planCsvImport(
           return [`${pad(c.h)}:${pad(c.mi)}`, n];
         }),
       );
+    const slotUnits = () => {
+      const pairs = row.list('slotUnits').map((pair) => {
+        const at = pair.indexOf('=');
+        const c = readClock(at < 0 ? pair : pair.slice(0, at), 'slotUnits');
+        const unit = at < 0 ? '' : pair.slice(at + 1).trim();
+        if (!unit || unit.length > 20) fail(`slotUnits: "${pair}" is not a time=unit pair`);
+        return [`${pad(c.h)}:${pad(c.mi)}`, unit] as const;
+      });
+      return Object.fromEntries(pairs);
+    };
+    const units = keep('slotUnits', 'slotUnits', slotUnits);
     return {
       name: keep('name', 'name', () => row.text('name', 120).trim()),
       activeIngredient: keep('activeIngredient', 'activeIngredient', () => row.text('activeIngredient', 120)),
-      form: keep('form', 'form', () => row.text('form', 120)),
+      form:
+        row.has('formCode') || row.has('form') || !before ? codes.either(row, 'formCode', 'form', 'form') : before.form,
       dose: keep('dose', 'dose', () => row.number('dose')),
       unit: keep('unit', 'unit', () => row.text('unit', 20)),
       frequency: keep('frequency', 'frequency', () => row.oneOf('frequency', FrequencySchema.options)),
@@ -655,6 +679,7 @@ export async function planCsvImport(
           .map((d) => (/^[0-6]$/.test(d) ? Number(d) : fail(`scheduledDays: "${d}" is not 0 to 6`))),
       ),
       slotDoses: keep('slotDoses', 'slotDoses', slotDoses),
+      slotUnits: units,
     };
   };
   const PROBLEM_WORDS: Record<string, string> = {
@@ -779,7 +804,7 @@ export async function planCsvImport(
           ...base(changeId),
           ...plan.change,
           medicationId: id,
-          legacy: { csv: (step.row ?? row).values },
+          importedFrom: { csv: (step.row ?? row).values },
         } as unknown as Record<string, JsonValue>,
       });
     }
@@ -920,7 +945,8 @@ export async function planCsvImport(
       ...base(id),
       sessionId,
       kind,
-      activityCode: codes.either(row, 'activityCode', 'activity', kind === 'activity' ? 'activity' : 'seizureType'),
+      // A seizure reference names its seizure through linkedSeizureId; only activities have a code
+      activityCode: kind === 'activity' ? codes.either(row, 'activityCode', 'activity', 'activity') : null,
       customText: row.text('customText', 120),
       moodCode: codes.either(row, 'moodCode', 'mood', 'mood'),
       notes: row.text('notes'),

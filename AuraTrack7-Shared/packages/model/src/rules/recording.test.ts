@@ -339,6 +339,7 @@ describe('the saved seizure', () => {
       householdId: newId(),
       deviceId: newId(),
       createdAt: T0,
+      dataVersion: 2,
     });
     expect(parsed.success).toBe(true);
     expect(values.status).toBe('in_progress');
@@ -398,7 +399,7 @@ describe('the saved seizure', () => {
     expect(sessionFromSeizure(seizureFixture({ status: 'recorded' }))).toBeNull();
   });
 
-  it('falls back to "seizure" for a saved symptom with no phase, and to zero for an unknown gap', () => {
+  it("keeps a saved symptom's phase, and counts an unknown gap as zero", () => {
     const saved = seizureFixture({
       status: 'in_progress',
       symptoms: [
@@ -410,10 +411,11 @@ describe('the saved seizure', () => {
           order: 0,
           sincePrevious: { kind: 'unknown', ms: null },
           isFirst: true,
+          phase: 'aura',
         },
       ],
     });
-    expect(sessionFromSeizure(saved)?.symptoms[0]).toMatchObject({ phase: 'seizure', at: saved.phases.start.at });
+    expect(sessionFromSeizure(saved)?.symptoms[0]).toMatchObject({ phase: 'aura', at: saved.phases.start.at });
   });
 });
 
@@ -535,6 +537,7 @@ describe('properties', () => {
           householdId: newId(),
           deviceId: newId(),
           createdAt: T0,
+          dataVersion: 2,
         });
         expect(parsed.success).toBe(true);
       }),
@@ -592,8 +595,14 @@ describe('logging a past seizure', () => {
   it('lays the phases out in order: aura, seizure, then recovery after it; every mark entered later', () => {
     const values = pastSeizureValues({ ...input, auraSec: 20, recoverySec: 120 });
     expect(
-      SeizureSchema.safeParse({ ...values, id: newId(), householdId: newId(), deviceId: newId(), createdAt: T0 })
-        .success,
+      SeizureSchema.safeParse({
+        ...values,
+        id: newId(),
+        householdId: newId(),
+        deviceId: newId(),
+        createdAt: T0,
+        dataVersion: 2,
+      }).success,
     ).toBe(true);
     expect(values).toMatchObject({
       isManualEntry: true,
@@ -613,7 +622,7 @@ describe('logging a past seizure', () => {
   it('with only the seizure given, there is no aura and no recovery', () => {
     const values = pastSeizureValues(input);
     expect(values.phases).toMatchObject({ auraEnd: { at: T0 }, seizureEnd: { at: T0 + 160 * S }, recoveryEnd: null });
-    expect(values.prodromeSecondsBefore).toBeUndefined();
+    expect(values.prodromeSecondsBefore).toBeNull();
   });
 
   it('keeps the warning signs beforehand, up to a week', () => {

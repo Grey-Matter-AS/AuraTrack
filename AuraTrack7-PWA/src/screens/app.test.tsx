@@ -240,7 +240,7 @@ describe('recording', () => {
             order: 0,
             sincePrevious: { kind: 'unknown', ms: null },
             isFirst: true,
-            phase: 'during',
+            phase: 'seizure',
           },
         ],
       },
@@ -522,7 +522,15 @@ describe('cancelled recordings and settings', () => {
     const second = newId();
     await ctx.client.createRecord({
       type: 'patient',
-      values: { id: second, patientId: second, name: 'Bo', dateOfBirth: null, emergencyContact: '', color: '#000' },
+      values: {
+        id: second,
+        patientId: second,
+        name: 'Bo',
+        dateOfBirth: null,
+        emergencyContact: '',
+        emergencyPhone: '',
+        color: '#000',
+      },
     });
     const user = userEvent.setup();
     ctx.mount();
@@ -542,11 +550,10 @@ function baseSeizure(patientId: string) {
       recoveryEnd: null,
     },
     status: 'recorded' as const,
-    typeCode: null,
-    ilae: null,
+    ilae2025: null,
+    profile: null,
     symptoms: [],
     afterFindings: [],
-    recoveryMinutes: null,
     recoveryOngoing: false,
     triggerCodes: [],
     notes: '',
@@ -555,6 +562,10 @@ function baseSeizure(patientId: string) {
     isEmergencyStop: false,
     recordedBy: 'carer' as const,
     eegSessionId: null,
+    prodromeSecondsBefore: null,
+    quickNotes: [],
+    recordedWhileLocked: false,
+    cancelled: false,
   };
 }
 
@@ -570,6 +581,7 @@ async function seed(ctx: Ctx, opts: { contact?: string; rescue?: string }) {
       name: 'Alex',
       dateOfBirth: null,
       emergencyContact: opts.contact ?? '',
+      emergencyPhone: '',
       color: '#336699',
     },
   });

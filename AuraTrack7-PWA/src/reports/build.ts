@@ -76,7 +76,7 @@ export function useReportMaker(): (request: ReportRequest) => MadeReport | null 
         const input = {
             patient,
             carerName: settings.carerIsContact ? patient.emergencyContact : settings.carerName,
-            carerPhone: settings.carerIsContact ? (patient.emergencyPhone ?? '') : settings.carerPhone,
+            carerPhone: settings.carerIsContact ? patient.emergencyPhone : settings.carerPhone,
             recordedBy: settings.recordedBy,
             neurologist: { name: settings.neurologistName, institution: settings.neurologistInstitution, contact: settings.neurologistContact },
             includeDateOfBirth: settings.reportIncludeDateOfBirth,
@@ -114,7 +114,7 @@ export function useReportMaker(): (request: ReportRequest) => MadeReport | null 
       }
       if (request.kind === 'eeg') {
         const session = eegSessions.find((s) => s.id === request.sessionId) ?? null;
-        const model = buildEegDiary({ session, activities: eegActivities.filter((a) => a.sessionId === session?.id) }, ctx);
+        const model = buildEegDiary({ session, activities: eegActivities.filter((a) => a.sessionId === session?.id), seizures }, ctx);
         return { type: 'pdf', landscape: false, fileName: `${FILE_NAMES.eeg}-${stamp}.pdf`, job: { kind: 'eeg', language, model } };
       }
       const text = buildCsv({

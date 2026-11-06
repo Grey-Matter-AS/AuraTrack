@@ -7,7 +7,7 @@
 2. **The plain-language seizure type row goes.** In its place the patient's own **seizure profiles**: up to 12 per patient (the first 3 in the row, the rest under "More"), each a name, its ILAE 2025 answers and, optionally, its usual signs in order. One tap fills in the classification and the usual signs; anything can be changed for this seizure.
 3. **"Something different"** sits beside the profiles and opens the ILAE questions directly. After saving, the app offers to keep the answers as a profile.
 4. **A seizure keeps a snapshot**: the profile's id and name as they were, and its own ILAE 2025 answers. Editing or removing a profile later never changes past seizures.
-5. **Old records are not converted.** A seizure saved with a type code and ILAE 2017 answers keeps them and shows them as recorded ("ILAE 2017"). 2025 answers can be added to it by hand.
+5. ~~Old records are not converted; they keep their type and ILAE 2017 answers.~~ **Superseded by D-18 (2026-11-06):** ILAE 2017 and the plain-language type are removed everywhere; ILAE 2025 is the only classification.
 
 ## The ILAE 2025 questions (basic version)
 The paper advises asking about recall and responsiveness rather than "consciousness"; the questions follow that.

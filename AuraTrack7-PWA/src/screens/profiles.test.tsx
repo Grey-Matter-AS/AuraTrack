@@ -90,7 +90,6 @@ describe('seizure profiles', () => {
     const seizure = (await ctx.api.createRecord({
       type: 'seizure',
       values: makeSeizure(patientId, 60, 90, {
-        typeCode: null,
         profile: { id: first.id, name: 'Usual seizure' },
         ilae2025: first.ilae,
       }),
@@ -124,7 +123,7 @@ describe('seizure profiles', () => {
     const p = await profile(ctx, patientId, 'Usual seizure', 0, { ilae: { ...NO_ANSWERS, class: 'unknown' } });
     const seizure = (await ctx.api.createRecord({
       type: 'seizure',
-      values: makeSeizure(patientId, 60, 90, { typeCode: null, profile: { id: p.id, name: p.name }, ilae2025: p.ilae }),
+      values: makeSeizure(patientId, 60, 90, { profile: { id: p.id, name: p.name }, ilae2025: p.ilae }),
     })) as unknown as Seizure;
     const user = await openProfiles(ctx);
     await user.click(screen.getByRole('button', { name: 'Remove profile' }));
@@ -144,5 +143,15 @@ describe('seizure profiles', () => {
     await openProfiles(ctx);
     expect(screen.queryByRole('button', { name: 'Add a profile' })).toBeNull();
     expect(screen.getByText('There are already 12 profiles, the most there can be.')).toBeTruthy();
+  });
+
+  it('keeps and shows every profile when a sync brings more than twelve, and says so', async () => {
+    const ctx = setup();
+    const { patientId } = await seed(ctx);
+    for (let i = 0; i < 14; i++) await profile(ctx, patientId, `Kind ${i + 1}`, i);
+    await openProfiles(ctx);
+    expect(screen.getByText('Kind 14')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Add a profile' })).toBeNull();
+    expect(screen.getByText(/^There are 14 profiles, more than the 12 there can be/)).toBeTruthy();
   });
 });

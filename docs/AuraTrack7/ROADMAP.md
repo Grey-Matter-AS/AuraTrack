@@ -62,7 +62,8 @@ Root scripts (`pnpm dev`, `build`, `test`, `lint`, `typecheck`) keep working ove
 ## A4. Data and migration
 - **Main way in:** the encrypted **v7 backup file** from the PWA (lossless), followed by a comparison report.
 - **Also:** CSV import in the v7 format (for spreadsheets; lossy by nature).
-- 6.1 users go through the PWA first. No 6.1 importer in the native apps.
+- No 6.1 importer anywhere (removed from the PWA too, D-18): 6.1 data is not carried over.
+- **Only the current format is read** (the 7.2 backup and CSV): no legacy paths, aliases or guesses (D-18).
 - No Argon2id natively (keys sit in hardware). v7 backups stay PBKDF2-SHA256 (600,000 rounds) + AES-GCM, so any backup opens on any platform.
 
 ## A5. Household, hub, alerts
@@ -95,6 +96,15 @@ Root scripts (`pnpm dev`, `build`, `test`, `lint`, `typecheck`) keep working ove
 - Medical data integrity first; codes, not English text, in stored data; 9 languages; careful, neutral wording.
 - A feature isn't done until its unit, UI and audit tests pass on both platforms and the shared vectors pass.
 - Full device-matrix audits only when you ask (as now); targeted audits otherwise.
+- **The PWA is the reference while it still changes.** Any change to it is carried into `parity.md` (and `docs/plan/feature-checklist.md`) in the same session.
+
+## A9. Compatibility and platform-only features (binding; D-18, D-19, D-20)
+- **No compatibility with versions before 7.2**, in the PWA or natively (D-18). Superseded items are removed, not kept: ILAE 2025 is the only classification (no ILAE 2017, no plain-language type); no 6.1 importer; every record has one shape (no fields that may be missing because old records lacked them); medicine forms are codes.
+- **Forward compatibility always:** every record carries `dataVersion` (2 since 7.2). A record of an unknown type or with a value this version does not know is kept, synced, backed up and counted on Home ("Records this device cannot show yet"), never dropped or edited away. A record **without** a data version is from before 7.2 and is deleted at load, with a notice on Home (D-18). From 7.2 on, a model change converts the records it changes. Same rules in Swift, Kotlin and TypeScript, with vectors.
+- **The cluster rule counts inside one window** (default 3 seizures within 8 minutes of each other, first to last) (D-19).
+- **Every platform-only extra states what it needs and what happens without it** (`extras.md`); safety never depends on an extra; missing permissions the alert relies on are shown in Set-up and in the recording settings (D-20).
+- **Data from a platform-only feature gets a shared code in the spec before it is built**, so the other platform, the PWA and older versions can show or count it (e.g. start source `detected`).
+- **Audits run on the oldest and the newest supported OS**, not only every screen size.
 
 ---
 
@@ -102,7 +112,7 @@ Root scripts (`pnpm dev`, `build`, `test`, `lint`, `typecheck`) keep working ove
 
 ## B1. Accounts (order matters: some take weeks)
 1. **D-U-N-S number** for Grey-Matter AS (free; needed for an Apple organisation account; can take 1–2 weeks).
-2. **Apple Developer Program**, organisation enrolment ($99/yr). Then in App Store Connect: app record, bundle ids (`no.greymatter.auratrack7` or your choice, plus watch, widget, notification service and push extension ids), **App Store Connect API key** for CI.
+2. **Apple Developer Program**, organisation enrolment ($99/yr). Then in App Store Connect: app record, bundle ids (`eu.greymatter.auratrack7`, approved 2026-11-06, plus watch, widget, notification service and push extension ids), **App Store Connect API key** for CI.
 3. **Apple entitlement requests** (start early, approval takes time):
    - Critical Alerts (`com.apple.developer.usernotifications.critical-alerts`)
    - Local Push Connectivity (`com.apple.developer.networking.networkextension` app-push-provider)
@@ -124,7 +134,7 @@ Root scripts (`pnpm dev`, `build`, `test`, `lint`, `typecheck`) keep working ove
 - **WSL:** JDK 21, Android command-line tools and SDK (for Gradle builds and unit tests from Claude Code), the existing Node toolchain.
 
 ## B4. Preparation decisions to confirm in N0 (small)
-- Bundle and package ids (proposed `no.greymatter.auratrack7` and its extensions); display name **AuraTrack7**; version scheme (the same version on both platforms for the same feature set; whether the first store release is 1.0 or continues 7.x is settled in N0).
+- Bundle and package ids: `eu.greymatter.auratrack7` and its extensions (approved 2026-11-06; no hyphen, as Android ids can't hold one); display name **AuraTrack7**; version scheme (the same version on both platforms for the same feature set; whether the first store release is 1.0 or continues 7.x is settled in N0).
 - Who receives security reports (`SECURITY.md` contact address).
 
 ---
@@ -137,7 +147,7 @@ Sizes: S (days), M (1–2 weeks), L (2–4 weeks), XL (more). Each milestone get
 
 ### N0 · The move to six folders, then accounts, machines, decisions (M)
 - **First, Part A: the move to the six folders (A2).** `git mv` everything so history is kept; update paths in `pnpm-workspace.yaml`, tsconfig files, Vitest, Playwright, Stryker, ESLint, the Dockerfile, every CI workflow (incl. `hub-release.yml`, `mutation.yml`), scripts, `vercel.json`, `CLAUDE.md` and the docs. All checks green before and after; the PWA runs on Vercel from the new layout (preview first, then production) and you've committed, before Part B starts.
-- **Then, Part B:** B1–B4 above; I write checklists and verify the toolchains on both machines (a "hello" SwiftUI app and Compose app built and tested locally and in CI).
+- **Then, Part B:** B1–B4 above; I write checklists and verify the toolchains on both machines (a "hello" SwiftUI app and Compose app built and tested locally and in CI). Every permission and entitlement in `extras.md` is checked against Apple's and Google's current documentation, and the ⚠ rows are settled or dropped (D-20).
 - **Done when:** the PWA runs on Vercel from the six folders; both toolchains build an empty app on device; CI runs macOS and Android jobs green; the entitlement requests are sent.
 
 ### N1 · Governance and rules (M)
@@ -149,15 +159,15 @@ Sizes: S (days), M (1–2 weeks), L (2–4 weeks), XL (more). Each milestone get
 
 ### N2 · Specification and test vectors (L, WSL)
 The contract. Written from the TS reference, generated vectors checked by the TS tests themselves.
-- `AuraTrack7-Shared/spec/data-model.md`: every record type (from `packages/model/src/schemas/`), canonical JSON, ids, HLC.
+- `AuraTrack7-Shared/spec/data-model.md`: every record type (from `packages/model/src/schemas/`), canonical JSON, ids, HLC, `dataVersion`; the forward-compatibility rule (unknown types and values kept, synced, backed up and counted) and the purge of records without a data version (D-18); only the 7.2 shapes.
 - `AuraTrack7-Shared/spec/codes.md` + `AuraTrack7-Shared/spec/vectors/catalogue.json`: the codes catalogue.
 - `AuraTrack7-Shared/spec/crypto.md`: per-record AES-GCM with AAD, device key, the v7 backup format, recovery kit, dropbox (locked start), sealing for sync.
 - `AuraTrack7-Shared/spec/merge.md`: field-level merge, dose rank, tombstones, change log.
 - `AuraTrack7-Shared/spec/rules.md` also: ILAE 2025 consciousness and type rules, seizure profiles and their snapshot (D-17, from the PWA's M8).
-- `AuraTrack7-Shared/spec/rules.md`: emergency plan (alert 5 min, cluster 3 in 8 min), 12-minute auto-stop, seizure time from phase marks, clusters, regimen history, scheduled/missed/assumed doses, local-date rules.
+- `AuraTrack7-Shared/spec/rules.md`: emergency plan (alert 5 min counted from Start; cluster 3 inside one 8-minute window, D-19), 12-minute auto-stop, the four phases (prodrome, aura, seizure, recovery), seizure length (start, aura included, to the end of the seizure; recovery never), the seizure phase as a breakdown only, regimen history with one dose and unit per time and daily totals, scheduled/missed/assumed doses, times to the second, local-date rules.
 - `AuraTrack7-Shared/spec/recording.md`: the recording reducer's events and states (`rules/recording.ts`).
 - `AuraTrack7-Shared/spec/sync.md`, `AuraTrack7-Shared/spec/hub-protocol.md`: pairing, membership, session protocol, hub `/v1` API.
-- `AuraTrack7-Shared/spec/csv.md`: the CSV format (`model/src/rules/csvFormat.ts`).
+- `AuraTrack7-Shared/spec/csv.md`: the CSV format (`model/src/rules/csvFormat.ts`), current columns only (`lengthSeconds`, `recoverySeconds`, `slotUnits`); anything it can't read is listed as a problem, never dropped.
 - `AuraTrack7-Shared/packages/vectors`: generator → `AuraTrack7-Shared/spec/vectors/*.json` (crypto, merge cases incl. property-test seeds, rules cases, recording event sequences, backup files, CSV files, report numbers).
 - `AuraTrack7-Shared/scripts/i18n-native`: String Catalog and `strings.xml` generation, checked in CI (placeholders, no empty strings, clinical wording kept).
 - **Done when:** every spec section has vectors; the TS reference passes them; you've read the spec summaries.
@@ -172,6 +182,7 @@ The contract. Written from the TS reference, generated vectors checked by the TS
   - XCUITest and Compose UI tests that open every screen across the matrix and check element frames (no overlap, nothing off screen, nothing clipped), plus `performAccessibilityAudit` (iOS) and the Accessibility Test Framework (Android): contrast, hit areas (44 pt / 48 dp), text clipping, labels.
   - Matrix: iPhone SE-size, 6.1", 6.9", landscape, iPad mini, 11", 13", Split View; Apple Watch 41/46/49 mm. Android 360 dp phone, 411 dp phone, large phone, foldable inner/outer, 10" tablet, landscape; Wear round small/large.
   - Text: iOS xSmall to AX5; Android font scale 0.85 to 2.0 and display size; dark and light; 9 languages plus a long pseudo-language.
+  - OS: the oldest and the newest supported (iOS 18 and current, with and without Liquid Glass; Android 12 and current, with edge-to-edge) (D-20).
   - A self-test with deliberately broken screens that the audit must catch (as on the web).
   - Lint rule: screens use platform components and the kit only.
 - **Done when:** a kitchen-sink screen per platform passes the full audit; screenshot baselines exist.
@@ -185,14 +196,16 @@ The contract. Written from the TS reference, generated vectors checked by the TS
 - App lock: PIN plus Face ID/Touch ID/fingerprint; lock after the time away you set, never during a recording; the OS limits attempts.
 - Backup exclusions, keyboards, app-switcher cover, screenshot setting (A3).
 - Backup file: write and read v7 backups (PBKDF2 + AES-GCM) byte-compatible with the PWA; restore by change-log replay.
-- **Done when:** crypto, merge and backup vectors pass on both; a PWA-made backup restores natively and a native backup restores in the PWA.
+- Unknown record types and values kept and counted (D-18), with vectors.
+- **Done when:** F-1001, F-1002, F-1004, F-1007 pass; crypto, merge, backup and forward-compatibility vectors pass on both; a PWA-made backup restores natively and a native backup restores in the PWA.
 
 ## Phase 2: Core parity (both platforms in parallel)
 
 ### N6 · Recording engine, Home and recording screens (L)
 - Port of the recording reducer; the seizure written at Start; every tap one write; crash recovery (`recover()`), including past-12-minute recordings.
 - At Start, the 5-minute alert, the one-minute warning and the 12-minute stop are **scheduled as local notifications** (time-sensitive; Critical when granted), so they fire with the app closed; cancelled on stop.
-- Screens: Set-up, Home (Start, Log past seizure, last 5 with badges, cancelled and locked-recording cards), Recording (carer phases or self Stop, timers, warning, red emergency screen with rescue medication and contact, 12-minute stop, quick notes, optional symptom strip, cluster warning at Start; **no other buttons**), Log past seizure, lost-recording question.
+- Set-up checks every permission the alert relies on (notifications; on Android exact alarms and full-screen alerts) and says plainly what is missing (D-20); iOS keeps the alert notifications first within its 64-notification limit (X-110).
+- Screens: Set-up, Home (three round buttons on one line: Start timer, Log past seizure, Log symptoms between seizures; last 5 with badges, cancelled and locked-recording cards, the "cannot show yet" card), Recording (carer phases or self Stop, timers, warning, red emergency screen with rescue medication and contact, 12-minute stop, quick notes, optional symptom strip, cluster warning at Start; **no other buttons**), Log past seizure (when, to the second; warning signs before, aura, seizure length required, recovery, all HH:MM:SS), lost-recording question.
 - Screen stays on (`isIdleTimerDisabled` / `keepScreenOn`), haptics, optional beep.
 - **Done when:** F-101–F-102, F-201–F-208, F-210–F-213, F-215, F-1005 pass on both; recording vectors pass; Start under 100 ms.
 
@@ -203,7 +216,7 @@ The contract. Written from the TS reference, generated vectors checked by the TS
 - **Done when:** F-1003 passes natively from every entry point; the dropbox merges at unlock with nothing lost (vectors).
 
 ### N8 · Seizure editor and logging (XL)
-- Classification (D-17: the patient's seizure profiles, up to 3, plus "Something different"; the ILAE 2025 questions; old type and ILAE 2017 answers shown as recorded), Before (warning time, triggers, symptoms), During, After (findings, areas, recovery), Notes; overview strip; vertical timeline (F-314, one component in editor, review, detail and PDF); body map (Apple Pencil on iPad); Review; edit history; discard flagged; "leave without saving?"; only changed fields saved.
+- As the PWA after M8 (`docs/plan/STATUS.md`, 2026-11-06): three tabs. **Classification** (D-17: "Start from a saved profile", up to 12 per patient, the first 3 in the row; "Something different"; the ILAE 2025 questions; a Profiles screen). **Timeline**: the whole seizure top to bottom, one tinted band per phase (Warning signs: how long before, triggers; Start; Aura: how long; Seizure: how long, and after a 12-minute stop "when did it end?"; Recovery: not back yet, how long, findings), symptom cards with "+ Add symptom" per band, delay cards between symptoms, saved sets above and below; warning signs drawn above Start and never the first sign. **Notes**. Review; edit history; discard flagged; "leave without saving?"; only changed fields saved; every length one HH:MM:SS box; body map (Apple Pencil on iPad).
 - Saved sets, own symptoms, quick-note labels, between-seizures log.
 - **Done when:** F-301–F-315 (editor parts), F-303, F-304, F-313 pass on both; the timeline audit passes at the largest text size.
 
@@ -219,9 +232,11 @@ The contract. Written from the TS reference, generated vectors checked by the TS
 ### N10 · History and graphical timelines (L)
 - Seizure list with filters kept; event detail with the timeline, danger flags, edit history; delete with tombstone; trend chart (Swift Charts / Compose Canvas); the History timeline over days and weeks; between-seizures entries.
 - iPad and tablet: list and detail side by side.
-- **Done when:** F-401–F-404, F-315, F-409 pass on both.
+- Trend chart and timeline as the PWA's (counts per bar, long seizures marked, average and upper limit, medicine-change markers, table view, shared period controls; same-day seizures in one circle).
+- **Done when:** F-103, F-401–F-404, F-315, F-409 pass on both.
 
 ### N11 · Medications and doses (L)
+- One dose and unit per scheduled time, "when needed" a single dose, a daily total table.
 - Add/change/stop medication with confirm sheets, rename reasons, change history, tracking start date, dose panel, extra dose, history grid, assumed (90 min, 31-day backfill) and missed doses.
 - **Reminders as real scheduled notifications** per patient (a big gain over the PWA), with actions "Taken" and "Snooze" (opening the app only when needed).
 - **Done when:** F-104, F-105, F-405, F-501–F-509 pass; dose-rule vectors pass.
@@ -229,7 +244,7 @@ The contract. Written from the TS reference, generated vectors checked by the TS
 ### N12 · Patients, settings, wellbeing, EEG diary, help (L)
 - Patients (add, rename, colour, remove, switcher, "Recording for"); every settings group (identity, appearance with the platform's own text size and theme, display, recording and emergency plan, clinician, data and backup, app lock); wellbeing module (off by default; check-in, factors, daily reminder, correlation view); EEG diary (sessions, activities, seizure references); Help, About, What's new; backup reminder.
 - Language: follows the system language per app (iOS per-app language, Android per-app locales), with the in-app choice of the 9.
-- **Done when:** F-106, F-107, F-110, F-111, F-406, F-407, F-551–F-554, F-581–F-583, F-585, F-601–F-607, F-901–F-906 pass.
+- **Done when:** F-106, F-107, F-110, F-111, F-214, F-406, F-407, F-551–F-554, F-581–F-583, F-585, F-601–F-607, F-901–F-906 pass.
 
 ### N13 · Video (M)
 - Recording during a seizure (AVFoundation / CameraX), front or back, overlay with start time and elapsed; linked to the seizure; stays on the recording device; file protection; never in the cloud backup.
@@ -238,19 +253,19 @@ The contract. Written from the TS reference, generated vectors checked by the TS
 ### N14 · Reports and export (XL)
 - Neurologist report, event log, monthly diary, EEG diary (PDFKit / `ImageRenderer` on Apple; `PdfDocument`/Canvas on Android), following `docs/plan/report-inventory.md` and the M5 additions; CSV export in the v7 format; preview; share sheet.
 - **Report-number vectors:** the same data gives the same numbers on all three platforms.
-- **Done when:** F-701–F-707 and F-408 pass; PDFs reviewed by you side by side with the PWA's.
+- **Done when:** F-701–F-707, F-584 and F-408 pass; PDFs reviewed by you side by side with the PWA's.
 
 ### N15 · Import, backup and the move from the PWA (M)
 - Restore from a PWA v7 backup file (Files app, share sheet, "Open in AuraTrack7"), with the comparison report; CSV import with the same checks as the PWA (`AuraTrack7-Shared/packages/store/src/importCsv.ts`: problems listed, nothing written until confirmed, duplicates skipped); backup creation and reminders.
 - In the PWA (a small change, allowed while paused): a "Moving to the app" guide that makes the backup and explains the steps.
-- **Done when:** F-801, F-802, F-805 pass; your own PWA data moves to both platforms with a matching comparison report.
+- **Done when:** F-801, F-802, F-805 pass; your own PWA data (7.2 or later) moves to both platforms with a matching comparison report.
 
 ### N16 · Household sync, native (XL)
 - Create and join by QR (camera) and PIN across platforms; device names; follow patients; remove a device (key replaced); sync by meeting on the same Wi-Fi (Bonjour/NSD + TLS); the hub client (HTTPS); update by QR or file; "Household up to date?"; conflict notes.
 - Native ↔ PWA through the hub or the file (D-11).
 - iOS Local Push Connectivity extension (at home, on named Wi-Fi); Android foreground connection to the hub (also over Tailscale).
 - Multi-device tests: simulators/emulators plus the TS reference as a third device; three devices meeting in different orders; deletions; removal.
-- **Done when:** F-1101–F-1106, F-1201–F-1202 pass in a mixed household (iPhone, Android, PWA, hub).
+- **Done when:** F-803, F-804, F-1101–F-1106, F-1201–F-1202, F-1204 pass in a mixed household (iPhone, Android, PWA, hub), including devices on different versions (records the older one can't show are kept and counted).
 
 ### N17 · Alerts everywhere: relay, push, SMS (L)
 - `AuraTrack7-Relay` built and deployed (A5 design); APNs and FCM senders; UnifiedPush for F-Droid; Notification Service Extension (iOS) and messaging service (Android) open the sealed alert; Critical Alerts where granted.
@@ -337,7 +352,8 @@ The contract. Written from the TS reference, generated vectors checked by the TS
 | F-104, F-105, F-405, F-501–F-509 medications | N11 | UserNotifications with actions | AlarmManager + notification actions |
 | F-106, F-406, F-551–F-554 wellbeing | N12 | | |
 | F-108 install banner, F-109 update bar | dropped | Stores handle installs and updates | Stores handle installs and updates |
-| F-110 backup reminder, F-801–F-802, F-805 | N15 | Files app, share sheet, document types | Storage Access Framework, share sheet |
+| F-110 backup reminder | N12 | Local notification | Notification |
+| F-801–F-802, F-805 | N15 | Files app, share sheet, document types | Storage Access Framework, share sheet |
 | F-111, F-601–F-607 patients and settings | N12 | System text size and theme first | System font scale and theme first |
 | F-701–F-707, F-408 reports and CSV | N14 | PDFKit, `ImageRenderer` | `PdfDocument`, Canvas |
 | F-803–F-804, F-1101–F-1106 household | N16 | Network.framework, Bonjour, AVFoundation QR scan | NsdManager, TLS sockets, CameraX QR scan (Android has no built-in QR decoder without Play Services: which decoder the F-Droid build uses is decided in N16) |
@@ -345,20 +361,21 @@ The contract. Written from the TS reference, generated vectors checked by the TS
 | F-901–F-906 help, about, languages, offline, a11y, toasts | N12, N20 | Native alerts and banners in place of toasts | Snackbars |
 | F-1001–F-1002 encryption, app lock | N5 | Secure Enclave, Keychain, LocalAuthentication | Keystore/StrongBox, BiometricPrompt |
 | F-1004 merge and audit trail | N5 | Vectors | Vectors |
-| F-1006 6.1 importer | dropped natively | via the PWA | via the PWA |
+| F-1006 6.1 importer | removed (D-18) | | |
 | F-1201–F-1204 hub and push | N16, N17 | Hub client, Local Push, APNs via relay | Hub client, foreground connection, FCM/UnifiedPush via relay |
 
 # Part E: Extras (summary; the full list is `extras.md`)
-- **iPhone:** X-101 Live Activity and Dynamic Island · X-102 Control Center control · X-103 Lock Screen widget · X-104 Action Button · X-105 Siri and Shortcuts (App Intents) · X-106 Critical Alerts · X-107 Home Screen widgets (last seizure, today's doses; neutral text) · X-108 Focus filter (alerts through Focus).
+Each extra states what it needs and what happens without it (D-20; `extras.md`).
+- **iPhone:** X-101 Live Activity and Dynamic Island · X-102 Control Center control · X-103 Lock Screen widget · X-104 Action Button · X-105 Siri and Shortcuts (App Intents) · X-106 Critical Alerts · X-107 Home Screen widgets (last seizure, today's doses; neutral text) · X-108 alerts through Focus · X-109 AlarmKit alarms (iOS 26) · X-110 rolling notification schedule (64-notification limit).
 - **iPad:** X-201 split view everywhere · X-202 multiple windows and Stage Manager · X-203 keyboard shortcuts and menus · X-204 Pencil on the body map · X-205 drag and drop of reports.
 - **Apple Watch:** X-301 recording on the wrist · X-302 complications and Smart Stack · X-303 Double Tap · X-304 Action Button (Ultra) · X-305 cellular standalone · X-306 heart rate during recording · X-307 detection (hidden until approved).
-- **Android:** X-401 Quick Settings tile · X-402 ongoing timer notification and Live Updates · X-403 lock-screen shortcut · X-404 Glance widgets · X-405 automatic SMS · X-406 alarm channel through Do Not Disturb · X-407 app shortcuts.
+- **Android:** X-401 Quick Settings tile · X-402 ongoing timer notification and Live Updates · X-403 lock-screen shortcut · X-404 Glance widgets · X-405 automatic SMS · X-406 alarm channel through Do Not Disturb and full-screen alert · X-407 app shortcuts · X-408 timing that survives a closed app (foreground service, exact alarms).
 - **Android tablets and foldables:** X-501 adaptive list-detail · X-502 foldable postures · X-503 keyboard, mouse, drag and drop.
 - **Wear OS:** X-601 recording on the wrist · X-602 Tiles and complications · X-603 heart rate during recording · X-604 detection (hidden until approved).
 - **Both:** X-701 health data views and statistics · X-702 dose reminders with "Taken" from the notification · X-703 real background alerts.
 
 # Decisions recorded (one note each in `decisions/`)
-D-1 native apps named AuraTrack7, PWA paused · D-2 tools and minimum OS · D-3 monorepo in six folders (PWA, Apple, Android, Server, Relay, Shared) and spec-with-vectors · D-4 privacy rules (A3) · D-5 hosted-server rule wording and the sealed relay (Cloud Run, europe-north1) · D-6 generic hub · D-7 GPL-3.0 + app-store exception + name policy (™, §7(e), registration later) · D-8 Class I self-declared, regulatory track · D-9 Play + F-Droid builds · D-10 v7 backup main import, CSV too, no 6.1 natively · D-11 native ↔ PWA through the hub or file · D-12 watches with the phones; detection early, hidden; auto-start from estimated onset · D-13 health data read-only, views + simple statistics · D-14 GitHub Actions only, signing via API key · D-15 parallel platforms per milestone · D-16 type fills in ILAE answers (replaced) · D-17 ILAE 2025 and seizure profiles.
+D-1 native apps named AuraTrack7, PWA paused · D-2 tools and minimum OS · D-3 monorepo in six folders (PWA, Apple, Android, Server, Relay, Shared) and spec-with-vectors · D-4 privacy rules (A3) · D-5 hosted-server rule wording and the sealed relay (Cloud Run, europe-north1) · D-6 generic hub · D-7 GPL-3.0 + app-store exception + name policy (™, §7(e), registration later) · D-8 Class I self-declared, regulatory track · D-9 Play + F-Droid builds · D-10 v7 backup main import, CSV too, no 6.1 natively · D-11 native ↔ PWA through the hub or file · D-12 watches with the phones; detection early, hidden; auto-start from estimated onset · D-13 health data read-only, views + simple statistics · D-14 GitHub Actions only, signing via API key · D-15 parallel platforms per milestone · D-16 type fills in ILAE answers (replaced) · D-17 ILAE 2025 and seizure profiles · D-18 break with the past (nothing before 7.2), keep the future (unknown records kept and counted) · D-19 cluster rule inside one window · D-20 platform-only features state their needs and fallbacks.
 
 # How sessions carry on (multi-session, two machines)
 - Every native session starts by reading `docs/AuraTrack7/STATUS.md`, then the current `N<n>.md`.
@@ -374,3 +391,6 @@ The roadmap changes only with your approval. Each change is logged here with its
 | 2026-11-03 | First version, approved |
 | 2026-11-04 | D-17: ILAE 2025 replaces 2017 and seizure profiles replace the type row (N2, N4, N8); built first in the PWA as M8 |
 | 2026-11-03 | The move to six folders moved from N1 to N0 (Part A, first), at your request: the PWA runs from the new layout on Vercel before accounts and money are spent |
+| 2026-11-06 | D-18 point 4: records from before 7.2 (no `dataVersion`) are deleted at load with a notice; every record carries `dataVersion`; profiles over the limit after a sync are all kept and shown, with a note |
+| 2026-11-06 | D-18 extended at your request: everything superseded removed in the PWA and the plan (ILAE 2017, the plain-language type, `recoveryMinutes`, the 6.1 importer, legacy optional fields, unused messages); catalogue version 2 edited by hand; medicine forms as codes; bundle id `eu.greymatter.auratrack7` approved |
+| 2026-11-06 | Review against the PWA, at your request: A4 and new A9 (D-18 no compatibility before 7.2 and forward compatibility; D-19 cluster rule; D-20 platform needs and fallbacks); N2, N3, N5, N6, N8, N10, N11 updated to the PWA after M8 (four phases, seizure length, one-timeline editor, profiles up to 12, seconds, per-time units, History chart); missing F-IDs added to the done-when lists (F-103, F-214, F-584, F-803, F-804, F-1001, F-1002, F-1004, F-1007, F-1204); F-110 in N12; bundle id `eu.greymatter.auratrack7`; new extras X-109, X-110, X-408 |

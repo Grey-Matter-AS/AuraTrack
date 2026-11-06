@@ -29,10 +29,7 @@ export function Sets() {
                           .slice(0, 2)
                           .join(', ')}
                     </p>
-                    <p className="app-note">
-                      {s.seizureTypeCode ? t('sets.for', { type: label(s.seizureTypeCode) }) : t('sets.anyType')} ·{' '}
-                      {s.items.map((x) => label(x.code)).join(', ')}
-                    </p>
+                    <p className="app-note">{s.items.map((x) => label(x.code)).join(', ')}</p>
                     <div className="ui-cluster">
                       <Button size="md" onClick={() => setRenaming({ id: s.id, name: s.name })}>
                         {t('sets.rename')}

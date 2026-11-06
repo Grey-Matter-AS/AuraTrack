@@ -182,7 +182,7 @@ describe('a seizure during a session', () => {
     expect(activities).toHaveLength(2);
     expect(activities.find((a) => a.kind === 'seizure_reference')).toMatchObject({
       linkedSeizureId: seizure.id,
-      activityCode: 'seizure_type.focal_aware',
+      activityCode: null,
       durationSec: 60,
       sessionId: session.id,
     });

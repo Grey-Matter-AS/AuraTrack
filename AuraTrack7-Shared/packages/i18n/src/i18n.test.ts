@@ -3,9 +3,7 @@ import {
   EEG_ACTIVITIES,
   FINDINGS,
   FINDING_GROUPS,
-  ILAE_FEATURES,
   MOODS,
-  SEIZURE_TYPES,
   SYMPTOMS,
   SYMPTOM_GROUPS,
   TRIGGERS,
@@ -19,8 +17,6 @@ import drafted from './labels/drafted.json';
 import { LANGUAGES, isDrafted, isLanguage, labelFor, labelText, labelledCodes } from './index';
 
 const catalogue: string[] = [
-  ...SEIZURE_TYPES,
-  ...ILAE_FEATURES,
   ...SYMPTOM_GROUPS,
   ...SYMPTOMS,
   ...TRIGGERS,
@@ -51,10 +47,7 @@ describe('English labels', () => {
   });
 
   it('are only for codes that exist', () => {
-    const stray = labelledCodes('en').filter(
-      (code) =>
-        !isCatalogueCode(code) && !code.startsWith('ilae.') && !code.startsWith('form.') && !code.startsWith('after'),
-    );
+    const stray = labelledCodes('en').filter((code) => !isCatalogueCode(code) && !code.startsWith('after'));
     expect(stray).toEqual([]);
   });
 });
@@ -71,10 +64,10 @@ describe('other languages', () => {
     },
   );
 
-  it('carry the ported 6.1 translations', () => {
+  it('carry the translations in every language', () => {
     expect(labelText('nb', 'trigger.stress')).toBe('Stress');
     expect(labelText('nb', 'trigger.sleep_deprivation')).toBe('Søvnmangel');
-    expect(labelFor('fr', 'seizure_type.absence').fallback).toBe(false);
+    expect(labelFor('fr', 'form.tablet').fallback).toBe(false);
   });
 });
 
@@ -88,7 +81,7 @@ describe('drafted translations (not yet checked by a native speaker)', () => {
 
   it.each(others)('%s: the drafted list names real labels, each written out and trimmed', (language) => {
     const list = (drafted as Record<string, string[]>)[language]!;
-    expect(list.length).toBe(274);
+    expect(list.length).toBe(248);
     expect(new Set(list).size).toBe(list.length);
     const have = new Set(labelledCodes(language));
     for (const code of list) {

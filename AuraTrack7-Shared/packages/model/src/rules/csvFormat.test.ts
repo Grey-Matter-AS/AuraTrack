@@ -26,19 +26,23 @@ describe('CSV tokens', () => {
     expect(parseAreaToken('/body.arms.left_arm')).toBeNull();
   });
 
-  it('symptoms with an area and a phase, and a phase it does not know left out', () => {
+  it('symptoms with an area and a phase, and a phase it does not know marked as bad', () => {
     expect(parseSymptomToken(symptomToken('symptom.x', arm, 'seizure'))).toEqual({
       code: 'symptom.x',
       area: arm,
       phase: 'seizure',
     });
     expect(parseSymptomToken('symptom.x#prodrome')?.phase).toBe('prodrome');
-    // Files written before 7.2 used three phases: they are read as aura, seizure and recovery
-    expect(parseSymptomToken('symptom.x#before')?.phase).toBe('aura');
-    expect(parseSymptomToken('symptom.x#during')?.phase).toBe('seizure');
-    expect(parseSymptomToken('symptom.x#after')?.phase).toBe('recovery');
+    // Only the four phases: the three of 7.0–7.1 are not guessed at
+    for (const old of ['before', 'during', 'after'])
+      expect(parseSymptomToken(`symptom.x#${old}`)).toMatchObject({ phase: null, badPhase: old });
     expect(symptomToken('symptom.x', null)).toBe('symptom.x');
-    expect(parseSymptomToken('symptom.x#later')).toEqual({ code: 'symptom.x', area: null, phase: null });
+    expect(parseSymptomToken('symptom.x#later')).toEqual({
+      code: 'symptom.x',
+      area: null,
+      phase: null,
+      badPhase: 'later',
+    });
   });
 
   it('findings with the places they were seen', () => {

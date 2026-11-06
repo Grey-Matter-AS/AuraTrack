@@ -8,7 +8,6 @@ export * from './api';
 export * from './rpc';
 export * from './recovery';
 export * from './backup';
-export * from './import6x';
 export * from './importCsv';
 export * from './dropbox';
 export * from './recording';

@@ -18,6 +18,7 @@ async function setup() {
     name: 'Alex Example',
     dateOfBirth: null,
     emergencyContact: '',
+    emergencyPhone: '',
     color: '#336699',
   });
   const options: CsvImportOptions = {
@@ -70,11 +71,12 @@ describe('seizures', () => {
         {
           date: '2026-10-05',
           time: '14:05',
-          type: 'Absens', // the Norwegian name is enough when the code column is empty
-          seizureSeconds: '90',
-          totalSeconds: '600',
+          ilae2025Start: 'generalized',
+          ilae2025Kind: 'typical_absence',
+          lengthSeconds: '90',
+          recoverySeconds: '510',
           symptomCodes:
-            'symptom.small_twitching.muscle_flickering@body.head_and_face/body.head_and_face.eyes#during|symptom.skin_and_temperature.face_flushing_red',
+            'symptom.small_twitching.muscle_flickering@body.head_and_face/body.head_and_face.eyes#seizure|symptom.skin_and_temperature.face_flushing_red',
           triggerCodes: 'trigger.stress',
           afterFindingCodes: 'after.confused|after.custom',
           afterFindings: 'Confused|Very sleepy',
@@ -92,7 +94,7 @@ describe('seizures', () => {
     const [s] = store.list('seizure');
     const start = at(2026, 10, 5, 14, 5);
     expect(s).toMatchObject({
-      typeCode: 'seizure_type.absence',
+      ilae2025: { class: 'generalized', generalized: 'typical_absence' },
       status: 'recorded',
       isManualEntry: true,
       timeZone: 'Europe/Oslo',
@@ -112,14 +114,14 @@ describe('seizures', () => {
     expect(s?.symptoms[0]).toMatchObject({
       code: 'symptom.small_twitching.muscle_flickering',
       area: { region: 'body.head_and_face', subRegion: 'body.head_and_face.eyes', part: null },
-      phase: 'seizure', // '#during' in a file from before 7.2
+      phase: 'seizure',
       isFirst: true,
     });
   });
 
   it('adds nothing the second time, and leaves out a row at the same minute as a seizure already there', async () => {
     const { store, options } = await setup();
-    const text = file({ SEIZURES: [{ date: '2026-10-05', time: '14:05', seizureSeconds: '60' }] });
+    const text = file({ SEIZURES: [{ date: '2026-10-05', time: '14:05', lengthSeconds: '60' }] });
     await importCsv(store, text, options);
     const again = await importCsv(store, text, options);
     expect(again.totals).toMatchObject({ found: 1, ready: 0, duplicates: 1 });
@@ -129,14 +131,14 @@ describe('seizures', () => {
 
   it('reads dates the way the date setting says, and refuses one that could be read two ways', async () => {
     const { store, options } = await setup();
-    const text = file({ SEIZURES: [{ date: '03/04/2026', time: '2:05 PM', seizureSeconds: '30' }] });
+    const text = file({ SEIZURES: [{ date: '03/04/2026', time: '2:05 PM', lengthSeconds: '30' }] });
     expect((await checkCsvImport(store, text, options)).examples[0]?.read).toBe('2026-04-03 14:05');
     expect((await checkCsvImport(store, text, { ...options, dateOrder: 'mdy' })).examples[0]?.read).toBe(
       '2026-03-04 14:05',
     );
     const ymd = await checkCsvImport(store, text, { ...options, dateOrder: 'ymd' });
     expect(ymd.problems[0]?.reason).toMatch(/could be read two ways/);
-    const dotted = file({ SEIZURES: [{ date: '05.10.2026', time: '14.05', seizureSeconds: '30' }] });
+    const dotted = file({ SEIZURES: [{ date: '05.10.2026', time: '14.05', lengthSeconds: '30' }] });
     expect((await checkCsvImport(store, dotted, options)).examples[0]?.read).toBe('2026-10-05 14:05');
   });
 
@@ -144,8 +146,8 @@ describe('seizures', () => {
     const { store, options } = await setup();
     const text = file({
       SEIZURES: [
-        { date: '2026-10-05', time: '14:05', seizureSeconds: '60' },
-        { date: '2026-10-06', time: '09:00', typeCode: 'seizure_type.made_up' },
+        { date: '2026-10-05', time: '14:05', lengthSeconds: '60' },
+        { date: '2026-10-06', time: '09:00', triggerCodes: 'trigger.made_up' },
         { date: '2026-10-07', time: '09:00', seizureEnd: '2026-10-07 08:00' },
         { date: '2026-10-08', time: '09:00', status: 'in_progress' },
         { date: '2026-02-30', time: '09:00' },
@@ -157,7 +159,7 @@ describe('seizures', () => {
     expect(report.unaccounted).toBe(0);
     expect(report.problems.map((p) => p.line)).toEqual([4, 5, 6, 7, 8]);
     expect(report.problems.map((p) => p.reason)).toEqual([
-      expect.stringMatching(/typeCode: "seizure_type.made_up" is not a known code/),
+      expect.stringMatching(/triggerCodes: "trigger.made_up" is not a known code/),
       expect.stringMatching(/not in order/),
       expect.stringMatching(/unfinished recording/),
       expect.stringMatching(/not a real date/),
@@ -170,7 +172,7 @@ describe('seizures', () => {
     const { store, options } = await setup();
     const text = file(
       {
-        SEIZURES: [{ date: '2026-10-05', time: '14:05', seizureSeconds: '60' }],
+        SEIZURES: [{ date: '2026-10-05', time: '14:05', lengthSeconds: '60' }],
         MEDICATIONS: [{ name: 'Lamotrigine', dose: '12,5', unit: 'mg', frequency: 'OD', scheduledTimes: '08:00' }],
       },
       ';',
@@ -183,11 +185,13 @@ describe('seizures', () => {
 
   it('keeps the CSV row with each record, and lists a block it does not know', async () => {
     const { store, options } = await setup();
-    const text = `${file({ SEIZURES: [{ date: '2026-10-05', time: '14:05', seizureSeconds: '60' }] })}\n\nSOMETHING_ELSE\na,b\n1,2`;
+    const text = `${file({ SEIZURES: [{ date: '2026-10-05', time: '14:05', lengthSeconds: '60' }] })}\n\nSOMETHING_ELSE\na,b\n1,2`;
     const report = await importCsv(store, text, options);
     expect(report.unknownSections).toEqual(['SOMETHING_ELSE']);
     const raw = (await store.changesSince(null)).find((e) => e.recordType === 'seizure');
-    expect((raw?.fields as { legacy?: { csv?: Record<string, string> } }).legacy?.csv?.date).toBe('2026-10-05');
+    expect((raw?.fields as { importedFrom?: { csv?: Record<string, string> } }).importedFrom?.csv?.date).toBe(
+      '2026-10-05',
+    );
   });
 });
 
@@ -300,7 +304,7 @@ describe('between seizures, wellbeing and the EEG diary', () => {
     const { store, options } = await setup();
     const seizureId = newId();
     const text = file({
-      SEIZURES: [{ id: seizureId, date: '2026-10-05', time: '23:30', seizureSeconds: '40' }],
+      SEIZURES: [{ id: seizureId, date: '2026-10-05', time: '23:30', lengthSeconds: '40' }],
       BETWEEN_SEIZURES: [
         {
           date: '2026-10-04',
@@ -364,8 +368,8 @@ describe('every row it cannot read is named, with its reason', () => {
         { date: '2026-10-05', time: '13:00 PM' },
         { date: '2026-10-05', time: '24:30' },
         { date: '', time: '14:05' },
-        { ...ok, seizureSeconds: '1.5' },
-        { ...ok, seizureSeconds: 'about a minute' },
+        { ...ok, lengthSeconds: '1.5' },
+        { ...ok, lengthSeconds: 'about a minute' },
         { ...ok, autoStopped: 'maybe' },
         { ...ok, notes: 'x'.repeat(5001) },
         { ...ok, auraEnd: '14:06' },
@@ -382,8 +386,8 @@ describe('every row it cannot read is named, with its reason', () => {
       expect.stringMatching(/time: "13:00 PM" is not a time/),
       expect.stringMatching(/time: "24:30" is not a time/),
       expect.stringMatching(/date: is empty/),
-      expect.stringMatching(/seizureSeconds: 1.5 is not a whole number/),
-      expect.stringMatching(/seizureSeconds: "about a minute" is not a number/),
+      expect.stringMatching(/lengthSeconds: 1.5 is not a whole number/),
+      expect.stringMatching(/lengthSeconds: "about a minute" is not a number/),
       expect.stringMatching(/autoStopped: "maybe" is not yes or no/),
       expect.stringMatching(/notes: longer than 5000/),
       expect.stringMatching(/auraEnd: "14:06" needs a date and a time/),
@@ -488,7 +492,7 @@ describe('every row it cannot read is named, with its reason', () => {
 });
 
 describe('what it reads besides the plain columns', () => {
-  it('names in place of codes, a time zone, only a total time, yes in Norwegian, and the formula guard', async () => {
+  it('names in place of codes, a time zone, only the length, yes in Norwegian, and the formula guard', async () => {
     const { store, options } = await setup();
     const text = file({
       SEIZURES: [
@@ -496,7 +500,7 @@ describe('what it reads besides the plain columns', () => {
           date: '2026-10-05',
           time: '14:05',
           timeZone: 'Europe/Stockholm',
-          totalSeconds: '120',
+          lengthSeconds: '120',
           auraEnd: '2026-10-05 14:05',
           triggers: 'Stress',
           afterFindings: 'Confused / disoriented',
@@ -520,6 +524,44 @@ describe('what it reads besides the plain columns', () => {
       recordedBy: 'self',
       notes: '=SUM(A1)',
     });
+  });
+
+  it('counts the length from the start, aura included, and the recovery from the end of the seizure', async () => {
+    const { store, options } = await setup();
+    const text = file({
+      SEIZURES: [
+        {
+          date: '2026-10-05',
+          time: '14:05',
+          auraEnd: '2026-10-05 14:05:20',
+          lengthSeconds: '90',
+          recoverySeconds: '300',
+        },
+        { date: '2026-10-06', time: '14:05', recoverySeconds: '300' },
+      ],
+    });
+    const report = await importCsv(store, text, options);
+    const start = at(2026, 10, 5, 14, 5);
+    expect(store.list('seizure')[0]?.phases).toMatchObject({
+      auraEnd: { at: start + 20_000 },
+      seizureEnd: { at: start + 90_000 },
+      recoveryEnd: { at: start + 390_000 },
+    });
+    expect(report.problems.map((p) => p.reason)).toEqual([
+      expect.stringMatching(/recoverySeconds: the end of the seizure/),
+    ]);
+  });
+
+  it('lists a symptom phase it does not know instead of dropping it', async () => {
+    const { store, options } = await setup();
+    const text = file({
+      SEIZURES: [
+        { date: '2026-10-05', time: '14:05', symptomCodes: 'symptom.small_twitching.muscle_flickering#during' },
+      ],
+    });
+    const report = await importCsv(store, text, options);
+    expect(report.problems.map((p) => p.reason)).toEqual([expect.stringMatching(/"during" is not a phase/)]);
+    expect(store.list('seizure')).toHaveLength(0);
   });
 
   it('a household word of its own, by name', async () => {

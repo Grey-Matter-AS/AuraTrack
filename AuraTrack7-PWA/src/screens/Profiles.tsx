@@ -121,6 +121,11 @@ export function Profiles() {
           >
             {t('prof.add')}
           </Button>
+        ) : profiles.length > MAX_SEIZURE_PROFILES ? (
+          // Two devices can each add profiles before they meet: all are kept and shown, none is removed by the app
+          <p className="app-note" role="status">
+            {t('prof.over', { count: profiles.length, max: MAX_SEIZURE_PROFILES })}
+          </p>
         ) : (
           <p className="app-note">{t('prof.full', { max: MAX_SEIZURE_PROFILES })}</p>
         )}
@@ -176,12 +181,12 @@ export function Profiles() {
                       if (!from) return;
                       const signs = [...from.symptoms]
                         .sort((a, b) => a.order - b.order)
-                        .map((x) => ({ code: x.code, phase: x.phase ?? 'seizure' }));
+                        .map((x) => ({ code: x.code, phase: x.phase }));
                       setEditing({ ...editing, signs: signs.slice(0, 40) });
                     }}
                     options={withSigns.map((s) => ({
                       value: s.id,
-                      label: `${fmt.whenSec(s.phases.start.at)} · ${seizureName(s, t, label)}`,
+                      label: `${fmt.whenSec(s.phases.start.at)} · ${seizureName(s, t)}`,
                     }))}
                   />
                 ) : (

@@ -193,7 +193,7 @@ export function History() {
 }
 
 function ListView() {
-  const { t, label, seizures, settings, profiles } = useApp();
+  const { t, seizures, settings, profiles } = useApp();
   const nav = useNav();
   const [filters, setFilters] = useState<HistoryFilters>(NO_FILTERS);
   const [page, setPage] = useState(1);
@@ -204,7 +204,7 @@ function ListView() {
     setFilters((f) => ({ ...f, ...next }));
     setPage(1);
   };
-  const types = [{ value: 'none', label: t('hist.noType') }, ...seizureKinds(seizures, profiles, t, label)];
+  const types = [{ value: 'none', label: t('hist.noType') }, ...seizureKinds(seizures, profiles, t)];
   return (
     <Stack>
       <Section title={t('hist.filters')}>
@@ -414,7 +414,7 @@ function TimelineView() {
   const app = useApp();
   const nav = useNav();
   const { t, label, seizures, settings, fmt, between, profiles } = app;
-  const kinds = useMemo(() => seizureKinds(seizures, profiles, t, label), [seizures, profiles, t, label]);
+  const kinds = useMemo(() => seizureKinds(seizures, profiles, t), [seizures, profiles, t]);
   const seizureById = useMemo(() => new Map(seizures.map((s) => [s.id, s])), [seizures]);
   const changes = useRecordList<MedicationChange>('medicationChange');
   const doses = useRecordList<DoseLog>('doseLog', { all: true });
@@ -477,7 +477,7 @@ function TimelineView() {
           : fmt.when(item.at);
     if (item.kind === 'seizure') {
       const seizure = seizureById.get(item.id);
-      const name = seizure ? seizureName(seizure, t, label) : t('home.untyped');
+      const name = seizure ? seizureName(seizure, t) : t('home.untyped');
       return `${when} · ${name}${item.seconds !== null ? ` · ${fmt.duration(item.seconds)}` : ''}`;
     }
     if (item.kind === 'between') return `${when} · ${t('hist.between', { name: label(item.code) })}`;

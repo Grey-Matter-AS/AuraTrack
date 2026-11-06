@@ -22,7 +22,6 @@ export const de: Partial<Record<keyof typeof m6en, string>> = {
   'hh.rename': 'Umbenennen',
   'hh.follows': 'Hat eine Kopie von allen',
   'hh.followsSome': 'Hat eine Kopie von: {names}',
-  'hh.removed': 'Entfernt',
   'hh.addDevice': 'Gerät hinzufügen',
   'hh.upToDate': 'Haushalt auf dem neuesten Stand?',
   'hh.fileTitle': 'Aktualisierung per Datei oder QR',
@@ -72,14 +71,11 @@ export const de: Partial<Record<keyof typeof m6en, string>> = {
   'hh.joinConnecting': 'Suche das Gerät …',
   'hh.joinCompare': 'Zeigt das andere Gerät dieselben sechs Ziffern?',
   'hh.joinWaitingOther': 'Warte auf die Bestätigung des anderen Geräts …',
-  'hh.joinDone':
-    'Beigetreten. Die Einträge kommen, wenn das andere Gerät geöffnet ist. Lassen Sie es eine Minute offen.',
   'hh.joinNotFound':
     'Das Gerät wurde nicht gefunden. Prüfen Sie, ob es den Code zeigt und online ist, und versuchen Sie es erneut.',
   'hh.joinHasRecords':
     'Dieses Gerät hat schon Einträge und kann deshalb keinem Haushalt beitreten. Machen Sie eine Sicherung und stellen Sie sie auf dem Gerät des Haushalts wieder her (Mehr, Sicherung und Wiederherstellung).',
   'hh.joinWaitingFirst': 'Warte auf das erste Treffen mit dem Haushalt. Lassen Sie das andere Gerät geöffnet.',
-  'hh.joinPinTitle': 'Wählen Sie eine PIN für dieses Gerät',
   'hh.joinStay': 'Abbrechen',
   'hh.scanTitle': 'QR-Code scannen',
   'hh.scanHelp': 'Halten Sie den Code vor die Kamera.',

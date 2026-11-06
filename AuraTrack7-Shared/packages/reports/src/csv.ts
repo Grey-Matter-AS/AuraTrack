@@ -4,7 +4,7 @@ import {
   EEG_ACTIVITIES,
   FINDINGS,
   MOODS,
-  SEIZURE_TYPES,
+  MEDICATION_FORMS,
   SYMPTOMS,
   TRIGGERS,
   WELLBEING_FACTORS,
@@ -15,8 +15,6 @@ import {
   localDateKey,
   symptomToken,
   type CsvSection,
-  seizureSeconds,
-  totalSeconds,
   type DoseLog,
   type EegActivity,
   type EegSession,
@@ -25,6 +23,8 @@ import {
   type MedicationChange,
   type Seizure,
   type WellbeingEntry,
+  recoverySeconds,
+  seizureLengthSeconds,
 } from '@auratrack/model';
 import { LANGUAGES, labelText } from '@auratrack/i18n';
 import { areaLabel } from './neurologist';
@@ -54,6 +54,11 @@ export const clockText = (at: number): string => {
 const slots = (doses: Readonly<Record<string, number>>) =>
   Object.entries(doses)
     .map(([time, dose]) => `${time}=${dose}`)
+    .join(CSV_LIST);
+/** Each time's own unit ("08:00=mg;20:00=tablet"); times without one use the medicine's unit. */
+const slotUnitCells = (units: Readonly<Record<string, string>> | undefined) =>
+  Object.entries(units ?? {})
+    .map(([time, unit]) => `${time}=${unit}`)
     .join(CSV_LIST);
 const stamp = (at: number | null) => (at === null ? '' : `${localDateKey(at)} ${clockText(at)}`);
 
@@ -90,8 +95,6 @@ export function buildCsv(input: CsvInput): string {
           localDateKey(s.phases.start.at),
           clockText(s.phases.start.at),
           s.timeZone,
-          s.typeCode ? label(s.typeCode) : '',
-          s.typeCode ?? '',
           // ILAE 2025 (D-17): the profile's name as saved, the type, and each answer as its code
           s.profile?.name ?? '',
           (s.ilae2025 ? ilae2025Type(s.ilae2025) : null) ?? '',
@@ -101,8 +104,8 @@ export function buildCsv(input: CsvInput): string {
           s.ilae2025?.bilateralTonicClonic ?? '',
           s.ilae2025?.observable ?? '',
           s.ilae2025?.generalized ?? '',
-          seizureSeconds(s.phases),
-          totalSeconds(s.phases),
+          seizureLengthSeconds(s.phases),
+          recoverySeconds(s.phases),
           stamp(s.phases.auraEnd?.at ?? null),
           stamp(s.phases.seizureEnd?.at ?? null),
           stamp(s.phases.recoveryEnd?.at ?? null),
@@ -113,7 +116,6 @@ export function buildCsv(input: CsvInput): string {
           s.afterFindings.map((f) => f.customLabel ?? label(f.code)).join(CSV_LIST),
           s.afterFindings.map((f) => findingToken(f.code, f.areas)).join(CSV_LIST),
           s.afterFindings.flatMap((f) => f.areas.map((a) => areaLabel(a, label))).join(CSV_LIST),
-          s.recoveryMinutes,
           s.prodromeSecondsBefore ?? '',
           s.notes,
           s.recordedBy,
@@ -122,7 +124,7 @@ export function buildCsv(input: CsvInput): string {
           [s.phases.start, s.phases.auraEnd, s.phases.seizureEnd, s.phases.recoveryEnd].some(
             (m) => m?.source === 'entered-later',
           ),
-          s.recordedWhileLocked === true,
+          s.recordedWhileLocked,
           s.video?.fileName ?? '',
         ];
       }),
@@ -152,13 +154,15 @@ export function buildCsv(input: CsvInput): string {
         m.id,
         m.name,
         m.activeIngredient,
-        m.form,
+        m.form ? label(m.form) : '',
+        m.form ?? '',
         m.dose,
         m.unit,
         m.frequency,
         m.scheduledTimes.join(CSV_LIST),
         m.scheduledDays.join(CSV_LIST),
         slots(m.slotDoses),
+        slotUnitCells(m.slotUnits),
         m.isRescue,
         m.showInEmergency,
         m.reminderEnabled,
@@ -203,6 +207,7 @@ export function buildCsv(input: CsvInput): string {
           c.note,
           c.to?.name ?? '',
           c.to?.activeIngredient ?? '',
+          c.to?.form ? label(c.to.form) : '',
           c.to?.form ?? '',
           c.to?.dose ?? '',
           c.to?.unit ?? '',
@@ -210,6 +215,7 @@ export function buildCsv(input: CsvInput): string {
           c.to ? c.to.scheduledTimes.join(CSV_LIST) : '',
           c.to ? c.to.scheduledDays.join(CSV_LIST) : '',
           c.to ? slots(c.to.slotDoses) : '',
+          c.to ? slotUnitCells(c.to.slotUnits) : '',
         ]),
     ),
     block(
@@ -296,7 +302,7 @@ export const csvTemplate = (label: (code: string) => string): string =>
 export function buildCodeList(): string {
   const body = BODY_REGIONS.flatMap((r) => [r.code, ...r.subRegions.flatMap((s) => [s.code, ...s.parts.map((p) => p.code)])]);
   const kinds: [string, readonly string[]][] = [
-    ['seizure type before 7.2 (typeCode)', SEIZURE_TYPES.map((x) => x.code)],
+    ['medicine form (formCode)', MEDICATION_FORMS.map((x) => x.code)],
     ['symptom (symptomCodes)', SYMPTOMS.map((x) => x.code)],
     ['body area (after @)', body],
     ['trigger (triggerCodes)', TRIGGERS.map((x) => x.code)],

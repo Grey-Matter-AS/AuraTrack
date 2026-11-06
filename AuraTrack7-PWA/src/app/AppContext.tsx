@@ -140,6 +140,10 @@ export interface AppState {
   /** The store, for screens that read a record type of their own (see useRecords), and a number that changes whenever data did. */
   api: AppApi;
   revision: number;
+  /** Records kept on this device that it cannot show (from another device or a newer version): Home says how many. */
+  hiddenRecords: number;
+  /** Records saved before 7.2 that were deleted since the app opened (D-18): Home says how many. */
+  purgedRecords: number;
   /** The passkey that unlocks this store (Face ID, fingerprint), and whether this browser can use one. */
   passkey: PasskeyRecord | null;
   passkeySupported: boolean;
@@ -182,11 +186,7 @@ export interface AppState {
     /** Saves the changes made in the editor to a seizure. */
     saveSeizure(id: string, patch: Partial<Seizure>): Promise<void>;
     history(id: string): Promise<{ at: number; kind: string; fields: string[] }[]>;
-    saveSet(args: {
-      typeCode: string | null;
-      name: string;
-      items: { code: string; phase: PhaseName }[];
-    }): Promise<void>;
+    saveSet(args: { name: string; items: { code: string; phase: PhaseName }[] }): Promise<void>;
     renameSet(id: string, name: string): Promise<void>;
     deleteSet(id: string): Promise<void>;
     /** Adds the household's own symptom and returns its code. */
@@ -307,6 +307,8 @@ export function AppProvider({
   const [busy, setBusy] = useState(false);
   const [wrongPin, setWrongPin] = useState(false);
   const [revision, setRevision] = useState(0);
+  const [hiddenRecords, setHiddenRecords] = useState(0);
+  const [purgedRecords, setPurgedRecords] = useState(0);
   const [controller] = useState(
     () => new RecordingController(sendTo(client, false), clockEnv, defaultRecordingSettings()),
   );
@@ -351,6 +353,9 @@ export function AppProvider({
    */
   const loadChain = useRef<Promise<unknown>>(Promise.resolve());
   const loadAllNow = useCallback(async () => {
+    // Records saved before 7.2 are deleted first (also when an old backup or an old device brought them), with a notice
+    const purge = await client.purgeLegacy();
+    if (purge.removed > 0) setPurgedRecords((n) => n + purge.removed);
     const list = (await client.list({ type: 'patient' })) as unknown as Patient[];
     const sorted = [...list].sort((a, b) => a.createdAt - b.createdAt);
     setPatients(sorted);
@@ -395,6 +400,7 @@ export function AppProvider({
     setLanguage(resolved.language);
     rememberLanguage(resolved.language);
     await sweepDoses(client, sorted, meds, resolved, controller.now(), sweeping, setAllLogs);
+    setHiddenRecords((await client.incomplete()).length);
     setRevision((n) => n + 1);
   }, [client, controller, loadLocked]);
   const loadAll = useCallback((): Promise<void> => {
@@ -596,7 +602,15 @@ export function AppProvider({
           if (chosen) await keepLanguage(chosen, id);
           await client.createRecord({
             type: 'patient',
-            values: { id, patientId: id, name: name.trim(), dateOfBirth: null, emergencyContact: '', color: '#336699' },
+            values: {
+              id,
+              patientId: id,
+              name: name.trim(),
+              dateOfBirth: null,
+              emergencyContact: '',
+              emergencyPhone: '',
+              color: '#336699',
+            },
           });
           // A new store has nothing "new": it starts at this version, so "What's new" shows only after an update
           await client.createRecord({
@@ -862,14 +876,13 @@ export function AppProvider({
           await loadAll();
         }),
       history: (id) => client.history({ type: 'seizure', id }),
-      saveSet: ({ typeCode, name, items }) =>
+      saveSet: ({ name, items }) =>
         guarded(async () => {
           if (!patient || items.length === 0) return;
           await client.createRecord({
             type: 'symptomSet',
             values: {
               patientId: patient.id,
-              seizureTypeCode: typeCode,
               name: name.trim().slice(0, 120),
               items: items.slice(0, 40),
             },
@@ -1060,6 +1073,8 @@ export function AppProvider({
     wrongPin,
     api: client,
     revision,
+    hiddenRecords,
+    purgedRecords,
     passkey,
     passkeySupported: passkeys !== null,
     passkeyFailed,
@@ -1154,7 +1169,7 @@ async function sweepEeg(
     await client.update({
       type: 'eegActivity',
       id: r.activityId,
-      patch: { endTime: r.endTime, durationSec: r.durationSec, activityCode: r.activityCode },
+      patch: { endTime: r.endTime, durationSec: r.durationSec },
     });
   return plan.links.length + plan.stops.length + plan.refreshes.length > 0;
 }

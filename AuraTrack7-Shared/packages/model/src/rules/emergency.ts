@@ -100,16 +100,17 @@ export function recoverySeconds(phases: Phases): number | null {
 }
 
 /**
- * The seizure phase after any aura (the aura and the recovery do not count). Kept for the CSV's `seizureSeconds` column,
- * which other tools and earlier exports read this way; screens and reports use `seizureLengthSeconds`.
+ * The seizure phase on its own: from the end of any aura to the end of the seizure (the aura and the recovery do not count).
+ * A breakdown next to the seizure length in the neurologist report. It is never called the seizure's length: that is
+ * `seizureLengthSeconds`.
  */
-export function seizureSeconds(phases: Phases): number | null {
+export function seizurePhaseSeconds(phases: Phases): number | null {
   const end = phases.seizureEnd ?? phases.recoveryEnd;
   if (!end) return null;
   return seconds((phases.auraEnd ?? phases.start).at, end.at);
 }
 
-/** Seconds from the start to the last mark (aura, seizure and recovery together), for the CSV's `totalSeconds` column. */
+/** Seconds from the start to the last mark (aura, seizure and recovery together): the whole recorded event. */
 export function totalSeconds(phases: Phases): number | null {
   const end = phases.recoveryEnd ?? phases.seizureEnd;
   return end ? seconds(phases.start.at, end.at) : null;
@@ -134,20 +135,28 @@ export interface TimedSeizure {
 }
 const startOf = (s: TimedSeizure): number => s.phases.start.at;
 
-/** For each seizure: how many seizures (itself included) fall within the window on either side of it. */
+/**
+ * For each seizure: the most seizures (itself included) that one window of the plan's length holds while also holding this
+ * seizure. "3 in 8 min" means three starts no more than 8 minutes apart from first to last, so seizures at 0, 7 and 14
+ * minutes are not a cluster (14 minutes from first to last), while 0, 4 and 8 are. Starts exactly a window apart count.
+ */
 export function clusterCounts<T extends TimedSeizure>(
   seizures: readonly T[],
   plan: EmergencyPlan = emergencyPlan(),
 ): Map<T, number> {
   const sorted = [...seizures].sort((a, b) => startOf(a) - startOf(b));
+  const best = sorted.map(() => 1);
+  // Every window that matters starts at a seizure: from seizure k, it holds k..last (within the window length).
+  let last = 0;
+  for (let k = 0; k < sorted.length; k++) {
+    if (last < k) last = k;
+    const from = startOf(sorted[k] as T);
+    while (last + 1 < sorted.length && startOf(sorted[last + 1] as T) - from <= plan.clusterWindowMs) last++;
+    const count = last - k + 1;
+    for (let j = k; j <= last; j++) if ((best[j] as number) < count) best[j] = count;
+  }
   const counts = new Map<T, number>();
-  sorted.forEach((current, i) => {
-    const t = startOf(current);
-    let count = 1;
-    for (let j = i - 1; j >= 0 && t - startOf(sorted[j] as T) <= plan.clusterWindowMs; j--) count++;
-    for (let j = i + 1; j < sorted.length && startOf(sorted[j] as T) - t <= plan.clusterWindowMs; j++) count++;
-    counts.set(current, count);
-  });
+  sorted.forEach((seizure, i) => counts.set(seizure, best[i] as number));
   return counts;
 }
 

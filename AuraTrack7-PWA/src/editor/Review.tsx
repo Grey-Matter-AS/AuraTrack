@@ -20,9 +20,7 @@ export function Review() {
         <OverviewStrip draft={draft} />
         <Card compact>
           <p className="app-banner">
-            {draft.profile?.name ??
-              ilae2025Name(draft.ilae2025, t) ??
-              (draft.typeCode ? label(draft.typeCode) : t('review.typeNotSet'))}
+            {draft.profile?.name ?? ilae2025Name(draft.ilae2025, t) ?? t('review.typeNotSet')}
           </p>
           {draft.profile && ilae2025Name(draft.ilae2025, t) ? (
             <p className="app-note">{t('classify.result', { type: ilae2025Name(draft.ilae2025, t) ?? '' })}</p>

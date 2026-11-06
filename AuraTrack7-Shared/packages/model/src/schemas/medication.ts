@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { IdSchema } from '../ids';
-import { ClockTimeSchema, InstantSchema, ShortTextSchema, TextSchema, baseRecord } from './common';
+import { ClockTimeSchema, CodeSchema, InstantSchema, ShortTextSchema, TextSchema, baseRecord } from './common';
 
 export const FrequencySchema = z.enum(['OD', 'BD', 'TDS', 'QDS', 'PRN']);
 export type Frequency = z.infer<typeof FrequencySchema>;
@@ -10,12 +10,13 @@ export const WeekdaySchema = z.number().int().min(0).max(6);
 export const RegimenSchema = z.object({
   name: ShortTextSchema,
   activeIngredient: ShortTextSchema,
-  form: ShortTextSchema,
+  /** The form as a catalogue code (`form.tablet`), or null when not given; the label comes from the catalogue. */
+  form: CodeSchema.nullable(),
   dose: z.number().nonnegative().nullable(),
   unit: z.string().max(20),
   slotDoses: z.record(ClockTimeSchema, z.number().nonnegative()),
-  /** Added in 7.2: the unit of each time's dose ("mg" in the morning, "tablet" at night). A time without one uses `unit`. */
-  slotUnits: z.record(ClockTimeSchema, z.string().max(20)).optional(),
+  /** The unit of each time's dose ("mg" in the morning, "tablet" at night). A time without one uses `unit`. */
+  slotUnits: z.record(ClockTimeSchema, z.string().max(20)),
   frequency: FrequencySchema,
   scheduledTimes: z.array(ClockTimeSchema).max(24),
   scheduledDays: z.array(WeekdaySchema).max(7),

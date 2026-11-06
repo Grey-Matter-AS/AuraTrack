@@ -13,7 +13,7 @@ test('the main page is the app, and the options page leads to the rest', async (
   await expect(page.getByLabel('PIN (at least 4 digits)')).toBeVisible({ timeout: 30_000 });
   await page.goto('/#/options');
   await expect(page.getByRole('button', { name: 'Open the app' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Try the prototype' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Try the prototype' })).toHaveCount(0);
   await page.getByRole('button', { name: 'Open the app' }).click();
   await expect(page.getByLabel('PIN (at least 4 digits)')).toBeVisible({ timeout: 30_000 });
 });

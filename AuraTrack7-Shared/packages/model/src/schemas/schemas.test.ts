@@ -48,18 +48,20 @@ const base = () => ({
   patientId: ids.patient,
   deviceId: ids.device,
   createdAt: 1,
+  dataVersion: 2,
 });
 
 describe('emergencyContactLine', () => {
   it('joins the name and the phone, or gives whichever there is', () => {
     expect(emergencyContactLine({ emergencyContact: 'Sam', emergencyPhone: '555' })).toBe('Sam, 555');
-    expect(emergencyContactLine({ emergencyContact: 'Sam' })).toBe('Sam');
+    expect(emergencyContactLine({ emergencyContact: 'Sam', emergencyPhone: '' })).toBe('Sam');
     expect(emergencyContactLine({ emergencyContact: '', emergencyPhone: '555' })).toBe('555');
-    expect(emergencyContactLine({ emergencyContact: '' })).toBe('');
+    expect(emergencyContactLine({ emergencyContact: '', emergencyPhone: '' })).toBe('');
   });
-  it('a person saved before the phone field existed is still valid', () => {
+  it('a person without the phone field is refused (no records from before 7.2, D-18)', () => {
     const old = { ...base(), name: 'A', dateOfBirth: null, emergencyContact: 'Sam 555', color: 'blue' };
-    expect(PatientSchema.safeParse(old).success).toBe(true);
+    expect(PatientSchema.safeParse(old).success).toBe(false);
+    expect(PatientSchema.safeParse({ ...old, emergencyPhone: '' }).success).toBe(true);
   });
 });
 
@@ -83,12 +85,13 @@ describe('shared parts', () => {
 describe('seizure', () => {
   it('accepts a complete record and keeps every field when parsed again', () => {
     const seizure = seizureFixture({
-      ilae: {
-        onset: 'focal',
-        awareness: 'aware',
-        motor: 'non_motor',
-        feature: 'ilae.feature.sensory',
-        spreadToBothSides: false,
+      ilae2025: {
+        class: 'focal',
+        recall: 'yes',
+        responsive: 'yes',
+        bilateralTonicClonic: 'no',
+        observable: 'no',
+        generalized: null,
       },
       symptoms: [
         {
@@ -99,6 +102,7 @@ describe('seizure', () => {
           order: 0,
           sincePrevious: { kind: 'unknown', ms: null },
           isFirst: true,
+          phase: 'aura',
         },
       ],
       afterFindings: [
@@ -115,7 +119,7 @@ describe('seizure', () => {
   });
 
   it('refuses English text where a code belongs, and a missing start', () => {
-    expect(SeizureSchema.safeParse(seizureFixture({ typeCode: 'Focal Aware' })).success).toBe(false);
+    expect(SeizureSchema.safeParse(seizureFixture({ triggerCodes: ['Stress'] })).success).toBe(false);
     const noStart = {
       ...seizureFixture(),
       phases: { start: null, auraEnd: null, seizureEnd: null, recoveryEnd: null },
@@ -168,12 +172,24 @@ describe('the other records', () => {
       true,
     );
     expect(
-      PatientSchema.safeParse({ ...base(), name: 'A', dateOfBirth: '1990-01-02', emergencyContact: '', color: 'blue' })
-        .success,
+      PatientSchema.safeParse({
+        ...base(),
+        name: 'A',
+        dateOfBirth: '1990-01-02',
+        emergencyContact: '',
+        emergencyPhone: '',
+        color: 'blue',
+      }).success,
     ).toBe(true);
     expect(
-      PatientSchema.safeParse({ ...base(), name: 'A', dateOfBirth: '2 Jan 1990', emergencyContact: '', color: 'blue' })
-        .success,
+      PatientSchema.safeParse({
+        ...base(),
+        name: 'A',
+        dateOfBirth: '2 Jan 1990',
+        emergencyContact: '',
+        emergencyPhone: '',
+        color: 'blue',
+      }).success,
     ).toBe(false);
   });
 
@@ -279,22 +295,28 @@ describe('added in 7.0.3: phases on symptoms, prodrome hours, between-seizures e
     ...over,
   });
 
-  it('a seizure written before 7.0.3 (no phase, no prodrome hours) is still valid and unchanged when parsed', () => {
-    const old = seizureFixture({ symptoms: [symptom()] as never });
-    const parsed = SeizureSchema.parse(old);
-    expect(parsed).toEqual(old);
-    expect('phase' in parsed.symptoms[0]!).toBe(false);
-    expect('prodromeSecondsBefore' in parsed).toBe(false);
+  it('refuses a symptom without its phase and a seizure without the 7.2 fields (D-18)', () => {
+    expect(SeizureSchema.safeParse(seizureFixture({ symptoms: [symptom()] as never })).success).toBe(false);
+    for (const field of [
+      'prodromeSecondsBefore',
+      'quickNotes',
+      'recordedWhileLocked',
+      'cancelled',
+      'ilae2025',
+      'profile',
+    ]) {
+      const old = Object.fromEntries(Object.entries(seizureFixture()).filter(([key]) => key !== field));
+      expect(SeizureSchema.safeParse(old).success, field).toBe(false);
+    }
   });
 
   it('accepts a phase on a symptom and the warning-sign time, and refuses anything else', () => {
     for (const phase of ['prodrome', 'aura', 'seizure', 'recovery']) {
       expect(SeizureSchema.safeParse(seizureFixture({ symptoms: [symptom({ phase })] as never })).success).toBe(true);
     }
-    // The three phases written before 7.2 are read as aura, seizure and recovery, so older records still open
-    const read = (phase: string) =>
-      SeizureSchema.parse(seizureFixture({ symptoms: [symptom({ phase })] as never })).symptoms[0]?.phase;
-    expect([read('before'), read('during'), read('after')]).toEqual(['aura', 'seizure', 'recovery']);
+    // The phases of 7.0–7.1 are not guessed at: "before" could have been a warning sign or an aura
+    for (const phase of ['before', 'during', 'after'])
+      expect(SeizureSchema.safeParse(seizureFixture({ symptoms: [symptom({ phase })] as never })).success).toBe(false);
     expect(SeizureSchema.safeParse(seizureFixture({ symptoms: [symptom({ phase: 'later' })] as never })).success).toBe(
       false,
     );
@@ -319,11 +341,9 @@ describe('added in 7.0.3: phases on symptoms, prodrome hours, between-seizures e
     expect(InterictalEventSchema.safeParse({ ...interictalFixture(), recordedBy: 'nurse' }).success).toBe(false);
   });
 
-  it('a symptom set has at least one item, each with a phase, and may be for every seizure type', () => {
+  it('a symptom set has at least one item, each with a phase', () => {
     expect(SymptomSetSchema.safeParse(symptomSetFixture()).success).toBe(true);
-    expect(SymptomSetSchema.safeParse(symptomSetFixture({ seizureTypeCode: null, name: 'Usual start' })).success).toBe(
-      true,
-    );
+    expect(SymptomSetSchema.safeParse(symptomSetFixture({ name: 'Usual start' })).success).toBe(true);
     expect(SymptomSetSchema.safeParse(symptomSetFixture({ items: [] })).success).toBe(false);
     expect(
       SymptomSetSchema.safeParse(symptomSetFixture({ items: [{ code: 'symptom.x', phase: 'meanwhile' }] as never }))
@@ -358,16 +378,8 @@ describe('ILAE 2025 and seizure profiles (D-17)', () => {
     expect(APPEND_ONLY_TYPES).not.toContain('seizureProfile');
   });
 
-  it('a seizure without the new fields (every one saved before 7.2) is still valid', () => {
-    const old = seizureFixture();
-    expect('ilae2025' in old).toBe(false);
-    expect(SeizureSchema.safeParse(old).success).toBe(true);
-  });
-
   it('a seizure keeps its ILAE 2025 answers and the profile as it was', () => {
     const seizure = seizureFixture({
-      typeCode: null,
-      ilae: null,
       ilae2025: seizureProfileFixture().ilae,
       profile: { id: newId(), name: 'Usual seizure' },
     });

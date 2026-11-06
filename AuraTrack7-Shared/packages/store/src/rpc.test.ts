@@ -2,7 +2,6 @@ import 'fake-indexeddb/auto';
 import { ids, seizureFixture, stripBase } from '@auratrack/model/fixtures';
 import { describe, expect, it } from 'vitest';
 import { createStoreApi, type StoreApi } from './api';
-import { encryptedFile, makeBackup, plainFile } from './import6x/legacy.fixture';
 import { RemoteError, connect, serve, type PortLike } from './rpc';
 import { TEST_PIN_KDF } from './crypto';
 
@@ -91,17 +90,16 @@ describe('rpc', () => {
   });
 });
 
-describe('import and backup through the worker interface', () => {
-  it('imports a 6.1 backup, compares it, backs up and restores it', async () => {
+describe('backup through the worker interface', () => {
+  it('writes records, backs up and restores them, and keeps them across a PIN change', async () => {
     const { page, worker, close } = channel();
     const { api } = createStoreApi({ name: `rpc-imp-${Date.now()}`, options: { pinKdf: TEST_PIN_KDF } });
     serve(worker, api);
     const client = connect<StoreApi>(page);
     await client.create({ credential: { pin: '2468' } });
-    const { report, comparison } = await client.importLegacy({ text: plainFile(), timeZone: 'Europe/Oslo' });
-    expect(report.unaccounted).toBe(0);
-    expect(comparison.allMatch).toBe(true);
-    expect((await client.counts()).seizure).toBe(24);
+    for (let i = 0; i < 3; i++)
+      await client.createRecord({ type: 'seizure', values: stripBase(seizureFixture({ patientId: ids.patient })) });
+    expect((await client.counts()).seizure).toBe(3);
     const file = await client.backup({ passphrase: 'a good passphrase' });
     expect(file.fileName).toMatch(/^auratrack-backup-\d{4}-\d{2}-\d{2}\.atbak$/);
     const restored = await client.restore({ text: file.text, passphrase: 'a good passphrase' });
@@ -113,27 +111,10 @@ describe('import and backup through the worker interface', () => {
     await client.lock();
     await expect(client.unlock({ credential: { pin: '2468' } })).rejects.toMatchObject({ name: 'WrongSecretError' });
     await client.unlock({ credential: { pin: '1357' } });
-    expect((await client.counts()).seizure).toBe(24);
-    client.close();
-    close();
-  }, 60_000);
-});
-
-describe('importing an encrypted 6.1 backup through the worker interface', () => {
-  it('passes the passphrase along', async () => {
-    const { page, worker, close } = channel();
-    const { api } = createStoreApi({ name: `rpc-enc-${Date.now()}`, options: { pinKdf: TEST_PIN_KDF } });
-    serve(worker, api);
-    const client = connect<StoreApi>(page);
-    await client.create({ credential: { pin: '2468' } });
-    const text = await encryptedFile(makeBackup({ events: 3 }), 'secret words');
-    await expect(client.importLegacy({ text })).rejects.toMatchObject({ name: 'PassphraseNeededError' });
-    const { report } = await client.importLegacy({ text, passphrase: 'secret words' });
-    expect(report.file.encrypted).toBe(true);
     expect((await client.counts()).seizure).toBe(3);
     client.close();
     close();
-  });
+  }, 60_000);
 });
 
 describe('the store through the worker interface', () => {

@@ -10,7 +10,7 @@ import {
   TextField,
   useToast,
 } from '@auratrack/ui';
-import type { ComparisonReport, ImportReport, RestoreReport } from '@auratrack/store';
+import type { RestoreReport } from '@auratrack/store';
 import { dateStamp } from '@auratrack/model';
 import { useState } from 'react';
 import { useApp } from '../app/AppContext';
@@ -32,7 +32,7 @@ type Checked = {
 
 const errorName = (e: unknown): string => (e instanceof Error ? e.name : '');
 
-/** Backup, restore, moving to a new device, bringing in a 6.1 backup or a spreadsheet, and the recovery kit (F-801, F-802, F-806). */
+/** Backup, restore, moving to a new device, bringing in a spreadsheet, and the recovery kit (F-801, F-802, F-806). */
 export function Backup() {
   const { t } = useApp();
   const nav = useNav();
@@ -51,7 +51,6 @@ export function Backup() {
           </Card>
         </Section>
         <Restore />
-        <ImportLegacy />
         <ImportCsv />
         <RecoveryKit />
       </Stack>
@@ -298,113 +297,6 @@ function Restore() {
                 ) : null}
                 {result.mismatched.length > 0 ? (
                   <p className="app-note">{t('restore.mismatched', { count: result.mismatched.length })}</p>
-                ) : null}
-              </Stack>
-            </Card>
-          ) : null}
-        </Stack>
-      </Card>
-    </Section>
-  );
-}
-
-function ImportLegacy() {
-  const app = useApp();
-  const { t, api, actions } = app;
-  const [file, setFile] = useState<{ name: string; text: string } | null>(null);
-  const [phrase, setPhrase] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [problem, setProblem] = useState<string | undefined>();
-  const [done, setDone] = useState<{ report: ImportReport; comparison: ComparisonReport } | null>(null);
-  return (
-    <Section title={t('import.title')}>
-      <Card>
-        <Stack>
-          <p className="app-help">{t('import.help')}</p>
-          <FilePicker
-            label={file ? t('restore.otherFile') : t('import.choose')}
-            accept=".json,.atbak,application/json"
-            onPick={(f) => {
-              void f.text().then((text) => {
-                setFile({ name: f.name, text });
-                setDone(null);
-                setProblem(undefined);
-              });
-            }}
-          />
-          {file ? <p className="app-note">{file.name}</p> : null}
-          {file ? (
-            <TextField
-              label={t('import.passphrase')}
-              help={t('import.passphraseHelp')}
-              type="password"
-              autoComplete="off"
-              value={phrase}
-              onChange={setPhrase}
-            />
-          ) : null}
-          {problem ? (
-            <p role="alert" className="app-banner">
-              {problem}
-            </p>
-          ) : null}
-          {file ? (
-            <Button
-              variant="primary"
-              disabled={busy}
-              onClick={() => {
-                if (!file) return;
-                setBusy(true);
-                setProblem(undefined);
-                void (async () => {
-                  try {
-                    const r = await api.importLegacy({ text: file.text, ...(phrase ? { passphrase: phrase } : {}) });
-                    await actions.refresh();
-                    setDone(r);
-                  } catch (e) {
-                    setProblem(
-                      errorName(e) === 'DecryptError' || /passphrase/i.test(String(e))
-                        ? t('restore.wrongPassphrase')
-                        : t('import.failed'),
-                    );
-                  } finally {
-                    setBusy(false);
-                  }
-                })();
-              }}
-            >
-              {t('import.button')}
-            </Button>
-          ) : null}
-          {done ? (
-            <Card
-              compact
-              {...(done.report.unaccounted === 0 && done.comparison.allMatch ? {} : { tone: 'danger' as const })}
-            >
-              <Stack gap="0.25rem">
-                <p className="app-banner" role="status">
-                  {t('import.result', {
-                    imported: done.report.totals.imported,
-                    found: done.report.totals.found,
-                    rejected: done.report.totals.rejected,
-                  })}
-                </p>
-                {done.report.duplicates > 0 ? (
-                  <p className="app-note">{t('import.duplicates', { count: done.report.duplicates })}</p>
-                ) : null}
-                {done.report.unaccounted > 0 ? (
-                  <p className="app-note">{t('import.unaccounted', { count: done.report.unaccounted })}</p>
-                ) : null}
-                <p className="app-note">
-                  {done.comparison.allMatch
-                    ? t('import.matches')
-                    : t('import.differs', { count: done.comparison.mismatches.length })}
-                </p>
-                {done.report.review.length > 0 ? (
-                  <p className="app-note">{t('import.review', { count: done.report.review.length })}</p>
-                ) : null}
-                {done.report.timeZoneAssumed ? (
-                  <p className="app-note">{t('import.timeZone', { zone: done.report.timeZone })}</p>
                 ) : null}
               </Stack>
             </Card>

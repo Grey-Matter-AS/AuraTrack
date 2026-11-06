@@ -8,8 +8,6 @@ import {
   type BackupCounts,
   type RestoreReport,
 } from './backup';
-import { compareImport, type ComparisonReport } from './import6x/compare';
-import { import6x, type ImportReport } from './import6x/import';
 import { checkCsvImport, importCsv, type CsvImportOptions, type CsvImportReport } from './importCsv';
 import { AuraDb } from './db';
 import { LockedRecorder, NO_LOCKED_SCREEN, type LockedScreen, type LockedStatus } from './dropbox';
@@ -230,18 +228,9 @@ export function createStoreApi(config: StoreApiConfig) {
     incomplete(): { type: string; id: string }[] {
       return current().incomplete();
     },
-    /** Reads a 6.1 backup into the store and checks it against 6.1's own numbers. Safe to run again. */
-    async importLegacy(arg: {
-      text: string;
-      passphrase?: string;
-      timeZone?: string;
-    }): Promise<{ report: ImportReport; comparison: ComparisonReport }> {
-      const options = {
-        ...(arg.passphrase !== undefined ? { passphrase: arg.passphrase } : {}),
-        ...(arg.timeZone !== undefined ? { timeZone: arg.timeZone } : {}),
-      };
-      const { report, legacy } = await import6x(current(), arg.text, options);
-      return { report, comparison: await compareImport(current(), legacy, report) };
+    /** Deletes the records saved before 7.2 (D-18) and says how many there were. */
+    purgeLegacy(): Promise<{ removed: number; types: Record<string, number> }> {
+      return current().purgeLegacy();
     },
     /** Reads a CSV file in the export's format and says what importing it would do. Writes nothing. */
     csvCheck(arg: { text: string } & CsvImportOptions): Promise<CsvImportReport> {

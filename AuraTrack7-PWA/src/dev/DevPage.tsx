@@ -1,9 +1,7 @@
 // DEVELOPER PAGE (M1). Not a real screen: it exists to check the data core with real data on the real device.
-// Open it at /#/dev. It lists what is in the store, imports a 6.1 backup, compares the result with 6.1's own numbers,
-// and makes and restores backups. Everything runs on this device; nothing is sent anywhere.
-import { labelText } from '@auratrack/i18n';
-import { localDateKey, seizureLengthSeconds, type Seizure } from '@auratrack/model';
-import type { ComparisonReport, ImportReport, RestoreReport, StoreApi, StoreStatus } from '@auratrack/store';
+// Open it at /#/dev. It lists what is in the store, adds made-up records to check with, and makes and restores backups. Everything runs on this device; nothing is sent anywhere.
+import { localDateKey, newId, seizureLengthSeconds, type Seizure } from '@auratrack/model';
+import type { RestoreReport, StoreApi, StoreStatus } from '@auratrack/store';
 import { connect, type PortLike } from '@auratrack/store/rpc';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import RecordingCheck from './RecordingCheck';
@@ -37,14 +35,13 @@ export default function DevPage() {
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [seizures, setSeizures] = useState<Seizure[]>([]);
   const [pin, setPin] = useState('');
-  const [passphrase, setPassphrase] = useState('');
   const [backupPass, setBackupPass] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
-  const [imported, setImported] = useState<{ report: ImportReport; comparison: ComparisonReport } | null>(null);
   const [restored, setRestored] = useState<RestoreReport | null>(null);
   const [kit, setKit] = useState<{ kit: string; qrSvg: string } | null>(null);
   const [pinMs, setPinMs] = useState<number | null>(null);
+  const [sampleName, setSampleName] = useState('Test person');
 
   const refresh = useCallback(async () => {
     const next = await client.status();
@@ -139,7 +136,6 @@ export default function DevPage() {
             onClick={() =>
               run(async () => {
                 await client.lock();
-                setImported(null);
                 setKit(null);
               })
             }
@@ -165,38 +161,20 @@ export default function DevPage() {
           </section>
 
           <section className={box}>
-            <h2 className="mb-2 font-bold">Import a 6.1 backup</h2>
+            <h2 className="mb-2 font-bold">Made-up records</h2>
             <p className="mb-2" style={{ color: 'var(--text-dim)' }}>
-              Choose a 6.1 backup file (plain, encrypted, or all patients). It is read here and never uploaded.
-              Importing the same file twice adds nothing.
+              A patient with this name, a medicine and 12 seizures, written through the store like any other record.
             </p>
             <input
               className={input}
-              type="password"
-              placeholder="Passphrase (encrypted backups)"
-              aria-label="6.1 backup passphrase"
-              value={passphrase}
-              onChange={(e) => setPassphrase(e.target.value)}
+              aria-label="Made-up patient name"
+              value={sampleName}
+              onChange={(e) => setSampleName(e.target.value)}
             />
-            <input
-              className={input}
-              type="file"
-              aria-label="6.1 backup file"
-              disabled={busy}
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file)
-                  void run(async () =>
-                    setImported(
-                      await client.importLegacy({ text: await read(file), ...(passphrase ? { passphrase } : {}) }),
-                    ),
-                  );
-                e.target.value = '';
-              }}
-            />
+            <button className={button} disabled={busy} onClick={() => run(() => addSamples(client, sampleName))}>
+              Add made-up records
+            </button>
           </section>
-
-          {imported && <ImportResult result={imported} />}
 
           <section className={box}>
             <h2 className="mb-2 font-bold">Backup and restore (v7)</h2>
@@ -273,8 +251,8 @@ export default function DevPage() {
                 <thead>
                   <tr>
                     <th className="pr-3">When</th>
-                    <th className="pr-3">Type</th>
-                    <th className="pr-3">Seizure time</th>
+                    <th className="pr-3">Profile</th>
+                    <th className="pr-3">Seizure length</th>
                     <th className="pr-3">Symptoms</th>
                     <th className="pr-3">Status</th>
                     <th className="pr-3">Locked?</th>
@@ -284,7 +262,7 @@ export default function DevPage() {
                   {seizures.slice(0, 100).map((s) => (
                     <tr key={s.id}>
                       <td className="pr-3">{when(s.phases.start.at)}</td>
-                      <td className="pr-3">{s.typeCode ? labelText('en', s.typeCode) : '—'}</td>
+                      <td className="pr-3">{s.profile?.name ?? '—'}</td>
                       <td className="pr-3">{seizureLengthSeconds(s.phases) ?? '—'} s</td>
                       <td className="pr-3">{s.symptoms.length}</td>
                       <td className="pr-3">{s.status}</td>
@@ -305,94 +283,77 @@ export default function DevPage() {
   );
 }
 
-function ImportResult({ result }: { result: { report: ImportReport; comparison: ComparisonReport } }) {
-  const { report, comparison } = result;
-  return (
-    <section className={box} data-testid="import-result">
-      <h2 className="mb-2 font-bold">Import result</h2>
-      <p data-testid="import-summary">
-        {report.file.patients} patient(s) · {report.totals.found} rows found · {report.totals.imported} imported ·{' '}
-        {report.totals.rejected} rejected · {report.unaccounted} unaccounted for · {report.applied} new,{' '}
-        {report.duplicates} already here
-      </p>
-      {report.timeZoneAssumed && (
-        <p style={{ color: 'var(--text-dim)' }}>
-          6.1 did not store a time zone; {report.timeZone} was assumed for every seizure.
-        </p>
-      )}
-      {report.patients.map((p) => (
-        <div key={p.patientKey} className="mt-2">
-          <h3 className="font-bold">{p.name || '(no name)'}</h3>
-          <p>
-            {Object.entries(p.tables)
-              .map(([t, c]) => `${t} ${c.imported}/${c.found}`)
-              .join(' · ')}
-          </p>
-          {p.rejected.length > 0 && (
-            <ul className="list-disc pl-5">
-              {p.rejected.map((r, i) => (
-                <li key={i}>
-                  Rejected {r.table} #{r.index + 1}: {r.reason}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      ))}
-      {report.review.length > 0 && (
-        <>
-          <h3 className="mt-3 font-bold">
-            To review ({report.review.length}): the original text is kept; shown as your own code, or as the broader
-            area where one is named
-          </h3>
-          <ul className="list-disc pl-5" data-testid="review">
-            {report.review.map((r) => (
-              <li key={`${r.kind}|${r.text}`}>
-                {r.kind}: “{r.text}” × {r.count}
-                {r.keptAs ? ` → ${r.keptAs}` : ''}
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-      <h3 className="mt-3 font-bold" data-testid="comparison-title">
-        Comparison with 6.1:{' '}
-        {comparison.allMatch ? 'everything matches' : `${comparison.mismatches.length} difference(s)`}
-      </h3>
-      <div className="overflow-x-auto">
-        <table className="w-full text-left" data-testid="comparison">
-          <thead>
-            <tr>
-              <th className="pr-3">Patient</th>
-              <th className="pr-3">Section</th>
-              <th className="pr-3">Metric</th>
-              <th className="pr-3">6.1</th>
-              <th className="pr-3">v7</th>
-              <th className="pr-3">Match</th>
-            </tr>
-          </thead>
-          <tbody>
-            {comparison.rows.map((row, i) => (
-              <tr key={i} style={row.match ? undefined : { color: '#f87171' }}>
-                <td className="pr-3">{row.patient}</td>
-                <td className="pr-3">{row.section}</td>
-                <td className="pr-3">{row.metric}</td>
-                <td className="pr-3">{row.v6}</td>
-                <td className="pr-3">{row.v7}</td>
-                <td className="pr-3">{row.match ? 'yes' : 'NO'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {comparison.seizureTimeDifferences.length > 0 && (
-        <p className="mt-2">
-          Seizures whose seizure time differs:{' '}
-          {comparison.seizureTimeDifferences
-            .map((d) => `${d.legacyKey} (6.1 ${d.v6} s, v7 ${d.v7 ?? '?'} s)`)
-            .join('; ')}
-        </p>
-      )}
-    </section>
-  );
+/** A patient, one medicine and 12 seizures a day apart, all made up. */
+async function addSamples(
+  client: { createRecord(arg: Parameters<StoreApi['createRecord']>[0]): Promise<unknown> },
+  name: string,
+): Promise<void> {
+  const patientId = newId();
+  await client.createRecord({
+    type: 'patient',
+    values: {
+      id: patientId,
+      patientId,
+      name,
+      dateOfBirth: null,
+      emergencyContact: '',
+      emergencyPhone: '',
+      color: '#336699',
+    },
+  });
+  await client.createRecord({
+    type: 'medication',
+    values: {
+      patientId,
+      name: 'Levetiracetam',
+      activeIngredient: 'Levetiracetam',
+      form: 'form.tablet',
+      dose: 500,
+      unit: 'mg',
+      slotDoses: {},
+      slotUnits: {},
+      frequency: 'BD',
+      scheduledTimes: ['08:00', '20:00'],
+      scheduledDays: [0, 1, 2, 3, 4, 5, 6],
+      isRescue: false,
+      showInEmergency: false,
+      reminderEnabled: false,
+      active: true,
+      startedAt: Date.now() - 30 * 86_400_000,
+      stoppedAt: null,
+    },
+  });
+  for (let i = 0; i < 12; i++) {
+    const start = Date.now() - (i + 1) * 86_400_000;
+    await client.createRecord({
+      type: 'seizure',
+      values: {
+        patientId,
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        phases: {
+          start: { at: start, source: 'entered-later' },
+          auraEnd: null,
+          seizureEnd: { at: start + (40 + i * 10) * 1000, source: 'entered-later' },
+          recoveryEnd: null,
+        },
+        status: 'recorded',
+        ilae2025: null,
+        profile: null,
+        symptoms: [],
+        afterFindings: [],
+        recoveryOngoing: false,
+        triggerCodes: [],
+        notes: '',
+        video: null,
+        isManualEntry: true,
+        isEmergencyStop: false,
+        recordedBy: 'carer',
+        eegSessionId: null,
+        prodromeSecondsBefore: null,
+        quickNotes: [],
+        recordedWhileLocked: false,
+        cancelled: false,
+      },
+    });
+  }
 }

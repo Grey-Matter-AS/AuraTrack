@@ -108,7 +108,10 @@ describe('reading a backup', () => {
     const { store, a } = await filled();
     // A record that arrived from an older or newer version, with a value that no longer fits
     const raw = (await store.snapshot()).records.find((r) => r.id === a.id)!;
-    const broken = { ...raw, fields: { ...raw.fields, typeCode: { ...raw.fields.typeCode!, value: 'Not a code' } } };
+    const broken = {
+      ...raw,
+      fields: { ...raw.fields, triggerCodes: { ...raw.fields.triggerCodes!, value: ['Not a code'] } },
+    };
     const { check } = await readBackup(await backupOf(store, [broken]), 'a good passphrase');
     expect(check.invalid).toHaveLength(1);
     expect(check.invalid[0]).toMatchObject({ type: 'seizure', id: a.id });
@@ -175,7 +178,7 @@ describe('restoring a backup', () => {
     const profile = await store.create('seizureProfile', stripBase(seizureProfileFixture({ patientId: ids.patient })));
     const s = await store.create(
       'seizure',
-      seizure({ ilae2025: profile.ilae, profile: { id: profile.id, name: profile.name }, typeCode: null, ilae: null }),
+      seizure({ ilae2025: profile.ilae, profile: { id: profile.id, name: profile.name } }),
     );
     const fresh = await Store.create(name(), { pin: '1357' }, FAST);
     const report = await restoreBackup(fresh, await createBackup(store, 'a good passphrase', BK), 'a good passphrase');
@@ -233,7 +236,10 @@ describe('restoring a backup', () => {
   it('reports invalid records but still restores them', async () => {
     const { store, a } = await filled();
     const raw = (await store.snapshot()).records.find((r) => r.id === a.id)!;
-    const broken = { ...raw, fields: { ...raw.fields, typeCode: { ...raw.fields.typeCode!, value: 'Not a code' } } };
+    const broken = {
+      ...raw,
+      fields: { ...raw.fields, triggerCodes: { ...raw.fields.triggerCodes!, value: ['Not a code'] } },
+    };
     const fresh = await Store.create(name(), { pin: '1357' }, FAST);
     const report = await restoreBackup(fresh, await backupOf(store, [broken]), 'a good passphrase');
     expect(report.invalid).toHaveLength(1);
@@ -320,6 +326,7 @@ describe('a backup of one person', () => {
         name: who,
         dateOfBirth: null,
         emergencyContact: '',
+        emergencyPhone: '',
         color: '#336699',
       } as never);
     const one = await store.create('seizure', seizure({ patientId: alexId, notes: 'alex one' }));

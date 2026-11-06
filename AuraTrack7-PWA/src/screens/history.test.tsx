@@ -33,7 +33,9 @@ describe('the list', () => {
   it('lists every seizure, newest first, with its count', async () => {
     const ctx = setup();
     const { patientId } = await seed(ctx);
-    await add(ctx, patientId, 600, 60, { typeCode: 'seizure_type.tonic_clonic' });
+    await add(ctx, patientId, 600, 60, {
+      profile: { id: '00000000-0000-4000-8000-000000000002', name: 'Tonic-clonic' },
+    });
     await add(ctx, patientId, 60, 30);
     await openHistory(ctx);
     expect(await screen.findByText('Seizures: 2')).toBeTruthy();
@@ -44,12 +46,14 @@ describe('the list', () => {
   it('filters by type and "not set", and Clear puts everything back', async () => {
     const ctx = setup();
     const { patientId } = await seed(ctx);
-    await add(ctx, patientId, 600, 60, { typeCode: 'seizure_type.tonic_clonic' });
+    await add(ctx, patientId, 600, 60, {
+      profile: { id: '00000000-0000-4000-8000-000000000002', name: 'Tonic-clonic' },
+    });
     await add(ctx, patientId, 300, 60);
-    await add(ctx, patientId, 60, 30, { typeCode: null, status: 'recorded' });
+    await add(ctx, patientId, 60, 30, { profile: null, status: 'recorded' });
     const user = await openHistory(ctx);
     await screen.findByText('Seizures: 3');
-    await user.selectOptions(screen.getByLabelText('Type'), 'seizure_type.tonic_clonic');
+    await user.selectOptions(screen.getByLabelText('Type'), 'profile:00000000-0000-4000-8000-000000000002');
     expect(await screen.findByText('Seizures: 1')).toBeTruthy();
     await user.selectOptions(screen.getByLabelText('Type'), 'none');
     expect(await screen.findByText('Seizures: 1')).toBeTruthy();
@@ -71,7 +75,9 @@ describe('the list', () => {
   it('says when no seizure matches the filters', async () => {
     const ctx = setup();
     const { patientId } = await seed(ctx);
-    await add(ctx, patientId, 60, 30, { typeCode: 'seizure_type.tonic_clonic' });
+    await add(ctx, patientId, 60, 30, {
+      profile: { id: '00000000-0000-4000-8000-000000000002', name: 'Tonic-clonic' },
+    });
     const user = await openHistory(ctx);
     await user.selectOptions(await screen.findByLabelText('Type'), 'none');
     expect(await screen.findByText('No seizures match these filters.')).toBeTruthy();
@@ -80,16 +86,20 @@ describe('the list', () => {
   it('keeps the filters when you open a seizure and come back', async () => {
     const ctx = setup();
     const { patientId } = await seed(ctx);
-    await add(ctx, patientId, 600, 60, { typeCode: 'seizure_type.tonic_clonic' });
+    await add(ctx, patientId, 600, 60, {
+      profile: { id: '00000000-0000-4000-8000-000000000002', name: 'Tonic-clonic' },
+    });
     await add(ctx, patientId, 60, 30);
     const user = await openHistory(ctx);
-    await user.selectOptions(await screen.findByLabelText('Type'), 'seizure_type.tonic_clonic');
+    await user.selectOptions(await screen.findByLabelText('Type'), 'profile:00000000-0000-4000-8000-000000000002');
     await screen.findByText('Seizures: 1');
     await user.click(screen.getByRole('button', { name: 'Open' }));
     await screen.findByText('History of changes');
     await user.click(screen.getByRole('button', { name: 'Back' }));
     expect(await screen.findByText('Seizures: 1')).toBeTruthy();
-    expect((screen.getByLabelText('Type') as HTMLSelectElement).value).toBe('seizure_type.tonic_clonic');
+    expect((screen.getByLabelText('Type') as HTMLSelectElement).value).toBe(
+      'profile:00000000-0000-4000-8000-000000000002',
+    );
   });
 
   it('shows the page size from the settings, with Earlier and Later between pages', async () => {
@@ -120,7 +130,13 @@ describe('the seizure in full', () => {
     await add(ctx, patientId, 60, 400, {
       notes: 'Woke at night',
       triggerCodes: ['trigger.stress'],
-      recoveryMinutes: 20,
+      // recovery from the end of the seizure, 20 minutes, as a phase mark
+      phases: {
+        start: { at: T0 - 3_600_000, source: 'timed' },
+        auraEnd: null,
+        seizureEnd: { at: T0 - 3_600_000 + 400_000, source: 'timed' },
+        recoveryEnd: { at: T0 - 3_600_000 + 400_000 + 1_200_000, source: 'timed' },
+      },
     });
     const user = await openHistory(ctx);
     await user.click(await screen.findByRole('button', { name: 'Open' }));
@@ -261,7 +277,7 @@ describe('the timeline', () => {
     await user.click(screen.getByRole('button', { name: 'Timeline' }));
     expect(await screen.findByText(/Between seizures:/)).toBeTruthy();
     expect(screen.getByRole('img', { name: /Timeline\. Events: 2/ })).toBeTruthy();
-    await user.click(screen.getByRole('button', { name: /focal aware · 1:30/i }));
+    await user.click(screen.getByRole('button', { name: /usual seizure · 1:30/i }));
     await screen.findByText('History of changes');
   });
 

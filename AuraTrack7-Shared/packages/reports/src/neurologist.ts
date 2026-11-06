@@ -12,7 +12,7 @@ import {
   nextLocalDay,
   regimenAt,
   regimenSnapshot,
-  seizureSeconds,
+  seizurePhaseSeconds,
   startOfLocalDay,
   auraSeconds,
   recoverySeconds,
@@ -204,7 +204,7 @@ export function doseSummary(
 ): string {
   // One unit for every time: "100 + 150 mg" (or "100 mg" when the doses are the same). Units that differ are each
   // written with their dose: "500 mg + 1 tablet". Doses in different units are never added up.
-  const slots = r.frequency === 'PRN' ? [] : r.scheduledTimes.map((t) => ({ dose: r.slotDoses[t] ?? r.dose, unit: r.slotUnits?.[t] ?? r.unit }));
+  const slots = r.frequency === 'PRN' ? [] : r.scheduledTimes.map((t) => ({ dose: r.slotDoses[t] ?? r.dose, unit: r.slotUnits[t] ?? r.unit }));
   const known = slots.filter((x): x is { dose: number; unit: string } => x.dose !== null);
   if (known.length === 0) return r.dose === null ? '' : `${r.dose} ${r.unit}`.trim();
   const units = new Set(known.map((x) => x.unit));
@@ -231,7 +231,7 @@ export function buildNeurologistReport(input: NeurologistInput, ctx: ReportConte
   const lengths = period.map(seconds).filter((n): n is number => n !== null);
   const average = lengths.length > 0 ? Math.round(lengths.reduce((a, b) => a + b, 0) / lengths.length) : 0;
   const daysCovered = new Set(period.map((s) => localDateKey(s.phases.start.at))).size;
-  const typeName = (s: Seizure) => clinicalClass(s, t, label);
+  const typeName = (s: Seizure) => clinicalClass(s, t);
   const byType = new Map<string, number>();
   for (const s of period) byType.set(typeName(s), (byType.get(typeName(s)) ?? 0) + 1);
 
@@ -351,7 +351,7 @@ export function buildNeurologistReport(input: NeurologistInput, ctx: ReportConte
     const b = doseSummary(endR);
     return {
       name: m.name,
-      detail: [m.activeIngredient, m.form].filter(Boolean).join(', '),
+      detail: [m.activeIngredient, m.form ? label(m.form) : ''].filter(Boolean).join(', '),
       stopped: m.stoppedAt !== null && m.stoppedAt <= to ? t('rep.stoppedOn', { date: fmt.date(m.stoppedAt) }) : '',
       dose: a !== '' && a !== b ? `${a} -> ${b}` : b,
       how: m.frequency === 'PRN' ? t('rep.asNeeded') : `${m.frequency} - ${t(`med.freq.${m.frequency}` as never)}`,
@@ -376,9 +376,9 @@ export function buildNeurologistReport(input: NeurologistInput, ctx: ReportConte
         date: fmt.date(c.effectiveAt),
         time: fmt.time(c.effectiveAt),
         medication: c.medicationName || r?.name || '',
-        detail: r ? [r.activeIngredient, r.form].filter(Boolean).join(', ') : '',
+        detail: r ? [r.activeIngredient, r.form ? label(r.form) : ''].filter(Boolean).join(', ') : '',
         typeLabel: t(`med.change.${c.type}` as never),
-        lines: changeLines(c, t),
+        lines: changeLines(c, t, label),
         note: c.note,
       };
     });
@@ -394,7 +394,7 @@ export function buildNeurologistReport(input: NeurologistInput, ctx: ReportConte
       length: seizureLengthSeconds(p),
       warning: s.prodromeSecondsBefore ?? null,
       aura: auraSeconds(p) ?? 0,
-      seizure: seizureSeconds(p),
+      seizure: seizurePhaseSeconds(p),
       recovery: recoverySeconds(p) ?? 0,
     };
   };
@@ -607,7 +607,7 @@ function rescueUse(input: NeurologistInput, ctx: ReportContext): string {
 }
 
 /** What changed, one line each: "dose 500 mg -> 750 mg", "times 08:00, 20:00 -> 08:00". */
-export function changeLines(c: MedicationChange, t: ReportContext['t']): string[] {
+export function changeLines(c: MedicationChange, t: ReportContext['t'], label: ReportContext['label']): string[] {
   if (c.type === 'started' || c.type === 'stopped') {
     const r = c.to ?? c.from;
     return r ? [`${doseSummary(r)} ${r.frequency === 'PRN' ? t('rep.asNeeded') : r.frequency}`.trim()] : [];
@@ -621,7 +621,8 @@ export function changeLines(c: MedicationChange, t: ReportContext['t']): string[
   if (c.from.frequency !== c.to.frequency) lines.push(`${t('rep.frequency')}: ${c.from.frequency} -> ${c.to.frequency}`);
   if (c.from.scheduledTimes.join() !== c.to.scheduledTimes.join())
     lines.push(`${t('rep.times')}: ${c.from.scheduledTimes.join(', ') || '-'} -> ${c.to.scheduledTimes.join(', ') || '-'}`);
-  if (c.from.form !== c.to.form) lines.push(`${t('rep.form')}: ${c.from.form || '-'} -> ${c.to.form || '-'}`);
+  if (c.from.form !== c.to.form)
+    lines.push(`${t('rep.form')}: ${c.from.form ? label(c.from.form) : '-'} -> ${c.to.form ? label(c.to.form) : '-'}`);
   return lines;
 }
 
@@ -635,10 +636,10 @@ export function seizureTimeline(s: Seizure, ctx: ReportContext): SeizureTimeline
   if (p.recoveryEnd) marks.push({ kind: 'recoveryEnd', atMs: p.recoveryEnd.at - t0, time: ctx.fmt.timeSec(p.recoveryEnd.at) });
   const ordered = [...s.symptoms].sort((a, b) => a.order - b.order);
   // Warning signs come before the start: they have no time on the seizure's clock and are never its first sign
-  const firstSign = ordered.find((sym) => (sym.phase ?? 'seizure') !== 'prodrome');
+  const firstSign = ordered.find((sym) => sym.phase !== 'prodrome');
   let clock: number | null = 0;
   const moments: SeizureTimeline['moments'] = ordered.map((sym) => {
-    const phase = sym.phase ?? 'seizure';
+    const phase = sym.phase;
     const place = areaLabel(sym.area, ctx.label);
     if (phase === 'prodrome') return { label: ctx.label(sym.code), place, phase, atMs: null, first: false };
     const gap = sym.sincePrevious;

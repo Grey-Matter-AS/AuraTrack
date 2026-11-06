@@ -242,18 +242,14 @@ export function drawBodyMap(flow: Flow, d: NonNullable<AdditionsData['bodyMap']>
 
 export function drawIlae(flow: Flow, d: NonNullable<AdditionsData['ilae']>, t: ReportText): void {
   flow.title(t('rep.exIlae'), 100);
-  if (d.recorded === 0 && d.earlier.recorded === 0)
+  if (d.recorded === 0)
     return flow.paragraph(t('rep.ilaeNone'), { size: 8.5, color: COLORS.muted, gap: 8 });
   const columns = [
     { title: t('rep.type'), grow: 4 },
     { title: t('rep.exCount'), width: 50, align: 'right' as const },
   ];
   flow.paragraph(t('rep.ilaeCover', { recorded: d.recorded, total: d.total }), { size: 8.5, gap: 4 });
-  if (d.recorded > 0) flow.table(columns, d.rows.map((r) => [r.label, String(r.count)]), { size: 8 });
-  if (d.earlier.recorded > 0) {
-    flow.paragraph(t('rep.ilae2017', { recorded: d.earlier.recorded }), { size: 8.5, gap: 4 });
-    flow.table(columns, d.earlier.rows.map((r) => [r.label, String(r.count)]), { size: 8 });
-  }
+  flow.table(columns, d.rows.map((r) => [r.label, String(r.count)]), { size: 8 });
 }
 
 export function drawRecovery(flow: Flow, d: NonNullable<AdditionsData['recovery']>, t: ReportText, minutes: (n: number | null) => string): void {

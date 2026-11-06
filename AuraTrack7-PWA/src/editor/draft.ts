@@ -4,7 +4,6 @@ import {
   EMPTY_ILAE_2025,
   SYMPTOMS,
   SYMPTOM_GROUPS,
-  bodyAreaFromLegacy,
   ilae2025ForSaving,
   isAuraLike,
   newId,
@@ -71,12 +70,6 @@ export interface Draft {
   profile: ProfileSnapshot | null;
   /** The timeline items the chosen profile added, so choosing another one can take them away again. Not saved. */
   profileItems: string[];
-  /** Recorded before 7.2: the plain-language type and the ILAE 2017 answers. Shown as they are; never changed. */
-  typeCode: string | null;
-  onset: 'focal' | 'generalized' | 'unknown' | null;
-  awareness: 'aware' | 'impaired' | 'unknown' | null;
-  motor: 'motor' | 'non_motor' | 'unknown' | null;
-  spread: 'yes' | 'no' | 'unknown' | null;
   triggers: string[];
   findings: string[];
   /** The user's own findings, in their own words. */
@@ -85,7 +78,6 @@ export interface Draft {
   quickNotes: string[];
   /** How long before the start the first warning signs came (prodrome), in seconds; null when none were entered. */
   prodromeSec: number | null;
-  recoveryMinutes: number;
   notBackYet: boolean;
   /** The timer stopped itself at 12 minutes; the seizure end is not known unless the user adds it. */
   stoppedByTimer: boolean;
@@ -108,7 +100,6 @@ const gapOf = (offset: SymptomEntry['sincePrevious'], first: boolean): Pick<Item
 
 export function draftFromSeizure(s: Seizure): Draft {
   const entries = [...s.symptoms].sort((a, b) => a.order - b.order);
-  const ilae = s.ilae;
   const known = s.afterFindings.filter((f) => f.code !== CUSTOM_FINDING);
   return {
     seizureId: s.id,
@@ -127,26 +118,20 @@ export function draftFromSeizure(s: Seizure): Draft {
     items: entries.map((e, i) => ({
       id: e.id,
       code: e.code,
-      phase: e.phase ?? 'seizure',
+      phase: e.phase,
       area: e.area,
       ...gapOf(e.sincePrevious, i === 0 || e.isFirst || e.phase === 'prodrome'),
       saved: e.sincePrevious,
     })),
     ilae2025: s.ilae2025 ?? EMPTY_ILAE_2025,
-    profile: s.profile ?? null,
+    profile: s.profile,
     profileItems: [],
-    typeCode: s.typeCode,
-    onset: ilae?.onset ?? null,
-    awareness: ilae?.awareness ?? null,
-    motor: ilae?.motor ?? null,
-    spread: ilae?.spreadToBothSides == null ? null : ilae.spreadToBothSides ? 'yes' : 'no',
     triggers: [...s.triggerCodes],
     findings: known.map((f) => f.code),
     customFindings: s.afterFindings.filter((f) => f.code === CUSTOM_FINDING).map((f) => f.customLabel ?? ''),
     notes: s.notes,
-    quickNotes: (s.quickNotes ?? []).map((n) => `[T+${Math.round((n.at - s.phases.start.at) / 1000)}s] ${n.label}`),
-    prodromeSec: s.prodromeSecondsBefore ?? null,
-    recoveryMinutes: s.recoveryMinutes ?? 0,
+    quickNotes: s.quickNotes.map((n) => `[T+${Math.round((n.at - s.phases.start.at) / 1000)}s] ${n.label}`),
+    prodromeSec: s.prodromeSecondsBefore,
     notBackYet: s.recoveryOngoing,
     stoppedByTimer: s.isEmergencyStop && s.phases.seizureEnd === null,
   };
@@ -161,28 +146,19 @@ export const prodromeText = (
 ): string | null => (prodromeSeconds(d) > 0 ? t('tl.about', { value: formatHms(prodromeSeconds(d)) }) : null);
 
 /**
- * Recovery in seconds: from the end of the seizure until back to usual self. Taken from the phase marks; a seizure that
- * only has the older minutes field (or no known end) uses that. Null when nothing was entered.
+ * Recovery in seconds: from the end of the seizure until back to usual self, from the phase marks. Null when either mark is
+ * missing, or when the recovery mark sits on the seizure's end (End seizure missed), which says nothing about its length.
  */
-export function recoverySecondsOf(d: Pick<Draft, 'seizureEnd' | 'recoveryEnd' | 'recoveryMinutes'>): number | null {
-  if (d.seizureEnd !== null && d.recoveryEnd !== null) {
-    const sec = Math.round((d.recoveryEnd - d.seizureEnd) / 1000);
-    if (sec > 0) return sec; // a recovery mark on the seizure's end (End seizure missed) says nothing about its length
-  }
-  return d.recoveryMinutes > 0 ? d.recoveryMinutes * 60 : null;
+export function recoverySecondsOf(d: Pick<Draft, 'seizureEnd' | 'recoveryEnd'>): number | null {
+  if (d.seizureEnd === null || d.recoveryEnd === null) return null;
+  const sec = Math.round((d.recoveryEnd - d.seizureEnd) / 1000);
+  return sec > 0 ? sec : null;
 }
 
-/** The draft with a new recovery length: the phase mark moves (when the seizure's end is known) and the minutes follow. */
-export function withRecovery<D extends Pick<Draft, 'seizureEnd' | 'recoveryEnd' | 'recoveryMinutes'>>(
-  d: D,
-  sec: number | null,
-): D {
+/** The draft with a new recovery length: the recovery mark moves. Without a known end of the seizure there is nothing to count from. */
+export function withRecovery<D extends Pick<Draft, 'seizureEnd' | 'recoveryEnd'>>(d: D, sec: number | null): D {
   const v = sec === null ? 0 : Math.max(0, Math.round(sec));
-  return {
-    ...d,
-    recoveryEnd: d.seizureEnd !== null ? (v > 0 ? d.seizureEnd + v * 1000 : null) : d.recoveryEnd,
-    recoveryMinutes: Math.round(v / 60),
-  };
+  return { ...d, recoveryEnd: d.seizureEnd !== null ? (v > 0 ? d.seizureEnd + v * 1000 : null) : d.recoveryEnd };
 }
 
 /**
@@ -227,7 +203,6 @@ const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
 /** What to save: only the fields the user changed since the draft was opened. */
 export function patchFromDraft(before: Draft, now: Draft, original: Seizure): Partial<Seizure> {
   const patch: Partial<Seizure> = {};
-  // The type and ILAE 2017 answers of an older seizure are never written: the editor only shows them
   const answers = ilae2025ForSaving(now.ilae2025);
   if (!same(answers, ilae2025ForSaving(before.ilae2025))) patch.ilae2025 = answers;
   if (!same(now.profile, before.profile)) patch.profile = now.profile;
@@ -245,7 +220,6 @@ export function patchFromDraft(before: Draft, now: Draft, original: Seizure): Pa
   }
   if (now.notes !== before.notes) patch.notes = now.notes;
   if (prodromeSeconds(now) !== prodromeSeconds(before)) patch.prodromeSecondsBefore = prodromeSeconds(now) || null;
-  if (now.recoveryMinutes !== before.recoveryMinutes) patch.recoveryMinutes = now.recoveryMinutes || null;
   if (now.notBackYet !== before.notBackYet) patch.recoveryOngoing = now.notBackYet;
 
   const timesChanged =
@@ -287,8 +261,8 @@ export const TABS: readonly TabId[] = ['classification', 'timeline', 'notes'];
  * The phases the timeline shows. A seizure like an aura (focal, preserved consciousness, nothing others could see) is all
  * aura, so it has no Seizure section, unless symptoms were already placed there.
  */
-export const timelinePhases = (d: Pick<Draft, 'typeCode' | 'ilae2025' | 'items'>): PhaseName[] =>
-  (d.typeCode === 'seizure_type.aura_only' || isAuraLike(d.ilae2025)) && !d.items.some((i) => i.phase === 'seizure')
+export const timelinePhases = (d: Pick<Draft, 'ilae2025' | 'items'>): PhaseName[] =>
+  isAuraLike(d.ilae2025) && !d.items.some((i) => i.phase === 'seizure')
     ? ['prodrome', 'aura', 'recovery']
     : [...PHASES];
 
@@ -325,7 +299,7 @@ export function chooseProfile(d: Draft, to: SeizureProfile | null, profiles: rea
 // ---- body areas
 
 /**
- * Does a symptom have a place on the body? The catalogue (from 6.1) knows: feelings and states (déjà vu, a strange smell,
+ * Does a symptom have a place on the body? The catalogue knows: feelings and states (déjà vu, a strange smell,
  * blacking out, speech) have none; some symptoms are always in one place (tongue biting is the mouth), so nothing is asked.
  */
 export type AreaRule = { kind: 'none' } | { kind: 'ask' } | { kind: 'fixed'; area: Area };
@@ -333,10 +307,11 @@ export function areaRule(code: string): AreaRule {
   const symptom = SYMPTOMS.find((s) => s.code === code);
   if (!symptom) return { kind: 'ask' };
   if (SYMPTOM_GROUPS.find((g) => g.code === symptom.group)?.skipRegion) return { kind: 'none' };
-  if (symptom.forceRegion) {
-    const area = bodyAreaFromLegacy(symptom.forceRegion, symptom.forceSubRegion ?? '', '');
-    if (area) return { kind: 'fixed', area };
-  }
+  if (symptom.forceRegion)
+    return {
+      kind: 'fixed',
+      area: { region: symptom.forceRegion, subRegion: symptom.forceSubRegion ?? null, part: null },
+    };
   return { kind: 'ask' };
 }
 export const startingArea = (code: string): Area | null => {
@@ -386,7 +361,7 @@ export function frequentSymptoms(
     const counts = new Map<string, number>();
     for (const seizure of list)
       for (const symptom of seizure.symptoms)
-        if ((symptom.phase ?? 'seizure') === phase) counts.set(symptom.code, (counts.get(symptom.code) ?? 0) + 1);
+        if (symptom.phase === phase) counts.set(symptom.code, (counts.get(symptom.code) ?? 0) + 1);
     return [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([code]) => code);
   };
   const ofType = profileId ? tally(seizures.filter((x) => x.profile?.id === profileId)) : [];

@@ -2,6 +2,7 @@
 import { cleanup, configure, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { newId } from '@auratrack/model';
 import { PIN, T0, backToHome, openPlace, openSettings, seed, setup } from './testSupport';
 
 // The cards on Home that ask for something: install, backup, what's new. And the first backup screen.
@@ -143,5 +144,42 @@ describe('the backup screen', () => {
     void PIN;
     void backToHome;
     void openSettings;
+  });
+});
+
+describe('records this device cannot show', () => {
+  it('are counted on Home instead of disappearing', async () => {
+    const ctx = setup();
+    await seed(ctx);
+    const [entry] = await ctx.client.changesSince({ stamp: null });
+    const recordId = newId();
+    await ctx.client.applyChanges({
+      entries: [
+        { ...entry!, id: newId(), recordType: 'heartRateSnapshot', recordId, fields: { bpm: 120, dataVersion: 3 } },
+      ],
+    });
+    ctx.mount();
+    await screen.findByRole('button', { name: 'Start timer' });
+    expect(await screen.findByText(/^Records this device cannot show yet: 1\./)).toBeTruthy();
+  });
+
+  it('deletes records saved before 7.2 and says how many', async () => {
+    const ctx = setup();
+    await seed(ctx);
+    const [entry] = await ctx.client.changesSince({ stamp: null });
+    const oldFields = Object.fromEntries(Object.entries(entry!.fields ?? {}).filter(([key]) => key !== 'dataVersion'));
+    await ctx.client.applyChanges({ entries: [{ ...entry!, id: newId(), recordId: newId(), fields: oldFields }] });
+    ctx.mount();
+    await screen.findByRole('button', { name: 'Start timer' });
+    expect(await screen.findByText(/^Records from a version before 7\.2 removed: 1\./)).toBeTruthy();
+    expect(screen.queryByText(/^Records this device cannot show yet/)).toBeNull();
+  });
+
+  it('shows nothing when every record can be shown', async () => {
+    const ctx = setup();
+    await seed(ctx);
+    ctx.mount();
+    await screen.findByRole('button', { name: 'Start timer' });
+    expect(screen.queryByText(/^Records this device cannot show yet/)).toBeNull();
   });
 });

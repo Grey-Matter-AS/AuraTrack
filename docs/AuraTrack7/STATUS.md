@@ -5,7 +5,7 @@
 - **Current milestone:** N0, The move to six folders (Part A), then accounts, machines, decisions (Part B). **Part A: committed to `main` (`dcc6958`, `0ba28c7`), Vercel production built from the new layout (Root Directory `AuraTrack7-PWA`). CI green on `main` (2026-11-04, `fcc44c7`). Left: your phone check of production.**
 - **Roadmap:** approved 2026-11-03 (`ROADMAP.md`).
 - **PWA:** paused 2026-11-03. Its open checks are listed in `docs/plan/STATUS.md`.
-- **Last updated:** 2026-11-03 (WSL)
+- **Last updated:** 2026-11-06 (WSL)
 
 ## Next step
 1. ~~Commit the CI fix and check CI~~: done, CI green on `main` (`fcc44c7`).
@@ -14,7 +14,8 @@
    - [ ] start and stop a test recording; it's in History
    - [ ] airplane mode, reload: it still opens
    - [ ] an installed copy picked up the update
-3. **Then:** Part A is done; Part B (accounts, D-U-N-S, Apple and Google enrolment, toolchains).
+3. **You:** look at the 2026-11-06 changes (below), commit them, and check that CI is green again. Before opening the new version on your phones, see "On your phones" below.
+4. **Then:** Part A is done; Part B (accounts, D-U-N-S, Apple and Google enrolment, toolchains), including checking every ⚠ row in `extras.md` against Apple's and Google's documentation (D-20).
 
 ## N0 A2–A4: the move (2026-11-03, WSL)
 - `git mv`: `apps/web` → `AuraTrack7-PWA`, `apps/server` → `AuraTrack7-Server/hub`, `apps/tray` → `AuraTrack7-Server/tray`, `packages/*` → `AuraTrack7-Shared/packages/*`. Package names unchanged.
@@ -46,7 +47,7 @@ Baseline (all green):
 ## Milestones
 | # | Milestone | State |
 |---|---|---|
-| N0 | Six-folder move (A); accounts, machines, decisions (B) | not started |
+| N0 | Six-folder move (A); accounts, machines, decisions (B) | A done (your phone check left); B not started |
 | N1 | Governance and rules | not started |
 | N2 | Specification and test vectors | not started |
 | N3 | Project skeletons and design system | not started |
@@ -73,6 +74,9 @@ Baseline (all green):
 | N24 | First store release | not started |
 | N25+ | After the first release (ROADMAP Phase 5) and the yearly cycle (Phase 6) | later |
 
+## Decided
+- Bundle and package ids: `eu.greymatter.auratrack7` on both platforms (approved 2026-11-06).
+
 ## Your accounts and requests (ROADMAP Part B1)
 | Item | State |
 |---|---|
@@ -84,12 +88,34 @@ Baseline (all green):
 | Regulatory adviser | yours, in progress per you |
 
 ## Open questions
-- D-17 (ILAE 2025, seizure profiles): built in the PWA as M8 on branch `7.2.0---M8` (sign-off `docs/plan/M8-signoff.md`); the native apps take it in N2, N4 and N8.
-- Translation review: the M8 messages (`classify.`, `prof.`, `field.ilae2025`, `field.profile`, `rep.ilae2017`; 8 languages), and the earlier `cls.section`/`cls.follow`.
+- D-17 (ILAE 2025, seizure profiles): built in the PWA as M8 (on `main`) (sign-off `docs/plan/M8-signoff.md`); the native apps take it in N2, N4 and N8.
+- Translation review: the M8 messages (`classify.`, `prof.`, `field.ilae2025`, `field.profile`; 8 languages), `home.hidden`, `help.newText`, `after.backAfter` (all drafted by Claude).
 - Version scheme of the first store release (1.0 or continuing 7.x): settled in N0.
-- Bundle and package ids: domain is `grey-matter.eu`; proposed `eu.greymatter.auratrack7` on both platforms (no hyphen: Android ids can't contain one). Waiting for your yes (N0 slice 2).
+- The ⚠ rows in `extras.md` (Critical Alerts, Android full-screen alerts and exact alarms, `SEND_SMS` on Play, the Android lock-screen shortcut, Health Connect history): checked in N0 Part B.
 - Contact address for security reports (`SECURITY.md`): N0.
 - Which QR decoder the F-Droid build uses: N16.
+
+## Review and fixes of 2026-11-06 (WSL): nothing committed
+Your instruction: fix every logical error that harms the app or its data; breaking changes are fine, in the PWA too; nothing is sacred unless it is correct. Decisions D-18, D-19, D-20.
+
+**Code (PWA and shared packages):**
+- **Cluster rule (D-19):** `clusterCounts` counted up to 8 min before *and* after each seizure (0, 7, 14 min read as "3 in 8 min"); now the seizures must fall inside one window. The 6.1 import comparison still compares 6.1's rule on both sides, with v7's count in its note.
+- **CSV lost each time's unit:** `slotUnits` column added (medicines and their changes), exported and imported; round-trip test covers "150 mg + 1 tablet".
+- **CSV duration columns** now mean what the app means: `lengthSeconds` (start to end of the seizure, aura included) and `recoverySeconds` (after the end of the seizure) replace `seizureSeconds`/`totalSeconds`. A recovery without an end of seizure is a listed problem. `seizureSeconds()` is renamed `seizurePhaseSeconds()` (only the neurologist report's breakdown and the 6.1 comparison use it).
+- **Records were hidden without a word:** the store now keeps records of unknown types (from a newer version or another platform) instead of refusing them; they load after a restart, sync on and are in backups. Home shows "Records this device cannot show yet: n …" (new Home card `HiddenRecordsCard`, built from the kit's `Card`, message `home.hidden` in 9 languages, drafted by Claude).
+- **No compatibility before 7.2 (D-18):** the `before/during/after` phase alias is gone (schema and CSV); a CSV `#phase` it doesn't know is now a listed problem (it used to be dropped). Records on your devices that still hold old phase names will be counted by the new Home card.
+- **The M3 prototype (`#/prototype`) is removed** (it showed the old editor and phases); its button left the options page; `prototype.spec.ts` deleted (staged with `git rm`).
+- **Wording:** `after.backAfter` says "Back to usual self" in 9 languages; the unused `det.recovery` is deleted.
+- **CI was red** (Prettier on two e2e files since `277e6fe`): formatted.
+- Checks: format, typecheck, lint clean; unit and component 1,301 of 1,301 (95 files); build passes, 77.8 KB initial JS; e2e Chromium `shell`, `app`, `recording`: 16 of 16. Not run: Firefox, the layout audits (Home has a new card that shows only when records are hidden).
+
+**Second round, same day (your instruction: "remove all legacy items that are superseded"; ILAE 2025 only):** ILAE 2017, the plain-language type (`typeCode`, `seizureTypeCode`), `recoveryMinutes`, the 6.1 importer and its scripts, and 92 unused messages (828 entries in 9 languages) are removed; catalogue version 2 is now edited by hand (`model/src/codes/catalogue.ts`); fields that were optional only for old records are required; medicine forms are stored as codes and reports label them in the report's language; EEG seizure references are named from the linked seizure; the CSV import now writes every field and reads `recordedWhileLocked`; CSV-imported records keep their row as `importedFrom`. Details in D-18 point 3. Checks: format, typecheck, lint clean; unit and component 1,251 of 1,251 (94 files); build passes, 77.8 KB; e2e Chromium (shell, app, recording, dev, m4, date-fields, passkey) 57 of 57. Not run: Firefox, household, video, the layout audits.
+
+**Third round, same day (your approval):** no record is hidden without notice any more. Every record carries `dataVersion` (2); at each load, records without it (from before 7.2, also from an old backup or an old device) are deleted as tombstones and Home says "Records from a version before 7.2 removed: n"; records from a newer version are kept and counted (D-18 point 4). Also: the last "back to normal" wording in 8 languages (`help.recordingText`, `det.recoveryOngoing`, `reports.extra.recoveryTimesHelp`); more than 12 profiles after a sync are all kept and shown with a note (`prof.over`); the M8 sign-off says the work is on `main`. Checks: format, typecheck, lint clean; 1,254 of 1,254 unit and component tests; build 77.8 KB; e2e Chromium (shell, app, recording, dev, m4, date-fields, passkey, household) 59 of 59. Not run: Firefox, video, the layout audits.
+
+**On your phones:** the first time you open the new version, everything saved by the version now in production is deleted (it has no data version), and Home says how many records went. Make a CSV export or backup first if you want a copy; it will also be deleted if you restore it into the new version.
+
+**Docs:** `ROADMAP.md` (A4, new A9, N0, N2, N3, N5, N6, N8, N10, N11, N12, N14, N15, N16, Part D/E, decisions, change log), `parity.md` (definitions section; F-101, F-102, F-110, F-205, F-301–F-306, F-312, F-314, F-315, F-402, F-403, F-501, F-705, F-1006; new F-1007), `extras.md` (what each extra needs and what happens otherwise; new X-109 AlarmKit, X-110 iOS 64-notification limit, X-408 Android timing), decisions D-18, D-19, D-20, `docs/plan/feature-checklist.md` (7.2 notes, F-1007), `docs/plan/STATUS.md`, `CLAUDE.md`.
 
 ## Session log
 | Date | Machine | What |
@@ -100,4 +126,8 @@ Baseline (all green):
 | 2026-11-03 | WSL | N0 A2–A4: the move on branch `n0-move`, paths updated, all checks green; waiting for your commit and the Vercel preview |
 | 2026-11-04 | WSL | Part A on `main` and in production; CI timing fix in a sync test |
 | 2026-11-04 | WSL | D-16: the seizure type fills in the ILAE answers it settles (PWA editor + model rule); heading renamed in 9 languages. Then replaced by D-17: ILAE 2025 and seizure profiles (PWA M8 plan drafted; native N2, N4, N8) |
+| 2026-11-06 | WSL | Records from before 7.2 deleted at load with a notice (`dataVersion`); last wording, profile-limit and M8 sign-off fixes |
+| 2026-11-06 | WSL | CI actions moved off Node 20 (GitHub's deprecation warning): `actions/checkout@v7`, `actions/setup-node@v7`, `pnpm/action-setup@v6` (pnpm 12 support since 6.1.0), `actions/upload-artifact@v7`; all run on Node 24. Not yet run in CI |
+| 2026-11-06 | WSL | Second round: every superseded legacy item removed (ILAE 2017, plain-language type, 6.1 importer, legacy-optional fields, unused messages); bundle id approved |
+| 2026-11-06 | WSL | Review of code and native plan against the PWA, then the fixes and doc updates (see "Review and fixes of 2026-11-06"); D-18, D-19, D-20 |
 | 2026-11-04 | WSL | PWA M8 (D-17) built on `7.2.0---M8`: ILAE 2025 questions, seizure profiles, reports and CSV; all checks green (see `docs/plan/M8-signoff.md`) |

@@ -26,9 +26,9 @@ function changeRows(changes: readonly MedicationChange[], from: number, to: numb
         date: ctx.fmt.date(c.effectiveAt),
         time: ctx.fmt.time(c.effectiveAt),
         medication: c.medicationName || r?.name || '',
-        detail: r ? [r.activeIngredient, r.form].filter(Boolean).join(', ') : '',
+        detail: r ? [r.activeIngredient, r.form ? ctx.label(r.form) : ''].filter(Boolean).join(', ') : '',
         typeLabel: ctx.t(`med.change.${c.type}` as never),
-        lines: changeLines(c, ctx.t),
+        lines: changeLines(c, ctx.t, ctx.label),
         note: c.note,
       };
     });
@@ -58,7 +58,7 @@ export function buildEventLog(
       return {
         date: fmt.date(s.phases.start.at),
         time: fmt.timeSec(s.phases.start.at),
-        type: clinicalName(s, t, label),
+        type: clinicalName(s, t),
         duration: seconds === null ? '-' : fmt.duration(seconds),
         notes: [
           s.notes,
@@ -133,7 +133,7 @@ export function buildDiary(
   },
   ctx: ReportContext,
 ): DiaryReport {
-  const { t, label } = ctx;
+  const { t } = ctx;
   const { year, month } = input;
   const daysInMonth = new Date(year, month, 0).getDate();
   const first = new Date(year, month - 1, 1).getDay();
@@ -149,7 +149,7 @@ export function buildDiary(
     byDay.set(d, [...(byDay.get(d) ?? []), s]);
   }
   const typeKey = (s: Seizure) => seizureKindKey(s) ?? 'none';
-  const titles = new Map(inMonth.map((s) => [typeKey(s), seizureTitle(s, t, label)]));
+  const titles = new Map(inMonth.map((s) => [typeKey(s), seizureTitle(s, t)]));
   const typeName = (key: string) => (key === 'none' ? t('rep.untyped') : (titles.get(key) ?? t('rep.untyped')));
   const rows = Math.ceil((first + daysInMonth) / 7);
   const cells: DiaryCell[] = [];
@@ -201,8 +201,15 @@ export interface EegReport {
   items: { kind: 'activity' | 'seizure'; what: string; start: string; end: string; duration: string; mood: string; notes: string }[];
 }
 
+/** "Seizure - Usual seizure": the linked seizure named by its profile or ILAE 2025 type, or just "Seizure". */
+function seizureRefText(a: EegActivity, seizures: readonly Seizure[], ctx: ReportContext): string {
+  const seizure = seizures.find((s) => s.id === a.linkedSeizureId);
+  const name = seizure && seizureKindKey(seizure) !== null ? seizureTitle(seizure, ctx.t) : null;
+  return name ? `${ctx.t('eeg.seizure')} - ${name}` : ctx.t('eeg.seizure');
+}
+
 export function buildEegDiary(
-  input: { session: EegSession | null; activities: readonly EegActivity[] },
+  input: { session: EegSession | null; activities: readonly EegActivity[]; seizures?: readonly Seizure[] },
   ctx: ReportContext,
 ): EegReport {
   const { t, label, fmt } = ctx;
@@ -226,7 +233,7 @@ export function buildEegDiary(
         kind: a.kind === 'seizure_reference' ? ('seizure' as const) : ('activity' as const),
         what:
           a.kind === 'seizure_reference'
-            ? `${t('eeg.seizure')}${a.activityCode ? ` - ${label(a.activityCode)}` : ''}`
+            ? seizureRefText(a, input.seizures ?? [], ctx)
             : a.customText || label(a.activityCode ?? ''),
         start: when(a.startTime),
         end: a.endTime ? when(a.endTime) : t('eeg.running.session'),

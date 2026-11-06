@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 // The settings added for recording and the lock screen (M3). A setting is stored as a `Setting` record (scope, key,
 // value); this table says which scope each key lives in, what values are allowed and what it is when nobody set it.
-// Older keys that came with the 6.1 import (hapticFeedback, durationFormat, ...) keep their 6.1 names.
+// Some keys (hapticFeedback, durationFormat, ...) keep the names they were first given.
 
 /** The nine languages of the app (the same list as `LANGUAGES` in @auratrack/i18n; the web app's tests check they agree). */
 export const LANGUAGE_CODES = ['en', 'nb', 'nn', 'da', 'sv', 'fi', 'de', 'fr', 'es'] as const;
@@ -34,7 +34,7 @@ export const SETTING_DEFS = {
   recordingHaptics: { scope: 'device', schema: z.boolean(), default: true },
   /** Who records: 'carer' (phase buttons) or 'self' (a simpler screen with one Stop button). */
   recordedBy: { scope: 'patient', schema: z.enum(['self', 'carer']), default: 'carer' },
-  /** How the screens look. The names are 6.1's, so an imported value is used as it is. */
+  /** How the screens look. */
   theme: { scope: 'device', schema: z.enum(['dark', 'light', 'system']), default: 'dark' },
   accentColor: { scope: 'device', schema: z.enum(['blue', 'red', 'green', 'purple', 'amber']), default: 'blue' },
   fontSize: { scope: 'device', schema: z.enum(['small', 'normal', 'large', 'xlarge']), default: 'normal' },

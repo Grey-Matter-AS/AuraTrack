@@ -9,6 +9,7 @@ const base = () => ({
   patientId: ids.patient,
   deviceId: ids.device,
   createdAt: 1_760_000_000_000,
+  dataVersion: 2,
 });
 
 export const seizureFixture = (over: Partial<Seizure> = {}): Seizure => ({
@@ -21,11 +22,10 @@ export const seizureFixture = (over: Partial<Seizure> = {}): Seizure => ({
     recoveryEnd: null,
   },
   status: 'recorded',
-  typeCode: 'seizure_type.focal_aware',
-  ilae: null,
+  ilae2025: null,
+  profile: null,
   symptoms: [],
   afterFindings: [],
-  recoveryMinutes: null,
   recoveryOngoing: false,
   triggerCodes: [],
   notes: '',
@@ -34,6 +34,10 @@ export const seizureFixture = (over: Partial<Seizure> = {}): Seizure => ({
   isEmergencyStop: false,
   recordedBy: 'carer',
   eegSessionId: null,
+  prodromeSecondsBefore: null,
+  quickNotes: [],
+  recordedWhileLocked: false,
+  cancelled: false,
   ...over,
 });
 
@@ -50,7 +54,6 @@ export const interictalFixture = (over: Partial<InterictalEvent> = {}): Interict
 
 export const symptomSetFixture = (over: Partial<SymptomSet> = {}): SymptomSet => ({
   ...base(),
-  seizureTypeCode: 'seizure_type.focal_aware',
   name: '',
   items: [{ code: 'symptom.big_shaking_jerking.rhythmic_shaking', phase: 'seizure' }],
   ...over,
@@ -76,10 +79,11 @@ export const medicationFixture = (over: Partial<Medication> = {}): Medication =>
   ...base(),
   name: 'Levetiracetam',
   activeIngredient: 'Levetiracetam',
-  form: 'tablet',
+  form: 'form.tablet',
   dose: 500,
   unit: 'mg',
   slotDoses: {},
+  slotUnits: {},
   frequency: 'BD',
   scheduledTimes: ['08:00', '20:00'],
   scheduledDays: [0, 1, 2, 3, 4, 5, 6],

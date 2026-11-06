@@ -18,6 +18,7 @@ const change = (over: Partial<MedicationChange>): MedicationChange => ({
   patientId: ids.patient,
   deviceId: ids.device,
   createdAt: 1,
+  dataVersion: 2,
   medicationId: med.id,
   medicationName: med.name,
   type: 'changed',

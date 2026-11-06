@@ -11,8 +11,6 @@ export const CSV_SECTIONS = {
     'date',
     'time',
     'timeZone',
-    'type',
-    'typeCode',
     'profile',
     'ilae2025Type',
     'ilae2025Start',
@@ -21,8 +19,9 @@ export const CSV_SECTIONS = {
     'ilae2025BilateralTonicClonic',
     'ilae2025Observable',
     'ilae2025Kind',
-    'seizureSeconds',
-    'totalSeconds',
+    // The seizure length as the app shows it (start to end of the seizure, aura included) and the recovery after it
+    'lengthSeconds',
+    'recoverySeconds',
     'auraEnd',
     'seizureEnd',
     'recoveryEnd',
@@ -33,7 +32,6 @@ export const CSV_SECTIONS = {
     'afterFindings',
     'afterFindingCodes',
     'afterFindingAreas',
-    'recoveryMinutes',
     'warningSecondsBefore',
     'notes',
     'recordedBy',
@@ -49,12 +47,14 @@ export const CSV_SECTIONS = {
     'name',
     'activeIngredient',
     'form',
+    'formCode',
     'dose',
     'unit',
     'frequency',
     'scheduledTimes',
     'scheduledDays',
     'slotDoses',
+    'slotUnits',
     'rescue',
     'showInEmergency',
     'reminder',
@@ -77,12 +77,14 @@ export const CSV_SECTIONS = {
     'name',
     'activeIngredient',
     'form',
+    'formCode',
     'dose',
     'unit',
     'frequency',
     'scheduledTimes',
     'scheduledDays',
     'slotDoses',
+    'slotUnits',
   ],
   WELLBEING_ENTRIES: ['id', 'recordedAt', 'day', 'mood', 'moodCode', 'intensity', 'factors', 'factorCodes', 'notes'],
   EEG_SESSIONS: [
@@ -133,24 +135,37 @@ export function parseAreaToken(token: string): BodyArea | null {
   return { region, subRegion: sub === '' ? null : sub, part: part === '' ? null : part };
 }
 
-/** A symptom as one token: `code`, `code@area` and/or `code#phase` (before, during or after). */
+/** A symptom as one token: `code`, `code@area` and/or `code#phase` (prodrome, aura, seizure or recovery). */
 export function symptomToken(code: string, area: BodyArea | null, phase?: PhaseName): string {
   return `${code}${area ? `@${areaToken(area)}` : ''}${phase ? `#${phase}` : ''}`;
 }
 
-export function parseSymptomToken(token: string): { code: string; area: BodyArea | null; phase: PhaseName | null } {
+/** `badPhase` holds a `#phase` that is not one of the four, so the import can list it instead of dropping it. */
+export function parseSymptomToken(token: string): {
+  code: string;
+  area: BodyArea | null;
+  phase: PhaseName | null;
+  badPhase?: string;
+} {
   let rest = token.trim();
   let phase: PhaseName | null = null;
+  let badPhase: string | undefined;
   const hash = rest.lastIndexOf('#');
   if (hash >= 0) {
     const p = rest.slice(hash + 1).trim();
-    const parsed = PhaseNameSchema.safeParse(p); // the four phases, and the three written before 7.2
+    const parsed = PhaseNameSchema.safeParse(p);
     if (parsed.success) phase = parsed.data;
+    else badPhase = p;
     rest = rest.slice(0, hash);
   }
   const at = rest.indexOf('@');
   const code = (at >= 0 ? rest.slice(0, at) : rest).trim();
-  return { code, area: at >= 0 ? parseAreaToken(rest.slice(at + 1)) : null, phase };
+  return {
+    code,
+    area: at >= 0 ? parseAreaToken(rest.slice(at + 1)) : null,
+    phase,
+    ...(badPhase !== undefined ? { badPhase } : {}),
+  };
 }
 
 /** An after-seizure finding as one token: `code`, or `code@area+area` with the places it was seen. */

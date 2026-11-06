@@ -45,8 +45,7 @@ export function usualSymptoms(seizures: readonly Seizure[], count = 4): string[]
   const tally = new Map<string, number>();
   for (const seizure of seizures)
     for (const symptom of seizure.symptoms)
-      if (symptom.phase === undefined || symptom.phase === 'seizure')
-        tally.set(symptom.code, (tally.get(symptom.code) ?? 0) + 1);
+      if (symptom.phase === 'seizure') tally.set(symptom.code, (tally.get(symptom.code) ?? 0) + 1);
   return [...tally]
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .slice(0, count)

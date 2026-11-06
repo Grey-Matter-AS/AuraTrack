@@ -166,7 +166,15 @@ describe('devices syncing through the hub, without ever meeting', () => {
     const second = crypto.randomUUID();
     await a.api.createRecord({
       type: 'patient',
-      values: { id: second, patientId: second, name: 'Sam', dateOfBirth: null, emergencyContact: '', color: '#aa3366' },
+      values: {
+        id: second,
+        patientId: second,
+        name: 'Sam',
+        dateOfBirth: null,
+        emergencyContact: '',
+        emergencyPhone: '',
+        color: '#aa3366',
+      },
     });
     const { registerPatient } = await import('@auratrack/sync');
     await registerPatient(a.api, second, Date.now());
@@ -293,7 +301,15 @@ describe('devices syncing through the hub, without ever meeting', () => {
     const second = crypto.randomUUID();
     await a.api.createRecord({
       type: 'patient',
-      values: { id: second, patientId: second, name: 'Sam', dateOfBirth: null, emergencyContact: '', color: '#aa3366' },
+      values: {
+        id: second,
+        patientId: second,
+        name: 'Sam',
+        dateOfBirth: null,
+        emergencyContact: '',
+        emergencyPhone: '',
+        color: '#aa3366',
+      },
     });
     const { registerPatient } = await import('@auratrack/sync');
     await registerPatient(a.api, second, Date.now());

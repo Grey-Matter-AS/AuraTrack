@@ -131,25 +131,40 @@ for (const device of MATRIX) {
     await openTab('Timeline');
     await everyLook('editor: timeline, empty');
     const add = async (phase: string, search: string, pick: RegExp) => {
-      await page.getByRole('listitem', { name: phase, exact: true }).getByRole('button', { name: '+ Add symptom' }).click();
+      await page
+        .getByRole('listitem', { name: phase, exact: true })
+        .getByRole('button', { name: '+ Add symptom' })
+        .click();
       const sheet = page.getByRole('dialog', { name: /^Add a symptom/ });
       await sheet.getByLabel('Search', { exact: true }).fill(search);
       await sheet.getByRole('button', { name: pick }).first().click();
       const where = page.getByRole('dialog', { name: /^Where:/ });
       if (await where.isVisible().catch(() => false)) await where.getByRole('button', { name: 'Done' }).click();
     };
-    await page.getByRole('listitem', { name: 'Aura', exact: true }).getByRole('button', { name: '+ Add symptom' }).click();
+    await page
+      .getByRole('listitem', { name: 'Aura', exact: true })
+      .getByRole('button', { name: '+ Add symptom' })
+      .click();
     await page.getByRole('dialog', { name: /^Add a symptom/ }).waitFor();
     await everyLook('add a symptom sheet', '.ui-overlay', true);
     await page.keyboard.press('Escape');
     await add('Aura', 'deja', /Deja Vu/i);
     await add('Seizure', 'staring', /Staring/i);
-    await page.getByRole('listitem', { name: 'Seizure', exact: true }).getByRole('button', { name: '+ Add symptom' }).click();
+    await page
+      .getByRole('listitem', { name: 'Seizure', exact: true })
+      .getByRole('button', { name: '+ Add symptom' })
+      .click();
     const sheet = page.getByRole('dialog', { name: /^Add a symptom/ });
     await sheet.getByLabel('Search', { exact: true }).fill('rhythmic');
-    await sheet.getByRole('button', { name: /Rhythmic/i }).first().click();
+    await sheet
+      .getByRole('button', { name: /Rhythmic/i })
+      .first()
+      .click();
     await page.getByRole('dialog', { name: /^Where:/ }).waitFor();
-    await page.getByRole('dialog', { name: /^Where:/ }).getByRole('button', { name: 'Arms', exact: true }).click();
+    await page
+      .getByRole('dialog', { name: /^Where:/ })
+      .getByRole('button', { name: 'Arms', exact: true })
+      .click();
     await everyLook('body map sheet', '.ui-overlay', true);
     await page.getByRole('button', { name: 'Done' }).click();
     await page.getByRole('combobox', { name: 'Time since the symptom before' }).last().selectOption('custom');

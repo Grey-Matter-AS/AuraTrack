@@ -21,6 +21,7 @@ const change = (over: Partial<MedicationChange>): MedicationChange => ({
   patientId: ids.patient,
   deviceId: ids.device,
   createdAt: 1,
+  dataVersion: 2,
   medicationId: med.id,
   medicationName: med.name,
   type: 'changed',
@@ -114,7 +115,7 @@ describe('regimen differences', () => {
 
   it('reports each kind of change', () => {
     const from = regimenSnapshot(med);
-    expect(diffRegimen(from, { ...from, name: 'Keppra', form: 'liquid', unit: 'ml' })).toEqual([
+    expect(diffRegimen(from, { ...from, name: 'Keppra', form: 'form.liquid', unit: 'ml' })).toEqual([
       'name',
       'form',
       'unit',
@@ -140,10 +141,11 @@ describe('regimen differences', () => {
     const snap = regimenSnapshot({ name: 'X', frequency: 'OD', dose: 5, unit: 'mg' });
     expect(snap).toMatchObject({
       activeIngredient: '',
-      form: '',
+      form: null,
       scheduledTimes: ['08:00'],
       scheduledDays: [0, 1, 2, 3, 4, 5, 6],
       slotDoses: {},
+      slotUnits: {},
     });
   });
 });

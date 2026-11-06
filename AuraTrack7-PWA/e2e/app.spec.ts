@@ -50,7 +50,9 @@ test('Start answers inside a frame or two', async ({ page }) => {
   const ms = await page.evaluate(
     () =>
       new Promise<number>((resolve) => {
-        const button = [...document.querySelectorAll('button')].find((b) => b.getAttribute('aria-label') === 'Start timer');
+        const button = [...document.querySelectorAll('button')].find(
+          (b) => b.getAttribute('aria-label') === 'Start timer',
+        );
         const t0 = performance.now();
         button?.click();
         const look = () =>

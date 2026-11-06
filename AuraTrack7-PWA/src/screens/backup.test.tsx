@@ -4,9 +4,9 @@ import { cleanup, configure, fireEvent, screen, waitFor, within } from '@testing
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { reportsEnv, type ReportsEnv } from '../reports/env';
-import { PIN, T0, makeSeizure, openPlace, seed, setup } from './testSupport';
+import { PIN, makeSeizure, openPlace, seed, setup } from './testSupport';
 
-// Backup, restore, a backup of one person, moving to a new phone, bringing in a 6.1 file, and the recovery kit. The real store,
+// Backup, restore, a backup of one person, moving to a new phone, bringing in a spreadsheet, and the recovery kit. The real store,
 // the real encryption; only the file dialog and the worker are replaced.
 configure({ asyncUtilTimeout: 8000 });
 
@@ -97,7 +97,15 @@ describe('making a backup', () => {
     const samId = newId();
     await ctx.client.createRecord({
       type: 'patient',
-      values: { id: samId, patientId: samId, name: 'Sam', dateOfBirth: null, emergencyContact: '', color: '#7e22ce' },
+      values: {
+        id: samId,
+        patientId: samId,
+        name: 'Sam',
+        dateOfBirth: null,
+        emergencyContact: '',
+        emergencyPhone: '',
+        color: '#7e22ce',
+      },
     });
     await ctx.client.createRecord({ type: 'seizure', values: makeSeizure(patientId, 60, 40, { notes: 'alex only' }) });
     await ctx.client.createRecord({ type: 'seizure', values: makeSeizure(samId, 60, 40, { notes: 'sam only' }) });
@@ -192,84 +200,6 @@ describe('restoring a backup', () => {
   });
 });
 
-const OLD_FILE = JSON.stringify({
-  schema: 'auratrack.backup',
-  version: 2,
-  exportedAt: T0,
-  data: {
-    settings: [{ key: 'personName', value: 'Old Patient' }],
-    events: [
-      {
-        uuid: 'ev-1',
-        startTime: T0 - 86_400_000,
-        date: 'x',
-        time: 'y',
-        duration: 90,
-        type: 'Focal Aware',
-        symptoms: [],
-        triggers: [],
-        notes: 'from version 6',
-        isComplete: true,
-        isEdited: false,
-        isManualEntry: false,
-        isEmergencyStop: false,
-        userModeAtTime: 'CARETAKER',
-        videoAttached: false,
-        editLog: [],
-        postIctal: { findings: [] },
-        laps: {},
-        manualDurations: { total: 90 },
-      },
-    ],
-    medications: [],
-    medicationLogs: [],
-    medicationChanges: [],
-    eegSessions: [],
-    eegActivities: [],
-    wellbeingEntries: [],
-    tombstones: [],
-  },
-});
-
-describe('bringing in a version 6 file', () => {
-  it('brings it in, accounts for every record, and says the numbers match', async () => {
-    const ctx = setup();
-    await seed(ctx);
-    const user = await openBackup(ctx);
-    choose('Choose a version 6 backup file', 'old.json', OLD_FILE);
-    await user.click(await screen.findByRole('button', { name: 'Bring it in' }));
-    const result = await screen.findByRole('status', {}, { timeout: 15_000 });
-    expect(result.textContent).toMatch(/Brought in \d+ of \d+ records/);
-    expect(await screen.findByText('The numbers match the backup file.')).toBeTruthy();
-    const notes = ((await ctx.client.list({ type: 'seizure' })) as unknown as { notes: string }[]).map((s) => s.notes);
-    expect(notes).toEqual(['from version 6']);
-  });
-
-  it('is safe to do twice: the second time brings nothing new', async () => {
-    const ctx = setup();
-    await seed(ctx);
-    const user = await openBackup(ctx);
-    choose('Choose a version 6 backup file', 'old.json', OLD_FILE);
-    await user.click(await screen.findByRole('button', { name: 'Bring it in' }));
-    await screen.findByText('The numbers match the backup file.');
-    await waitFor(() =>
-      expect((screen.getByRole('button', { name: 'Bring it in' }) as HTMLButtonElement).disabled).toBe(false),
-    );
-    await user.click(screen.getByRole('button', { name: 'Bring it in' }));
-    await waitFor(async () => expect(await ctx.client.list({ type: 'seizure' })).toHaveLength(1));
-    expect(await screen.findByText(/Already here from an earlier import/)).toBeTruthy();
-  });
-
-  it('says so for a file that is not from version 6', async () => {
-    const ctx = setup();
-    await seed(ctx);
-    const user = await openBackup(ctx);
-    choose('Choose a version 6 backup file', 'x.json', '{"hello": "world"}');
-    await user.click(await screen.findByRole('button', { name: 'Bring it in' }));
-    expect(await screen.findByText('The file could not be read. Nothing was changed.')).toBeTruthy();
-  });
-});
-
 describe('the recovery kit', () => {
   it('needs the PIN, then shows the code and the QR code, and saves the page as a PDF', async () => {
     const ctx = setup();
@@ -331,7 +261,8 @@ describe('records from a spreadsheet', () => {
     await waitFor(() => expect(saved).toHaveLength(2));
     expect(saved[0]).toMatchObject({ fileName: 'auratrack-template.csv', mime: 'text/csv' });
     expect(String(saved[0]?.bytes)).toMatch(/^SEIZURES\nid,date,time,/);
-    expect(String(saved[1]?.bytes)).toMatch(/seizure_type\.absence/);
+    expect(String(saved[1]?.bytes)).toMatch(/form\.tablet/);
+    expect(String(saved[1]?.bytes)).not.toMatch(/seizure_type\./);
   });
 
   it('checks the file when it is chosen, adds nothing until Import, then adds the rows that are ready', async () => {
@@ -340,8 +271,8 @@ describe('records from a spreadsheet', () => {
     const user = await openBackup(ctx);
     const text = [
       'SEIZURES',
-      'date,time,typeCode,seizureSeconds,notes',
-      '2026-10-05,14:05,seizure_type.absence,60,From paper',
+      'date,time,triggerCodes,lengthSeconds,notes',
+      '2026-10-05,14:05,trigger.stress,60,From paper',
       '2026-10-06,25:00,,60,',
     ].join('\n');
     choose('Choose a CSV file', 'diary.csv', text);

@@ -1,10 +1,7 @@
 import { expect, test } from '@playwright/test';
-import { makeBackup, plainFile } from '../../AuraTrack7-Shared/packages/store/src/import6x/legacy.fixture';
 
-// M1: the data core in a real browser, through the developer page. Made-up 6.1 data only.
-test('creates an encrypted store, imports a 6.1 backup, checks it against 6.1, backs up, restores and survives a reload', async ({
-  page,
-}) => {
+// M1: the data core in a real browser, through the developer page. Made-up data only.
+test('creates an encrypted store, adds records, backs up, restores and survives a reload', async ({ page }) => {
   await page.goto('/#/dev');
   await expect(page.getByTestId('status')).toHaveText('No store yet');
 
@@ -12,21 +9,10 @@ test('creates an encrypted store, imports a 6.1 backup, checks it against 6.1, b
   await page.getByRole('button', { name: 'Create store' }).click();
   await expect(page.getByTestId('status')).toHaveText('Unlocked');
 
-  // Import a 6.1 backup: every row accounted for, and the numbers agree with 6.1
-  await page
-    .getByLabel('6.1 backup file')
-    .setInputFiles({ name: 'auratrack-backup.json', mimeType: 'application/json', buffer: Buffer.from(plainFile()) });
-  await expect(page.getByTestId('import-summary')).toContainText('0 unaccounted for', { timeout: 30_000 });
-  await expect(page.getByTestId('comparison-title')).toContainText('everything matches');
-  await expect(page.getByTestId('counts')).toContainText('seizure: 24');
-  await expect(page.getByTestId('review')).toContainText('Poor sleep');
-  await expect(page.getByTestId('seizures').locator('tbody tr')).toHaveCount(24);
-
-  // Importing the same file again adds nothing
-  await page
-    .getByLabel('6.1 backup file')
-    .setInputFiles({ name: 'again.json', mimeType: 'application/json', buffer: Buffer.from(plainFile()) });
-  await expect(page.getByTestId('import-summary')).toContainText('0 new', { timeout: 30_000 });
+  // Made-up records go in through the store
+  await page.getByRole('button', { name: 'Add made-up records' }).click();
+  await expect(page.getByTestId('counts')).toContainText('seizure: 12', { timeout: 30_000 });
+  await expect(page.getByTestId('seizures').locator('tbody tr')).toHaveCount(12);
 
   // A v7 backup downloads, and restores cleanly onto the same store
   await page.getByLabel('Backup passphrase', { exact: true }).fill('a good passphrase');
@@ -52,7 +38,7 @@ test('creates an encrypted store, imports a 6.1 backup, checks it against 6.1, b
   await page.getByLabel('PIN', { exact: true }).fill('2468');
   await page.getByRole('button', { name: 'Unlock' }).click();
   await expect(page.getByTestId('status')).toHaveText('Unlocked');
-  await expect(page.getByTestId('counts')).toContainText('seizure: 24');
+  await expect(page.getByTestId('counts')).toContainText('seizure: 12');
 });
 
 test('nothing readable is stored: the database holds only sealed bytes', async ({ page }) => {
@@ -60,11 +46,9 @@ test('nothing readable is stored: the database holds only sealed bytes', async (
   await page.getByLabel('PIN', { exact: true }).fill('2468');
   await page.getByRole('button', { name: 'Create store' }).click();
   await expect(page.getByTestId('status')).toHaveText('Unlocked');
-  const file = JSON.stringify(makeBackup({ events: 3, name: 'Distinctive Name Zq' }));
-  await page
-    .getByLabel('6.1 backup file')
-    .setInputFiles({ name: 'b.json', mimeType: 'application/json', buffer: Buffer.from(file) });
-  await expect(page.getByTestId('import-summary')).toContainText('0 unaccounted for', { timeout: 30_000 });
+  await page.getByLabel('Made-up patient name').fill('Distinctive Name Zq');
+  await page.getByRole('button', { name: 'Add made-up records' }).click();
+  await expect(page.getByTestId('counts')).toContainText('seizure: 12', { timeout: 30_000 });
   const stored = await page.evaluate(
     () =>
       new Promise<string>((resolve, reject) => {
@@ -88,5 +72,5 @@ test('nothing readable is stored: the database holds only sealed bytes', async (
   expect(stored.length).toBeGreaterThan(1000);
   expect(stored).not.toContain('Distinctive Name Zq');
   expect(stored).not.toContain('Levetiracetam');
-  expect(stored).not.toContain('Focal Aware');
+  expect(stored).not.toContain('form.tablet');
 });

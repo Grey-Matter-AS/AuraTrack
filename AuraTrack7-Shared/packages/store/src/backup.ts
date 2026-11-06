@@ -14,7 +14,6 @@ import type { ApplyResult, Store } from './store';
 // Backup v7: one encrypted file with every patient and every record of the household on this device: the records with their
 // per-field stamps (deleted ones included, as tombstones) and the whole change log. It is checked when it is made and when
 // it is restored: counts per record type must match, and anything that does not validate is listed, never dropped.
-// (6.1 backups have their own schema names; the importer reads those.)
 
 export const BACKUP_SCHEMA = 'auratrack.v7.backup';
 export const BACKUP_VERSION = 1;

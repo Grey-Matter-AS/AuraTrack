@@ -16,19 +16,17 @@ export interface HistoryFilters {
 }
 export const NO_FILTERS: HistoryFilters = { type: null, from: '', to: '', needsDetails: false };
 
-type Kinded = Pick<Seizure, 'typeCode' | 'ilae2025' | 'profile'>;
+type Kinded = Pick<Seizure, 'ilae2025' | 'profile'>;
 type Filterable = Kinded & Pick<Seizure, 'status' | 'phases'>;
 
 /**
  * What kind of seizure it is, as one key for filters and colours (D-17): `profile:<id>` for a seizure saved with a profile;
- * `ilae2025:<type>` for one classified by ILAE 2025 alone; the plain-language type code for one recorded before 7.2
- * (so a filter kept from then still works); null when it is not classified.
+ * `ilae2025:<type>` for one classified by ILAE 2025 alone; null when it is not classified.
  */
 export function seizureKindKey(s: Kinded): string | null {
   if (s.profile) return `profile:${s.profile.id}`;
   const type = s.ilae2025 ? ilae2025Type(s.ilae2025) : null;
-  if (type) return `ilae2025:${type}`;
-  return s.typeCode;
+  return type ? `ilae2025:${type}` : null;
 }
 
 /** A seizure waits for details when its timing is saved but nothing else, or it is not classified. */

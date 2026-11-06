@@ -1,3 +1,4 @@
+import type { AutoFields } from '../schemas/common';
 import { z } from 'zod';
 import { IdSchema } from '../ids';
 import {
@@ -305,16 +306,13 @@ export function seizurePatch(session: RecordingSession): Partial<Seizure> {
 }
 
 /** Everything a new seizure record needs, for the moment Start is tapped. */
-export function newSeizureValues(
-  session: RecordingSession,
-): Omit<Seizure, 'id' | 'householdId' | 'deviceId' | 'createdAt'> {
+export function newSeizureValues(session: RecordingSession): Omit<Seizure, AutoFields> {
   return {
     patientId: session.patientId,
     timeZone: session.timeZone,
-    typeCode: null,
-    ilae: null,
+    ilae2025: null,
+    profile: null,
     afterFindings: [],
-    recoveryMinutes: null,
     recoveryOngoing: false,
     triggerCodes: [],
     notes: '',
@@ -322,6 +320,10 @@ export function newSeizureValues(
     isManualEntry: false,
     recordedBy: session.recordedBy,
     eegSessionId: null,
+    prodromeSecondsBefore: null,
+    quickNotes: [],
+    recordedWhileLocked: false,
+    cancelled: false,
     ...(seizurePatch(session) as Pick<Seizure, 'phases' | 'status' | 'symptoms' | 'isEmergencyStop'>),
   };
 }
@@ -358,9 +360,7 @@ export function pastSeizureProblem(input: PastSeizureInput, now: number): PastSe
  * the seizure, then the recovery. The seizure length (start to end of seizure) is the aura and the seizure together; the
  * recovery comes after it. Every mark is saved as "entered later", and the record says it was entered by hand.
  */
-export function pastSeizureValues(
-  input: PastSeizureInput,
-): Omit<Seizure, 'id' | 'householdId' | 'deviceId' | 'createdAt'> {
+export function pastSeizureValues(input: PastSeizureInput): Omit<Seizure, AutoFields> {
   const aura = whole(input.auraSec);
   const recovery = whole(input.recoverySec);
   const prodrome = whole(input.prodromeSec);
@@ -377,12 +377,14 @@ export function pastSeizureValues(
       recoveryEnd: recovery > 0 ? later(seizureEnd + recovery * 1000) : null,
     },
     status: 'recorded',
-    typeCode: null,
-    ilae: null,
+    ilae2025: null,
+    profile: null,
     symptoms: [],
     afterFindings: [],
-    recoveryMinutes: null,
-    ...(prodrome > 0 ? { prodromeSecondsBefore: Math.min(prodrome, 604_800) } : {}),
+    prodromeSecondsBefore: prodrome > 0 ? Math.min(prodrome, 604_800) : null,
+    quickNotes: [],
+    recordedWhileLocked: false,
+    cancelled: false,
     recoveryOngoing: false,
     triggerCodes: [],
     notes: '',
@@ -403,7 +405,7 @@ export function sessionFromSeizure(seizure: Seizure): RecordingSession | null {
   let at = seizure.phases.start.at;
   const symptoms = seizure.symptoms.map((entry) => {
     at += entry.sincePrevious.ms ?? 0;
-    return { id: entry.id, code: entry.code, phase: entry.phase ?? 'seizure', at };
+    return { id: entry.id, code: entry.code, phase: entry.phase, at };
   });
   return {
     seizureId: seizure.id,
@@ -420,7 +422,7 @@ export function sessionFromSeizure(seizure: Seizure): RecordingSession | null {
       recoveryEnd: seizure.phases.recoveryEnd?.source === 'entered-later',
     },
     symptoms,
-    quickNotes: seizure.quickNotes ?? [],
+    quickNotes: seizure.quickNotes,
     status: 'running',
     autoStopped: false,
     endedAt: null,

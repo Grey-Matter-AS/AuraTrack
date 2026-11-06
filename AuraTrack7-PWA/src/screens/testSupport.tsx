@@ -68,6 +68,7 @@ export async function seed(ctx: Ctx, opts: { contact?: string; rescue?: string; 
       name: opts.name ?? 'Alex',
       dateOfBirth: null,
       emergencyContact: opts.contact ?? '',
+      emergencyPhone: '',
       color: '#336699',
     },
   });
@@ -97,11 +98,10 @@ export function makeSeizure(
       recoveryEnd: null,
     },
     status: 'complete' as const,
-    typeCode: 'seizure_type.focal_aware',
-    ilae: null,
+    ilae2025: null,
+    profile: { id: '00000000-0000-4000-8000-000000000001', name: 'Usual seizure' },
     symptoms: [],
     afterFindings: [],
-    recoveryMinutes: null,
     recoveryOngoing: false,
     triggerCodes: [],
     notes: '',
@@ -110,6 +110,10 @@ export function makeSeizure(
     isEmergencyStop: false,
     recordedBy: 'carer' as const,
     eegSessionId: null,
+    prodromeSecondsBefore: null,
+    quickNotes: [],
+    recordedWhileLocked: false,
+    cancelled: false,
     ...extra,
   };
 }

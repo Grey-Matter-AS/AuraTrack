@@ -35,6 +35,26 @@ export function InstallCard() {
 }
 
 /** Backup reminder (F-110): back up now, snooze, or turn it off. */
+/** Records this device keeps but cannot show: never hidden without a word (medical data integrity). */
+export function HiddenRecordsCard() {
+  const { t, hiddenRecords, purgedRecords } = useApp();
+  if (hiddenRecords === 0 && purgedRecords === 0) return null;
+  return (
+    <Card tone="accent" compact>
+      {purgedRecords > 0 ? (
+        <p className="app-note" role="status">
+          {t('home.purged', { count: purgedRecords })}
+        </p>
+      ) : null}
+      {hiddenRecords > 0 ? (
+        <p className="app-note" role="status">
+          {t('home.hidden', { count: hiddenRecords })}
+        </p>
+      ) : null}
+    </Card>
+  );
+}
+
 export function BackupCard() {
   const app = useApp();
   const { t, settings, actions, patients } = app;

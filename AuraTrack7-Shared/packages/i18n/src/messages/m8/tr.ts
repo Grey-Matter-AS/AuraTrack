@@ -6,6 +6,12 @@ import type { m8en } from './en';
 type Tr = Partial<Record<keyof typeof m8en, string>>;
 
 const nb: Tr = {
+  'prof.over':
+    'Det finnes {count} profiler, flere enn de {max} det kan være: to enheter la til noen før de møttes. Alle beholdes; fjern dem du ikke trenger for å legge til nye.',
+  'home.purged':
+    'Oppføringer fra en versjon før 7.2 fjernet: {count}. Fra 7.2 lagres oppføringer på en ny måte, og eldre leses ikke.',
+  'home.hidden':
+    'Oppføringer denne enheten ikke kan vise ennå: {count}. De kom fra en annen enhet eller en nyere versjon. De er tatt vare på, deles med husstanden og er med i sikkerhetskopier. Oppdater appen på denne enheten for å se dem.',
   'hist.legendCount': 'Tallet i en sirkel er hvor mange anfall den viser; anfall samme dag deler én sirkel.',
   'det.rescue': 'Akuttmedisin',
   'det.rescueLine': '{name} {dose} kl. {time}, {after} etter starten',
@@ -68,7 +74,6 @@ const nb: Tr = {
   'tab.timeline': 'Tidslinje',
   'tl.addSymptom': '+ Legg til symptom',
   'tl.addTitle': 'Legg til et symptom: {phase}',
-  'tl.phaseLabel': 'Fase',
   'tl.delay': 'Tid siden symptomet før',
   'gap.custom': 'Annen tid (tt:mm:ss)',
   'gap.customValue': 'Omtrent {time} senere',
@@ -89,7 +94,6 @@ const nb: Tr = {
   'rep.warning': 'Varsel før',
   'field.ilae2025': 'ILAE 2025-klassifisering',
   'field.profile': 'anfallsprofil',
-  'rep.ilae2017': 'Registrert før ILAE 2025, med svar etter ILAE 2017 (telt for seg): {recorded}',
   'classify.section': 'ILAE 2025-klassifisering for nevrologen din',
   'classify.start': 'Hvor startet det?',
   'classify.start.focal': 'Fokal',
@@ -153,8 +157,6 @@ const nb: Tr = {
   'classify.type.g.tonic': 'Generalisert tonisk anfall',
   'classify.type.g.atonic': 'Generalisert atonisk anfall',
   'classify.type.g.myoclonic_atonic': 'Generalisert myoklont-atonisk anfall',
-  'classify.earlier': 'Registrert før ILAE 2025 som: {type}',
-  'classify.earlier2017': 'Svar etter ILAE 2017: {answers}',
   'prof.row': 'Start fra en lagret profil',
   'prof.rowHelp':
     'En profil fyller ut spørsmålene under og de vanlige tegnene. Endre det som var annerledes denne gangen.',
@@ -192,6 +194,12 @@ const nb: Tr = {
 };
 
 const nn: Tr = {
+  'prof.over':
+    'Det finst {count} profilar, fleire enn dei {max} det kan vere: to einingar la til nokre før dei møttest. Alle blir haldne; fjern dei du ikkje treng for å leggje til nye.',
+  'home.purged':
+    'Oppføringar frå ein versjon før 7.2 fjerna: {count}. Frå 7.2 blir oppføringar lagra på ein ny måte, og eldre blir ikkje lesne.',
+  'home.hidden':
+    'Oppføringar denne eininga ikkje kan vise enno: {count}. Dei kom frå ei anna eining eller ein nyare versjon. Dei er tekne vare på, blir delte med hushaldet og er med i tryggingskopiar. Oppdater appen på denne eininga for å sjå dei.',
   'hist.legendCount': 'Talet i ein sirkel er kor mange anfall han viser; anfall same dag deler éin sirkel.',
   'det.rescue': 'Akuttmedisin',
   'det.rescueLine': '{name} {dose} kl. {time}, {after} etter starten',
@@ -254,7 +262,6 @@ const nn: Tr = {
   'tab.timeline': 'Tidslinje',
   'tl.addSymptom': '+ Legg til symptom',
   'tl.addTitle': 'Legg til eit symptom: {phase}',
-  'tl.phaseLabel': 'Fase',
   'tl.delay': 'Tid sidan symptomet før',
   'gap.custom': 'Anna tid (tt:mm:ss)',
   'gap.customValue': 'Omtrent {time} seinare',
@@ -275,7 +282,6 @@ const nn: Tr = {
   'rep.warning': 'Varsel før',
   'field.ilae2025': 'ILAE 2025-klassifisering',
   'field.profile': 'anfallsprofil',
-  'rep.ilae2017': 'Registrert før ILAE 2025, med svar etter ILAE 2017 (talde for seg): {recorded}',
   'classify.section': 'ILAE 2025-klassifisering for nevrologen din',
   'classify.start': 'Kvar starta det?',
   'classify.start.focal': 'Fokal',
@@ -339,8 +345,6 @@ const nn: Tr = {
   'classify.type.g.tonic': 'Generalisert tonisk anfall',
   'classify.type.g.atonic': 'Generalisert atonisk anfall',
   'classify.type.g.myoclonic_atonic': 'Generalisert myoklont-atonisk anfall',
-  'classify.earlier': 'Registrert før ILAE 2025 som: {type}',
-  'classify.earlier2017': 'Svar etter ILAE 2017: {answers}',
   'prof.row': 'Start frå ein lagra profil',
   'prof.rowHelp': 'Ein profil fyller ut spørsmåla under og dei vanlege teikna. Endre det som var annleis denne gongen.',
   'prof.different': 'Ingen, fyll ut sjølv',
@@ -377,6 +381,12 @@ const nn: Tr = {
 };
 
 const da: Tr = {
+  'prof.over':
+    'Der er {count} profiler, flere end de {max}, der kan være: to enheder tilføjede nogle, før de mødtes. Alle beholdes; fjern dem, du ikke har brug for, for at tilføje nye.',
+  'home.purged':
+    'Poster fra en version før 7.2 fjernet: {count}. Fra 7.2 gemmes poster på en ny måde, og ældre læses ikke.',
+  'home.hidden':
+    'Poster denne enhed ikke kan vise endnu: {count}. De kom fra en anden enhed eller en nyere version. De gemmes, deles med husstanden og er med i sikkerhedskopier. Opdater appen på denne enhed for at se dem.',
   'hist.legendCount': 'Tallet i en cirkel er, hvor mange anfald den viser; anfald samme dag deler én cirkel.',
   'det.rescue': 'Akutmedicin',
   'det.rescueLine': '{name} {dose} kl. {time}, {after} efter starten',
@@ -439,7 +449,6 @@ const da: Tr = {
   'tab.timeline': 'Tidslinje',
   'tl.addSymptom': '+ Tilføj symptom',
   'tl.addTitle': 'Tilføj et symptom: {phase}',
-  'tl.phaseLabel': 'Fase',
   'tl.delay': 'Tid siden symptomet før',
   'gap.custom': 'Anden tid (tt:mm:ss)',
   'gap.customValue': 'Omkring {time} senere',
@@ -461,7 +470,6 @@ const da: Tr = {
   'rep.warning': 'Varsel før',
   'field.ilae2025': 'ILAE 2025-klassificering',
   'field.profile': 'anfaldsprofil',
-  'rep.ilae2017': 'Registreret før ILAE 2025, med svar efter ILAE 2017 (talt for sig): {recorded}',
   'classify.section': 'ILAE 2025-klassificering til din neurolog',
   'classify.start': 'Hvor startede det?',
   'classify.start.focal': 'Fokal',
@@ -527,8 +535,6 @@ const da: Tr = {
   'classify.type.g.tonic': 'Generaliseret tonisk anfald',
   'classify.type.g.atonic': 'Generaliseret atonisk anfald',
   'classify.type.g.myoclonic_atonic': 'Generaliseret myoklont-atonisk anfald',
-  'classify.earlier': 'Registreret før ILAE 2025 som: {type}',
-  'classify.earlier2017': 'Svar efter ILAE 2017: {answers}',
   'prof.row': 'Start fra en gemt profil',
   'prof.rowHelp':
     'En profil udfylder spørgsmålene nedenfor og de sædvanlige tegn. Ret det, der var anderledes denne gang.',
@@ -566,6 +572,12 @@ const da: Tr = {
 };
 
 const sv: Tr = {
+  'prof.over':
+    'Det finns {count} profiler, fler än de {max} som får finnas: två enheter lade till några innan de möttes. Alla behålls; ta bort dem du inte behöver för att lägga till nya.',
+  'home.purged':
+    'Poster från en version före 7.2 borttagna: {count}. Från 7.2 sparas poster på ett nytt sätt, och äldre läses inte.',
+  'home.hidden':
+    'Poster som den här enheten inte kan visa ännu: {count}. De kom från en annan enhet eller en nyare version. De sparas, delas med hushållet och ingår i säkerhetskopior. Uppdatera appen på den här enheten för att se dem.',
   'hist.legendCount': 'Siffran i en cirkel är hur många anfall den visar; anfall samma dag delar en cirkel.',
   'det.rescue': 'Akutläkemedel',
   'det.rescueLine': '{name} {dose} kl. {time}, {after} efter starten',
@@ -628,7 +640,6 @@ const sv: Tr = {
   'tab.timeline': 'Tidslinje',
   'tl.addSymptom': '+ Lägg till symtom',
   'tl.addTitle': 'Lägg till ett symtom: {phase}',
-  'tl.phaseLabel': 'Fas',
   'tl.delay': 'Tid sedan symtomet före',
   'gap.custom': 'Annan tid (tt:mm:ss)',
   'gap.customValue': 'Ungefär {time} senare',
@@ -649,7 +660,6 @@ const sv: Tr = {
   'rep.warning': 'Varning före',
   'field.ilae2025': 'ILAE 2025-klassificering',
   'field.profile': 'anfallsprofil',
-  'rep.ilae2017': 'Registrerade före ILAE 2025, med svar enligt ILAE 2017 (räknade för sig): {recorded}',
   'classify.section': 'ILAE 2025-klassificering för din neurolog',
   'classify.start': 'Var började det?',
   'classify.start.focal': 'Fokalt',
@@ -713,8 +723,6 @@ const sv: Tr = {
   'classify.type.g.tonic': 'Generaliserat toniskt anfall',
   'classify.type.g.atonic': 'Generaliserat atoniskt anfall',
   'classify.type.g.myoclonic_atonic': 'Generaliserat myoklont-atoniskt anfall',
-  'classify.earlier': 'Registrerat före ILAE 2025 som: {type}',
-  'classify.earlier2017': 'Svar enligt ILAE 2017: {answers}',
   'prof.row': 'Börja från en sparad profil',
   'prof.rowHelp':
     'En profil fyller i frågorna nedan och de vanliga tecknen. Ändra det som var annorlunda den här gången.',
@@ -752,6 +760,12 @@ const sv: Tr = {
 };
 
 const fi: Tr = {
+  'prof.over':
+    'Profiileja on {count}, enemmän kuin sallitut {max}: kaksi laitetta lisäsi niitä ennen kuin ne kohtasivat. Kaikki säilytetään; poista tarpeettomat, jotta voit lisätä uusia.',
+  'home.purged':
+    'Ennen versiota 7.2 tallennettuja merkintöjä poistettu: {count}. Versiosta 7.2 alkaen merkinnät tallennetaan uudella tavalla, eikä vanhempia lueta.',
+  'home.hidden':
+    'Merkinnät, joita tämä laite ei vielä voi näyttää: {count}. Ne tulivat toiselta laitteelta tai uudemmasta versiosta. Ne säilytetään, jaetaan kotitalouden kanssa ja ovat mukana varmuuskopioissa. Päivitä sovellus tällä laitteella nähdäksesi ne.',
   'hist.legendCount': 'Ympyrän luku kertoo, montako kohtausta siinä on; saman päivän kohtaukset jakavat yhden ympyrän.',
   'det.rescue': 'Kohtauslääke',
   'det.rescueLine': '{name} {dose} klo {time}, {after} alun jälkeen',
@@ -814,7 +828,6 @@ const fi: Tr = {
   'tab.timeline': 'Aikajana',
   'tl.addSymptom': '+ Lisää oire',
   'tl.addTitle': 'Lisää oire: {phase}',
-  'tl.phaseLabel': 'Vaihe',
   'tl.delay': 'Aika edellisestä oireesta',
   'gap.custom': 'Muu aika (tt:mm:ss)',
   'gap.customValue': 'Noin {time} myöhemmin',
@@ -836,7 +849,6 @@ const fi: Tr = {
   'rep.warning': 'Ennakko',
   'field.ilae2025': 'ILAE 2025 -luokitus',
   'field.profile': 'kohtausprofiili',
-  'rep.ilae2017': 'Kirjattu ennen ILAE 2025 -luokitusta, ILAE 2017 -vastauksin (laskettu erikseen): {recorded}',
   'classify.section': 'ILAE 2025 -luokitus neurologillesi',
   'classify.start': 'Mistä se alkoi?',
   'classify.start.focal': 'Paikallinen',
@@ -901,8 +913,6 @@ const fi: Tr = {
   'classify.type.g.tonic': 'Yleistynyt tooninen kohtaus',
   'classify.type.g.atonic': 'Yleistynyt atoninen kohtaus',
   'classify.type.g.myoclonic_atonic': 'Yleistynyt myokloninen-atoninen kohtaus',
-  'classify.earlier': 'Kirjattu ennen ILAE 2025 -luokitusta: {type}',
-  'classify.earlier2017': 'ILAE 2017 -vastaukset: {answers}',
   'prof.row': 'Aloita tallennetusta profiilista',
   'prof.rowHelp':
     'Profiili täyttää alla olevat kysymykset ja tavalliset merkit. Muuta se, mikä oli tällä kertaa toisin.',
@@ -940,6 +950,12 @@ const fi: Tr = {
 };
 
 const de: Tr = {
+  'prof.over':
+    'Es gibt {count} Profile, mehr als die {max} möglichen: Zwei Geräte haben welche hinzugefügt, bevor sie sich trafen. Alle bleiben erhalten; entfernen Sie nicht benötigte, um neue hinzuzufügen.',
+  'home.purged':
+    'Einträge aus einer Version vor 7.2 entfernt: {count}. Seit 7.2 werden Einträge in neuer Form gespeichert, ältere werden nicht gelesen.',
+  'home.hidden':
+    'Einträge, die dieses Gerät noch nicht anzeigen kann: {count}. Sie stammen von einem anderen Gerät oder einer neueren Version. Sie bleiben erhalten, werden mit dem Haushalt geteilt und sind in Sicherungen enthalten. Aktualisieren Sie die App auf diesem Gerät, um sie zu sehen.',
   'hist.legendCount':
     'Die Zahl im Kreis ist die Zahl der Anfälle darin; Anfälle dicht beieinander teilen sich einen Kreis.',
   'det.rescue': 'Notfallmedikament',
@@ -1003,7 +1019,6 @@ const de: Tr = {
   'tab.timeline': 'Zeitleiste',
   'tl.addSymptom': '+ Symptom hinzufügen',
   'tl.addTitle': 'Symptom hinzufügen: {phase}',
-  'tl.phaseLabel': 'Phase',
   'tl.delay': 'Zeit seit dem Symptom davor',
   'gap.custom': 'Andere Zeit (hh:mm:ss)',
   'gap.customValue': 'Etwa {time} später',
@@ -1024,7 +1039,6 @@ const de: Tr = {
   'rep.warning': 'Warnung vorher',
   'field.ilae2025': 'ILAE-2025-Klassifikation',
   'field.profile': 'Anfallsprofil',
-  'rep.ilae2017': 'Vor ILAE 2025 erfasst, mit Antworten nach ILAE 2017 (getrennt gezählt): {recorded}',
   'classify.section': 'ILAE-2025-Klassifikation für die Neurologie',
   'classify.start': 'Wo hat er begonnen?',
   'classify.start.focal': 'Fokal',
@@ -1090,8 +1104,6 @@ const de: Tr = {
   'classify.type.g.tonic': 'Generalisierter tonischer Anfall',
   'classify.type.g.atonic': 'Generalisierter atonischer Anfall',
   'classify.type.g.myoclonic_atonic': 'Generalisierter myoklonisch-atonischer Anfall',
-  'classify.earlier': 'Vor ILAE 2025 erfasst als: {type}',
-  'classify.earlier2017': 'Antworten nach ILAE 2017: {answers}',
   'prof.row': 'Mit einem gespeicherten Profil beginnen',
   'prof.rowHelp': 'Ein Profil füllt die Fragen unten und die üblichen Zeichen aus. Ändern Sie, was diesmal anders war.',
   'prof.different': 'Keins, selbst ausfüllen',
@@ -1128,6 +1140,12 @@ const de: Tr = {
 };
 
 const fr: Tr = {
+  'prof.over':
+    'Il y a {count} profils, plus que les {max} possibles : deux appareils en ont ajouté avant de se rencontrer. Tous sont conservés ; supprimez ceux dont vous n’avez pas besoin pour en ajouter.',
+  'home.purged':
+    'Entrées d’une version antérieure à 7.2 supprimées : {count}. Depuis la 7.2, les entrées sont enregistrées sous une nouvelle forme et les anciennes ne sont pas lues.',
+  'home.hidden':
+    'Entrées que cet appareil ne peut pas encore afficher : {count}. Elles viennent d’un autre appareil ou d’une version plus récente. Elles sont conservées, partagées avec le foyer et incluses dans les sauvegardes. Mettez à jour l’app sur cet appareil pour les voir.',
   'hist.legendCount':
     'Le nombre dans un cercle est le nombre de crises qu’il réunit ; des crises rapprochées partagent un cercle.',
   'det.rescue': 'Médicament de secours',
@@ -1191,7 +1209,6 @@ const fr: Tr = {
   'tab.timeline': 'Chronologie',
   'tl.addSymptom': '+ Ajouter un symptôme',
   'tl.addTitle': 'Ajouter un symptôme : {phase}',
-  'tl.phaseLabel': 'Phase',
   'tl.delay': 'Temps depuis le symptôme précédent',
   'gap.custom': 'Autre durée (hh:mm:ss)',
   'gap.customValue': 'Environ {time} plus tard',
@@ -1213,7 +1230,6 @@ const fr: Tr = {
   'rep.warning': 'Signes avant',
   'field.ilae2025': 'classification ILAE 2025',
   'field.profile': 'profil de crise',
-  'rep.ilae2017': 'Enregistrées avant ILAE 2025, avec réponses ILAE 2017 (comptées à part) : {recorded}',
   'classify.section': 'Classification ILAE 2025 pour votre neurologue',
   'classify.start': 'Où a-t-elle commencé ?',
   'classify.start.focal': 'Focale',
@@ -1277,8 +1293,6 @@ const fr: Tr = {
   'classify.type.g.tonic': 'Crise tonique généralisée',
   'classify.type.g.atonic': 'Crise atonique généralisée',
   'classify.type.g.myoclonic_atonic': 'Crise myoclono-atonique généralisée',
-  'classify.earlier': 'Enregistrée avant ILAE 2025 comme : {type}',
-  'classify.earlier2017': 'Réponses ILAE 2017 : {answers}',
   'prof.row': 'Partir d’un profil enregistré',
   'prof.rowHelp':
     'Un profil remplit les questions ci-dessous et les signes habituels. Changez ce qui était différent cette fois.',
@@ -1316,6 +1330,12 @@ const fr: Tr = {
 };
 
 const es: Tr = {
+  'prof.over':
+    'Hay {count} perfiles, más de los {max} posibles: dos dispositivos añadieron algunos antes de encontrarse. Se conservan todos; elimine los que no necesite para añadir otros nuevos.',
+  'home.purged':
+    'Registros de una versión anterior a la 7.2 eliminados: {count}. Desde la 7.2 los registros se guardan de una forma nueva y los anteriores no se leen.',
+  'home.hidden':
+    'Registros que este dispositivo aún no puede mostrar: {count}. Vienen de otro dispositivo o de una versión más reciente. Se conservan, se comparten con el hogar y se incluyen en las copias de seguridad. Actualice la app en este dispositivo para verlos.',
   'hist.legendCount': 'El número en un círculo es cuántas crisis reúne; las crisis del mismo día comparten un círculo.',
   'det.rescue': 'Medicación de rescate',
   'det.rescueLine': '{name} {dose} a las {time}, {after} después del inicio',
@@ -1378,7 +1398,6 @@ const es: Tr = {
   'tab.timeline': 'Cronología',
   'tl.addSymptom': '+ Añadir síntoma',
   'tl.addTitle': 'Añadir un síntoma: {phase}',
-  'tl.phaseLabel': 'Fase',
   'tl.delay': 'Tiempo desde el síntoma anterior',
   'gap.custom': 'Otro tiempo (hh:mm:ss)',
   'gap.customValue': 'Unos {time} después',
@@ -1400,7 +1419,6 @@ const es: Tr = {
   'rep.warning': 'Aviso previo',
   'field.ilae2025': 'clasificación ILAE 2025',
   'field.profile': 'perfil de crisis',
-  'rep.ilae2017': 'Registradas antes de ILAE 2025, con respuestas ILAE 2017 (contadas aparte): {recorded}',
   'classify.section': 'Clasificación ILAE 2025 para tu equipo de neurología',
   'classify.start': '¿Dónde empezó?',
   'classify.start.focal': 'Focal',
@@ -1465,8 +1483,6 @@ const es: Tr = {
   'classify.type.g.tonic': 'Crisis tónica generalizada',
   'classify.type.g.atonic': 'Crisis atónica generalizada',
   'classify.type.g.myoclonic_atonic': 'Crisis mioclónico-atónica generalizada',
-  'classify.earlier': 'Registrada antes de ILAE 2025 como: {type}',
-  'classify.earlier2017': 'Respuestas ILAE 2017: {answers}',
   'prof.row': 'Empezar con un perfil guardado',
   'prof.rowHelp':
     'Un perfil rellena las preguntas de abajo y los signos habituales. Cambia lo que fue distinto esta vez.',

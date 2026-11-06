@@ -10,7 +10,7 @@ import { LogPast } from './LogPast';
 import { Recovery } from './Recovery';
 import { UpdateCard } from './UpdateCard';
 import { DosePanel } from './DosePanel';
-import { HouseholdCard, BackupCard, InstallCard, WellbeingCard, WhatsNewCard } from './HomeCards';
+import { HouseholdCard, HiddenRecordsCard, BackupCard, InstallCard, WellbeingCard, WhatsNewCard } from './HomeCards';
 import { CheckIn } from './Wellbeing';
 import { ActivitySheet, RunningCard, StartSession } from './Eeg';
 import { MainNav } from './MainNav';
@@ -47,9 +47,9 @@ export function Home() {
     nav.push('editor');
   };
 
-  const cancelled = seizures.filter((s) => s.cancelled === true);
+  const cancelled = seizures.filter((s) => s.cancelled);
   const kept = seizures.filter((s) => s.cancelled !== true);
-  const lockedOnes = kept.filter((s) => s.recordedWhileLocked === true && !isClassified(s));
+  const lockedOnes = kept.filter((s) => s.recordedWhileLocked && !isClassified(s));
   const recent = kept.slice(0, 5);
 
   return (
@@ -61,6 +61,7 @@ export function Home() {
         <UpdateCard />
         <Recovery />
         <WhatsNewCard />
+        <HiddenRecordsCard />
         <BackupCard />
         <InstallCard />
         <HouseholdCard />

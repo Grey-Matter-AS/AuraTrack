@@ -23,6 +23,7 @@ const entry = (
   householdId: 'h',
   deviceId: 'dv',
   createdAt: 0,
+  dataVersion: 2,
   patientId: 'p',
   recordedAt: at(d),
   dayKey: day(d),

@@ -24,11 +24,11 @@ export function regimenSnapshot(med: RegimenSource): Regimen {
   return {
     name: med.name,
     activeIngredient: med.activeIngredient ?? '',
-    form: med.form ?? '',
+    form: med.form ?? null,
     dose: med.dose,
     unit: med.unit,
     slotDoses: { ...med.slotDoses },
-    ...(med.slotUnits ? { slotUnits: { ...med.slotUnits } } : {}),
+    slotUnits: { ...med.slotUnits },
     frequency: med.frequency,
     scheduledTimes: [...(med.scheduledTimes ?? defaultScheduledTimes(med.frequency))],
     scheduledDays: [...(med.scheduledDays ?? ALL_DAYS)],
@@ -46,7 +46,7 @@ export function slotDose(
 
 /** Unit for one time slot: its own unit if set, otherwise the medication's unit. */
 export function slotUnit(regimen: Pick<Regimen, 'unit' | 'slotUnits'> | null | undefined, time: string | null): string {
-  return (time !== null ? regimen?.slotUnits?.[time] : undefined) ?? regimen?.unit ?? '';
+  return (time !== null ? regimen?.slotUnits[time] : undefined) ?? regimen?.unit ?? '';
 }
 
 /**
@@ -77,7 +77,8 @@ const sameList = <T>(a: readonly T[], b: readonly T[]): boolean => {
 export function diffRegimen(from: Regimen, to: Regimen): string[] {
   const fields: string[] = [];
   // Ingredient spelling case does not make it a different medicine ("lamotrigine" = "Lamotrigine")
-  const norm = (key: string, value: string) => (key === 'activeIngredient' ? value.toLowerCase() : value);
+  const norm = (key: string, value: string | null) =>
+    key === 'activeIngredient' && value ? value.toLowerCase() : value;
   for (const key of ['name', 'activeIngredient', 'form', 'unit', 'frequency'] as const) {
     if (norm(key, from[key]) !== norm(key, to[key])) fields.push(key);
   }
@@ -90,7 +91,7 @@ export function diffRegimen(from: Regimen, to: Regimen): string[] {
     // A time's own unit, where either side set one (a change of the medicine's unit alone shows up as 'unit')
     for (const time of sharedTimes)
       if (
-        (from.slotUnits?.[time] !== undefined || to.slotUnits?.[time] !== undefined) &&
+        (from.slotUnits[time] !== undefined || to.slotUnits[time] !== undefined) &&
         slotUnit(from, time) !== slotUnit(to, time)
       )
         fields.push(`slotUnit:${time}`);

@@ -57,7 +57,7 @@ describe('buildCsv', () => {
       'EEG_SESSIONS',
       'EEG_ACTIVITIES',
     ]);
-    expect(b.SEIZURES?.[0]).toMatch(/^id,date,time,timeZone,type,typeCode/);
+    expect(b.SEIZURES?.[0]).toMatch(/^id,date,time,timeZone,profile,ilae2025Type/);
   });
 
   it('leaves out recordings in progress and cancelled ones, and any outside the period', () => {
@@ -84,7 +84,8 @@ describe('buildCsv', () => {
     const area = { region: 'body.arms', subRegion: 'body.arms.left_arm', part: null };
     const s: Seizure = {
       ...base,
-      typeCode: null,
+      ilae2025: null,
+      profile: null,
       symptoms: [
         { ...(base.symptoms[0] as Seizure['symptoms'][number]), area, order: 1 },
         { ...(base.symptoms[0] as Seizure['symptoms'][number]), area: null, order: 0 },

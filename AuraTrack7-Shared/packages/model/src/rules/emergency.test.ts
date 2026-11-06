@@ -13,7 +13,7 @@ import {
   recordingState,
   recoverySeconds,
   seizureLengthSeconds,
-  seizureSeconds,
+  seizurePhaseSeconds,
   totalSeconds,
 } from './emergency';
 
@@ -93,7 +93,7 @@ describe('seizure time', () => {
     expect(seizureLengthSeconds(p)).toBe(300);
     expect(isLongSeizure(p)).toBe(true);
     // The CSV columns keep their meaning: the seizure phase alone, and everything to the end of recovery
-    expect(seizureSeconds(p)).toBe(120);
+    expect(seizurePhaseSeconds(p)).toBe(120);
     expect(totalSeconds(p)).toBe(600);
     expect(auraSeconds(p)).toBe(180);
     expect(recoverySeconds(p)).toBe(300);
@@ -116,19 +116,19 @@ describe('seizure time', () => {
       seizureEnd: null,
       recoveryEnd: mark(T0 + 400_000),
     };
-    expect(seizureSeconds(p)).toBe(340);
+    expect(seizurePhaseSeconds(p)).toBe(340);
   });
 
   it('is unknown while nothing has ended, and never negative', () => {
     const open: Phases = { start: mark(T0), auraEnd: null, seizureEnd: null, recoveryEnd: null };
-    expect(seizureSeconds(open)).toBeNull();
+    expect(seizurePhaseSeconds(open)).toBeNull();
     expect(totalSeconds(open)).toBeNull();
     expect(isLongSeizure(open)).toBe(false);
-    expect(seizureSeconds({ ...open, seizureEnd: mark(T0 - 5000) })).toBe(0);
+    expect(seizurePhaseSeconds({ ...open, seizureEnd: mark(T0 - 5000) })).toBe(0);
   });
 
   it('a seizure with only a total counts the whole of it', () => {
-    expect(seizureSeconds(phases(T0, 90))).toBe(90);
+    expect(seizurePhaseSeconds(phases(T0, 90))).toBe(90);
     expect(totalSeconds(phases(T0, 90))).toBe(90);
   });
 });
@@ -140,9 +140,24 @@ describe('clusters', () => {
   });
 
   it('is exact at the window edge', () => {
-    expect(buildDangerMap([at(0), at(8), at(16)])['8']?.clusterCount).toBe(3);
+    const edge = buildDangerMap([at(0), at(4), at(8)]);
+    expect([edge['0'], edge['4'], edge['8']].map((f) => f?.clusterCount)).toEqual([3, 3, 3]);
     const late = { id: 'late', phases: phases(T0 + 8 * MIN + 1000, 60) };
     expect(buildDangerMap([at(0), late, at(20)])['0']?.flags).not.toContain('cluster');
+  });
+
+  it('needs every seizure of the cluster inside one window, not the window on either side', () => {
+    for (const list of [
+      [at(0), at(7), at(14)],
+      [at(0), at(8), at(16)],
+    ]) {
+      const map = buildDangerMap(list);
+      for (const s of list) expect(map[s.id]?.flags).not.toContain('cluster');
+    }
+    // 0, 5, 7 is a cluster; 14 joins 7 but only 2 seizures share a window with it
+    const map = buildDangerMap([at(0), at(5), at(7), at(14)]);
+    expect(['0', '5', '7', '14'].map((id) => map[id]?.clusterCount)).toEqual([3, 3, 3, 0]);
+    expect([...clusterCounts([at(0), at(5), at(7), at(14)]).values()]).toEqual([3, 3, 3, 2]);
   });
 
   it("follows the user's rule", () => {

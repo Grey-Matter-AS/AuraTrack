@@ -75,22 +75,19 @@ export function Detail({ id }: { id: string }) {
   return (
     <Screen>
       <Stack>
-        <AppHeader title={seizureName(seizure, t, label)} onBack={() => nav.pop()} />
+        <AppHeader title={seizureName(seizure, t)} onBack={() => nav.pop()} />
         <Card>
           <Stack gap="0.5rem">
             <p className="app-banner">{fmt.whenSec(seizure.phases.start.at)}</p>
             {seizure.profile && ilae2025Name(seizure.ilae2025, t) ? (
               <p className="app-note">{t('classify.result', { type: ilae2025Name(seizure.ilae2025, t) ?? '' })}</p>
             ) : null}
-            {seizure.typeCode && (seizure.profile || ilae2025Name(seizure.ilae2025, t)) ? (
-              <p className="app-note">{t('classify.earlier', { type: label(seizure.typeCode) })}</p>
-            ) : null}
             <OverviewStrip draft={draft} />
             {entered ? <p className="app-note">{t('det.enteredLater')}</p> : null}
             {edited ? <p className="app-note">{t('det.edited')}</p> : null}
             {seizure.isEmergencyStop ? <p className="app-note">{t('home.badgeStopped')}</p> : null}
             {seizure.recordedWhileLocked ? <p className="app-note">{t('home.badgeLocked')}</p> : null}
-            {seizure.cancelled === true ? <p className="app-note">{t('home.badgeCancelled')}</p> : null}
+            {seizure.cancelled ? <p className="app-note">{t('home.badgeCancelled')}</p> : null}
             {flags?.flags.includes('long_duration') ? (
               <p className="app-banner">{t('det.long', { minutes: settings.plan.alertMinutes })}</p>
             ) : null}
@@ -152,10 +149,10 @@ export function Detail({ id }: { id: string }) {
             <p className="app-help">{seizure.notes}</p>
           </Section>
         ) : null}
-        {(seizure.quickNotes ?? []).length > 0 ? (
+        {seizure.quickNotes.length > 0 ? (
           <Section title={t('det.quickNotes')}>
             <Stack gap="0.25rem">
-              {(seizure.quickNotes ?? []).map((n) => (
+              {seizure.quickNotes.map((n) => (
                 <p className="app-note" key={n.id}>
                   {fmt.time(n.at)} · {n.label}
                 </p>

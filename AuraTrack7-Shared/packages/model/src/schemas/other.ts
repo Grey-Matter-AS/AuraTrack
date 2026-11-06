@@ -19,8 +19,8 @@ export const PatientSchema = z.object({
   name: ShortTextSchema,
   dateOfBirth: CalendarDaySchema.nullable(),
   emergencyContact: ShortTextSchema,
-  /** Optional: people saved before it was added have none. */
-  emergencyPhone: ShortTextSchema.optional(),
+  /** The emergency contact's phone number; empty when not given. */
+  emergencyPhone: ShortTextSchema,
   color: z.string().max(20),
 });
 export type Patient = z.infer<typeof PatientSchema>;

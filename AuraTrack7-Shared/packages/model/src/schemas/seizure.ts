@@ -18,7 +18,7 @@ export type PhaseMark = z.infer<typeof PhaseMarkSchema>;
 /**
  * One timing model (README 4.3). `start` begins the aura if there is one. `auraEnd` is when the aura ended and the
  * seizure began. `seizureEnd` is when the seizure stopped (Stop on the recording screen sets it). `recoveryEnd` is when
- * the person was back to normal. Without an `auraEnd` the seizure starts at `start`.
+ * the person was back to their usual self. Without an `auraEnd` the seizure starts at `start`.
  */
 export const PhasesSchema = z.object({
   start: PhaseMarkSchema,
@@ -27,15 +27,6 @@ export const PhasesSchema = z.object({
   recoveryEnd: PhaseMarkSchema.nullable(),
 });
 export type Phases = z.infer<typeof PhasesSchema>;
-
-export const IlaeSchema = z.object({
-  onset: z.enum(['focal', 'generalized', 'unknown']).nullable(),
-  awareness: z.enum(['aware', 'impaired', 'unknown']).nullable(),
-  motor: z.enum(['motor', 'non_motor']).nullable(),
-  feature: CodeSchema.nullable(),
-  spreadToBothSides: z.boolean().nullable(),
-});
-export type Ilae = z.infer<typeof IlaeSchema>;
 
 /**
  * The generalized seizure types of the ILAE 2025 classification (Beniczky et al., Epilepsia 2025, Table 1), plus the two
@@ -85,18 +76,11 @@ export type ProfileSnapshot = z.infer<typeof ProfileSnapshotSchema>;
 /**
  * Which phase a symptom belongs to, the same four phases as the times (ILAE semiology glossary): `prodrome` (warning signs
  * before the seizure; not part of it), `aura` (felt first; part of the seizure), `seizure`, `recovery` (post-ictal, until
- * back to usual self). The three phases written before 7.2 are read as aura, seizure and recovery.
+ * back to usual self). Nothing else is read: the three phases of 7.0–7.1 (before, during, after) are not mapped, because
+ * "before" could have been a warning sign or an aura (decided 2026-11-06: no compatibility with versions before 7.2).
  */
 export const PHASE_NAMES = ['prodrome', 'aura', 'seizure', 'recovery'] as const;
-const LEGACY_PHASE: Readonly<Record<string, (typeof PHASE_NAMES)[number]>> = {
-  before: 'aura',
-  during: 'seizure',
-  after: 'recovery',
-};
-export const PhaseNameSchema = z.preprocess(
-  (v) => (typeof v === 'string' && v in LEGACY_PHASE ? LEGACY_PHASE[v] : v),
-  z.enum(PHASE_NAMES),
-);
+export const PhaseNameSchema = z.enum(PHASE_NAMES);
 export type PhaseName = z.infer<typeof PhaseNameSchema>;
 
 /** How well the time between one symptom and the next is known. */
@@ -116,8 +100,8 @@ export const SymptomEntrySchema = z.object({
   /** Time since the previous moment. */
   sincePrevious: OffsetSchema,
   isFirst: z.boolean(),
-  /** Added in 7.0.3. Records written before it have none; the editor places those by the time marks. */
-  phase: PhaseNameSchema.optional(),
+  /** The phase it belongs to. */
+  phase: PhaseNameSchema,
 });
 export type SymptomEntry = z.infer<typeof SymptomEntrySchema>;
 
@@ -140,16 +124,13 @@ export const SeizureSchema = z.object({
   phases: PhasesSchema,
   /** 'in_progress' from the moment Start is tapped; 'complete' once the user finished the details. */
   status: z.enum(['in_progress', 'recorded', 'complete']),
-  /** The plain-language type and the ILAE 2017 answers. New seizures leave them null; older ones keep them as recorded. */
-  typeCode: CodeSchema.nullable(),
-  ilae: IlaeSchema.nullable(),
-  /** Added in 7.2 (D-17): the ILAE 2025 answers, and the seizure profile they came from, as it was then. */
-  ilae2025: Ilae2025Schema.nullable().optional(),
-  profile: ProfileSnapshotSchema.nullable().optional(),
+  /** The classification (D-17): the ILAE 2025 answers, and the seizure profile they came from, as it was then. */
+  ilae2025: Ilae2025Schema.nullable(),
+  profile: ProfileSnapshotSchema.nullable(),
   symptoms: z.array(SymptomEntrySchema).max(200),
   afterFindings: z.array(FindingEntrySchema).max(100),
   /**
-   * Added in 7.0.3: about how long before the start the first warning sign came, in seconds. Some people have a few seconds'
+   * About how long before the start the first warning sign came, in seconds. Some people have a few seconds'
    * warning, others hours; the screen offers seconds, minutes or hours and stores seconds (up to a week).
    */
   prodromeSecondsBefore: z
@@ -157,15 +138,13 @@ export const SeizureSchema = z.object({
     .int()
     .min(0)
     .max(7 * 24 * 3600)
-    .nullable()
-    .optional(),
-  /** Added in 7.0.3: the quick-note buttons tapped during the recording, in the order tapped. */
-  quickNotes: z.array(QuickNoteSchema).max(200).optional(),
-  /** Added in 7.0.3: the recording was started from the PIN screen and merged after unlock. */
-  recordedWhileLocked: z.boolean().optional(),
-  /** Added in 7.0.3: the recording was cancelled. It is kept, and the user is asked later whether to delete it. */
-  cancelled: z.boolean().optional(),
-  recoveryMinutes: z.number().int().nonnegative().nullable(),
+    .nullable(),
+  /** The quick-note buttons tapped during the recording, in the order tapped. */
+  quickNotes: z.array(QuickNoteSchema).max(200),
+  /** The recording was started from the PIN screen and merged after unlock. */
+  recordedWhileLocked: z.boolean(),
+  /** The recording was cancelled. It is kept, and the user is asked later whether to delete it. */
+  cancelled: z.boolean(),
   recoveryOngoing: z.boolean(),
   triggerCodes: z.array(CodeSchema).max(50),
   notes: TextSchema,

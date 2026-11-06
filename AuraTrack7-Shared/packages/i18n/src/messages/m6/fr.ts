@@ -22,7 +22,6 @@ export const fr: Partial<Record<keyof typeof m6en, string>> = {
   'hh.rename': 'Renommer',
   'hh.follows': 'Garde une copie de tout le monde',
   'hh.followsSome': 'Garde une copie de : {names}',
-  'hh.removed': 'Retiré',
   'hh.addDevice': 'Ajouter un appareil',
   'hh.upToDate': 'Le foyer est-il à jour ?',
   'hh.fileTitle': 'Mise à jour par fichier ou QR code',
@@ -71,14 +70,11 @@ export const fr: Partial<Record<keyof typeof m6en, string>> = {
   'hh.joinConnecting': 'Recherche de l’appareil…',
   'hh.joinCompare': 'L’autre appareil affiche-t-il les mêmes six chiffres ?',
   'hh.joinWaitingOther': 'En attente de la confirmation de l’autre appareil…',
-  'hh.joinDone':
-    'Foyer rejoint. Les enregistrements arrivent quand l’autre appareil est ouvert. Laissez-le ouvert une minute.',
   'hh.joinNotFound':
     'L’appareil n’a pas été trouvé. Vérifiez qu’il affiche le code et qu’il est en ligne, puis réessayez.',
   'hh.joinHasRecords':
     'Cet appareil contient déjà des enregistrements, il ne peut donc pas rejoindre un foyer. Faites une sauvegarde, puis restaurez-la sur l’appareil du foyer (Plus, Sauvegarde et restauration).',
   'hh.joinWaitingFirst': 'En attente de la première rencontre avec le foyer. Laissez l’autre appareil ouvert.',
-  'hh.joinPinTitle': 'Choisissez un code PIN pour cet appareil',
   'hh.joinStay': 'Annuler',
   'hh.scanTitle': 'Scanner un QR code',
   'hh.scanHelp': 'Placez le code devant la caméra.',

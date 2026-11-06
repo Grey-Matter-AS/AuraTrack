@@ -44,6 +44,7 @@ describe('creating and reading', () => {
       householdId: store.info.householdId,
       deviceId: store.info.deviceId,
       createdAt: 1_760_000_000_000,
+      dataVersion: 2,
     });
     expect(store.get('seizure', made.id)).toEqual(made);
     expect(store.list('seizure')).toEqual([made]);
@@ -54,7 +55,9 @@ describe('creating and reading', () => {
 
   it('refuses an invalid record and leaves nothing behind', async () => {
     const store = await newStore();
-    await expect(store.create('seizure', seizure({ typeCode: 'Focal Aware' }))).rejects.toBeInstanceOf(ValidationError);
+    await expect(store.create('seizure', seizure({ triggerCodes: ['Stress'] }))).rejects.toBeInstanceOf(
+      ValidationError,
+    );
     expect(store.list('seizure')).toEqual([]);
     expect(await store.changesSince()).toEqual([]);
   });
@@ -292,15 +295,18 @@ describe('between-seizures events and symptom sets (7.0.3)', () => {
     const set = await a.create('symptomSet', stripBase(symptomSetFixture()));
     await b.applyChanges(await a.changesSince());
     await a.update('symptomSet', set.id, { name: 'Usual start' });
-    await b.update('symptomSet', set.id, { seizureTypeCode: null });
+    await b.update('symptomSet', set.id, { items: [{ code: 'symptom.eyes.staring_blankly', phase: 'seizure' }] });
     await a.applyChanges(await b.changesSince());
     await b.applyChanges(await a.changesSince());
     for (const store of [a, b]) {
-      expect(store.get('symptomSet', set.id)).toMatchObject({ name: 'Usual start', seizureTypeCode: null });
+      expect(store.get('symptomSet', set.id)).toMatchObject({
+        name: 'Usual start',
+        items: [{ code: 'symptom.eyes.staring_blankly', phase: 'seizure' }],
+      });
     }
   });
 
-  it('a seizure written the old way still opens and can gain a phase on a symptom', async () => {
+  it('a seizure gains symptoms with their phase and a warning-sign time', async () => {
     const store = await newStore();
     const made = await store.create('seizure', seizure());
     const symptoms = [
@@ -345,8 +351,10 @@ describe('updating and deleting', () => {
   it('an update that would make the record invalid is refused and changes nothing', async () => {
     const store = await newStore();
     const made = await store.create('seizure', seizure());
-    await expect(store.update('seizure', made.id, { typeCode: 'Not a code' })).rejects.toBeInstanceOf(ValidationError);
-    expect(store.get('seizure', made.id)?.typeCode).toBe('seizure_type.focal_aware');
+    await expect(store.update('seizure', made.id, { triggerCodes: ['Not a code'] })).rejects.toBeInstanceOf(
+      ValidationError,
+    );
+    expect(store.get('seizure', made.id)?.triggerCodes).toEqual([]);
   });
 
   it('refuses to update or delete what is missing or already deleted', async () => {
@@ -485,21 +493,86 @@ describe('two devices', () => {
     expect(await a.changesSince(first!.stamp)).toHaveLength(1);
   });
 
-  it('refuses a change that is not valid, of an unknown type, or from a clock far in the future', async () => {
+  it('refuses a change that is not valid, of a malformed type, or from a clock far in the future', async () => {
     const { a, b } = await pair();
     await a.create('seizure', seizure());
     const [entry] = await a.changesSince();
     const result = await b.applyChanges([
       { ...entry!, id: newId(), stamp: 'nope' },
-      { ...entry!, id: newId(), recordType: 'spaceship' },
+      { ...entry!, id: newId(), recordType: 'not a type!' },
+      { ...entry!, id: newId(), recordType: 'changeLog' },
       { ...entry!, id: newId(), stamp: encodeHlc({ wall: 4_000_000_000_000, counter: 0, node: 'x' }) },
       { nonsense: true } as unknown as ChangeLogEntry,
     ]);
     expect(result.applied).toBe(0);
     expect(result.rejected.map((r) => r.reason)).toEqual(
-      expect.arrayContaining(['not a valid change', 'unknown record type spaceship', 'its clock is too far ahead']),
+      expect.arrayContaining(['not a valid change', 'unknown record type not a type!', 'its clock is too far ahead']),
     );
-    expect(result.rejected).toHaveLength(4);
+    expect(result.rejected).toHaveLength(5);
+  });
+
+  it('keeps a record of a type from a newer version, passes it on and counts it as not shown', async () => {
+    const { a, b } = await pair();
+    await a.create('seizure', seizure());
+    const [entry] = await a.changesSince();
+    const newer = {
+      ...entry!,
+      id: newId(),
+      recordType: 'heartRateSnapshot',
+      recordId: newId(),
+      fields: { bpm: 120, dataVersion: 3 },
+    };
+    const result = await b.applyChanges([newer]);
+    expect(result).toMatchObject({ applied: 1, rejected: [] });
+    expect(b.incomplete()).toEqual([{ type: 'heartRateSnapshot', id: newer.recordId }]);
+    expect((await b.changesSince()).map((e) => e.id)).toContain(newer.id);
+    expect((await b.snapshot()).records.some((r) => r.id === newer.recordId)).toBe(true);
+  });
+
+  it('deletes records saved before 7.2 (no data version), keeps newer ones, and the delete reaches the other device', async () => {
+    const { a, b } = await pair();
+    const kept = await a.create('seizure', seizure());
+    expect(kept.dataVersion).toBe(2);
+    const [entry] = await a.changesSince();
+    const oldFields = Object.fromEntries(Object.entries(entry!.fields ?? {}).filter(([key]) => key !== 'dataVersion'));
+    const old = {
+      ...entry!,
+      id: newId(),
+      recordId: newId(),
+      fields: { ...oldFields, typeCode: 'seizure_type.absence' },
+    };
+    const newer = {
+      ...entry!,
+      id: newId(),
+      recordType: 'heartRateSnapshot',
+      recordId: newId(),
+      fields: { bpm: 120, dataVersion: 3 },
+    };
+    const oldType = { ...entry!, id: newId(), recordType: 'legacyThing', recordId: newId(), fields: { x: 1 } };
+    await a.applyChanges([old, newer, oldType]);
+    await b.applyChanges(await a.changesSince());
+    expect(await a.purgeLegacy()).toEqual({ removed: 2, types: { seizure: 1, legacyThing: 1 } });
+    expect(a.list('seizure').map((x) => x.id)).toEqual([kept.id]);
+    expect(a.incomplete()).toEqual([{ type: 'heartRateSnapshot', id: newer.recordId }]);
+    expect(await a.purgeLegacy()).toEqual({ removed: 0, types: {} });
+    await b.applyChanges(await a.changesSince());
+    expect(b.versioned('seizure', old.recordId)?.deletedAt).not.toBeNull();
+    expect(b.incomplete()).toEqual([{ type: 'heartRateSnapshot', id: newer.recordId }]);
+  });
+
+  it('still has a record of a newer type after a restart', async () => {
+    const name = dbName();
+    const store = await Store.create(name, { pin: '2468' }, FAST);
+    await store.create('seizure', seizure());
+    const [entry] = await store.changesSince();
+    const recordId = newId();
+    await store.applyChanges([
+      { ...entry!, id: newId(), recordType: 'heartRateSnapshot', recordId, fields: { bpm: 120, dataVersion: 3 } },
+    ]);
+    store.close();
+    const again = await Store.unlock(name, { pin: '2468' }, FAST);
+    expect(again.incomplete()).toEqual([{ type: 'heartRateSnapshot', id: recordId }]);
+    again.close();
   });
 
   it('two different append-only records under one id are reported, and both devices keep the same one', async () => {
@@ -608,6 +681,7 @@ describe('importing records from outside', () => {
       patientId: ids.patient,
       deviceId: ids.device,
       createdAt: 1,
+      dataVersion: 2,
       medicationId,
       medicationName: 'X',
       type: 'started',

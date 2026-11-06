@@ -14,13 +14,13 @@ export function SeizureCard({
   flags: ReturnType<typeof buildDangerMap>[string] | undefined;
   action: { label: string; onClick: () => void } | null;
 }) {
-  const { t, label, fmt } = useApp();
+  const { t, fmt } = useApp();
   const length = seizureLengthSeconds(seizure.phases);
   const badges = [
     seizure.isManualEntry ? t('home.badgeManual') : null,
     seizure.recordedWhileLocked ? t('home.badgeLocked') : null,
     seizure.isEmergencyStop ? t('home.badgeStopped') : null,
-    seizure.cancelled === true ? t('home.badgeCancelled') : null,
+    seizure.cancelled ? t('home.badgeCancelled') : null,
     flags?.flags.includes('long_duration') ? t('home.longSeizure') : null,
     flags?.flags.includes('cluster') ? t('home.badgeCluster', { count: flags.clusterCount }) : null,
     seizure.status === 'in_progress' ? t('rec.title') : null,
@@ -29,7 +29,7 @@ export function SeizureCard({
     <Card compact>
       <div className="app-row">
         <div>
-          <p className="app-banner">{seizureName(seizure, t, label)}</p>
+          <p className="app-banner">{seizureName(seizure, t)}</p>
           <p className="app-note">
             {fmt.whenSec(seizure.phases.start.at)}
             {length !== null ? ` · ${fmt.duration(length)}` : ''}

@@ -63,12 +63,12 @@ export function MedEdit({ id }: { id?: string }) {
     start ? (known ? start.activeIngredient : start.activeIngredient === '' ? '' : OWN) : '',
   );
   const [ownIngredient, setOwnIngredient] = useState(start && !known ? start.activeIngredient : '');
-  const [form, setForm] = useState(start?.form ?? 'tablet');
+  const [form, setForm] = useState<string>(start?.form ?? 'form.tablet');
   const [dose, setDose] = useState(text(start?.dose ?? null));
   const [unit, setUnit] = useState(start?.unit ?? 'mg');
   const [frequency, setFrequency] = useState<Frequency>(start?.frequency ?? 'BD');
   const [times, setTimes] = useState<string[]>(start?.scheduledTimes ?? defaultScheduledTimes('BD'));
-  // One dose and one unit per scheduled time; a time saved before 7.2 with no dose of its own shows the medicine's dose
+  // One dose and one unit per scheduled time; a time with no dose of its own shows the medicine's dose
   const [slots, setSlots] = useState<Record<string, string>>(() =>
     Object.fromEntries(
       (start?.scheduledTimes ?? defaultScheduledTimes('BD')).map((time) => [
@@ -81,7 +81,7 @@ export function MedEdit({ id }: { id?: string }) {
     Object.fromEntries(
       (start?.scheduledTimes ?? defaultScheduledTimes('BD')).map((time) => [
         time,
-        start?.slotUnits?.[time] ?? start?.unit ?? 'mg',
+        start?.slotUnits[time] ?? start?.unit ?? 'mg',
       ]),
     ),
   );
@@ -126,7 +126,7 @@ export function MedEdit({ id }: { id?: string }) {
     slotDoses: scheduled
       ? Object.fromEntries(slotNumbers.filter(([, v]) => v !== null).map(([time, v]) => [time, v as number]))
       : {},
-    ...(scheduled ? { slotUnits: Object.fromEntries(times.map((time) => [time, unitAt(time)])) } : {}),
+    slotUnits: scheduled ? Object.fromEntries(times.map((time) => [time, unitAt(time)])) : {},
     frequency,
     scheduledTimes: frequency === 'PRN' ? [] : [...times].sort(),
     scheduledDays: days.map(Number).sort(),
@@ -193,7 +193,7 @@ export function MedEdit({ id }: { id?: string }) {
               label={t('med.form')}
               value={form}
               onChange={setForm}
-              options={FORMS.map((f) => ({ value: f.stored, label: app.label(f.code) }))}
+              options={FORMS.map((code) => ({ value: code, label: app.label(code) }))}
             />
           </Stack>
         </Section>

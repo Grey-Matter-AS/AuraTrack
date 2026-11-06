@@ -26,14 +26,14 @@ const seizure = (start: number, seconds: number, extra: Partial<Seizure> = {}): 
   ...seizureFixture(),
   phases: phasesAt(start, seconds),
   status: 'complete',
-  typeCode: 'seizure_type.focal_aware',
+  profile: { id: 'usual', name: 'Usual seizure' },
   cancelled: false,
   ...extra,
 });
 
 describe('filters', () => {
   const a = seizure(at(2026, 10, 1), 60, { id: 'a' });
-  const b = seizure(at(2026, 10, 15), 400, { id: 'b', typeCode: null });
+  const b = seizure(at(2026, 10, 15), 400, { id: 'b', profile: null });
   const c = seizure(at(2026, 11, 1), 60, { id: 'c', status: 'recorded' });
   const all = [a, b, c];
 
@@ -42,11 +42,8 @@ describe('filters', () => {
     expect(filtersActive(NO_FILTERS)).toBe(false);
   });
 
-  it('filters by type, including "not set"', () => {
-    expect(filterSeizures(all, { ...NO_FILTERS, type: 'seizure_type.focal_aware' }).map((s) => s.id)).toEqual([
-      'a',
-      'c',
-    ]);
+  it('filters by kind, including "not set"', () => {
+    expect(filterSeizures(all, { ...NO_FILTERS, type: 'profile:usual' }).map((s) => s.id)).toEqual(['a', 'c']);
     expect(filterSeizures(all, { ...NO_FILTERS, type: 'none' }).map((s) => s.id)).toEqual(['b']);
   });
 
@@ -59,13 +56,13 @@ describe('filters', () => {
       observable: null,
       generalized: null,
     };
-    const p = seizure(at(2026, 10, 2), 60, { id: 'p', typeCode: null, ilae2025, profile: { id: 'x', name: 'Usual' } });
-    const q = seizure(at(2026, 10, 3), 60, { id: 'q', typeCode: null, ilae2025 });
-    const r = seizure(at(2026, 10, 4), 60, { id: 'r', typeCode: null, ilae2025: { ...ilae2025, class: null } });
+    const p = seizure(at(2026, 10, 2), 60, { id: 'p', ilae2025, profile: { id: 'x', name: 'Usual' } });
+    const q = seizure(at(2026, 10, 3), 60, { id: 'q', profile: null, ilae2025 });
+    const r = seizure(at(2026, 10, 4), 60, { id: 'r', profile: null, ilae2025: { ...ilae2025, class: null } });
     expect(seizureKindKey(p)).toBe('profile:x');
     expect(seizureKindKey(q)).toBe('ilae2025:focal_impaired_consciousness');
     expect(seizureKindKey(r)).toBeNull();
-    expect(seizureKindKey(seizure(at(2026, 10, 5), 60))).toBe('seizure_type.focal_aware');
+    expect(seizureKindKey(seizure(at(2026, 10, 5), 60))).toBe('profile:usual');
     const list = [p, q, r];
     expect(filterSeizures(list, { ...NO_FILTERS, type: 'profile:x' }).map((s) => s.id)).toEqual(['p']);
     expect(
@@ -102,12 +99,12 @@ describe('filters', () => {
     fc.assert(
       fc.property(
         fc.array(fc.integer({ min: 0, max: 400 }), { maxLength: 30 }),
-        fc.constantFrom(null, 'none', 'seizure_type.focal_aware'),
+        fc.constantFrom(null, 'none', 'profile:usual'),
         (days, type) => {
           const list = days.map((d, i) =>
             seizure(at(2026, 1, 1) + d * 86_400_000, 30, {
               id: String(i),
-              typeCode: i % 2 ? null : 'seizure_type.focal_aware',
+              profile: i % 2 ? null : { id: 'usual', name: 'Usual seizure' },
             }),
           );
           const out = filterSeizures(list, { ...NO_FILTERS, type });
@@ -224,7 +221,7 @@ describe('timeline items', () => {
       ['medication', 'c1'],
       ['missed', 'd1'],
     ]);
-    expect(items[0]).toMatchObject({ seconds: 90, long: false, kindKey: 'seizure_type.focal_aware' });
+    expect(items[0]).toMatchObject({ seconds: 90, long: false, kindKey: 'profile:usual' });
     expect(items[3]).toMatchObject({ name: 'Lamotrigine', medicationId: 'm1' });
   });
 

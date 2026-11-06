@@ -67,9 +67,6 @@ export const m8en = {
   'classify.type.g.tonic': 'Generalized tonic seizure',
   'classify.type.g.atonic': 'Generalized atonic seizure',
   'classify.type.g.myoclonic_atonic': 'Generalized myoclonic-atonic seizure',
-  'classify.earlier': 'Recorded before ILAE 2025 as: {type}',
-  'classify.earlier2017': 'ILAE 2017 answers: {answers}',
-  'rep.ilae2017': 'Recorded before ILAE 2025, with ILAE 2017 answers (counted apart): {recorded}',
   'field.ilae2025': 'ILAE 2025 classification',
   'field.profile': 'seizure profile',
   'prof.row': 'Start from a saved profile',
@@ -87,6 +84,8 @@ export const m8en = {
   'prof.nameHelp': 'In your own words, for example "Usual seizure" or "Night seizure".',
   'prof.withSigns': 'Keep the signs on the timeline as its usual signs ({n})',
   'prof.kept': 'Profile kept',
+  'prof.over':
+    'There are {count} profiles, more than the {max} there can be: two devices added some before they met. All are kept; remove the ones you do not need to add new ones.',
   'prof.full': 'There are already {max} profiles, the most there can be.',
   'prof.title': 'Seizure profiles',
   'prof.help':
@@ -124,7 +123,6 @@ export const m8en = {
   'tab.timeline': 'Timeline',
   'tl.addSymptom': '+ Add symptom',
   'tl.addTitle': 'Add a symptom: {phase}',
-  'tl.phaseLabel': 'Phase',
   'tl.howLong': 'How long',
   'tl.delay': 'Time since the symptom before',
   'gap.custom': 'Other time (hh:mm:ss)',
@@ -190,4 +188,8 @@ export const m8en = {
   'det.rescueLine': '{name} {dose} at {time}, {after} after the start',
   'hist.legendCount':
     'The number in a circle is how many seizures it holds; seizures on the same day share one circle.',
+  'home.purged':
+    'Records from a version before 7.2 removed: {count}. Since 7.2 records are kept in a new form, and older ones are not read.',
+  'home.hidden':
+    'Records this device cannot show yet: {count}. They came from another device or a newer version. They are kept, shared with the household and included in backups. Updating the app on this device shows them.',
 } as const;

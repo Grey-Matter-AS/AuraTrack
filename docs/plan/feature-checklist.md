@@ -1,12 +1,12 @@
 # AuraTrack 6.1 feature checklist (acceptance list for 7.0)
 
-**Status: draft, for your review** (updated 2026-10-30 with the v7 design decisions; v7 changes are marked "v7:"). Every 6.1 feature has an ID, its 6.1 behaviour in one line, and the milestone that rebuilds it. 7.0 is done when every item passes its test, or you've marked it "drop". Add anything missing, and mark items you want changed.
+**Status: draft, for your review** (updated 2026-10-30 with the v7 design decisions; v7 changes are marked "v7:"; **updated 2026-11-06 with 7.2 (M8 and its additions), marked "7.2:"**; this list feeds `docs/AuraTrack7/parity.md`, and both change together). Every 6.1 feature has an ID, its 6.1 behaviour in one line, and the milestone that rebuilds it. 7.0 is done when every item passes its test, or you've marked it "drop". Add anything missing, and mark items you want changed.
 
 Columns: **ID · feature · 6.1 behaviour · milestone**
 
 ## Home (F-100)
-- **F-101 · Start Timer:** a red circle that starts a recording at once. M3
-- **F-102 · Log Past Seizure:** an amber circle opening a sheet with date, time, total duration and optional phase durations; phases add up to the total. M3
+- **F-101 · Start Timer:** a red circle that starts a recording at once. M3 **7.2:** one of three round buttons on one line (Start timer, Log past seizure, Log symptoms between seizures); labels never split.
+- **F-102 · Log Past Seizure:** an amber circle opening a sheet with date, time, total duration and optional phase durations; phases add up to the total. M3 **7.2:** when (to the second), warning signs before, aura, seizure length (required), recovery, each HH:MM:SS; recovery comes after the seizure and is never part of its length.
 - **F-103 · Recent seizures:** the last 5, with type, date, time, duration, badges (edited, manual, video, EEG, untagged, danger flags), View/Edit and Delete. M4
 - **F-104 · Dose panel:** today's scheduled doses by time slot; tap to mark, then Save; status taken, late, missed or assumed. M4
 - **F-105 · Extra dose:** log an unscheduled or rescue dose. M4
@@ -22,7 +22,7 @@ Columns: **ID · feature · 6.1 behaviour · milestone**
 - **F-202 · Carer phase tiles:** End aura, End seizure; recovery runs on; the phase timers show at the top. M3
 - **F-203 · No aura:** tapping End seizure first records aura = 0. M3
 - **F-204 · Self mode:** a simplified screen with no phase tiles. M3
-- **F-205 · Emergency alert:** full screen at the alert time (default 5 min), measuring seizure time (aura and recovery excluded). Wording differs for carer and self. Shows rescue medication, neurologist and emergency contact. Dismissable. v7: what it shows while the app is locked is a setting (default: rescue medication and contacts). M3
+- **F-205 · Emergency alert:** full screen at the alert time (default 5 min), measuring seizure time (aura and recovery excluded). Wording differs for carer and self. Shows rescue medication, neurologist and emergency contact. Dismissable. v7: what it shows while the app is locked is a setting (default: rescue medication and contacts). M3 **7.2:** counted from Start, aura included (the seizure length).
 - **F-206 · Warning** one minute before the alert. M3
 - **F-207 · 12-minute auto-stop:** saves with a status-epilepticus note; quick notes are kept. M3
 - **F-208 · Quick notes:** configurable labels, timestamped in the notes ("[T+35s] FELL"). M3
@@ -35,20 +35,20 @@ Columns: **ID · feature · 6.1 behaviour · milestone**
 - **F-215 · v7: optional symptom strip** during recording: off by default (setting), the usual symptoms for this patient and type, one tap adds a symptom timed automatically into the running phase. No other new buttons on the recording screen. M3
 
 ## Tagging and logging (F-300), rebuilt as the tabbed editor with the vertical timeline in M3
-- **F-301 · Seizure type:** Tonic-Clonic, Focal Aware, Focal Impaired, Absence, Aura Only; skip allowed. v7: plus the ILAE 2017 guided questions, with "Not sure" everywhere; the plain-language type stays the headline. **7.2 (M8, D-17):** replaced by the person's seizure profiles (up to 12; the first 3 in the row, the rest under "More"; "Something different"; "Keep these answers as a profile") and the ILAE 2025 questions (basic version, the paper's plain questions about recall and responsiveness); older seizures show their type and ILAE 2017 answers as recorded, never changed. M3
-- **F-302 · Symptoms:** a group → symptom → detail → body region → sub-region → parts (multi-select) wizard. v7: replaced by the tabbed editor, a search over the symptom list, and the body map. M3
+- **F-301 · Seizure type:** Tonic-Clonic, Focal Aware, Focal Impaired, Absence, Aura Only; skip allowed. v7: plus the ILAE 2017 guided questions, with "Not sure" everywhere; the plain-language type stays the headline. **7.2 (M8, D-17):** replaced by the person's seizure profiles (up to 12; the first 3 in the row, the rest under "More"; "Something different"; "Keep these answers as a profile") and the ILAE 2025 questions (basic version, the paper's plain questions about recall and responsiveness); older seizures show their type and ILAE 2017 answers as recorded, never changed. M3 **7.2 (D-18):** ILAE 2025 only; the plain-language type and ILAE 2017 are removed everywhere, older seizures included.
+- **F-302 · Symptoms:** a group → symptom → detail → body region → sub-region → parts (multi-select) wizard. v7: replaced by the tabbed editor, a search over the symptom list, and the body map. M3 **7.2:** "+ Add symptom" in each phase of the timeline opens a sheet (usual, search, browse, own symptoms, add your own); symptom cards, "⋯" for place, phase, remove.
 - **F-303 · Custom symptoms and details,** remembered for next time ("added by you"). M3
 - **F-304 · Saved symptom sets** per seizure type (7.2: no longer tied to a type; a profile's usual signs do that job, and "often for" counts a profile's seizures): suggested names, "most used for <type>", managed in Settings. M3
-- **F-305 · Symptom order** by drag (the first is the main symptom). v7: order and intervals on the vertical timeline (F-314). M3
-- **F-306 · Summary:** editable total and phase timers (marked "edited"), the type with Change, the event date and time for past or edited seizures. v7: phase times show their source (timed, edited, entered later). M3
+- **F-305 · Symptom order** by drag (the first is the main symptom). v7: order and intervals on the vertical timeline (F-314). M3 **7.2:** delay cards between symptoms: not known, same time, a few seconds, ~10 s, ~30 s, ~1 min, or other time (saved as approximate).
+- **F-306 · Summary:** editable total and phase timers (marked "edited"), the type with Change, the event date and time for past or edited seizures. v7: phase times show their source (timed, edited, entered later). M3 **7.2:** every length one HH:MM:SS box filled from the right; times in the phase sections of the timeline.
 - **F-307 · After-seizure findings:** 7 groups, body areas for movement and sensation findings, custom findings, "back to normal after", "not back yet". M3
 - **F-308 · Triggers:** 11, linked to wellbeing factors. v7: the wellbeing link only while that module is on. M3
 - **F-309 · Clinical notes** (free text). M3
 - **F-310 · Finish & save; Save timing only** (details later); **Cancel & discard** for a new seizure, Cancel changes for an edit. M3
 - **F-311 · Edit history:** which fields changed and when; an edit returns to where it started. M3
-- **F-312 · v7: tabs by phase** (Before, During, After, Details), always visible with their state; an overview strip on every tab; a Review before saving; Save works from any tab. M3
+- **F-312 · v7: tabs by phase** (Before, During, After, Details), always visible with their state; an overview strip on every tab; a Review before saving; Save works from any tab. M3 **7.2:** replaced by three tabs: Classification, Timeline (the whole seizure, one band per phase: Warning signs, Start, Aura, Seizure, Recovery), Notes; four phases (prodrome, aura, seizure, recovery) for times and symptoms.
 - **F-313 · v7: "Between seizures" log** (interictal symptoms): a quick entry from Home with symptom, time, body area and note; shown on the History timeline and in reports. M3, M4, M5
-- **F-314 · v7: vertical seizure timeline** (README section 5.1):
+- **F-314 · v7: vertical seizure timeline** (README section 5.1): **7.2:** warning signs drawn above Start and never the first sign; a node and connector per band and card.
   - a line in phase colours, with phase markers and times (start, aura ends, seizure ends, back to normal)
   - moments holding one or more symptoms on a shared leader line; drag a box onto a moment to make symptoms simultaneous
   - spacing by order; intervals written on the line, marked exact, approximate (~) or unknown; true scale as an option in the report and on wide screens
@@ -59,12 +59,12 @@ Columns: **ID · feature · 6.1 behaviour · milestone**
   - one component: compact in the editor's overview, full in Review, on the detail page and in the PDF
 
   M3, M4, M5
-- **F-315 · v7: History timeline** over days and weeks: seizures (sized by duration, coloured by type), between-seizures entries, medication changes and missed doses; tap anything to open it; also for the report period. M4, M5
+- **F-315 · v7: History timeline** over days and weeks: seizures (sized by duration, coloured by type), between-seizures entries, medication changes and missed doses; tap anything to open it; also for the report period. M4, M5 **7.2:** same-day seizures share one circle with the count; the chart's period controls.
 
 ## History (F-400)
-- **F-401 · Seizure list:** paginated (page size setting), filters by type (including "type not set"; 7.2: by profile, ILAE 2025 type, or the type of an older seizure), date range and "needs details", Clear; the filters are kept when coming back. M4
-- **F-402 · Trend chart:** frequency over time with medication change markers. M4
-- **F-403 · Event detail:** type, phases, symptoms, after-seizure findings with areas and recovery, triggers, notes, video file name, EEG badge, danger flags (long seizure, cluster against the patient's rule), edit history; Edit. v7: with the vertical seizure timeline (F-314). M4
+- **F-401 · Seizure list:** paginated (page size setting), filters by type (including "type not set"; 7.2: by profile or ILAE 2025 type), date range and "needs details", Clear; the filters are kept when coming back. M4
+- **F-402 · Trend chart:** frequency over time with medication change markers. M4 **7.2:** a bar per day, week or month with its count, long seizures marked, average and upper limit (average + 3√average), medicine-change markers, table view, − + ◀ ▶ Today and From–To.
+- **F-403 · Event detail:** type, phases, symptoms, after-seizure findings with areas and recovery, triggers, notes, video file name, EEG badge, danger flags (long seizure, cluster against the patient's rule), edit history; Edit. v7: with the vertical seizure timeline (F-314). M4 **7.2:** times to the second; rescue medicine as time since the start; cluster flags counted inside one window (D-19).
 - **F-404 · Delete with confirmation** (also removes the linked EEG note). M4
 - **F-405 · Medications tab:** a dose history grid by day and slot, editable (taken, missed, time), with an audit marker. M4
 - **F-406 · Wellbeing tab:** entries, filters, a correlation overview with seizures. v7: only while the module is on. M4
@@ -73,7 +73,7 @@ Columns: **ID · feature · 6.1 behaviour · milestone**
 - **F-409 · Tabs hidden** when a feature is off and has no data. M4
 
 ## Medications (F-500)
-- **F-501 · Add medication:** name, active ingredient picker (about 30 built in plus your own, capitalised), form, dose and unit, frequency (OD, BD, TDS, QDS, PRN), times, days, per-slot doses, rescue flag, show on the emergency screen, reminders. M4
+- **F-501 · Add medication:** name, active ingredient picker (about 30 built in plus your own, capitalised), form, dose and unit, frequency (OD, BD, TDS, QDS, PRN), times, days, per-slot doses, rescue flag, show on the emergency screen, reminders. M4 **7.2:** one dose and unit per scheduled time; "when needed" a single dose; a daily total table.
 - **F-502 · Change confirm sheet:** effective date and dose time, optional note; types started, changed, stopped, correction. M4
 - **F-503 · Name locked after confirmation;** renaming asks why (typo, brand, different medicine → replace). M4
 - **F-504 · Stop instead of delete;** delete only for mistakes, synced as a tombstone. M4
@@ -117,7 +117,7 @@ Columns: **ID · feature · 6.1 behaviour · milestone**
 - **F-702 · Event log PDF** for a date range. M5
 - **F-703 · Monthly seizure diary PDF.** M5
 - **F-704 · EEG diary PDF.** M5
-- **F-705 · CSV export** (seizures, medications, logs, changes, wellbeing, EEG). M5
+- **F-705 · CSV export** (seizures, medications, logs, changes, wellbeing, EEG). M5 **7.2:** current format only (D-18): `lengthSeconds`, `recoverySeconds`, `slotUnits`; a value it can't read is listed as a problem.
 - **F-706 · Print preview** in the app. M5
 - **F-707 · Save via the system dialog, or a download.** v7: plus Share (the share sheet). M5
 
@@ -143,7 +143,8 @@ Columns: **ID · feature · 6.1 behaviour · milestone**
 - **F-1003 · Start from the lock screen:** recording never waits for the lock; merged when unlocked. M3
 - **F-1004 · Field-level merge and audit trail:** HLC per field, append-only change log, tombstones, merge rule per record type. M1
 - **F-1005 · Crash-proof recording:** saved the moment Start is tapped, every tap written at once. M3
-- **F-1006 · 6.1 importer:** plain or encrypted, one or all patients; a review list for anything unmapped; a comparison report against 6.1's numbers. M1
+- **F-1006 · 6.1 importer:** plain or encrypted, one or all patients; a review list for anything unmapped; a comparison report against 6.1's numbers. M1 **7.2: removed (D-18).**
+- **F-1007 · 7.2: records this device cannot show** (an unknown type or value from another device or a newer version) are kept, synced, backed up and counted on Home; never dropped. Records from before 7.2 (no `dataVersion`) are deleted at load, with a notice on Home (D-18). 7.2
 
 ## Household (F-1100), new in v7
 - **F-1101 · Create and join:** the first device creates it; others join by QR code and PIN; device names. M6
@@ -160,7 +161,7 @@ Columns: **ID · feature · 6.1 behaviour · milestone**
 - **F-1204 · Daily encrypted backups** on the hub. M7
 
 ## Not carried over (decided)
-- 6.x legacy data formats, except through the importer.
+- 6.x data formats and the 6.1 importer (removed in 7.2, D-18).
 - HelsaMi and Helsenorge integration: a distant idea, not planned.
 - Phone or tablet as a household hub.
 - The 6.x Cypress suite (replaced by Playwright).

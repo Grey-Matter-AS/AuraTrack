@@ -24,13 +24,11 @@ export const SymptomSetItemSchema = z.object({ code: CodeSchema, phase: PhaseNam
 export type SymptomSetItem = z.infer<typeof SymptomSetItemSchema>;
 
 /**
- * A saved set of symptoms for a seizure type (F-304): one tap adds all of it. `name` is the user's own words and may be
- * empty, in which case the app suggests a name from the symptoms.
+ * A saved set of symptoms (F-304): one tap adds all of it. `name` is the user's own words and may be empty, in which case
+ * the app suggests a name from the symptoms. Not tied to a kind of seizure: a profile's usual signs do that job (D-17).
  */
 export const SymptomSetSchema = z.object({
   ...baseRecord,
-  /** The seizure type it is for; null means every type. */
-  seizureTypeCode: CodeSchema.nullable(),
   name: ShortTextSchema,
   items: z.array(SymptomSetItemSchema).min(1).max(40),
 });

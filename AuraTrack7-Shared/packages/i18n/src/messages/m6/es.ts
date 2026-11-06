@@ -22,7 +22,6 @@ export const es: Partial<Record<keyof typeof m6en, string>> = {
   'hh.rename': 'Cambiar el nombre',
   'hh.follows': 'Guarda una copia de todos',
   'hh.followsSome': 'Guarda una copia de: {names}',
-  'hh.removed': 'Quitado',
   'hh.addDevice': 'Añadir un dispositivo',
   'hh.upToDate': '¿El hogar está al día?',
   'hh.fileTitle': 'Actualización por archivo o QR',
@@ -70,13 +69,11 @@ export const es: Partial<Record<keyof typeof m6en, string>> = {
   'hh.joinConnecting': 'Buscando el dispositivo…',
   'hh.joinCompare': '¿Muestra el otro dispositivo los mismos seis dígitos?',
   'hh.joinWaitingOther': 'Esperando a que el otro dispositivo confirme…',
-  'hh.joinDone': 'Se ha unido. Los registros llegan cuando el otro dispositivo está abierto. Déjelo abierto un minuto.',
   'hh.joinNotFound':
     'No se encontró el dispositivo. Compruebe que muestra el código y tiene conexión, e inténtelo de nuevo.',
   'hh.joinHasRecords':
     'Este dispositivo ya tiene registros, así que no puede unirse a un hogar. Haga una copia de seguridad y restáurela en el dispositivo del hogar (Más, Copia de seguridad y restauración).',
   'hh.joinWaitingFirst': 'Esperando el primer encuentro con el hogar. Deje abierto el otro dispositivo.',
-  'hh.joinPinTitle': 'Elija un PIN para este dispositivo',
   'hh.joinStay': 'Cancelar',
   'hh.scanTitle': 'Escanear un código QR',
   'hh.scanHelp': 'Ponga el código delante de la cámara.',

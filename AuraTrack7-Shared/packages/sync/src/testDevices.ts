@@ -26,7 +26,15 @@ export async function firstDevice(patientId: string, now?: () => number): Promis
   const d = await newDevice(now);
   await d.api.createRecord({
     type: 'patient',
-    values: { id: patientId, patientId, name: 'Alex', dateOfBirth: null, emergencyContact: '', color: '#336699' },
+    values: {
+      id: patientId,
+      patientId,
+      name: 'Alex',
+      dateOfBirth: null,
+      emergencyContact: '',
+      emergencyPhone: '',
+      color: '#336699',
+    },
   });
   await startHousehold(d.api, d.who, { name: 'Home', deviceName: 'Kitchen', patientIds: [patientId], now: Date.now() });
   return d;

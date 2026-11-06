@@ -176,7 +176,6 @@ export function SaveSetButton() {
               onClick={() => {
                 void app.actions
                   .saveSet({
-                    typeCode: null,
                     name: setName,
                     items: inSeizureOrder(draft.items).map((i) => ({ code: i.code, phase: i.phase })),
                   })

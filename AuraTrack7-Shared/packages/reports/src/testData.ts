@@ -3,6 +3,7 @@ import type {
   DoseLog,
   EegActivity,
   EegSession,
+  Ilae2025,
   InterictalEvent,
   Medication,
   MedicationChange,
@@ -26,7 +27,7 @@ const at = (daysAgo: number, hour: number, minute = 0) => {
 
 export const patient: Patient = {
   id: 'p1', householdId: 'h', deviceId: 'd', createdAt: at(120, 9), patientId: 'p1',
-  name: 'Random Seed Patient', dateOfBirth: '2010-05-17', emergencyContact: 'Sam 555 0100', color: '#1d4ed8',
+  name: 'Random Seed Patient', dateOfBirth: '2010-05-17', emergencyContact: 'Sam 555 0100', emergencyPhone: '', color: '#1d4ed8',
 };
 
 let seed = 7;
@@ -51,7 +52,16 @@ export function context(language = 'en'): ReportContext {
   };
 }
 
-const TYPES = ['seizure_type.focal_aware', 'seizure_type.focal_impaired', 'seizure_type.tonic_clonic', 'seizure_type.absence'];
+// Four kinds of seizure, as ILAE 2025 answers; the first two come from the person's profiles
+const answers = (over: Partial<Ilae2025>): Ilae2025 => ({
+  class: 'focal', recall: null, responsive: null, bilateralTonicClonic: null, observable: null, generalized: null, ...over,
+});
+const KINDS: { ilae2025: Ilae2025; profile: { id: string; name: string } | null }[] = [
+  { ilae2025: answers({ recall: 'yes', responsive: 'yes', observable: 'no' }), profile: { id: 'p-usual', name: 'Usual seizure' } },
+  { ilae2025: answers({ recall: 'no', responsive: 'no' }), profile: { id: 'p-night', name: 'Night seizure' } },
+  { ilae2025: answers({ bilateralTonicClonic: 'yes' }), profile: null },
+  { ilae2025: answers({ class: 'generalized', generalized: 'typical_absence' }), profile: null },
+];
 const TRIGGERS = ['trigger.stress', 'trigger.sleep_deprivation', 'trigger.missed_medication'];
 
 export function seizures(count = 40): Seizure[] {
@@ -71,8 +81,8 @@ export function seizures(count = 40): Seizure[] {
         recoveryEnd: full ? { at: start + 15_000 + seconds * 1000 + 300_000, source: 'timed' } : null,
       },
       status: i % 8 === 7 ? 'recorded' : 'complete',
-      typeCode: i % 8 === 7 ? null : TYPES[i % TYPES.length] ?? null,
-      ilae: null,
+      ilae2025: i % 8 === 7 ? null : (KINDS[i % KINDS.length]?.ilae2025 ?? null),
+      profile: i % 8 === 7 ? null : (KINDS[i % KINDS.length]?.profile ?? null),
       symptoms: [
         { id: `y${i}a`, code: 'symptom.awareness.fully_awake_aware', area: null, moment: 0, order: 0, sincePrevious: { kind: 'unknown', ms: null }, isFirst: true, phase: 'seizure' },
         ...(i % 2 === 0
@@ -80,7 +90,6 @@ export function seizures(count = 40): Seizure[] {
           : [{ id: `y${i}c`, code: 'symptom.awareness.confused_dream_like', area: null, moment: 1, order: 1, sincePrevious: { kind: 'unknown' as const, ms: null }, isFirst: false, phase: 'seizure' as const }]),
       ],
       afterFindings: i % 4 === 0 ? [{ code: 'after.confused', customLabel: null, areas: [] }] : [],
-      recoveryMinutes: full ? 5 : null,
       recoveryOngoing: false,
       triggerCodes: i % 5 === 0 ? [TRIGGERS[i % TRIGGERS.length] as string] : [],
       notes: i % 6 === 0 ? 'Seed note with longer wording to exercise report wrapping and pagination in the PDF.' : '',
@@ -89,6 +98,10 @@ export function seizures(count = 40): Seizure[] {
       isEmergencyStop: i === 17,
       recordedBy: i % 2 === 0 ? 'carer' : 'self',
       eegSessionId: null,
+      prodromeSecondsBefore: null,
+      quickNotes: [],
+      recordedWhileLocked: false,
+      cancelled: false,
     });
   }
   return out;
@@ -97,13 +110,13 @@ export function seizures(count = 40): Seizure[] {
 export const medications: Medication[] = [
   {
     id: 'm1', householdId: 'h', deviceId: 'd', createdAt: at(100, 9), patientId: 'p1', name: 'Lamotrigine', activeIngredient: 'Lamotrigine',
-    form: 'tablet', dose: 100, unit: 'mg', slotDoses: { '20:00': 150 }, frequency: 'BD', scheduledTimes: ['08:00', '20:00'],
+    form: 'form.tablet', dose: 100, unit: 'mg', slotDoses: { '20:00': 150 }, slotUnits: {}, frequency: 'BD', scheduledTimes: ['08:00', '20:00'],
     scheduledDays: [0, 1, 2, 3, 4, 5, 6], isRescue: false, showInEmergency: false, reminderEnabled: false, active: true,
     startedAt: at(100, 9), stoppedAt: null,
   },
   {
     id: 'm2', householdId: 'h', deviceId: 'd', createdAt: at(100, 9), patientId: 'p1', name: 'Midazolam', activeIngredient: 'Midazolam',
-    form: 'buccal', dose: 10, unit: 'mg', slotDoses: {}, frequency: 'PRN', scheduledTimes: [], scheduledDays: [0, 1, 2, 3, 4, 5, 6],
+    form: 'form.buccal', dose: 10, unit: 'mg', slotDoses: {}, slotUnits: {}, frequency: 'PRN', scheduledTimes: [], scheduledDays: [0, 1, 2, 3, 4, 5, 6],
     isRescue: true, showInEmergency: true, reminderEnabled: false, active: true, startedAt: at(100, 9), stoppedAt: null,
   },
 ];
@@ -116,7 +129,7 @@ const lamotrigine = ((): Medication => {
 const regimen = (m: Medication, over: Partial<Medication> = {}) => {
   const r = { ...m, ...over };
   return {
-    name: r.name, activeIngredient: r.activeIngredient, form: r.form, dose: r.dose, unit: r.unit, slotDoses: r.slotDoses,
+    name: r.name, activeIngredient: r.activeIngredient, form: r.form, dose: r.dose, unit: r.unit, slotDoses: r.slotDoses, slotUnits: r.slotUnits,
     frequency: r.frequency, scheduledTimes: r.scheduledTimes, scheduledDays: r.scheduledDays,
   };
 };

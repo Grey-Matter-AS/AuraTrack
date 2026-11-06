@@ -37,10 +37,8 @@ export const INGREDIENTS = [
 
 export const UNITS = ['mg', 'mcg', 'g', 'ml', 'IU'] as const;
 
-/** The forms as stored: the plain words the importer keeps (`tablet`), the label comes from the catalogue code. */
-export const FORMS = MEDICATION_FORMS.map((f) => ({ stored: f.legacy, code: f.code }));
-
-export const formCode = (stored: string): string | null => FORMS.find((f) => f.stored === stored)?.code ?? null;
+/** The forms a medicine can have: stored as catalogue codes (`form.tablet`); the label comes from the catalogue. */
+export const FORMS = MEDICATION_FORMS.map((f) => f.code);
 
 /** "500 mg", or "" when no dose is set. */
 export const doseText = (dose: number | null | undefined, unit: string): string =>
