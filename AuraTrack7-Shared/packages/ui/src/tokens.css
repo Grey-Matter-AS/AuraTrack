@@ -28,6 +28,10 @@
   --border-subtle: light-dark(rgb(226 232 240 / 0.7), rgb(51 65 85 / 0.5));
 
   /* Meaning colours: fixed (they never follow the accent), with a readable shade per theme */
+  /* Charts follow the chosen accent. The marked part (long seizures) is amber; with a red or amber accent it is blue, as
+     red and amber are too close to tell apart (dataviz validator, both themes) */
+  --chart-count: var(--accent);
+  --chart-marked: light-dark(#b45309, #c97a0a);
   --phase-prodrome: light-dark(#6d28d9, #a78bfa);
   --phase-aura: light-dark(#b45309, #f59e0b);
   --phase-seizure: light-dark(#b91c1c, #ef4444);
@@ -117,6 +121,7 @@
 
 :root[data-accent='red'] {
   --accent: #dc2626;
+  --chart-marked: light-dark(#2563eb, #5b8def);
 }
 :root[data-accent='blue'] {
   --accent: #5b8def;
@@ -129,6 +134,7 @@
 }
 :root[data-accent='amber'] {
   --accent: #d97706;
+  --chart-marked: light-dark(#2563eb, #5b8def);
 }
 
 :root[data-font-size='small'] {

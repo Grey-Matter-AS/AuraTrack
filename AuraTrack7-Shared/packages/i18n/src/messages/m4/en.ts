@@ -282,7 +282,7 @@ export const m4en = {
   'med.ownIngredient': 'Another ingredient…',
   'med.ownIngredientName': 'Name of the ingredient',
   'med.form': 'Form',
-  'med.schedule': 'Dose and times',
+  'med.schedule': 'Dosage',
   'med.frequency': 'How often',
   'med.freq.OD': 'Once a day',
   'med.freq.BD': 'Twice a day',

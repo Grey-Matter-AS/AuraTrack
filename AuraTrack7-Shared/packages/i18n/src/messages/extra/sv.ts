@@ -282,7 +282,7 @@ export const sv: Extra = {
   'med.ownIngredient': 'En annan substans …',
   'med.ownIngredientName': 'Substansens namn',
   'med.form': 'Form',
-  'med.schedule': 'Dos och tider',
+  'med.schedule': 'Dosering',
   'med.frequency': 'Hur ofta',
   'med.freq.OD': 'En gång dagligen',
   'med.freq.BD': 'Två gånger dagligen',

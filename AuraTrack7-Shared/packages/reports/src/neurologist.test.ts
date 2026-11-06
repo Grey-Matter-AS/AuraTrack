@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { seizureSeconds } from '@auratrack/model';
+import { seizureLengthSeconds } from '@auratrack/model';
 import { buildNeurologistReport, doseSummary, areaLabel } from './neurologist';
 import { changes, context, medications, neurologistInput, seizures } from './testData';
 
@@ -11,7 +11,7 @@ describe('the neurologist report: the numbers', () => {
     const inPeriod = input.seizures.filter((s) => s.phases.start.at >= input.from && s.phases.start.at <= input.to);
     const r = report();
     expect(r.stats.seizures).toBe(String(inPeriod.length));
-    const lengths = inPeriod.map((s) => seizureSeconds(s.phases)).filter((n): n is number => n !== null);
+    const lengths = inPeriod.map((s) => seizureLengthSeconds(s.phases)).filter((n): n is number => n !== null);
     const average = Math.round(lengths.reduce((a, b) => a + b, 0) / lengths.length);
     expect(r.stats.average).toBe(context().fmt.duration(average));
     const days = new Set(inPeriod.map((s) => context().fmt.date(s.phases.start.at))).size;
@@ -33,7 +33,7 @@ describe('the neurologist report: the numbers', () => {
     const flag = r.flags.find((f) => f.label.includes('minutes'));
     expect(flag?.level).toBe('warning');
     expect(flag?.label).toMatch(/^Seizures at or over 5 minutes: \d+$/);
-    expect(flag?.detail).toMatch(/\d{4}-\d{2}-\d{2} \d{2}:\d{2} \(\d+:\d{2}\)/);
+    expect(flag?.detail).toMatch(/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} \(\d+:\d{2}\)/);
   });
 
   it('flags a recording the timer stopped, seizures that were edited, and names the triggers with how often', () => {
@@ -130,6 +130,13 @@ describe('the neurologist report: medicines', () => {
     expect(doseSummary(m)).toBe('100 + 150 mg');
     expect(doseSummary({ ...medications[1]! })).toBe('10 mg');
     expect(doseSummary({ ...m, dose: null, slotDoses: {}, frequency: 'PRN', scheduledTimes: [] })).toBe('');
+  });
+
+  it('writes each unit with its dose when the times of the day use different units, never adding them up', () => {
+    const m = medications[0]!;
+    const times = m.scheduledTimes;
+    const mixed = { ...m, slotUnits: { [times[0]!]: 'mg', [times[1]!]: 'tablet' } };
+    expect(doseSummary(mixed)).toBe(`${m.slotDoses[times[0]!] ?? m.dose} mg + ${m.slotDoses[times[1]!] ?? m.dose} tablet`);
   });
 });
 

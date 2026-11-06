@@ -53,7 +53,7 @@ export function Disclosure({
   children,
 }: {
   title: string;
-  summary?: string;
+  summary?: string | undefined;
   defaultOpen?: boolean;
   children: ReactNode;
 }) {
@@ -112,10 +112,23 @@ export function NavList({ title, items }: { title?: string; items: readonly NavL
       <ul className="ui-navlist__rows">
         {items.map((item) => (
           <li key={item.id}>
-            <button type="button" className="ui-navlist__row" onClick={item.onClick}>
+            {/* The row is named by its label; the line under it is its description */}
+            <button
+              type="button"
+              className="ui-navlist__row"
+              onClick={item.onClick}
+              aria-labelledby={`${headingId}-${item.id}-l`}
+              aria-describedby={item.description ? `${headingId}-${item.id}-d` : undefined}
+            >
               <span className="ui-navlist__text">
-                <span className="ui-navlist__label">{item.label}</span>
-                {item.description ? <span className="ui-navlist__description">{item.description}</span> : null}
+                <span className="ui-navlist__label" id={`${headingId}-${item.id}-l`}>
+                  {item.label}
+                </span>
+                {item.description ? (
+                  <span className="ui-navlist__description" id={`${headingId}-${item.id}-d`}>
+                    {item.description}
+                  </span>
+                ) : null}
               </span>
               <span className="ui-navlist__chevron" aria-hidden="true" />
             </button>

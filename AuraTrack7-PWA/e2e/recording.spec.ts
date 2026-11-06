@@ -39,7 +39,7 @@ test('Start works from the PIN screen, records into the drop box, and is merged 
   await page.getByRole('button', { name: 'End aura' }).click();
   await page.getByRole('button', { name: 'Note: Calm' }).click();
   await page.getByRole('button', { name: 'End seizure' }).click();
-  await page.getByRole('button', { name: 'Back to normal' }).click();
+  await page.getByRole('button', { name: 'Back to usual self' }).click();
   await expect(page.getByTestId('recording-done')).toContainText('finished');
   await expect(page.getByTestId('recording-state')).toContainText('Saving: saved');
   await expect(page.getByTestId('pin-screen')).toContainText('5 entries waiting');
@@ -115,7 +115,7 @@ test('a recording made while unlocked is found again after a reload (crash recov
   await expect(page.getByTestId('recording-stage')).toContainText('seizure');
   await expect(page.getByTestId('recording-stage')).toContainText('unlocked');
   await page.getByRole('button', { name: 'End seizure' }).click();
-  await page.getByRole('button', { name: 'Back to normal' }).click();
+  await page.getByRole('button', { name: 'Back to usual self' }).click();
   await expect(page.getByTestId('recording-done')).toContainText('finished');
 });
 

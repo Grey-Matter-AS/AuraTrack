@@ -76,8 +76,10 @@ export interface RoundButtonProps extends NativeButton {
 
 /** The big round action on Home (Start Timer, Log Past Seizure). A real button; the circle keeps its shape at every text size. */
 export function RoundButton({ tone, icon, type = 'button', children, ...rest }: RoundButtonProps) {
+  // A label written over several lines ("Start\ntimer") is announced as one phrase ("Start timer")
+  const name = typeof children === 'string' && /\s/.test(children) ? children.replace(/\s+/g, ' ').trim() : undefined;
   return (
-    <button type={type} className={cx('ui-round', `ui-round--${tone}`)} {...rest}>
+    <button type={type} className={cx('ui-round', `ui-round--${tone}`)} aria-label={name} {...rest}>
       {icon}
       <span className="ui-round__label">{children}</span>
     </button>

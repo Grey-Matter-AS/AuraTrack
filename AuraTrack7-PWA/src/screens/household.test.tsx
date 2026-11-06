@@ -516,7 +516,7 @@ describe('alerts to the household', () => {
     expect(alerts.map((a) => a.event)).toEqual(['started', 'alert']); // not again
     await user.click(await screen.findByRole('button', { name: 'Dismiss' })); // the red alert
     await user.click(screen.getByRole('button', { name: 'End seizure' }));
-    await user.click(screen.getByRole('button', { name: 'Back to normal' }));
+    await user.click(screen.getByRole('button', { name: 'Back to usual self' }));
     await waitFor(() => expect(alerts.map((a) => a.event)).toEqual(['started', 'alert', 'recorded']));
     expect(new Set(alerts.map((a) => a.auth))).toEqual(new Set(['Bearer tok']));
     expect(alerts[0]?.patientId).toBeTruthy();
@@ -533,7 +533,7 @@ describe('alerts to the household', () => {
     await user.click(await screen.findByRole('button', { name: 'Start timer' }));
     expect(await screen.findByRole('timer')).toBeTruthy();
     await user.click(screen.getByRole('button', { name: 'End seizure' }));
-    await user.click(screen.getByRole('button', { name: 'Back to normal' }));
+    await user.click(screen.getByRole('button', { name: 'Back to usual self' }));
     await waitFor(() => expect(ctx.api.list({ type: 'seizure' })).toHaveLength(1));
     await waitFor(() =>
       expect((ctx.api.list({ type: 'seizure' }) as { status: string }[])[0]?.status).not.toBe('in_progress'),

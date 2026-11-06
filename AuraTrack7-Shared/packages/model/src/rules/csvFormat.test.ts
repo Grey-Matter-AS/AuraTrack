@@ -27,11 +27,16 @@ describe('CSV tokens', () => {
   });
 
   it('symptoms with an area and a phase, and a phase it does not know left out', () => {
-    expect(parseSymptomToken(symptomToken('symptom.x', arm, 'during'))).toEqual({
+    expect(parseSymptomToken(symptomToken('symptom.x', arm, 'seizure'))).toEqual({
       code: 'symptom.x',
       area: arm,
-      phase: 'during',
+      phase: 'seizure',
     });
+    expect(parseSymptomToken('symptom.x#prodrome')?.phase).toBe('prodrome');
+    // Files written before 7.2 used three phases: they are read as aura, seizure and recovery
+    expect(parseSymptomToken('symptom.x#before')?.phase).toBe('aura');
+    expect(parseSymptomToken('symptom.x#during')?.phase).toBe('seizure');
+    expect(parseSymptomToken('symptom.x#after')?.phase).toBe('recovery');
     expect(symptomToken('symptom.x', null)).toBe('symptom.x');
     expect(parseSymptomToken('symptom.x#later')).toEqual({ code: 'symptom.x', area: null, phase: null });
   });

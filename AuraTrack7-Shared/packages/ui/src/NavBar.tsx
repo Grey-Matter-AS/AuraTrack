@@ -1,3 +1,5 @@
+import type { CSSProperties } from 'react';
+
 export interface NavBarItem {
   id: string;
   label: string;
@@ -26,7 +28,13 @@ export function NavBar({ items, current, onSelect, label }: NavBarProps) {
           aria-current={item.id === current ? 'page' : undefined}
           onClick={() => item.id !== current && onSelect(item.id)}
         >
-          {item.label}
+          {/* The text is sized so its longest word fits the tab: words are never split or hyphenated */}
+          <span
+            className="ui-navbar__label"
+            style={{ '--longest': Math.max(4, ...item.label.split(/\s+/).map((w) => w.length)) } as CSSProperties}
+          >
+            {item.label}
+          </span>
         </button>
       ))}
     </nav>

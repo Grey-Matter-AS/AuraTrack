@@ -3,7 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { newId } from '../ids';
 import { SeizureSchema } from '../schemas';
 import { seizureFixture } from '../schemas/fixtures';
-import { AUTO_STOP_AT_S, emergencyPlan } from './emergency';
+import type { PhaseName } from '../schemas';
+import { AUTO_STOP_AT_S, emergencyPlan, seizureLengthSeconds } from './emergency';
 import {
   LockedMarkerSchema,
   RecordingEventSchema,
@@ -48,7 +49,7 @@ const ev = (
   at,
 });
 const note = (label: string, at: number): RecordingEvent => ({ kind: 'quick_note', id: newId(), at, label });
-const symptom = (code: string, phase: 'before' | 'during' | 'after', at: number): RecordingEvent => ({
+const symptom = (code: string, phase: PhaseName, at: number): RecordingEvent => ({
   kind: 'symptom',
   id: newId(),
   at,
@@ -163,8 +164,8 @@ describe('reducing a recording', () => {
   });
 
   it('keeps symptoms and quick notes, with times no earlier than Start', () => {
-    const s = run(start(), symptom('symptom.a', 'before', T0 - 5 * S), note('Calm', T0 + 3 * S));
-    expect(s.symptoms[0]).toMatchObject({ code: 'symptom.a', phase: 'before', at: T0 });
+    const s = run(start(), symptom('symptom.a', 'aura', T0 - 5 * S), note('Calm', T0 + 3 * S));
+    expect(s.symptoms[0]).toMatchObject({ code: 'symptom.a', phase: 'aura', at: T0 });
     expect(s.quickNotes[0]).toMatchObject({ label: 'Calm', at: T0 + 3 * S });
   });
 
@@ -176,7 +177,7 @@ describe('reducing a recording', () => {
     reduceRecording(s, ev('finish', T0 + 1000));
     expect(JSON.stringify(s)).toBe(before);
     let t: RecordingSession | null = run(start());
-    for (let i = 0; i < 210; i++) t = reduceRecording(t, symptom('symptom.a', 'during', T0 + i)) as RecordingSession;
+    for (let i = 0; i < 210; i++) t = reduceRecording(t, symptom('symptom.a', 'seizure', T0 + i)) as RecordingSession;
     expect(t.symptoms).toHaveLength(200);
   });
 
@@ -221,7 +222,7 @@ describe('marks typed in afterwards', () => {
     const s = run(
       start(),
       ev('end_aura', T0 + 5 * S),
-      symptom('symptom.a', 'during', T0 + 40 * S),
+      symptom('symptom.a', 'seizure', T0 + 40 * S),
       note('Calm', T0 + 30 * S),
     );
     expect(lastActivityAt(s)).toBe(T0 + 40 * S);
@@ -350,11 +351,11 @@ describe('the saved seizure', () => {
   });
 
   it('writes symptoms in order with the gap since the one before', () => {
-    const s = run(start(), symptom('symptom.b', 'during', T0 + 30 * S), symptom('symptom.a', 'before', T0 + 10 * S));
+    const s = run(start(), symptom('symptom.b', 'seizure', T0 + 30 * S), symptom('symptom.a', 'aura', T0 + 10 * S));
     const patch = seizurePatch(s);
     expect(patch.symptoms).toMatchObject([
-      { code: 'symptom.a', order: 0, isFirst: true, phase: 'before', sincePrevious: { kind: 'exact', ms: 10 * S } },
-      { code: 'symptom.b', order: 1, isFirst: false, phase: 'during', sincePrevious: { kind: 'exact', ms: 20 * S } },
+      { code: 'symptom.a', order: 0, isFirst: true, phase: 'aura', sincePrevious: { kind: 'exact', ms: 10 * S } },
+      { code: 'symptom.b', order: 1, isFirst: false, phase: 'seizure', sincePrevious: { kind: 'exact', ms: 20 * S } },
     ]);
   });
 
@@ -377,7 +378,7 @@ describe('the saved seizure', () => {
     const s = run(
       start(),
       ev('end_aura', T0 + 10 * S),
-      symptom('symptom.a', 'during', T0 + 20 * S),
+      symptom('symptom.a', 'seizure', T0 + 20 * S),
       note('Calm', T0 + 25 * S),
     );
     const saved = seizureFixture({ id: s.seizureId, ...newSeizureValues(s) });
@@ -397,7 +398,7 @@ describe('the saved seizure', () => {
     expect(sessionFromSeizure(seizureFixture({ status: 'recorded' }))).toBeNull();
   });
 
-  it('falls back to "during" for a saved symptom with no phase, and to zero for an unknown gap', () => {
+  it('falls back to "seizure" for a saved symptom with no phase, and to zero for an unknown gap', () => {
     const saved = seizureFixture({
       status: 'in_progress',
       symptoms: [
@@ -412,7 +413,7 @@ describe('the saved seizure', () => {
         },
       ],
     });
-    expect(sessionFromSeizure(saved)?.symptoms[0]).toMatchObject({ phase: 'during', at: saved.phases.start.at });
+    expect(sessionFromSeizure(saved)?.symptoms[0]).toMatchObject({ phase: 'seizure', at: saved.phases.start.at });
   });
 });
 
@@ -420,7 +421,7 @@ describe('what a locked page keeps in the clear', () => {
   it('is only the id and the marks', () => {
     const s = run(
       start(),
-      symptom('symptom.a', 'during', T0 + S),
+      symptom('symptom.a', 'seizure', T0 + S),
       note('Calm', T0 + 2 * S),
       ev('end_aura', T0 + 4 * S),
     );
@@ -473,7 +474,7 @@ describe('the event schema', () => {
       ev('end_aura', T0),
       ev('cancel', T0),
       note('x', T0),
-      symptom('symptom.a', 'after', T0),
+      symptom('symptom.a', 'recovery', T0),
     ])
       expect(RecordingEventSchema.safeParse(event).success).toBe(true);
   });
@@ -485,7 +486,7 @@ describe('the event schema', () => {
       { ...ev('end_aura', T0), id: 'not-an-id' },
       note('', T0),
       note('x'.repeat(25), T0),
-      { ...symptom('symptom.a', 'during', T0), phase: 'sometime' },
+      { ...symptom('symptom.a', 'seizure', T0), phase: 'sometime' },
       { ...ev('end_aura', T0), at: -1 },
       null,
     ];
@@ -504,8 +505,8 @@ const arbEvent: fc.Arbitrary<RecordingEvent> = fc.oneof(
   fc.integer({ min: 0, max: 900 }).map((s) => ev('cancel', T0 + s * S)),
   fc.tuple(fc.integer({ min: 0, max: 900 }), fc.constantFrom('a', 'b', 'c')).map(([s, l]) => note(l, T0 + s * S)),
   fc
-    .tuple(fc.integer({ min: 0, max: 900 }), fc.constantFrom('before', 'during', 'after' as const))
-    .map(([s, p]) => symptom('symptom.x', p as 'before' | 'during' | 'after', T0 + s * S)),
+    .tuple(fc.integer({ min: 0, max: 900 }), fc.constantFrom('aura', 'seizure', 'recovery' as const))
+    .map(([s, p]) => symptom('symptom.x', p as 'aura' | 'seizure' | 'recovery', T0 + s * S)),
 );
 
 const arbRun = fc.array(arbEvent, { maxLength: 30 }).map((events) => [start(), ...events]);
@@ -586,9 +587,9 @@ describe('properties', () => {
 });
 
 describe('logging a past seizure', () => {
-  const input = { patientId, recordedBy: 'self' as const, timeZone: 'Europe/Oslo', start: T0, totalSec: 300 };
+  const input = { patientId, recordedBy: 'self' as const, timeZone: 'Europe/Oslo', start: T0, seizureSec: 160 };
 
-  it('makes a valid seizure whose phases add up to the total, all marked as entered later', () => {
+  it('lays the phases out in order: aura, seizure, then recovery after it; every mark entered later', () => {
     const values = pastSeizureValues({ ...input, auraSec: 20, recoverySec: 120 });
     expect(
       SeizureSchema.safeParse({ ...values, id: newId(), householdId: newId(), deviceId: newId(), createdAt: T0 })
@@ -601,27 +602,36 @@ describe('logging a past seizure', () => {
       phases: {
         start: { at: T0, source: 'entered-later' },
         auraEnd: { at: T0 + 20 * S, source: 'entered-later' },
+        // The seizure length is aura and seizure: 3 min; recovery comes after it and is never part of it
         seizureEnd: { at: T0 + 180 * S },
         recoveryEnd: { at: T0 + 300 * S },
       },
     });
+    expect(seizureLengthSeconds(values.phases)).toBe(180);
   });
 
-  it('takes the whole total as seizure time when no phase is given', () => {
+  it('with only the seizure given, there is no aura and no recovery', () => {
     const values = pastSeizureValues(input);
-    expect(values.phases).toMatchObject({ auraEnd: { at: T0 }, seizureEnd: { at: T0 + 300 * S }, recoveryEnd: null });
+    expect(values.phases).toMatchObject({ auraEnd: { at: T0 }, seizureEnd: { at: T0 + 160 * S }, recoveryEnd: null });
+    expect(values.prodromeSecondsBefore).toBeUndefined();
   });
 
-  it('refuses a zero length, a time in the future, and phases as long as the total or longer', () => {
-    expect(pastSeizureProblem({ ...input, totalSec: 0 }, T0 + S)).toBe('zero');
+  it('keeps the warning signs beforehand, up to a week', () => {
+    expect(pastSeizureValues({ ...input, prodromeSec: 7200 }).prodromeSecondsBefore).toBe(7200);
+    expect(pastSeizureValues({ ...input, prodromeSec: 10 * 86_400 }).prodromeSecondsBefore).toBe(604_800);
+  });
+
+  it('refuses a seizure of no length and a time in the future; an aura on its own is a seizure', () => {
+    expect(pastSeizureProblem({ ...input, seizureSec: 0 }, T0 + S)).toBe('zero');
+    expect(pastSeizureProblem({ ...input, seizureSec: null }, T0 + S)).toBe('zero');
+    expect(pastSeizureProblem({ ...input, seizureSec: 0, auraSec: 30 }, T0 + S)).toBeNull();
     expect(pastSeizureProblem(input, T0 - S)).toBe('future');
-    expect(pastSeizureProblem({ ...input, auraSec: 100, recoverySec: 200 }, T0 + S)).toBe('phases_too_long');
-    expect(pastSeizureProblem({ ...input, auraSec: 100, recoverySec: 199 }, T0 + S)).toBeNull();
-    expect(pastSeizureProblem(input, T0)).toBeNull();
+    // A long recovery is fine: it is not part of the seizure
+    expect(pastSeizureProblem({ ...input, recoverySec: 7200 }, T0 + S)).toBeNull();
   });
 
   it('rounds, and ignores negative phases', () => {
-    const values = pastSeizureValues({ ...input, totalSec: 90.4, auraSec: -5 });
+    const values = pastSeizureValues({ ...input, seizureSec: 90.4, auraSec: -5 });
     expect(values.phases.seizureEnd?.at).toBe(T0 + 90 * S);
     expect(values.phases.auraEnd?.at).toBe(T0);
   });

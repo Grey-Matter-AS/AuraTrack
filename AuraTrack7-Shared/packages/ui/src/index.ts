@@ -57,7 +57,19 @@ export {
   type TimelineEntry,
   type TimelinePhase,
 } from './PhaseTimeline';
-export { EventChart, TrendChart, type ChartEvent, type EventKind, type TrendBar, type TrendMarker } from './Charts';
+export {
+  ChartLegend,
+  EventChart,
+  TimeSeriesChart,
+  TrendChart,
+  type ChartEvent,
+  type EventKind,
+  type SeriesEvent,
+  type SeriesPoint,
+  type TrendBar,
+  type TrendMarker,
+} from './Charts';
+export { DataTable, type DataColumn } from './Table';
 export { createScreenStack, type Navigator, type ScreenMap } from './Navigator';
 export { BottomSheet, Dialog, ToastProvider, useToast, type ToastTone } from './Overlays';
 export { prefersReducedMotion, useReducedMotion } from './motion';

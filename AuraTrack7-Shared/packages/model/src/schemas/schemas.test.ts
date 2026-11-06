@@ -288,9 +288,13 @@ describe('added in 7.0.3: phases on symptoms, prodrome hours, between-seizures e
   });
 
   it('accepts a phase on a symptom and the warning-sign time, and refuses anything else', () => {
-    for (const phase of ['before', 'during', 'after']) {
+    for (const phase of ['prodrome', 'aura', 'seizure', 'recovery']) {
       expect(SeizureSchema.safeParse(seizureFixture({ symptoms: [symptom({ phase })] as never })).success).toBe(true);
     }
+    // The three phases written before 7.2 are read as aura, seizure and recovery, so older records still open
+    const read = (phase: string) =>
+      SeizureSchema.parse(seizureFixture({ symptoms: [symptom({ phase })] as never })).symptoms[0]?.phase;
+    expect([read('before'), read('during'), read('after')]).toEqual(['aura', 'seizure', 'recovery']);
     expect(SeizureSchema.safeParse(seizureFixture({ symptoms: [symptom({ phase: 'later' })] as never })).success).toBe(
       false,
     );
@@ -328,7 +332,7 @@ describe('added in 7.0.3: phases on symptoms, prodrome hours, between-seizures e
     expect(
       SymptomSetSchema.safeParse(
         symptomSetFixture({
-          items: Array.from({ length: 41 }, () => ({ code: 'symptom.x', phase: 'during' as const })),
+          items: Array.from({ length: 41 }, () => ({ code: 'symptom.x', phase: 'seizure' as const })),
         }),
       ).success,
     ).toBe(false);
@@ -348,7 +352,7 @@ describe('ILAE 2025 and seizure profiles (D-17)', () => {
     expect(SeizureProfileSchema.safeParse(seizureProfileFixture({ name: '' })).success).toBe(false);
     expect(SeizureProfileSchema.safeParse(seizureProfileFixture({ name: 'x'.repeat(61) })).success).toBe(false);
     expect(SeizureProfileSchema.safeParse(seizureProfileFixture({ signs: [] })).success).toBe(true);
-    const many = Array.from({ length: 41 }, () => ({ code: 'symptom.x', phase: 'during' as const }));
+    const many = Array.from({ length: 41 }, () => ({ code: 'symptom.x', phase: 'seizure' as const }));
     expect(SeizureProfileSchema.safeParse(seizureProfileFixture({ signs: many })).success).toBe(false);
     expect(RECORD_TYPES).toContain('seizureProfile');
     expect(APPEND_ONLY_TYPES).not.toContain('seizureProfile');

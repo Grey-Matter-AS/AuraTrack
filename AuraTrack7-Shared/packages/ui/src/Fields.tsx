@@ -329,9 +329,13 @@ export function DurationField({
   const limit = maxHours * 3600 + 59 * 60 + 59;
   const handle = (raw: string) => {
     const before = digits ?? (value === null ? '' : formatHms(value).replace(/\D/g, '').replace(/^0+/, ''));
-    let next = raw.replace(/\D/g, '').replace(/^0+/, '');
-    // A colon was deleted: that means the last digit
-    if (next === before && raw.length < shown.length) next = next.slice(0, -1);
+    const typed = raw.replace(/\D/g, '');
+    let next: string;
+    if (typed === '') next = '';
+    // A deletion (shorter than what was shown) takes the last typed digit off, never a zero of the mask
+    else if (raw.length < shown.length) next = before.slice(0, -1);
+    // Leading zeros carry nothing, but a 0 typed on its own is zero, which is not the same as nothing
+    else next = typed.replace(/^0+/, '') || '0';
     next = next.slice(-(String(maxHours).length + 4));
     setDigits(next);
     onChange(next === '' ? null : Math.min(limit, secondsOfDigits(next)));

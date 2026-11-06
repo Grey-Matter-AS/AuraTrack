@@ -282,7 +282,7 @@ export const nb: Extra = {
   'med.ownIngredient': 'Et annet virkestoff …',
   'med.ownIngredientName': 'Navn på virkestoffet',
   'med.form': 'Form',
-  'med.schedule': 'Dose og tidspunkter',
+  'med.schedule': 'Dosering',
   'med.frequency': 'Hvor ofte',
   'med.freq.OD': 'Én gang daglig',
   'med.freq.BD': 'To ganger daglig',

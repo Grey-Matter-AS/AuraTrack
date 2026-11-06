@@ -99,7 +99,7 @@ describe('recording', () => {
     await user.click(screen.getByRole('button', { name: 'End aura' }));
     await tick(ctx, 60_000);
     await user.click(screen.getByRole('button', { name: 'End seizure' }));
-    await user.click(screen.getByRole('button', { name: 'Back to normal' }));
+    await user.click(screen.getByRole('button', { name: 'Back to usual self' }));
     await addDetailsThenBack(user);
     const [seizure] = (await ctx.client.list({ type: 'seizure' })) as unknown as {
       status: string;
@@ -107,7 +107,7 @@ describe('recording', () => {
     }[];
     expect(seizure).toMatchObject({ status: 'recorded', phases: { seizureEnd: { at: T0 + 80_000 } } });
     expect(await screen.findByText('Type not set')).toBeTruthy();
-    expect(await screen.findByText(/· 1:00/)).toBeTruthy(); // the seizure length, aura excluded
+    expect(await screen.findByText(/· 1:20/)).toBeTruthy(); // the seizure length: the aura counts, recovery never does
   });
 
   it('has no buttons beyond the phase buttons and the quick notes', async () => {
@@ -264,47 +264,54 @@ describe('recording', () => {
       symptoms: { phase: string }[];
       createdAt: number;
     }[];
-    expect(all.some((s) => s.symptoms.length === 1 && s.symptoms[0]?.phase === 'during')).toBe(true);
+    expect(all.some((s) => s.symptoms.length === 1 && s.symptoms[0]?.phase === 'seizure')).toBe(true);
   });
 });
 
 describe('Log past seizure', () => {
-  it('saves a seizure whose phases add up, marked as entered later', async () => {
+  it('saves the phases in order (aura, seizure, then recovery after it), each entered later', async () => {
     const ctx = setup();
     await seed(ctx, {});
     const user = userEvent.setup();
     ctx.mount();
     await user.click(await screen.findByRole('button', { name: 'Log past seizure' }));
     const sheet = await screen.findByRole('dialog', { name: 'Log a past seizure' });
-    await user.type(within(sheet).getByLabelText('Minutes'), '3');
-    await user.type(within(sheet).getByLabelText('Aura (seconds)'), '20');
+    // One box each, HH:MM:SS, filled from the right: 2, 0 is 00:00:20; 2, 4, 0 is 00:02:40
+    await user.type(within(sheet).getByLabelText('Aura'), '20');
+    await user.type(within(sheet).getByLabelText('Seizure'), '240');
+    await user.type(within(sheet).getByLabelText('Recovery, until back to usual self'), '1000');
+    expect(within(sheet).getByText('Seizure length: 00:03:00 (aura and seizure)')).toBeTruthy();
     await user.click(within(sheet).getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Log a past seizure' })).toBeNull());
     expect(screen.getByText(/entered later/)).toBeTruthy();
     const [seizure] = (await ctx.client.list({ type: 'seizure' })) as unknown as {
       isManualEntry: boolean;
-      phases: { start: { at: number; source: string }; auraEnd: { at: number }; seizureEnd: { at: number } };
+      phases: {
+        start: { at: number; source: string };
+        auraEnd: { at: number };
+        seizureEnd: { at: number };
+        recoveryEnd: { at: number };
+      };
     }[];
     expect(seizure!.isManualEntry).toBe(true);
     expect(seizure!.phases.start.source).toBe('entered-later');
     expect(seizure!.phases.auraEnd.at - seizure!.phases.start.at).toBe(20_000);
     expect(seizure!.phases.seizureEnd.at - seizure!.phases.start.at).toBe(180_000);
+    expect(seizure!.phases.recoveryEnd.at - seizure!.phases.seizureEnd.at).toBe(600_000);
   });
 
-  it('refuses a length of zero and phases that are longer than the total', async () => {
+  it('asks for the seizure, and refuses one of no length', async () => {
     const ctx = setup();
     await seed(ctx, {});
     const user = userEvent.setup();
     ctx.mount();
     await user.click(await screen.findByRole('button', { name: 'Log past seizure' }));
     const sheet = await screen.findByRole('dialog', { name: 'Log a past seizure' });
-    await user.type(within(sheet).getByLabelText('Minutes'), '0');
+    await user.click(within(sheet).getByRole('button', { name: 'Save' }));
+    expect(await within(sheet).findByText('Enter how long the seizure lasted.')).toBeTruthy();
+    await user.type(within(sheet).getByLabelText('Seizure'), '0');
     await user.click(within(sheet).getByRole('button', { name: 'Save' }));
     expect(await within(sheet).findByText('Set a length of at least one second.')).toBeTruthy();
-    await user.type(within(sheet).getByLabelText('Minutes'), '1');
-    await user.type(within(sheet).getByLabelText('Recovery (minutes)'), '5');
-    await user.click(within(sheet).getByRole('button', { name: 'Save' }));
-    expect(await within(sheet).findByText('The phases add up to more than the total length.')).toBeTruthy();
     expect(await ctx.client.list({ type: 'seizure' })).toHaveLength(0);
   });
 });
@@ -322,7 +329,7 @@ describe('the PIN screen', () => {
     await tick(ctx, 30_000);
     await user.click(screen.getByRole('button', { name: 'FELL' }));
     await user.click(screen.getByRole('button', { name: 'End seizure' }));
-    await user.click(screen.getByRole('button', { name: 'Back to normal' }));
+    await user.click(screen.getByRole('button', { name: 'Back to usual self' }));
     await user.click(await screen.findByRole('button', { name: 'Save and close' }));
     await screen.findByText('AuraTrack is locked');
     await user.type(await screen.findByLabelText('PIN'), PIN);

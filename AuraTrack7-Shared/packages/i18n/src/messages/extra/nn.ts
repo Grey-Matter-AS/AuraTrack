@@ -283,7 +283,7 @@ export const nn: Extra = {
   'med.ownIngredient': 'Eit anna verkestoff …',
   'med.ownIngredientName': 'Namn på verkestoffet',
   'med.form': 'Form',
-  'med.schedule': 'Dose og tidspunkt',
+  'med.schedule': 'Dosering',
   'med.frequency': 'Kor ofte',
   'med.freq.OD': 'Éin gong dagleg',
   'med.freq.BD': 'To gonger dagleg',

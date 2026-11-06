@@ -284,7 +284,7 @@ export const fr: Extra = {
   'med.ownIngredient': 'Une autre substance…',
   'med.ownIngredientName': 'Nom de la substance',
   'med.form': 'Forme',
-  'med.schedule': 'Dose et horaires',
+  'med.schedule': 'Posologie',
   'med.frequency': 'Fréquence',
   'med.freq.OD': 'Une fois par jour',
   'med.freq.BD': 'Deux fois par jour',

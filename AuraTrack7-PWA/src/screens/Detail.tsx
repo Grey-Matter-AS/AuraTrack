@@ -1,5 +1,5 @@
-import { buildDangerMap, type EegActivity } from '@auratrack/model';
-import { AppHeader, Button, Card, Dialog, Screen, Section, Stack } from '@auratrack/ui';
+import { buildDangerMap, type DoseLog, type EegActivity } from '@auratrack/model';
+import { AppHeader, Button, Card, Dialog, Screen, Section, Stack, formatHms } from '@auratrack/ui';
 import { useEffect, useMemo, useState } from 'react';
 import { useApp } from '../app/AppContext';
 import { ilae2025Name, seizureName } from '../app/seizureName';
@@ -21,6 +21,7 @@ export function Detail({ id }: { id: string }) {
   const host = useEditorHost();
   const seizure = seizures.find((s) => s.id === id);
   const eegNotes = useRecords<EegActivity>('eegActivity', { all: true }) ?? [];
+  const doses = useRecords<DoseLog>('doseLog', { all: true }) ?? [];
   const [trail, setTrail] = useState<{ at: number; kind: string; fields: string[] }[]>([]);
   const [deleting, setDeleting] = useState(false);
   useEffect(() => {
@@ -42,6 +43,26 @@ export function Detail({ id }: { id: string }) {
   const flags = danger[seizure.id];
   const draft = draftFromSeizure(seizure);
   const recoverySec = recoverySecondsOf(draft);
+  // Rescue medicine given around this seizure, to the second, and how long after the start (F-505): from just before the
+  // start until two hours after the seizure (or its recovery) ended
+  const rescueIds = new Map(app.medications.filter((m) => m.isRescue).map((m) => [m.id, m.name]));
+  const p = seizure.phases;
+  const windowEnd = (p.recoveryEnd ?? p.seizureEnd ?? p.start).at + 2 * 3_600_000;
+  const rescueGiven = doses
+    .filter(
+      (d) =>
+        rescueIds.has(d.medicationId) &&
+        d.status !== 'missed' &&
+        d.takenAt >= p.start.at - 5 * 60_000 &&
+        d.takenAt <= windowEnd,
+    )
+    .sort((a, b) => a.takenAt - b.takenAt)
+    .map((d) => ({
+      id: d.id,
+      takenAt: d.takenAt,
+      name: rescueIds.get(d.medicationId) ?? '',
+      dose: d.doseSnapshot !== null ? `${d.doseSnapshot} ${d.unitSnapshot}` : '',
+    }));
   const linked = eegNotes.filter((n) => n.linkedSeizureId === seizure.id);
   const sources = [
     seizure.phases.start,
@@ -99,6 +120,25 @@ export function Detail({ id }: { id: string }) {
                 <p className="app-note">{`${t('dur.recovery')}: ${fmt.duration(recoverySec)}`}</p>
               ) : null}
               {seizure.recoveryOngoing ? <p className="app-note">{t('det.recoveryOngoing')}</p> : null}
+            </Stack>
+          </Section>
+        ) : null}
+        {rescueGiven.length > 0 ? (
+          <Section title={t('det.rescue')}>
+            <Stack gap="0.25rem">
+              {rescueGiven.map((d) => (
+                <p className="app-note" key={d.id}>
+                  {t('det.rescueLine', {
+                    name: d.name,
+                    dose: d.dose,
+                    time: fmt.timeSec(d.takenAt),
+                    after:
+                      d.takenAt >= seizure.phases.start.at
+                        ? formatHms((d.takenAt - seizure.phases.start.at) / 1000)
+                        : `-${formatHms((seizure.phases.start.at - d.takenAt) / 1000)}`,
+                  })}
+                </p>
+              ))}
             </Stack>
           </Section>
         ) : null}

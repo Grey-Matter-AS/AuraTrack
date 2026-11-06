@@ -54,7 +54,10 @@ describe('adding a medicine', () => {
     await user.click(screen.getByRole('button', { name: 'Add a medicine' }));
     await user.type(await screen.findByLabelText('Name'), 'Keppra');
     await user.selectOptions(screen.getByLabelText('Active ingredient'), 'Levetiracetam');
-    await user.type(screen.getByLabelText('Dose'), '500');
+    // One dose (and unit) for each time of the day; the daily total adds them up
+    await user.type(screen.getByLabelText('Dose at 08:00'), '500');
+    await user.type(screen.getByLabelText('Dose at 20:00'), '500');
+    expect(screen.getByRole('region', { name: 'Daily total' }).textContent).toContain('1,000 mg');
     await user.click(screen.getByRole('button', { name: 'Save' }));
     await waitFor(async () => expect(await list(ctx, 'medication')).toHaveLength(1));
     const [med] = await list<Medication>(ctx, 'medication');
@@ -112,7 +115,7 @@ describe('changing, renaming and stopping', () => {
     const user = await openMeds(ctx);
     await user.click(await screen.findByRole('button', { name: 'Open' }));
     await user.click(await screen.findByRole('button', { name: 'Change' }));
-    const dose = await screen.findByLabelText('Dose');
+    const dose = await screen.findByLabelText(/^Dose at /);
     await user.clear(dose);
     await user.type(dose, '150');
     await user.click(screen.getByRole('button', { name: 'Review the change' }));

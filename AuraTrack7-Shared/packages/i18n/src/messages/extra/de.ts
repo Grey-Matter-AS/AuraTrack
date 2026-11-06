@@ -284,7 +284,7 @@ export const de: Extra = {
   'med.ownIngredient': 'Ein anderer Wirkstoff …',
   'med.ownIngredientName': 'Name des Wirkstoffs',
   'med.form': 'Darreichungsform',
-  'med.schedule': 'Dosis und Zeiten',
+  'med.schedule': 'Dosierung',
   'med.frequency': 'Wie oft',
   'med.freq.OD': 'Einmal täglich',
   'med.freq.BD': 'Zweimal täglich',

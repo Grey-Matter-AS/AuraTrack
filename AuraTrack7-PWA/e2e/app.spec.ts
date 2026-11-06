@@ -40,7 +40,7 @@ test('set up, record a seizure with the phase buttons, and see it on Home', asyn
   await page.getByRole('button', { name: 'FELL' }).click();
   await expect(page.getByText(/\[T\+\d+s\] FELL/)).toBeVisible();
   await page.getByRole('button', { name: 'End seizure' }).click();
-  await page.getByRole('button', { name: 'Back to normal' }).click();
+  await page.getByRole('button', { name: 'Back to usual self' }).click();
   await detailsThenBack(page);
   await expect(page.getByText('Type not set')).toBeVisible();
 });
@@ -50,7 +50,7 @@ test('Start answers inside a frame or two', async ({ page }) => {
   const ms = await page.evaluate(
     () =>
       new Promise<number>((resolve) => {
-        const button = [...document.querySelectorAll('button')].find((b) => b.textContent?.includes('Start timer'));
+        const button = [...document.querySelectorAll('button')].find((b) => b.getAttribute('aria-label') === 'Start timer');
         const t0 = performance.now();
         button?.click();
         const look = () =>
@@ -114,8 +114,10 @@ test('Log past seizure saves one whose phases add up', async ({ page }) => {
   await firstRun(page);
   await page.getByRole('button', { name: 'Log past seizure' }).click();
   const sheet = page.getByRole('dialog', { name: 'Log a past seizure' });
-  await sheet.getByLabel('Minutes', { exact: true }).fill('2');
-  await sheet.getByLabel('Aura (seconds)').fill('15');
+  // One HH:MM:SS box per phase, filled from the right
+  await sheet.getByLabel('Aura', { exact: true }).pressSequentially('15');
+  await sheet.getByLabel('Seizure', { exact: true }).pressSequentially('200');
+  await expect(sheet.getByText('Seizure length: 00:02:15 (aura and seizure)')).toBeVisible();
   await sheet.getByRole('button', { name: 'Save' }).click();
   await expect(page.getByText(/entered later/)).toBeVisible();
 });
@@ -137,15 +139,19 @@ test('after a recording, Add details opens the editor: ILAE 2025 answers, a symp
   await answer(page, 'Where did it start?', 'Focal');
   await answer(page, 'Could the person remember it afterwards?', 'No');
   await expect(page.getByText('ILAE 2025: Focal impaired consciousness seizure')).toBeVisible();
-  await openTab('During');
-  await page.getByLabel('Search', { exact: true }).fill('rhythmic');
-  await page
+  await openTab('Timeline');
+  const seizureBand = page.getByRole('listitem', { name: 'Seizure', exact: true });
+  await seizureBand.getByRole('button', { name: '+ Add symptom' }).click();
+  const add = page.getByRole('dialog', { name: /^Add a symptom/ });
+  await add.getByLabel('Search', { exact: true }).fill('rhythmic');
+  await add
     .getByRole('button', { name: /Rhythmic Shaking/i })
     .first()
     .click();
-  await page.getByRole('button', { name: 'Add area' }).click();
-  await page.getByRole('button', { name: 'Arms', exact: true }).click();
-  await page.getByRole('button', { name: 'Done' }).click();
+  // A symptom with a place on the body asks for it straight away
+  const where = page.getByRole('dialog', { name: /^Where:/ });
+  await where.getByRole('button', { name: 'Arms', exact: true }).click();
+  await where.getByRole('button', { name: 'Done' }).click();
   await page.getByRole('button', { name: 'Review' }).click();
   await expect(page.getByRole('list', { name: 'Seizure timeline' })).toContainText(/Rhythmic Shaking/i);
   await page.getByRole('button', { name: 'Save' }).click();

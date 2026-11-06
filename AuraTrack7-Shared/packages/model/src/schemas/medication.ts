@@ -14,6 +14,8 @@ export const RegimenSchema = z.object({
   dose: z.number().nonnegative().nullable(),
   unit: z.string().max(20),
   slotDoses: z.record(ClockTimeSchema, z.number().nonnegative()),
+  /** Added in 7.2: the unit of each time's dose ("mg" in the morning, "tablet" at night). A time without one uses `unit`. */
+  slotUnits: z.record(ClockTimeSchema, z.string().max(20)).optional(),
   frequency: FrequencySchema,
   scheduledTimes: z.array(ClockTimeSchema).max(24),
   scheduledDays: z.array(WeekdaySchema).max(7),

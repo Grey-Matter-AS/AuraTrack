@@ -176,7 +176,7 @@ export default function RecordingCheck({
               End seizure
             </button>
             <button className={button} onClick={() => controller.tap('back_to_normal')}>
-              Back to normal
+              Back to usual self
             </button>
             <button className={button} onClick={() => controller.quickNote('Calm')}>
               Note: Calm

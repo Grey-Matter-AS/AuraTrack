@@ -16,7 +16,9 @@ export const defaultScheduledTimes = (frequency: Frequency): string[] => [...(DE
 export const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6] as const;
 
 type RegimenSource = Pick<Medication, 'name' | 'frequency' | 'dose' | 'unit'> &
-  Partial<Pick<Medication, 'activeIngredient' | 'form' | 'slotDoses' | 'scheduledTimes' | 'scheduledDays'>>;
+  Partial<
+    Pick<Medication, 'activeIngredient' | 'form' | 'slotDoses' | 'slotUnits' | 'scheduledTimes' | 'scheduledDays'>
+  >;
 
 export function regimenSnapshot(med: RegimenSource): Regimen {
   return {
@@ -26,6 +28,7 @@ export function regimenSnapshot(med: RegimenSource): Regimen {
     dose: med.dose,
     unit: med.unit,
     slotDoses: { ...med.slotDoses },
+    ...(med.slotUnits ? { slotUnits: { ...med.slotUnits } } : {}),
     frequency: med.frequency,
     scheduledTimes: [...(med.scheduledTimes ?? defaultScheduledTimes(med.frequency))],
     scheduledDays: [...(med.scheduledDays ?? ALL_DAYS)],
@@ -41,13 +44,36 @@ export function slotDose(
   return own ?? regimen?.dose;
 }
 
+/** Unit for one time slot: its own unit if set, otherwise the medication's unit. */
+export function slotUnit(regimen: Pick<Regimen, 'unit' | 'slotUnits'> | null | undefined, time: string | null): string {
+  return (time !== null ? regimen?.slotUnits?.[time] : undefined) ?? regimen?.unit ?? '';
+}
+
+/**
+ * How much is taken on a scheduled day, per unit: [["mg", 1000], ["tablet", 1]]. Doses in different units are never added
+ * together. A medicine taken only when needed has no daily total.
+ */
+export function dailyTotals(
+  regimen: Pick<Regimen, 'dose' | 'unit' | 'slotDoses' | 'slotUnits' | 'scheduledTimes' | 'frequency'>,
+): [string, number][] {
+  if (regimen.frequency === 'PRN') return [];
+  const totals = new Map<string, number>();
+  for (const time of regimen.scheduledTimes) {
+    const dose = slotDose(regimen, time);
+    if (dose === null || dose === undefined) continue;
+    const unit = slotUnit(regimen, time);
+    totals.set(unit, Math.round(((totals.get(unit) ?? 0) + dose) * 1000) / 1000);
+  }
+  return [...totals];
+}
+
 const sameList = <T>(a: readonly T[], b: readonly T[]): boolean => {
   const left = [...a].sort();
   const right = [...b].sort();
   return left.length === right.length && left.every((v, i) => v === right[i]);
 };
 
-/** The clinically relevant fields that differ, e.g. ['name', 'slotDose:20:00', 'form']. */
+/** The clinically relevant fields that differ, e.g. ['name', 'slotDose:20:00', 'slotUnit:20:00', 'form']. */
 export function diffRegimen(from: Regimen, to: Regimen): string[] {
   const fields: string[] = [];
   // Ingredient spelling case does not make it a different medicine ("lamotrigine" = "Lamotrigine")
@@ -61,6 +87,13 @@ export function diffRegimen(from: Regimen, to: Regimen): string[] {
   if (sharedTimes.length) {
     for (const time of sharedTimes)
       if (Number(slotDose(from, time)) !== Number(slotDose(to, time))) fields.push(`slotDose:${time}`);
+    // A time's own unit, where either side set one (a change of the medicine's unit alone shows up as 'unit')
+    for (const time of sharedTimes)
+      if (
+        (from.slotUnits?.[time] !== undefined || to.slotUnits?.[time] !== undefined) &&
+        slotUnit(from, time) !== slotUnit(to, time)
+      )
+        fields.push(`slotUnit:${time}`);
   } else if (Number(from.dose) !== Number(to.dose)) {
     fields.push('dose');
   }

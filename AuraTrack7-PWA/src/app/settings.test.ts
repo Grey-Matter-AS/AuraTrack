@@ -74,7 +74,7 @@ describe('resolving settings', () => {
 });
 
 describe('the symptom strip choices', () => {
-  const entry = (code: string, phase?: 'before' | 'during' | 'after') => ({
+  const entry = (code: string, phase?: 'prodrome' | 'aura' | 'seizure' | 'recovery') => ({
     id: newId(),
     code,
     area: null,
@@ -87,9 +87,9 @@ describe('the symptom strip choices', () => {
 
   it('lists the symptoms seen most often during seizures, most common first, up to the count', () => {
     const seizures = [
-      seizureFixture({ symptoms: [entry('symptom.a', 'during'), entry('symptom.b', 'during')] }),
-      seizureFixture({ symptoms: [entry('symptom.b'), entry('symptom.c', 'before')] }),
-      seizureFixture({ symptoms: [entry('symptom.b', 'during'), entry('symptom.a', 'during')] }),
+      seizureFixture({ symptoms: [entry('symptom.a', 'seizure'), entry('symptom.b', 'seizure')] }),
+      seizureFixture({ symptoms: [entry('symptom.b'), entry('symptom.c', 'aura')] }),
+      seizureFixture({ symptoms: [entry('symptom.b', 'seizure'), entry('symptom.a', 'seizure')] }),
     ];
     expect(usualSymptoms(seizures)).toEqual(['symptom.b', 'symptom.a']);
     expect(usualSymptoms(seizures, 1)).toEqual(['symptom.b']);
@@ -97,7 +97,7 @@ describe('the symptom strip choices', () => {
   });
 
   it('breaks a tie by code, so the strip does not shuffle', () => {
-    const seizures = [seizureFixture({ symptoms: [entry('symptom.z', 'during'), entry('symptom.m', 'during')] })];
+    const seizures = [seizureFixture({ symptoms: [entry('symptom.z', 'seizure'), entry('symptom.m', 'seizure')] })];
     expect(usualSymptoms(seizures)).toEqual(['symptom.m', 'symptom.z']);
   });
 });

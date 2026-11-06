@@ -7,9 +7,9 @@ afterEach(cleanup);
 
 const entries: TimelineEntry[] = [
   { kind: 'marker', id: 'a', text: 'Start · 14:05:00', phase: 'aura' },
-  { kind: 'moment', id: 'b', name: 'Strange smell', meta: 'Before', phase: 'before', first: true },
+  { kind: 'moment', id: 'b', name: 'Strange smell', meta: 'Before', phase: 'aura', first: true },
   { kind: 'gap', id: 'c', text: '12 s later' },
-  { kind: 'moment', id: 'd', name: 'Shaking', meta: 'During · Left arm', phase: 'during' },
+  { kind: 'moment', id: 'd', name: 'Shaking', meta: 'During · Left arm', phase: 'seizure' },
   { kind: 'marker', id: 'e', text: 'Seizure ends · 14:07:00', phase: 'seizure' },
 ];
 
@@ -34,7 +34,10 @@ describe('PhaseTimeline', () => {
 
   it('leaves out the second line of a symptom that has nothing more to say', () => {
     render(
-      <PhaseTimeline entries={[{ kind: 'moment', id: 'x', name: 'Confusion', meta: '', phase: 'after' }]} label="t" />,
+      <PhaseTimeline
+        entries={[{ kind: 'moment', id: 'x', name: 'Confusion', meta: '', phase: 'recovery' }]}
+        label="t"
+      />,
     );
     expect(document.querySelector('.ui-timeline__meta')).toBeNull();
   });

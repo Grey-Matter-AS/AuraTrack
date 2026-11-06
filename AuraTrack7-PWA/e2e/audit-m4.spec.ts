@@ -150,8 +150,9 @@ for (const device of MATRIX) {
     await page.getByRole('button', { name: 'Add a medicine' }).click();
     await page.getByLabel('Name', { exact: true }).fill('Lamotrigine');
     await page.getByLabel('Active ingredient').selectOption('Lamotrigine');
-    await page.getByLabel('Dose', { exact: true }).fill('100');
-    await look('medicine form');
+    await page.getByLabel('Dose at 08:00').fill('100');
+    await page.getByLabel('Dose at 20:00').fill('150');
+    await look('medicine form, with the daily total');
     const yesterday = new Date(Date.now() - 86_400_000);
     const day = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
     await page.getByLabel('Started on').fill(day);
@@ -192,7 +193,7 @@ for (const device of MATRIX) {
     await page.waitForTimeout(1500);
     await page.getByRole('button', { name: 'End seizure' }).click();
     await look('recording with video notes');
-    await page.getByRole('button', { name: 'Back to normal' }).click();
+    await page.getByRole('button', { name: 'Back to usual self' }).click();
     await page.getByRole('button', { name: 'Add details' }).click();
     await page.getByText('Seizure details').waitFor();
     await back();

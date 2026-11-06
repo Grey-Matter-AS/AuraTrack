@@ -12,8 +12,8 @@ describe('screen messages', () => {
       for (const key of MESSAGE_KEYS) expect(messageTemplate(language, key)).not.toMatch(later);
   });
 
-  it('has 1,317 messages, each with a key that says which screen it belongs to', () => {
-    expect(MESSAGE_KEYS).toHaveLength(1317);
+  it('has 1,401 messages, each with a key that says which screen it belongs to', () => {
+    expect(MESSAGE_KEYS).toHaveLength(1401);
     expect(new Set(MESSAGE_KEYS).size).toBe(MESSAGE_KEYS.length);
     for (const key of MESSAGE_KEYS) expect(key, key).toMatch(/^[a-z]+(\.[A-Za-z0-9_]+)+$/);
   });

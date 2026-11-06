@@ -105,6 +105,25 @@ const profile = async (ctx: Ctx, patientId: string, name: string, position: numb
     values: { patientId, name, position, ilae: NO_ANSWERS, signs: [], ...over },
   })) as unknown as SeizureProfile;
 const tab = (name: string) => screen.getByRole('tab', { name: new RegExp(`^${name}`) });
+/** One phase's band on the timeline: its heading, its own fields, its symptom cards and "+ Add symptom". */
+const band = (phase: 'Warning signs' | 'Aura' | 'Seizure' | 'Recovery') =>
+  screen.getByRole('listitem', { name: phase });
+/** Adds a symptom card to a phase: "+ Add symptom", search, pick. The body map, when it opens, is closed unless kept. */
+const addSymptom = async (
+  user: ReturnType<typeof userEvent.setup>,
+  phase: 'Warning signs' | 'Aura' | 'Seizure' | 'Recovery',
+  search: string,
+  pick: RegExp,
+  keepBodyMap = false,
+) => {
+  await user.click(within(band(phase)).getByRole('button', { name: '+ Add symptom' }));
+  const sheet = await screen.findByRole('dialog', { name: /^Add a symptom/ });
+  await user.type(within(sheet).getByLabelText('Search'), search);
+  await user.click(await within(sheet).findByRole('button', { name: pick }));
+  await waitFor(() => expect(screen.queryByRole('dialog', { name: /^Add a symptom/ })).toBeNull());
+  const where = screen.queryByRole('dialog', { name: /^Where:/ });
+  if (where && !keepBodyMap) await user.click(within(where).getByRole('button', { name: 'Done' }));
+};
 
 afterEach(cleanup);
 
@@ -150,33 +169,33 @@ describe('the editor, tab by tab', () => {
     const { id, patientId } = await seed(ctx);
     await profile(ctx, patientId, 'Aura feeling', 0, {
       ilae: { ...NO_ANSWERS, class: 'focal', recall: 'yes', responsive: 'yes', observable: 'no' },
-      signs: [{ code: DEJA_VU, phase: 'before' }],
+      signs: [{ code: DEJA_VU, phase: 'aura' }],
     });
     const night = await profile(ctx, patientId, 'Night seizure', 1, {
       ilae: { ...NO_ANSWERS, class: 'generalized', generalized: 'tonic_clonic' },
-      signs: [{ code: SHAKING, phase: 'during' }],
+      signs: [{ code: SHAKING, phase: 'seizure' }],
     });
     const user = await openEditor(ctx);
     await user.click(screen.getByRole('button', { name: 'Aura feeling' }));
     expect(screen.getByText('ILAE 2025: Focal preserved consciousness seizure')).toBeTruthy();
     expect(screen.getByText(/Filled in from "Aura feeling"/)).toBeTruthy();
-    // Like an aura: nothing others could see, so there is no During tab
-    expect(screen.queryByRole('tab', { name: /^During/ })).toBeNull();
-    await user.click(tab('Before'));
-    expect(screen.getAllByText(/Deja Vu/i).length).toBeGreaterThan(0);
+    // Like an aura: nothing others could see, so the timeline has no Seizure section
+    await user.click(tab('Timeline'));
+    expect(screen.queryByRole('listitem', { name: 'Seizure' })).toBeNull();
+    expect(within(band('Aura')).getAllByText(/Deja Vu/i).length).toBeGreaterThan(0);
     await user.click(tab('Classification'));
     await answer(user, BTC, 'No');
     await user.click(screen.getByRole('button', { name: 'Night seizure' }));
     expect(screen.getByText('ILAE 2025: Generalized tonic-clonic seizure')).toBeTruthy();
-    expect(screen.getByRole('tab', { name: /^During/ })).toBeTruthy();
-    await user.click(tab('Before'));
+    await user.click(tab('Timeline'));
+    expect(within(band('Seizure')).getAllByText(/Rhythmic Shaking/i).length).toBeGreaterThan(0);
     expect(screen.queryByText(/Deja Vu/i)).toBeNull();
     await user.click(screen.getByRole('button', { name: 'Save' }));
     await screen.findByRole('button', { name: 'Start timer' });
     const saved = await get(ctx, id!);
     expect(saved.profile).toEqual({ id: night.id, name: 'Night seizure' });
     expect(saved.ilae2025).toEqual({ ...NO_ANSWERS, class: 'generalized', generalized: 'tonic_clonic' });
-    expect(saved.symptoms.map((x) => [x.code, x.phase])).toEqual([[SHAKING, 'during']]);
+    expect(saved.symptoms.map((x) => [x.code, x.phase])).toEqual([[SHAKING, 'seizure']]);
   });
 
   it('shows the first three profiles and the others under More', async () => {
@@ -230,62 +249,84 @@ describe('the editor, tab by tab', () => {
     });
   });
 
-  it('an older seizure recorded as aura only has no During tab', async () => {
+  it('an older seizure recorded as aura only has no Seizure section on its timeline', async () => {
     const ctx = setup();
     await seed(ctx, { typeCode: 'seizure_type.aura_only' });
-    await openEditor(ctx);
-    expect(screen.queryByRole('tab', { name: /^During/ })).toBeNull();
-    expect(screen.getByRole('tab', { name: /^Before/ })).toBeTruthy();
+    const user = await openEditor(ctx);
+    await user.click(tab('Timeline'));
+    expect(screen.queryByRole('listitem', { name: 'Seizure' })).toBeNull();
+    expect(band('Aura')).toBeTruthy();
+    expect(band('Warning signs')).toBeTruthy();
+    expect(band('Recovery')).toBeTruthy();
   });
 
-  it('adds a symptom in the right phase, with the first one starred, and saves its place in the order', async () => {
+  it('adds symptom cards to their phases; the first sign of the seizure is starred, never a warning sign', async () => {
     const ctx = setup();
     const { id } = await seed(ctx);
     const user = await openEditor(ctx);
-    await user.click(tab('During'));
-    await user.type(screen.getByLabelText('Search'), 'rhythmic');
-    await user.click(await screen.findByRole('button', { name: /Rhythmic Shaking/i }));
-    expect(await screen.findByText(/★/)).toBeTruthy();
-    await user.click(tab('Before'));
-    await user.type(screen.getByLabelText('Search'), 'deja');
-    await user.click(await screen.findByRole('button', { name: /Deja Vu/i }));
+    await user.click(tab('Timeline'));
+    await addSymptom(user, 'Seizure', 'rhythmic', /Rhythmic Shaking/i);
+    expect(within(band('Seizure')).getByText(/★/)).toBeTruthy();
+    await addSymptom(user, 'Aura', 'deja', /Deja Vu/i);
+    await addSymptom(user, 'Warning signs', 'smell', /Strange Smell/i);
+    // The star moves to the aura's symptom; the warning sign is before the seizure and never the first sign
+    expect(within(band('Aura')).getByText(/★/)).toBeTruthy();
+    expect(within(band('Warning signs')).queryByText(/★/)).toBeNull();
     await user.click(screen.getByRole('button', { name: 'Save' }));
     await screen.findByRole('button', { name: 'Start timer' });
     const saved = await get(ctx, id!);
     expect(saved.symptoms.map((s) => [s.phase, s.order, s.isFirst])).toEqual([
-      ['before', 0, true],
-      ['during', 1, false],
+      ['prodrome', 0, false],
+      ['aura', 1, true],
+      ['seizure', 2, false],
     ]);
+    // Warning signs are not timed from the seizure; a new card's time since the one before is not known
+    expect(saved.symptoms[0]?.sincePrevious).toEqual({ kind: 'unknown', ms: null });
+    expect(saved.symptoms[2]?.sincePrevious).toEqual({ kind: 'unknown', ms: null });
+  });
+
+  it('a delay card between two symptoms takes a preset or a time of its own, saved as an estimate', async () => {
+    const ctx = setup();
+    const { id } = await seed(ctx);
+    const user = await openEditor(ctx);
+    await user.click(tab('Timeline'));
+    await addSymptom(user, 'Seizure', 'rhythmic', /Rhythmic Shaking/i);
+    await addSymptom(user, 'Seizure', 'blank', /Staring/i);
+    const delay = within(band('Seizure')).getByRole('combobox', { name: 'Time since the symptom before' });
+    expect((delay as HTMLSelectElement).value).toBe('unknown');
+    await user.selectOptions(delay, 'custom');
+    await user.type(within(band('Seizure')).getAllByPlaceholderText('00:00:00').at(-1)!, '125');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    await screen.findByRole('button', { name: 'Start timer' });
+    const saved = await get(ctx, id!);
+    expect(saved.symptoms[1]?.sincePrevious).toEqual({ kind: 'approximate', ms: 85_000 });
   });
 
   it('asks for a body area only where the symptom has a place, and saves the area', async () => {
     const ctx = setup();
     const { id } = await seed(ctx);
     const user = await openEditor(ctx);
-    await user.click(tab('Before'));
-    await user.type(screen.getByLabelText('Search'), 'deja');
-    await user.click(await screen.findByRole('button', { name: /Deja Vu/i }));
-    expect(screen.queryByRole('button', { name: 'Add area' })).toBeNull();
-    await user.click(tab('During'));
-    await user.type(screen.getByLabelText('Search'), 'rhythmic');
-    await user.click(await screen.findByRole('button', { name: /Rhythmic Shaking/i }));
-    await user.click(screen.getByRole('button', { name: 'Add area' }));
-    await user.click(screen.getByRole('button', { name: /^Arms$/ }));
-    await user.click(screen.getByRole('button', { name: 'Done' }));
+    await user.click(tab('Timeline'));
+    await addSymptom(user, 'Aura', 'deja', /Deja Vu/i);
+    // A feeling has no place on the body: the body map does not open
+    expect(screen.queryByRole('dialog', { name: /^Where:/ })).toBeNull();
+    await addSymptom(user, 'Seizure', 'rhythmic', /Rhythmic Shaking/i, true);
+    const where = await screen.findByRole('dialog', { name: /^Where:/ });
+    await user.click(within(where).getByRole('button', { name: /^Arms$/ }));
+    await user.click(within(where).getByRole('button', { name: 'Done' }));
     await user.click(screen.getByRole('button', { name: 'Save' }));
     await screen.findByRole('button', { name: 'Start timer' });
     const saved = await get(ctx, id!);
-    expect(saved.symptoms.find((s) => s.phase === 'during')?.area?.region).toBe('body.arms');
-    expect(saved.symptoms.find((s) => s.phase === 'before')?.area).toBeNull();
+    expect(saved.symptoms.find((s) => s.phase === 'seizure')?.area?.region).toBe('body.arms');
+    expect(saved.symptoms.find((s) => s.phase === 'aura')?.area).toBeNull();
   });
 
-  it('saves the time of the first warning sign in seconds', async () => {
+  it('saves how long before the warning signs came, typed as HH:MM:SS', async () => {
     const ctx = setup();
     const { id } = await seed(ctx);
     const user = await openEditor(ctx);
-    await user.click(tab('Before'));
-    await user.type(screen.getByLabelText('How long before the seizure did the first warning sign start?'), '2');
-    await user.click(screen.getByRole('button', { name: 'Hours' }));
+    await user.click(tab('Timeline'));
+    await user.type(within(band('Warning signs')).getByLabelText('Warning signs beforehand'), '20000');
     await user.click(screen.getByRole('button', { name: 'Save' }));
     await screen.findByRole('button', { name: 'Start timer' });
     expect((await get(ctx, id!)).prodromeSecondsBefore).toBe(7200);
@@ -295,18 +336,22 @@ describe('the editor, tab by tab', () => {
     const ctx = setup();
     const { id } = await seed(ctx);
     const user = await openEditor(ctx);
-    await user.click(tab('Before'));
-    await user.click(screen.getByRole('button', { name: /Stress/i }));
-    await user.click(tab('After'));
-    await user.type(screen.getByLabelText('Something else (in your own words)'), 'Wanted to sleep');
-    await user.click(screen.getAllByRole('button', { name: 'Add' })[0]!);
-    await user.type(screen.getByLabelText('Back to normal after (minutes)'), '20');
+    await user.click(tab('Timeline'));
+    await user.click(within(band('Warning signs')).getByRole('button', { name: /Possible triggers/ }));
+    await user.click(within(band('Warning signs')).getByRole('button', { name: /Stress/i }));
+    await user.click(within(band('Recovery')).getByRole('button', { name: /How the person was afterwards/ }));
+    await user.type(within(band('Recovery')).getByLabelText('Something else (in your own words)'), 'Wanted to sleep');
+    await user.click(within(band('Recovery')).getByRole('button', { name: 'Add' }));
+    const recovery = within(band('Recovery')).getByLabelText('Recovery, until back to usual self');
+    await user.clear(recovery);
+    await user.type(recovery, '2000');
     await user.click(screen.getByRole('button', { name: 'Save' }));
     await screen.findByRole('button', { name: 'Start timer' });
     const saved = await get(ctx, id!);
     expect(saved.triggerCodes).toHaveLength(1);
     expect(saved.afterFindings).toEqual([{ code: 'after.custom', customLabel: 'Wanted to sleep', areas: [] }]);
     expect(saved.recoveryMinutes).toBe(20);
+    expect(saved.phases.recoveryEnd!.at - saved.phases.seizureEnd!.at).toBe(20 * 60_000);
   });
 
   it('keeps the symptoms exactly as recorded when only the notes are edited', async () => {
@@ -320,7 +365,7 @@ describe('the editor, tab by tab', () => {
         order: 0,
         sincePrevious: { kind: 'exact', ms: 4321 },
         isFirst: true,
-        phase: 'during',
+        phase: 'seizure',
       },
       {
         id: newId(),
@@ -347,8 +392,9 @@ describe('the editor, tab by tab', () => {
     const ctx = setup();
     const { id } = await seed(ctx);
     const user = await openEditor(ctx);
-    await user.click(tab('Notes'));
-    const seizure = screen.getByLabelText('Seizure (seconds)');
+    await user.click(tab('Timeline'));
+    const seizure = within(band('Seizure')).getByLabelText('How long');
+    await user.clear(seizure);
     await user.type(seizure, '45');
     await user.click(screen.getByRole('button', { name: 'Save' }));
     await screen.findByRole('button', { name: 'Start timer' });
@@ -365,15 +411,15 @@ describe('the editor, tab by tab', () => {
       phases: { start: { at: T0 - 3_600_000, source: 'timed' }, auraEnd: null, seizureEnd: null, recoveryEnd: null },
     });
     const user = await openEditor(ctx);
-    await user.click(tab('Notes'));
-    expect(screen.getByText(/stopped itself at 12 minutes/)).toBeTruthy();
-    const when = screen.getByLabelText('When did the seizure end?') as HTMLInputElement;
-    await user.clear(when);
-    await user.type(when, '2025-10-09T12:20');
+    await user.click(tab('Timeline'));
+    expect(within(band('Seizure')).getByText(/stopped itself at 12 minutes/)).toBeTruthy();
+    const when = within(band('Seizure')).getByLabelText('When did the seizure end?') as HTMLInputElement;
+    fireEvent.change(when, { target: { value: '2025-10-09T12:20:15' } });
     await user.click(screen.getByRole('button', { name: 'Save' }));
     await screen.findByRole('button', { name: 'Start timer' });
     const phases = (await get(ctx, id!)).phases;
     expect(phases.seizureEnd?.source).toBe('entered-later');
+    expect(new Date(phases.seizureEnd!.at).getSeconds()).toBe(15);
   });
 
   it('lists what changed and when in the edit history', async () => {
@@ -398,18 +444,18 @@ describe('the editor, tab by tab', () => {
 });
 
 describe('the start time', () => {
-  it('moves every time with it, and marks them as edited', async () => {
+  it('moves every time with it, to the second, and marks them as edited', async () => {
     const ctx = setup();
     const { id } = await seed(ctx);
     const before = (await get(ctx, id!)).phases;
     const user = await openEditor(ctx);
-    await user.click(tab('Notes'));
+    await user.click(tab('Timeline'));
     const when = screen.getByLabelText('When did it start?') as HTMLInputElement;
-    fireEvent.change(when, { target: { value: '2025-10-01T08:30' } });
+    fireEvent.change(when, { target: { value: '2025-10-01T08:30:20' } });
     await user.click(screen.getByRole('button', { name: 'Save' }));
     await screen.findByRole('button', { name: 'Start timer' });
     const after = (await get(ctx, id!)).phases;
-    expect(after.start.at).toBe(new Date('2025-10-01T08:30').getTime());
+    expect(after.start.at).toBe(new Date('2025-10-01T08:30:20').getTime());
     expect(after.start.source).toBe('edited');
     expect(after.seizureEnd!.at - after.start.at).toBe(before.seizureEnd!.at - before.start.at); // the length is kept
   });
@@ -457,9 +503,8 @@ describe('leaving, discarding and reviewing', () => {
     const ctx = setup();
     const { id } = await seed(ctx);
     const user = await openEditor(ctx);
-    await user.click(tab('During'));
-    await user.type(screen.getByLabelText('Search'), 'rhythmic');
-    await user.click(await screen.findByRole('button', { name: /Rhythmic Shaking/i }));
+    await user.click(tab('Timeline'));
+    await addSymptom(user, 'Seizure', 'rhythmic', /Rhythmic Shaking/i);
     await user.click(screen.getByRole('button', { name: 'Review' }));
     const timeline = await screen.findByRole('list', { name: 'Seizure timeline' });
     expect(within(timeline).getByText(/Rhythmic Shaking/i)).toBeTruthy();
@@ -468,25 +513,30 @@ describe('leaving, discarding and reviewing', () => {
     expect((await get(ctx, id!)).status).toBe('complete');
   });
 
-  it('moves a symptom down and removes one, in the timeline', async () => {
+  it('moves a symptom down, moves one to another phase, and removes one, from its card', async () => {
     const ctx = setup();
     const { id } = await seed(ctx);
     const user = await openEditor(ctx);
-    await user.click(tab('During'));
-    for (const q of ['rhythmic', 'blank']) {
-      await user.clear(screen.getByLabelText('Search'));
-      await user.type(screen.getByLabelText('Search'), q);
-      await user.click(
-        (await screen.findAllByRole('button', { name: new RegExp(q === 'blank' ? 'Staring' : 'Rhythmic', 'i') }))[0]!,
-      );
-    }
-    await user.click(screen.getAllByRole('button', { name: 'Move down' })[0]!);
-    await user.click(screen.getAllByRole('button', { name: 'Remove' }).at(-1)!);
+    await user.click(tab('Timeline'));
+    await addSymptom(user, 'Seizure', 'rhythmic', /Rhythmic Shaking/i);
+    await addSymptom(user, 'Seizure', 'blank', /Staring/i);
+    await addSymptom(user, 'Seizure', 'deja', /Deja Vu/i);
+    await user.click(within(band('Seizure')).getAllByRole('button', { name: 'Move down' })[0]!);
+    // ⋯ on the Deja Vu card: move it to the aura
+    await user.click(within(band('Seizure')).getByRole('button', { name: /More for Deja Vu/i }));
+    await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Aura' }));
+    // ⋯ on the last card in the seizure: remove it
+    await user.click(within(band('Seizure')).getByRole('button', { name: /More for Rhythmic Shaking/i }));
+    await user.click(
+      within(await screen.findByRole('dialog')).getByRole('button', { name: 'Remove from the timeline' }),
+    );
     await user.click(screen.getByRole('button', { name: 'Save' }));
     await screen.findByRole('button', { name: 'Start timer' });
     const saved = await get(ctx, id!);
-    expect(saved.symptoms).toHaveLength(1);
-    expect(saved.symptoms[0]?.code).toBe('symptom.eyes.staring_blankly');
+    expect(saved.symptoms.map((x) => [x.phase, x.code])).toEqual([
+      ['aura', DEJA_VU],
+      ['seizure', 'symptom.eyes.staring_blankly'],
+    ]);
   });
 });
 
@@ -495,10 +545,14 @@ describe('your own symptoms and saved sets', () => {
     const ctx = setup();
     const { id } = await seed(ctx);
     const user = await openEditor(ctx);
-    await user.click(tab('During'));
-    await user.type(screen.getByLabelText('Your own symptom'), 'Hums a tune');
-    await user.click(screen.getByRole('button', { name: 'Add' }));
-    expect((await screen.findAllByText('Hums a tune')).length).toBeGreaterThan(0);
+    await user.click(tab('Timeline'));
+    await user.click(within(band('Seizure')).getByRole('button', { name: '+ Add symptom' }));
+    const sheet = await screen.findByRole('dialog', { name: /^Add a symptom/ });
+    await user.type(within(sheet).getByLabelText('Your own symptom'), 'Hums a tune');
+    await user.click(within(sheet).getByRole('button', { name: 'Add' }));
+    const where = await screen.findByRole('dialog', { name: /^Where:/ });
+    await user.click(within(where).getByRole('button', { name: 'Done' }));
+    expect((await within(band('Seizure')).findAllByText(/Hums a tune/)).length).toBeGreaterThan(0);
     await user.click(screen.getByRole('button', { name: 'Save' }));
     await screen.findByRole('button', { name: 'Start timer' });
     const saved = await get(ctx, id!);
@@ -511,13 +565,12 @@ describe('your own symptoms and saved sets', () => {
     expect(codes).toMatchObject([{ kind: 'symptom', label: 'Hums a tune', code: saved.symptoms[0]?.code }]);
   });
 
-  it('saves the symptoms as a set, offers it in the next seizure, and manages it from Home', async () => {
+  it('saves the timeline as a set, fills a timeline from it, and manages it from More', async () => {
     const ctx = setup();
     await seed(ctx);
     const user = await openEditor(ctx);
-    await user.click(tab('During'));
-    await user.type(screen.getByLabelText('Search'), 'rhythmic');
-    await user.click(await screen.findByRole('button', { name: /Rhythmic Shaking/i }));
+    await user.click(tab('Timeline'));
+    await addSymptom(user, 'Seizure', 'rhythmic', /Rhythmic Shaking/i);
     await user.click(screen.getByRole('button', { name: 'Save these symptoms as a set' }));
     const sheet = await screen.findByRole('dialog', { name: 'Save these symptoms as a set' });
     const name = within(sheet).getByLabelText('Name of the set');
@@ -527,11 +580,13 @@ describe('your own symptoms and saved sets', () => {
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Save these symptoms as a set' })).toBeNull());
     const sets = (await ctx.client.list({ type: 'symptomSet' })) as unknown as { name: string; items: unknown[] }[];
     expect(sets).toMatchObject([
-      { name: 'Usual start', items: [{ code: 'symptom.big_shaking_jerking.rhythmic_shaking', phase: 'during' }] },
+      { name: 'Usual start', items: [{ code: 'symptom.big_shaking_jerking.rhythmic_shaking', phase: 'seizure' }] },
     ]);
-    expect(screen.getByRole('button', { name: '+ Usual start' })).toBeTruthy();
+    // The set is offered above the timeline
+    const fill = screen.getByLabelText('Fill the timeline from a saved set') as HTMLSelectElement;
+    expect([...fill.options].map((o) => o.text)).toContain('Usual start');
 
-    // Home → the sets screen
+    // More → the sets screen
     await user.click(screen.getByRole('button', { name: 'Back' }));
     await user.click(await screen.findByRole('button', { name: 'Leave' }));
     await user.click(await screen.findByRole('button', { name: 'More' }));

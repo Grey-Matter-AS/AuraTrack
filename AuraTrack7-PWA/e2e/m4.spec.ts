@@ -27,7 +27,7 @@ async function recordOne(page: Page) {
   await page.getByRole('button', { name: 'Start timer' }).click();
   await expect(page.getByRole('timer')).toBeVisible();
   await page.getByRole('button', { name: 'End seizure' }).click();
-  await page.getByRole('button', { name: 'Back to normal' }).click();
+  await page.getByRole('button', { name: 'Back to usual self' }).click();
   await page.getByRole('button', { name: 'Add details' }).click();
   await expect(page.getByText('Seizure details')).toBeVisible();
   await page.getByRole('button', { name: 'Back', exact: true }).click();
@@ -56,7 +56,9 @@ test('a medicine is added, its dose marked, and the change kept in its history',
   await page.getByRole('button', { name: 'Add a medicine' }).click();
   await page.getByLabel('Name', { exact: true }).fill('Keppra');
   await page.getByLabel('Active ingredient').selectOption('Levetiracetam');
-  await page.getByLabel('Dose', { exact: true }).fill('500');
+  await page.getByLabel('Dose at 08:00').fill('500');
+  await page.getByLabel('Dose at 20:00').fill('500');
+  await expect(page.getByRole('region', { name: 'Daily total' })).toContainText('1,000 mg');
   await page.getByLabel('Started on').fill('2026-11-01'); // yesterday: today's 08:00 dose is expected
   await page.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(page.getByText(/500 mg · BD 08:00, 20:00/)).toBeVisible();

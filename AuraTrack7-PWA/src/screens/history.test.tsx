@@ -126,7 +126,7 @@ describe('the seizure in full', () => {
     await user.click(await screen.findByRole('button', { name: 'Open' }));
     expect(await screen.findByText('Woke at night')).toBeTruthy();
     expect(screen.getByText(/At or over the emergency alert time \(5 minutes\)/)).toBeTruthy();
-    expect(screen.getByText('Back to normal after 20 minutes')).toBeTruthy();
+    expect(screen.getByText('Recovery, until back to usual self: 20:00')).toBeTruthy();
     expect(screen.getByText('Possible triggers')).toBeTruthy();
     expect(screen.getByRole('list', { name: 'Seizure timeline' })).toBeTruthy();
     expect(screen.getByText(/· Recorded/)).toBeTruthy();
@@ -202,10 +202,17 @@ describe('the chart', () => {
     await add(ctx, patientId, 60 * 24 * 40, 30); // outside 12 weeks? no: 40 days is inside 12 weeks
     const user = await openHistory(ctx);
     await user.click(screen.getByRole('button', { name: 'Chart' }));
-    expect(await screen.findByText('Seizures in this period: 3. At or over the emergency alert time: 1.')).toBeTruthy();
-    await user.click(screen.getByRole('button', { name: '30 days' }));
-    expect(await screen.findByText('Seizures in this period: 2. At or over the emergency alert time: 1.')).toBeTruthy();
+    // It opens on the last 30 days, a bar per day
+    expect(
+      await screen.findByText(/Seizures in this period: 2\. At or over the emergency alert time: 1\./),
+    ).toBeTruthy();
     expect(screen.getByRole('img', { name: /Seizures per day: 2 in all/ })).toBeTruthy();
+    // Zooming out shows 13 weeks, a bar per week
+    await user.click(screen.getByRole('button', { name: 'Zoom out' }));
+    expect(
+      await screen.findByText(/Seizures in this period: 3\. At or over the emergency alert time: 1\./),
+    ).toBeTruthy();
+    expect(screen.getByRole('img', { name: /Seizures per week: 3 in all/ })).toBeTruthy();
   });
 
   it('lists the medicine changes of the period under the chart', async () => {
@@ -270,7 +277,7 @@ describe('the timeline', () => {
     await waitFor(() => expect(later.disabled).toBe(false));
     await user.click(later);
     await waitFor(() => expect(later.disabled).toBe(true));
-    await user.click(screen.getByRole('button', { name: 'Day' }));
+    await user.click(screen.getByRole('button', { name: 'Zoom in' }));
     expect(await screen.findByText('Nothing in this period.')).toBeTruthy();
   });
 });

@@ -54,7 +54,7 @@ describe('starting', () => {
     f.advance(5 * S);
     c.tap('end_aura');
     c.quickNote('Calm');
-    c.symptom('symptom.a', 'during');
+    c.symptom('symptom.a', 'seizure');
     f.advance(S);
     c.tap('end_seizure');
     c.tap('back_to_normal');

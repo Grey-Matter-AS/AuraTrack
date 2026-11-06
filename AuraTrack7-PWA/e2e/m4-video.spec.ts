@@ -46,7 +46,7 @@ test('is filmed during a recording and kept with the seizure', async ({ page }) 
   ]);
   await page.waitForTimeout(2500);
   await page.getByRole('button', { name: 'End seizure' }).click();
-  await page.getByRole('button', { name: 'Back to normal' }).click();
+  await page.getByRole('button', { name: 'Back to usual self' }).click();
   await page.getByRole('button', { name: 'Add details' }).click();
   await expect(page.getByText('Seizure details')).toBeVisible({ timeout: 20_000 });
   await page.getByRole('button', { name: 'Back', exact: true }).click();

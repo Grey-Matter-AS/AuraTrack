@@ -281,7 +281,7 @@ export const fi: Extra = {
   'med.ownIngredient': 'Jokin muu aine …',
   'med.ownIngredientName': 'Aineen nimi',
   'med.form': 'Muoto',
-  'med.schedule': 'Annos ja ajat',
+  'med.schedule': 'Annostus',
   'med.frequency': 'Kuinka usein',
   'med.freq.OD': 'Kerran päivässä',
   'med.freq.BD': 'Kaksi kertaa päivässä',

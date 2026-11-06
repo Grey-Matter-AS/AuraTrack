@@ -170,7 +170,7 @@ describe('the timeline of one seizure', () => {
   const base = seizures(2)[1]!; // one with every part recorded
   const seizure = (gaps: { kind: 'exact' | 'approximate' | 'unknown'; ms: number | null }[]): Seizure => ({
     ...base,
-    symptoms: gaps.map((g, i) => ({ id: `y${i}`, code: 'symptom.awareness.fully_awake_aware', area: null, moment: i, order: i, sincePrevious: g, isFirst: i === 0, phase: 'during' as const })),
+    symptoms: gaps.map((g, i) => ({ id: `y${i}`, code: 'symptom.awareness.fully_awake_aware', area: null, moment: i, order: i, sincePrevious: g, isFirst: i === 0, phase: 'seizure' as const })),
   });
 
   it('adds up the exact gaps, and does not know the time after one that is not exact', () => {

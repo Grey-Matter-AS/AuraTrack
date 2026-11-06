@@ -112,7 +112,7 @@ describe('seizures', () => {
     expect(s?.symptoms[0]).toMatchObject({
       code: 'symptom.small_twitching.muscle_flickering',
       area: { region: 'body.head_and_face', subRegion: 'body.head_and_face.eyes', part: null },
-      phase: 'during',
+      phase: 'seizure', // '#during' in a file from before 7.2
       isFirst: true,
     });
   });

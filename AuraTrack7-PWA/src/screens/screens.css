@@ -39,6 +39,12 @@
   justify-content: center;
   gap: 1rem;
 }
+.app-chart-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
 .app-row {
   display: flex;
   align-items: baseline;

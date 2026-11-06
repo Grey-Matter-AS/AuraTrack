@@ -1,5 +1,6 @@
 import {
   RENAME_REASONS,
+  dailyTotals,
   defaultScheduledTimes,
   planMedicationChange,
   regimenSnapshot,
@@ -15,11 +16,14 @@ import {
   AppHeader,
   BottomSheet,
   Button,
+  Card,
   Checkbox,
   ChipGroup,
   ChoiceList,
+  DataTable,
   DateTimeField,
   DecimalField,
+  FieldRow,
   Screen,
   Section,
   Select,
@@ -64,8 +68,22 @@ export function MedEdit({ id }: { id?: string }) {
   const [unit, setUnit] = useState(start?.unit ?? 'mg');
   const [frequency, setFrequency] = useState<Frequency>(start?.frequency ?? 'BD');
   const [times, setTimes] = useState<string[]>(start?.scheduledTimes ?? defaultScheduledTimes('BD'));
-  const [slots, setSlots] = useState<Record<string, string>>(
-    Object.fromEntries(Object.entries(start?.slotDoses ?? {}).map(([k, v]) => [k, String(v)])),
+  // One dose and one unit per scheduled time; a time saved before 7.2 with no dose of its own shows the medicine's dose
+  const [slots, setSlots] = useState<Record<string, string>>(() =>
+    Object.fromEntries(
+      (start?.scheduledTimes ?? defaultScheduledTimes('BD')).map((time) => [
+        time,
+        text(start?.slotDoses[time] ?? start?.dose),
+      ]),
+    ),
+  );
+  const [slotUnits, setSlotUnits] = useState<Record<string, string>>(() =>
+    Object.fromEntries(
+      (start?.scheduledTimes ?? defaultScheduledTimes('BD')).map((time) => [
+        time,
+        start?.slotUnits?.[time] ?? start?.unit ?? 'mg',
+      ]),
+    ),
   );
   const [days, setDays] = useState<string[]>((start?.scheduledDays ?? [0, 1, 2, 3, 4, 5, 6]).map(String));
   const [rescue, setRescue] = useState(before?.isRescue ?? false);
@@ -76,8 +94,26 @@ export function MedEdit({ id }: { id?: string }) {
   const [problem, setProblem] = useState<ChangeProblem | null>(null);
 
   const ingredientName = (ingredient === OWN ? ownIngredient : ingredient).trim();
-  const doseNumber = number(dose);
-  const slotNumbers = Object.entries(slots).map(([time, v]) => [time, number(v)] as const);
+  const scheduled = frequency !== 'PRN';
+  const slotNumbers = times.map((time) => [time, number(slots[time] ?? '')] as const);
+  const unitAt = (time: string) => slotUnits[time] ?? unit;
+  // Scheduled: the medicine's own dose and unit are those of its first time (what older screens and reports read)
+  const firstTime = [...times].sort()[0];
+  const doseNumber = scheduled ? (firstTime ? number(slots[firstTime] ?? '') : null) : number(dose);
+  const mainUnit = scheduled && firstTime ? unitAt(firstTime) : unit;
+  // The daily total, per unit (doses in different units are never added together)
+  const totals = scheduled
+    ? dailyTotals({
+        dose: null,
+        unit,
+        slotDoses: Object.fromEntries(
+          slotNumbers.filter(([, v]) => v !== null && !Number.isNaN(v)).map(([time, v]) => [time, v as number]),
+        ),
+        slotUnits: Object.fromEntries(times.map((time) => [time, unitAt(time)])),
+        scheduledTimes: times,
+        frequency,
+      })
+    : [];
   const invalid =
     name.trim() === '' || Number.isNaN(doseNumber) || slotNumbers.some(([, v]) => v !== null && Number.isNaN(v));
 
@@ -86,10 +122,11 @@ export function MedEdit({ id }: { id?: string }) {
     activeIngredient: ingredientName,
     form,
     dose: doseNumber,
-    unit,
-    slotDoses: Object.fromEntries(
-      slotNumbers.filter(([time, v]) => v !== null && times.includes(time)).map(([time, v]) => [time, v as number]),
-    ),
+    unit: mainUnit,
+    slotDoses: scheduled
+      ? Object.fromEntries(slotNumbers.filter(([, v]) => v !== null).map(([time, v]) => [time, v as number]))
+      : {},
+    ...(scheduled ? { slotUnits: Object.fromEntries(times.map((time) => [time, unitAt(time)])) } : {}),
     frequency,
     scheduledTimes: frequency === 'PRN' ? [] : [...times].sort(),
     scheduledDays: days.map(Number).sort(),
@@ -171,40 +208,55 @@ export function MedEdit({ id }: { id?: string }) {
               }}
               options={FREQUENCIES.map((f) => ({ value: f, label: t(`med.freq.${f}` as never) }))}
             />
-            <div className="ui-cluster">
-              <DecimalField label={t('med.dose')} value={dose} onChange={setDose} />
-              <Select
-                label={t('med.unit')}
-                value={unit}
-                onChange={setUnit}
-                options={[...new Set([...UNITS, unit])].map((u) => ({ value: u, label: u }))}
-              />
-            </div>
-            {frequency !== 'PRN'
-              ? times.map((time, i) => (
-                  <Stack gap="0.5rem" key={i}>
+            {/* Taken when needed: one dose. On a schedule: each time has its own dose and unit, and nothing else */}
+            {!scheduled ? (
+              <FieldRow min="7rem">
+                <DecimalField label={t('med.dose')} value={dose} onChange={setDose} />
+                <Select
+                  label={t('med.unit')}
+                  value={unit}
+                  onChange={setUnit}
+                  options={[...new Set([...UNITS, unit])].map((u) => ({ value: u, label: u }))}
+                />
+              </FieldRow>
+            ) : (
+              times.map((time, i) => (
+                <Card compact key={i}>
+                  <Stack gap="0.5rem">
                     <DateTimeField
                       label={t('med.timeN', { n: i + 1 })}
                       type="time"
+                      withSeconds={false}
                       value={time}
                       onChange={(v) => {
                         if (v === '') return;
                         setTimes((list) => list.map((x, j) => (j === i ? v : x)));
-                        setSlots((s) => {
-                          const { [time]: moved, ...rest } = s;
+                        // The dose and unit go with their time
+                        const carry = (r: Record<string, string>) => {
+                          const { [time]: moved, ...rest } = r;
                           return moved === undefined ? rest : { ...rest, [v]: moved };
-                        });
+                        };
+                        setSlots(carry);
+                        setSlotUnits(carry);
                       }}
                     />
-                    <DecimalField
-                      label={t('med.slotDose', { time })}
-                      help={t('med.slotDoseHelp')}
-                      value={slots[time] ?? ''}
-                      onChange={(v) => setSlots((s) => ({ ...s, [time]: v }))}
-                    />
+                    <FieldRow min="7rem">
+                      <DecimalField
+                        label={t('med.slotDose', { time })}
+                        value={slots[time] ?? ''}
+                        onChange={(v) => setSlots((r) => ({ ...r, [time]: v }))}
+                      />
+                      <Select
+                        label={t('med.unit')}
+                        value={unitAt(time)}
+                        onChange={(u) => setSlotUnits((r) => ({ ...r, [time]: u }))}
+                        options={[...new Set([...UNITS, unitAt(time)])].map((u) => ({ value: u, label: u }))}
+                      />
+                    </FieldRow>
                   </Stack>
-                ))
-              : null}
+                </Card>
+              ))
+            )}
             {frequency !== 'PRN' ? (
               <ChipGroup
                 multiple
@@ -212,6 +264,19 @@ export function MedEdit({ id }: { id?: string }) {
                 value={days}
                 onChange={setDays}
                 options={[1, 2, 3, 4, 5, 6, 0].map((d) => ({ value: String(d), label: weekday(d) }))}
+              />
+            ) : null}
+            {scheduled && totals.length > 0 ? (
+              <DataTable
+                caption={t('med.dailyTitle')}
+                columns={[{ title: t('med.dailyTime') }, { title: t('med.dailyDose'), numeric: true }]}
+                rows={[...times]
+                  .sort()
+                  .map((time) => [time, slots[time]?.trim() ? `${slots[time]} ${unitAt(time)}` : '–'])}
+                footer={[
+                  t('med.dailyTotal'),
+                  totals.map(([u, n]) => `${n.toLocaleString(app.language)} ${u}`).join(' + '),
+                ]}
               />
             ) : null}
           </Stack>

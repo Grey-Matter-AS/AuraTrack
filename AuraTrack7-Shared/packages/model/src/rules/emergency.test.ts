@@ -1,14 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import type { Phases } from '../schemas';
 import {
+  auraSeconds,
   AUTO_STOP_AT_S,
   buildDangerMap,
   clusterCounts,
   clusterWindowLabel,
   computeDangerFlags,
   emergencyPlan,
+  isLongRecord,
   isLongSeizure,
   recordingState,
+  recoverySeconds,
+  seizureLengthSeconds,
   seizureSeconds,
   totalSeconds,
 } from './emergency';
@@ -78,16 +82,31 @@ describe('seizure time', () => {
     expect(isLongSeizure(phases(T0, 420), emergencyPlan({ emergencyAlertMinutes: 7 }))).toBe(true);
   });
 
-  it('does not count the aura or a long recovery', () => {
+  it('times the seizure as neurologists do: the aura counts, a long recovery never does', () => {
     const p: Phases = {
       start: mark(T0),
       auraEnd: mark(T0 + 180_000),
       seizureEnd: mark(T0 + 300_000),
       recoveryEnd: mark(T0 + 600_000),
     };
+    // 3 min aura + 2 min seizure = 5 min: long, as the live alert says at 5 minutes from Start
+    expect(seizureLengthSeconds(p)).toBe(300);
+    expect(isLongSeizure(p)).toBe(true);
+    // The CSV columns keep their meaning: the seizure phase alone, and everything to the end of recovery
     expect(seizureSeconds(p)).toBe(120);
     expect(totalSeconds(p)).toBe(600);
-    expect(isLongSeizure(p)).toBe(false);
+    expect(auraSeconds(p)).toBe(180);
+    expect(recoverySeconds(p)).toBe(300);
+    // A 4 min recovery after a 2 min seizure is not long
+    const short: Phases = { ...p, auraEnd: mark(T0), seizureEnd: mark(T0 + 120_000), recoveryEnd: mark(T0 + 360_000) };
+    expect(isLongSeizure(short)).toBe(false);
+  });
+
+  it('counts a seizure stopped by the timer at 12 minutes as long, though its end is not known', () => {
+    const open: Phases = { start: mark(T0), auraEnd: null, seizureEnd: null, recoveryEnd: null };
+    expect(isLongSeizure(open)).toBe(false);
+    expect(isLongRecord({ phases: open, isEmergencyStop: true })).toBe(true);
+    expect(isLongRecord({ phases: open })).toBe(false);
   });
 
   it('counts to the end of recovery when the seizure end was never marked', () => {

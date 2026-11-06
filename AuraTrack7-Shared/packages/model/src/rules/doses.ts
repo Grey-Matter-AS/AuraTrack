@@ -1,6 +1,6 @@
 import type { DoseLog, DoseStatus, Medication, MedicationChange } from '../schemas';
 import { localDateKey, nextLocalDay, parseLocalDate, startOfLocalDay } from './dates';
-import { changesForMedication, regimenAt, regimenSnapshot, slotDose } from './regimen';
+import { changesForMedication, regimenAt, regimenSnapshot, slotDose, slotUnit } from './regimen';
 
 export { defaultScheduledTimes } from './regimen';
 
@@ -58,7 +58,7 @@ function doseFor(
     medicationId: med.id,
     medicationName: med.name,
     dose: slotDose(regimen, time),
-    unit: regimen.unit,
+    unit: slotUnit(regimen, time),
     scheduledTime: time,
     scheduledTs: scheduledTimestampForDay(time, dayMs),
   };

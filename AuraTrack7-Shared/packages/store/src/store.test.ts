@@ -312,13 +312,13 @@ describe('between-seizures events and symptom sets (7.0.3)', () => {
         order: 0,
         sincePrevious: { kind: 'exact' as const, ms: 0 },
         isFirst: true,
-        phase: 'during' as const,
+        phase: 'seizure' as const,
       },
     ];
     await store.update('seizure', made.id, { symptoms, prodromeSecondsBefore: 7200 });
     expect(store.get('seizure', made.id)).toMatchObject({
       prodromeSecondsBefore: 7200,
-      symptoms: [{ phase: 'during' }],
+      symptoms: [{ phase: 'seizure' }],
     });
   });
 });

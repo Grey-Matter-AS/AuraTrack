@@ -282,7 +282,7 @@ export const da: Extra = {
   'med.ownIngredient': 'Et andet stof …',
   'med.ownIngredientName': 'Stoffets navn',
   'med.form': 'Form',
-  'med.schedule': 'Dosis og tidspunkter',
+  'med.schedule': 'Dosering',
   'med.frequency': 'Hvor ofte',
   'med.freq.OD': 'Én gang dagligt',
   'med.freq.BD': 'To gange dagligt',

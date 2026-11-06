@@ -63,7 +63,11 @@ export function seizureKinds(
 }
 
 /** The series colour (1 to 7) of a kind, by its place among the kinds; 8 for seizures not classified. */
+/**
+ * The colour slot of a seizure kind on the timeline: a seizure with no type is slot 1, which follows the accent colour;
+ * each named kind takes the next slot (2 to 8), so kinds stay apart from each other and from the untyped ones.
+ */
 export const seriesOf = (key: string | null, kinds: readonly { value: string }[]): number => {
   const index = key === null ? -1 : kinds.findIndex((k) => k.value === key);
-  return index < 0 ? 8 : (index % 7) + 1;
+  return index < 0 ? 1 : (index % 7) + 2;
 };

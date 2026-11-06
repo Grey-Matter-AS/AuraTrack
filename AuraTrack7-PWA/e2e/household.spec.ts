@@ -29,7 +29,7 @@ async function recordOne(page: Page) {
   await page.getByRole('button', { name: 'Start timer' }).click();
   await expect(page.getByRole('timer')).toBeVisible();
   await page.getByRole('button', { name: 'End seizure' }).click();
-  await page.getByRole('button', { name: 'Back to normal' }).click();
+  await page.getByRole('button', { name: 'Back to usual self' }).click();
   await page.getByRole('button', { name: 'Add details' }).click();
   await expect(page.getByText('Seizure details')).toBeVisible();
   await page.getByRole('button', { name: 'Back', exact: true }).click();

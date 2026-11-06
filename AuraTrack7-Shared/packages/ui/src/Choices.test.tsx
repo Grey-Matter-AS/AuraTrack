@@ -29,9 +29,16 @@ describe('ChipGroup', () => {
     expect(screen.getByRole('group', { name: 'Letters' })).toBeTruthy();
   });
 
-  it('keeps its label for screen readers only by default', () => {
+  it('shows its label by default, so no row of chips is left unnamed', () => {
     render(<ChipGroup label="Letters" options={options} value="b" onChange={vi.fn()} />);
+    expect(screen.getByText('Letters')).toBeTruthy();
+    expect(screen.getByRole('group', { name: 'Letters' })).toBeTruthy();
+  });
+
+  it('keeps the label for screen readers only where a heading above already says it', () => {
+    render(<ChipGroup showLabel={false} label="Letters" options={options} value="b" onChange={vi.fn()} />);
     expect(screen.queryByText('Letters')).toBeNull();
+    expect(screen.getByRole('group', { name: 'Letters' })).toBeTruthy();
   });
 
   it('multiple choice: adds and removes, keeping the order it was given', async () => {
@@ -49,7 +56,7 @@ describe('ChipGroup', () => {
   it('nothing chosen yet is allowed, and fill makes the chips share the row', () => {
     const { container } = render(<ChipGroup fill label="Letters" options={options} value={null} onChange={() => {}} />);
     expect(screen.getAllByRole('button').every((b) => b.getAttribute('aria-pressed') === 'false')).toBe(true);
-    expect(container.firstElementChild?.className).toBe('ui-chip-group ui-chip-group--fill');
+    expect(container.querySelector('.ui-chip-group')?.className).toBe('ui-chip-group ui-chip-group--fill');
   });
 });
 

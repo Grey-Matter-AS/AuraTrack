@@ -199,11 +199,19 @@ const isEdited = (s: Seizure): boolean =>
 const finished = (s: Seizure): boolean => s.status !== 'in_progress' && s.cancelled !== true;
 
 /** "500 mg", or "250 mg + 500 mg" when the doses differ between the times of the day. */
-export function doseSummary(r: Pick<Regimen, 'dose' | 'unit' | 'slotDoses' | 'scheduledTimes' | 'frequency'>): string {
-  const slots = r.frequency === 'PRN' ? [] : r.scheduledTimes.map((t) => r.slotDoses[t] ?? r.dose);
-  const known = slots.filter((d): d is number => d !== null && d !== undefined);
-  if (known.length > 1 && new Set(known).size > 1) return `${known.join(' + ')} ${r.unit}`.trim();
-  return r.dose === null && known.length === 0 ? '' : `${known[0] ?? r.dose} ${r.unit}`.trim();
+export function doseSummary(
+  r: Pick<Regimen, 'dose' | 'unit' | 'slotDoses' | 'slotUnits' | 'scheduledTimes' | 'frequency'>,
+): string {
+  // One unit for every time: "100 + 150 mg" (or "100 mg" when the doses are the same). Units that differ are each
+  // written with their dose: "500 mg + 1 tablet". Doses in different units are never added up.
+  const slots = r.frequency === 'PRN' ? [] : r.scheduledTimes.map((t) => ({ dose: r.slotDoses[t] ?? r.dose, unit: r.slotUnits?.[t] ?? r.unit }));
+  const known = slots.filter((x): x is { dose: number; unit: string } => x.dose !== null);
+  if (known.length === 0) return r.dose === null ? '' : `${r.dose} ${r.unit}`.trim();
+  const units = new Set(known.map((x) => x.unit));
+  if (units.size > 1) return known.map((x) => `${x.dose} ${x.unit}`.trim()).join(' + ');
+  const unit = known[0]?.unit ?? r.unit;
+  const doses = known.map((x) => x.dose);
+  return new Set(doses).size > 1 ? `${doses.join(' + ')} ${unit}`.trim() : `${doses[0]} ${unit}`.trim();
 }
 
 const countedList = (counts: Map<string, number>, limit: number, suffix = (n: number) => `${n}x`): string =>

@@ -56,7 +56,7 @@ describe('seizure profiles', () => {
       order: 0,
       sincePrevious: { kind: 'unknown', ms: null },
       isFirst: true,
-      phase: 'during',
+      phase: 'seizure',
     };
     await ctx.api.createRecord({ type: 'seizure', values: makeSeizure(patientId, 60, 90, { symptoms: [symptom] }) });
     const user = await openProfiles(ctx);
@@ -77,7 +77,7 @@ describe('seizure profiles', () => {
         name: 'Usual seizure',
         position: 0,
         ilae: { ...NO_ANSWERS, class: 'focal', recall: 'no' },
-        signs: [{ code: SHAKING, phase: 'during' }],
+        signs: [{ code: SHAKING, phase: 'seizure' }],
       },
     ]);
   });
