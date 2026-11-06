@@ -1,6 +1,13 @@
 import 'fake-indexeddb/auto';
 import { newId } from '@auratrack/model';
-import { doseLogFixture, ids, medicationFixture, seizureFixture, stripBase } from '@auratrack/model/fixtures';
+import {
+  doseLogFixture,
+  ids,
+  medicationFixture,
+  seizureFixture,
+  seizureProfileFixture,
+  stripBase,
+} from '@auratrack/model/fixtures';
 import { describe, expect, it } from 'vitest';
 import {
   BackupFormatError,
@@ -161,6 +168,20 @@ describe('restoring a backup', () => {
     expect(fresh.versioned('seizure', b.id)?.deletedAt).not.toBeNull();
     expect(fresh.get('medication', med.id)?.name).toBe('Levetiracetam');
     expect((await fresh.changesSince()).length).toBe((await store.changesSince()).length);
+  });
+
+  it('brings back seizure profiles and the ILAE 2025 answers of a seizure (D-17)', async () => {
+    const store = await Store.create(name(), { pin: '2468' }, FAST);
+    const profile = await store.create('seizureProfile', stripBase(seizureProfileFixture({ patientId: ids.patient })));
+    const s = await store.create(
+      'seizure',
+      seizure({ ilae2025: profile.ilae, profile: { id: profile.id, name: profile.name }, typeCode: null, ilae: null }),
+    );
+    const fresh = await Store.create(name(), { pin: '1357' }, FAST);
+    const report = await restoreBackup(fresh, await createBackup(store, 'a good passphrase', BK), 'a good passphrase');
+    expect(report.ok).toBe(true);
+    expect(fresh.get('seizureProfile', profile.id)).toEqual(store.get('seizureProfile', profile.id));
+    expect(fresh.get('seizure', s.id)).toEqual(store.get('seizure', s.id));
   });
 
   it('is safe to restore twice, and on the device it came from', async () => {

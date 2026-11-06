@@ -1,5 +1,5 @@
 import 'fake-indexeddb/auto';
-import { ids, seizureFixture, stripBase } from '@auratrack/model/fixtures';
+import { ids, seizureFixture, seizureProfileFixture, stripBase } from '@auratrack/model/fixtures';
 import { describe, expect, it } from 'vitest';
 import { removeDevice, effectiveFollows } from './membership';
 import { firstDevice as first, join, meet, type Device } from './testDevices';
@@ -58,6 +58,24 @@ describe('a household of real stores', () => {
     await meet(a, b);
     expect(seizures(a)).toHaveLength(0);
     expect(seizures(b)).toHaveLength(0);
+  });
+
+  it('a seizure profile travels, and two edits to different fields on two devices both survive (D-17)', async () => {
+    const a = await firstDevice();
+    const b = await join(a, 'B');
+    const profile = (await a.api.createRecord({
+      type: 'seizureProfile',
+      values: stripBase(seizureProfileFixture({ patientId: ids.patient })),
+    })) as { id: string };
+    await meet(a, b);
+    await a.api.update({ type: 'seizureProfile', id: profile.id, patch: { name: 'Morning seizure' } });
+    await b.api.update({ type: 'seizureProfile', id: profile.id, patch: { position: 2 } });
+    await meet(a, b);
+    for (const d of [a, b])
+      expect(d.api.get({ type: 'seizureProfile', id: profile.id })).toMatchObject({
+        name: 'Morning seizure',
+        position: 2,
+      });
   });
 
   it('a device’s own settings (theme, lock) stay on that device; a patient’s settings travel', async () => {

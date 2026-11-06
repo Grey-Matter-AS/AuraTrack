@@ -1,5 +1,5 @@
 import { newId } from '../ids';
-import type { DoseLog, InterictalEvent, Medication, Seizure, SymptomSet } from './index';
+import type { DoseLog, InterictalEvent, Medication, Seizure, SeizureProfile, SymptomSet } from './index';
 
 // Builders for tests: valid made-up records.
 export const ids = { household: newId(), patient: newId(), device: newId() };
@@ -52,7 +52,23 @@ export const symptomSetFixture = (over: Partial<SymptomSet> = {}): SymptomSet =>
   ...base(),
   seizureTypeCode: 'seizure_type.focal_aware',
   name: '',
-  items: [{ code: 'symptom.big_shaking_jerking.rhythmic_shaking', phase: 'during' }],
+  items: [{ code: 'symptom.big_shaking_jerking.rhythmic_shaking', phase: 'seizure' }],
+  ...over,
+});
+
+export const seizureProfileFixture = (over: Partial<SeizureProfile> = {}): SeizureProfile => ({
+  ...base(),
+  name: 'Usual seizure',
+  ilae: {
+    class: 'focal',
+    recall: 'yes',
+    responsive: 'no',
+    bilateralTonicClonic: 'no',
+    observable: null,
+    generalized: null,
+  },
+  signs: [{ code: 'symptom.big_shaking_jerking.rhythmic_shaking', phase: 'seizure' }],
+  position: 0,
   ...over,
 });
 

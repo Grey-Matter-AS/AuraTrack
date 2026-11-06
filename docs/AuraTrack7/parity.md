@@ -41,7 +41,7 @@ Columns: **ID · feature · milestone · Apple · Android · state**
 ## Tagging and logging (F-300)
 | ID | Feature | N | Apple | Android | State |
 |---|---|---|---|---|---|
-| F-301 | Seizure type + ILAE questions | N8 | Classification tab | Classification tab | not started |
+| F-301 | Seizure profiles (up to 3) + ILAE 2025 questions; old type and 2017 answers shown as recorded (D-17, vectors) | N8 | Classification tab | Classification tab | not started |
 | F-302 | Symptoms: tabbed editor, search, body map | N8 | `searchable`, body map in `AuraKit` | Search bar, body map in `:core:designsystem` | not started |
 | F-303 | Own symptoms and details | N8 | | | not started |
 | F-304 | Saved symptom sets | N8 | | | not started |

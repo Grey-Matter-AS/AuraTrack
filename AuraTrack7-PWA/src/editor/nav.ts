@@ -8,6 +8,7 @@ export type ScreenName =
   | 'editor'
   | 'review'
   | 'sets'
+  | 'profiles'
   | 'patients'
   | 'settings'
   | 'settingsGroup'

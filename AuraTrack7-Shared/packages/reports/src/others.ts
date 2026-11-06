@@ -1,6 +1,6 @@
 import {
-  SEIZURE_TYPES,
-  seizureSeconds,
+  seizureKindKey,
+  seizureLengthSeconds,
   type EegActivity,
   type EegSession,
   type Medication,
@@ -9,6 +9,7 @@ import {
   type Seizure,
 } from '@auratrack/model';
 import type { ReportContext } from './context';
+import { clinicalName, seizureTitle } from './names';
 import { areaLabel, changeLines, doseSummary, type ChangeRow } from './neurologist';
 
 // The other reports as data: the event log (R-2), the monthly diary (R-3) and the EEG diary (R-4).
@@ -53,11 +54,11 @@ export function buildEventLog(
     .sort((a, b) => b.phases.start.at - a.phases.start.at)
     .map((s) => {
       const after = s.afterFindings.map((f) => f.customLabel ?? label(f.code));
-      const seconds = seizureSeconds(s.phases);
+      const seconds = seizureLengthSeconds(s.phases);
       return {
         date: fmt.date(s.phases.start.at),
-        time: fmt.time(s.phases.start.at),
-        type: s.typeCode ? label(s.typeCode) : t('rep.untyped'),
+        time: fmt.timeSec(s.phases.start.at),
+        type: clinicalName(s, t, label),
         duration: seconds === null ? '-' : fmt.duration(seconds),
         notes: [
           s.notes,
@@ -147,8 +148,9 @@ export function buildDiary(
     const d = new Date(s.phases.start.at).getDate();
     byDay.set(d, [...(byDay.get(d) ?? []), s]);
   }
-  const typeKey = (s: Seizure) => s.typeCode ?? 'none';
-  const typeName = (code: string) => (code === 'none' ? t('rep.untyped') : label(code));
+  const typeKey = (s: Seizure) => seizureKindKey(s) ?? 'none';
+  const titles = new Map(inMonth.map((s) => [typeKey(s), seizureTitle(s, t, label)]));
+  const typeName = (key: string) => (key === 'none' ? t('rep.untyped') : (titles.get(key) ?? t('rep.untyped')));
   const rows = Math.ceil((first + daysInMonth) / 7);
   const cells: DiaryCell[] = [];
   for (let i = 0; i < rows * 7; i++) {
@@ -190,9 +192,6 @@ export function buildDiary(
     ),
   };
 }
-
-/** The types the diary colours, for a legend that is always the same. */
-export const DIARY_TYPE_CODES = SEIZURE_TYPES.map((x) => x.code);
 
 // ── R-4 EEG diary
 

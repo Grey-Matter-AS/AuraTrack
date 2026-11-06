@@ -379,7 +379,7 @@ export function ConfirmChange({
         />
         <p className="app-note">{type === 'correction' ? t('med.kindCorrectionHelp') : t('med.kindChangedHelp')}</p>
         <DateTimeField label={t('med.effectiveDay')} type="date" value={day} onChange={setDay} max={dayInput(now)} />
-        <DateTimeField label={t('med.effectiveTime')} type="time" value={time} onChange={setTime} />
+        <DateTimeField label={t('med.effectiveTime')} type="time" withSeconds={false} value={time} onChange={setTime} />
         <TextArea label={t('med.note')} value={note} onChange={setNote} rows={3} />
       </Stack>
     </BottomSheet>

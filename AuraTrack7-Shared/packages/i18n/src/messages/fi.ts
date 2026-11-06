@@ -4,6 +4,7 @@ import { m4en } from './m4/en';
 import { m5en } from './m5/en';
 import { m6en } from './m6/en';
 import { m7en } from './m7/en';
+import { m8en } from './m8/en';
 
 // Drafted by Claude (2026-11-02); not yet checked by a native speaker (see ../labels/drafted.json for the same note on labels).
 export const fi: Record<MessageKey, string> = {
@@ -11,6 +12,7 @@ export const fi: Record<MessageKey, string> = {
   ...m5en,
   ...m6en,
   ...m7en,
+  ...m8en,
   ...extraTr.fi,
   'common.save': 'Tallenna',
   'common.review': 'Tarkista',
@@ -41,7 +43,7 @@ export const fi: Record<MessageKey, string> = {
   'rec.stop': 'Pysäytä',
   'rec.endAura': 'Aura päättyy',
   'rec.endSeizure': 'Kohtaus päättyy',
-  'rec.backToNormal': 'Takaisin normaaliksi',
+  'rec.backToNormal': 'Ennallaan',
   'rec.addDetails': 'Lisää tietoja',
   'rec.symptomStrip': 'Oireet (yksi napautus, aika kirjataan automaattisesti)',
   'rec.quickNotes': 'Pikamuistiinpanot',
@@ -81,6 +83,10 @@ export const fi: Record<MessageKey, string> = {
   'tab.before': 'Ennen',
   'tab.during': 'Aikana',
   'tab.after': 'Jälkeen',
+  'tab.prodrome': 'Varoitusmerkit',
+  'tab.aura': 'Aura',
+  'tab.seizure': 'Kohtaus',
+  'tab.recovery': 'Toipuminen',
   'tab.notes': 'Muistiinpanot',
   'tab.notFilled': 'ei vielä täytetty',
   'tab.added': '{n} lisätty',
@@ -89,9 +95,10 @@ export const fi: Record<MessageKey, string> = {
   'tab.nothingYet': 'ei vielä mitään',
   'cls.question': 'Millainen kohtaus oli?',
   'cls.typeLabel': 'Kohtauksen tyyppi',
-  'cls.follow': 'Muut välilehdet noudattavat nyt tätä tyyppiä: mitä ne ehdottavat ja mitkä niistä näytetään.',
+  'cls.follow':
+    'Muut välilehdet noudattavat nyt tätä tyyppiä, samoin alla olevat ILAE-vastaukset, jotka tyyppi ratkaisee. Kaikkia vastauksia voi yhä muuttaa.',
   'cls.notSureHint': 'Etkö ole varma? Jätä tyhjäksi: kaikki toimii silti, ja voit asettaa sen myöhemmin.',
-  'cls.section': 'Luokittelu (valinnainen)',
+  'cls.section': 'ILAE 2017 -luokitus neurologillesi',
   'cls.intro': 'Vastaa siihen, mitä tiedät. ”En ole varma” käy aina, ja sen voi muuttaa myöhemmin.',
   'cls.onset': 'Mistä se alkoi?',
   'cls.awareness': 'Tajunta',
@@ -113,7 +120,7 @@ export const fi: Record<MessageKey, string> = {
   'after.findings': 'Löydökset',
   'after.chosen': 'Valittu: {list}',
   'after.recovery': 'Toipuminen',
-  'after.notBack': 'Ei vielä normaali',
+  'after.notBack': 'Ei vielä ennallaan',
   'after.backAfter': 'Palasi normaaliksi (minuuttia myöhemmin)',
   'notes.section': 'Muistiinpanot',
   'notes.label': 'Muistiinpanot neurologille',

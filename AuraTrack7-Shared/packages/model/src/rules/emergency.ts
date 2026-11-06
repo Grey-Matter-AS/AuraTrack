@@ -80,8 +80,28 @@ export function recordingState(elapsedSec: number, plan: EmergencyPlan = emergen
 const seconds = (from: number, to: number): number => Math.max(0, Math.round((to - from) / 1000));
 
 /**
- * Seconds of seizure activity: the seizure phase (the aura before it and the recovery after it do not count).
- * Null while the seizure has no end yet.
+ * The length of the seizure, as neurologists time it: from the start (an aura is part of the seizure) to the end of the
+ * seizure. Recovery is never counted. This is the number shown on every screen and report, and the one the alert, the
+ * "long" badge and the report flags compare with the emergency plan. Null while the seizure has no end yet.
+ */
+export function seizureLengthSeconds(phases: Phases): number | null {
+  const end = phases.seizureEnd ?? phases.recoveryEnd;
+  return end ? seconds(phases.start.at, end.at) : null;
+}
+
+/** The aura on its own: the start to the end of the aura. Null when no aura was marked. */
+export function auraSeconds(phases: Phases): number | null {
+  return phases.auraEnd ? seconds(phases.start.at, phases.auraEnd.at) : null;
+}
+
+/** Recovery on its own: the end of the seizure until back to usual self. Null when either end is missing. */
+export function recoverySeconds(phases: Phases): number | null {
+  return phases.seizureEnd && phases.recoveryEnd ? seconds(phases.seizureEnd.at, phases.recoveryEnd.at) : null;
+}
+
+/**
+ * The seizure phase after any aura (the aura and the recovery do not count). Kept for the CSV's `seizureSeconds` column,
+ * which other tools and earlier exports read this way; screens and reports use `seizureLengthSeconds`.
  */
 export function seizureSeconds(phases: Phases): number | null {
   const end = phases.seizureEnd ?? phases.recoveryEnd;
@@ -89,18 +109,28 @@ export function seizureSeconds(phases: Phases): number | null {
   return seconds((phases.auraEnd ?? phases.start).at, end.at);
 }
 
-/** Seconds from the start to the last mark (aura, seizure and recovery together). Null while nothing has ended. */
+/** Seconds from the start to the last mark (aura, seizure and recovery together), for the CSV's `totalSeconds` column. */
 export function totalSeconds(phases: Phases): number | null {
   const end = phases.recoveryEnd ?? phases.seizureEnd;
   return end ? seconds(phases.start.at, end.at) : null;
 }
 
 export const isLongSeizure = (phases: Phases, plan: EmergencyPlan = emergencyPlan()): boolean =>
-  (seizureSeconds(phases) ?? 0) >= plan.alertSec;
+  (seizureLengthSeconds(phases) ?? 0) >= plan.alertSec;
+
+/**
+ * A long seizure on record: its length reached the alert time, or the timer stopped itself at 12 minutes (the end is not
+ * known then, but it ran far past the alert).
+ */
+export const isLongRecord = (
+  s: { readonly phases: Phases; readonly isEmergencyStop?: boolean },
+  plan: EmergencyPlan = emergencyPlan(),
+): boolean => isLongSeizure(s.phases, plan) || s.isEmergencyStop === true;
 
 export interface TimedSeizure {
   readonly id: string;
   readonly phases: Phases;
+  readonly isEmergencyStop?: boolean;
 }
 const startOf = (s: TimedSeizure): number => s.phases.start.at;
 
@@ -132,7 +162,7 @@ export interface DangerFlags {
 
 function flagsFor(seizure: TimedSeizure, count: number, plan: EmergencyPlan): DangerFlags {
   const flags: DangerFlag[] = [];
-  if (isLongSeizure(seizure.phases, plan)) flags.push('long_duration');
+  if (isLongRecord(seizure, plan)) flags.push('long_duration');
   const isCluster = count >= plan.clusterMinCount;
   if (isCluster) flags.push('cluster');
   return {

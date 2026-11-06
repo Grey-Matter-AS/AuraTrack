@@ -5,6 +5,7 @@ import {
   newId,
   reduceRecording,
   type EmergencyPlan,
+  type PhaseName,
   type RecordingEvent,
   type RecordingSession,
   type RecordingState,
@@ -168,7 +169,7 @@ export class RecordingController {
     this.dispatch({ kind: 'quick_note', id: newId(), at: this.env.now(), label });
   }
 
-  symptom(code: string, phase: 'before' | 'during' | 'after'): void {
+  symptom(code: string, phase: PhaseName): void {
     this.dispatch({ kind: 'symptom', id: newId(), at: this.env.now(), code, phase });
   }
 

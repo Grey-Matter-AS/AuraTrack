@@ -1,15 +1,21 @@
 import type { CSSProperties } from 'react';
 import { cx } from './cx';
 
-export type TimelinePhase = 'before' | 'during' | 'after';
+/** The four phases of a seizure's symptoms: warning signs (before it), aura, seizure, recovery. */
+export type TimelinePhase = 'prodrome' | 'aura' | 'seizure' | 'recovery';
 
 /** One line of the timeline, top to bottom. Texts are already in the reader's language. */
 export type TimelineEntry =
-  | { kind: 'marker'; id: string; text: string; phase: 'aura' | 'seizure' | 'recovery' }
+  | { kind: 'marker'; id: string; text: string; phase: 'prodrome' | 'aura' | 'seizure' | 'recovery' }
   | { kind: 'gap'; id: string; text: string }
   | { kind: 'moment'; id: string; name: string; meta: string; phase: TimelinePhase; first?: boolean };
 
-const MARKER_COLOUR = { aura: 'var(--phase-aura)', seizure: 'var(--phase-seizure)', recovery: 'var(--phase-recovery)' };
+const MARKER_COLOUR = {
+  prodrome: 'var(--phase-prodrome)',
+  aura: 'var(--phase-aura)',
+  seizure: 'var(--phase-seizure)',
+  recovery: 'var(--phase-recovery)',
+};
 
 /**
  * The vertical seizure timeline, read-only: a line with the phase markers, and the symptoms as boxes in the order they

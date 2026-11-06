@@ -1,7 +1,7 @@
 name: Mutation tests
 
 # Nightly: deliberately breaks the clinical rules, the merge and the crypto, and checks that the tests notice.
-# Fails under 80% (docs/plan/README.md, Testing strategy). Takes a few minutes, so it is not run on every push.
+# Fails under 80% (docs/plan/README.md, Testing strategy). Takes about half an hour, so it is not run on every push.
 on:
   schedule:
     - cron: '0 3 * * *'

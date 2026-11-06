@@ -84,10 +84,15 @@ export function createScreenStack<M extends ScreenMap>(screens: M) {
       window.scrollTo(0, top?.scrollY ?? 0);
     }, [entries.length, top?.scrollY, top?.uid]);
 
+    // The browser history entry is written here, once per push, never inside a state updater: React may run an updater
+    // twice (it always does in development), which wrote two entries and made Back need two presses
+    const length = useRef(entries.length);
+    length.current = entries.length;
     const push = useCallback((name: string, props?: object) => {
       announce.current = true;
+      window.history.pushState({ [HISTORY_KEY]: length.current }, '');
+      length.current += 1;
       setEntries((list) => {
-        window.history.pushState({ [HISTORY_KEY]: list.length }, '');
         const last = list[list.length - 1];
         const saved = list.map((entry) => (entry === last ? { ...entry, scrollY: window.scrollY } : entry));
         return [...saved, { uid: uid.current++, name, props: props ?? {}, scrollY: 0 }];

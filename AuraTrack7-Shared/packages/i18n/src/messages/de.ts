@@ -4,6 +4,7 @@ import { m4en } from './m4/en';
 import { m5en } from './m5/en';
 import { m6en } from './m6/en';
 import { m7en } from './m7/en';
+import { m8en } from './m8/en';
 
 // Drafted by Claude (2026-11-02); not yet checked by a native speaker (see ../labels/drafted.json for the same note on labels).
 export const de: Record<MessageKey, string> = {
@@ -11,6 +12,7 @@ export const de: Record<MessageKey, string> = {
   ...m5en,
   ...m6en,
   ...m7en,
+  ...m8en,
   ...extraTr.de,
   'common.save': 'Speichern',
   'common.review': 'Prüfen',
@@ -41,7 +43,7 @@ export const de: Record<MessageKey, string> = {
   'rec.stop': 'Stopp',
   'rec.endAura': 'Aura-Ende',
   'rec.endSeizure': 'Anfallsende',
-  'rec.backToNormal': 'Wieder normal',
+  'rec.backToNormal': 'Wieder wie gewohnt',
   'rec.addDetails': 'Details hinzufügen',
   'rec.symptomStrip': 'Symptome (ein Tipp, Zeit wird automatisch erfasst)',
   'rec.quickNotes': 'Kurznotizen',
@@ -81,6 +83,10 @@ export const de: Record<MessageKey, string> = {
   'tab.before': 'Davor',
   'tab.during': 'Währenddessen',
   'tab.after': 'Danach',
+  'tab.prodrome': 'Warnzeichen',
+  'tab.aura': 'Aura',
+  'tab.seizure': 'Anfall',
+  'tab.recovery': 'Erholung',
   'tab.notes': 'Notizen',
   'tab.notFilled': 'noch nicht ausgefüllt',
   'tab.added': '{n} hinzugefügt',
@@ -89,9 +95,10 @@ export const de: Record<MessageKey, string> = {
   'tab.nothingYet': 'noch nichts',
   'cls.question': 'Was für ein Anfall war es?',
   'cls.typeLabel': 'Anfallstyp',
-  'cls.follow': 'Die anderen Tabs richten sich jetzt nach diesem Typ: was sie vorschlagen und welche angezeigt werden.',
+  'cls.follow':
+    'Die anderen Tabs richten sich jetzt nach diesem Typ, ebenso die ILAE-Antworten unten, die der Typ festlegt. Jede Antwort lässt sich weiterhin ändern.',
   'cls.notSureHint': 'Unsicher? Lassen Sie es leer: Alles funktioniert trotzdem, und Sie können es später festlegen.',
-  'cls.section': 'Klassifikation (optional)',
+  'cls.section': 'ILAE-2017-Klassifikation für die Neurologie',
   'cls.intro': 'Antworten Sie, was Sie wissen. „Unsicher“ ist immer in Ordnung und kann später geändert werden.',
   'cls.onset': 'Wo hat es begonnen?',
   'cls.awareness': 'Bewusstsein',
@@ -113,7 +120,7 @@ export const de: Record<MessageKey, string> = {
   'after.findings': 'Befunde',
   'after.chosen': 'Ausgewählt: {list}',
   'after.recovery': 'Erholung',
-  'after.notBack': 'Noch nicht wieder normal',
+  'after.notBack': 'Noch nicht wieder wie gewohnt',
   'after.backAfter': 'Wieder normal nach (Minuten)',
   'notes.section': 'Notizen',
   'notes.label': 'Notizen für den Neurologen',

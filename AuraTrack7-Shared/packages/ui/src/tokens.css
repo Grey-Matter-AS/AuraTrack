@@ -28,6 +28,7 @@
   --border-subtle: light-dark(rgb(226 232 240 / 0.7), rgb(51 65 85 / 0.5));
 
   /* Meaning colours: fixed (they never follow the accent), with a readable shade per theme */
+  --phase-prodrome: light-dark(#6d28d9, #a78bfa);
   --phase-aura: light-dark(#b45309, #f59e0b);
   --phase-seizure: light-dark(#b91c1c, #ef4444);
   --phase-recovery: light-dark(#1d4ed8, #5b8def);

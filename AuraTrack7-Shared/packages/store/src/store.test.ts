@@ -6,6 +6,7 @@ import {
   interictalFixture,
   medicationFixture,
   seizureFixture,
+  seizureProfileFixture,
   stripBase,
   symptomSetFixture,
 } from '@auratrack/model/fixtures';
@@ -244,6 +245,30 @@ describe('between-seizures events and symptom sets (7.0.3)', () => {
     expect(again.get('symptomSet', set.id)?.name).toBe('Usual start');
     expect(again.list('interictalEvent')).toHaveLength(1);
     expect(again.list('symptomSet')).toHaveLength(1);
+  });
+
+  it('keeps seizure profiles encrypted, checks them, and keeps a seizure’s own copy when its profile changes (D-17)', async () => {
+    const name = dbName();
+    const store = await Store.create(name, { pin: '2468' }, FAST);
+    const profile = await store.create('seizureProfile', stripBase(seizureProfileFixture({ name: 'Night seizure' })));
+    await expect(store.create('seizureProfile', stripBase(seizureProfileFixture({ name: '' })))).rejects.toBeInstanceOf(
+      ValidationError,
+    );
+    const seizure = await store.create(
+      'seizure',
+      stripBase(seizureFixture({ ilae2025: profile.ilae, profile: { id: profile.id, name: profile.name } })),
+    );
+    await store.update('seizureProfile', profile.id, {
+      name: 'Night-time seizure',
+      ilae: { ...profile.ilae, class: 'unknown' },
+    });
+    store.close();
+    const again = await Store.unlock(name, { pin: '2468' }, FAST);
+    expect(again.get('seizureProfile', profile.id)?.name).toBe('Night-time seizure');
+    expect(again.get('seizure', seizure.id)).toMatchObject({
+      profile: { id: profile.id, name: 'Night seizure' },
+      ilae2025: { class: 'focal' },
+    });
   });
 
   it('indexes an event by when it happened, so ranges can be read without opening everything', async () => {

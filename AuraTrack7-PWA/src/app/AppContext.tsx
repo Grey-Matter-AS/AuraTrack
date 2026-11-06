@@ -20,6 +20,7 @@ import {
   type InterictalEvent,
   type Medication,
   type MedicationChange,
+  type SeizureProfile,
   type SymptomSet,
   type BodyArea,
   type PhaseName,
@@ -106,6 +107,8 @@ export interface AppState {
   seizures: Seizure[];
   /** Saved symptom sets (F-304), the household's own symptoms (F-303) and the between-seizures log (F-313). */
   sets: SymptomSet[];
+  /** The active person's seizure profiles (D-17), in their order. */
+  profiles: SeizureProfile[];
   customCodes: CustomCode[];
   between: InterictalEvent[];
   /** The active person's medicines (stopped ones too), their history, and their dose logs. */
@@ -231,6 +234,7 @@ const PATIENT_OWNED: StoredType[] = [
   'seizure',
   'interictalEvent',
   'symptomSet',
+  'seizureProfile',
   'medication',
   'doseLog',
   'wellbeingEntry',
@@ -281,6 +285,7 @@ export function AppProvider({
   const [activeId, setActiveId] = useState<string | null>(null);
   const [seizures, setSeizures] = useState<Seizure[]>([]);
   const [sets, setSets] = useState<SymptomSet[]>([]);
+  const [profiles, setProfiles] = useState<SeizureProfile[]>([]);
   const [customCodes, setCustomCodes] = useState<CustomCode[]>([]);
   const [between, setBetween] = useState<InterictalEvent[]>([]);
   const [allMeds, setAllMeds] = useState<Medication[]>([]);
@@ -368,6 +373,12 @@ export function AppProvider({
     setSeizures(all.filter((s) => s.patientId === wanted?.id).sort((a, b) => b.phases.start.at - a.phases.start.at));
     const sets_ = (await client.list({ type: 'symptomSet' })) as unknown as SymptomSet[];
     setSets(sets_.filter((x) => x.patientId === wanted?.id));
+    const profiles_ = (await client.list({ type: 'seizureProfile' })) as unknown as SeizureProfile[];
+    setProfiles(
+      profiles_
+        .filter((x) => x.patientId === wanted?.id)
+        .sort((a, b) => a.position - b.position || a.createdAt - b.createdAt),
+    );
     setCustomCodes((await client.list({ type: 'customCode' })) as unknown as CustomCode[]);
     const inBetween = (await client.list({ type: 'interictalEvent' })) as unknown as InterictalEvent[];
     setBetween(inBetween.filter((x) => x.patientId === wanted?.id).sort((a, b) => b.occurredAt - a.occurredAt));
@@ -1028,6 +1039,7 @@ export function AppProvider({
     patient,
     seizures,
     sets,
+    profiles,
     customCodes,
     between,
     medications,

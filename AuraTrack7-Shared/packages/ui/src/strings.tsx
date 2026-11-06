@@ -15,6 +15,16 @@ export interface UiStrings {
   /** Names the tab picker for a screen reader */
   chooseTab: string;
   switchPatient: string;
+  /** The boxes of a length of time: full names for screen readers, short units shown beside the boxes. */
+  hours: string;
+  minutes: string;
+  seconds: string;
+  hShort: string;
+  minShort: string;
+  sShort: string;
+  /** A row that opens: Show and Hide. */
+  show: string;
+  hide: string;
 }
 
 export const ENGLISH: UiStrings = {
@@ -28,6 +38,14 @@ export const ENGLISH: UiStrings = {
   position: (n, total) => `${n} of ${total}`,
   chooseTab: 'Choose a section',
   switchPatient: 'Switch person',
+  hours: 'Hours',
+  minutes: 'Minutes',
+  seconds: 'Seconds',
+  hShort: 'h',
+  minShort: 'min',
+  sShort: 's',
+  show: 'Show',
+  hide: 'Hide',
 };
 
 const StringsContext = createContext<UiStrings>(ENGLISH);

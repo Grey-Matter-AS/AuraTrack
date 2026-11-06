@@ -113,6 +113,7 @@ export function Reports() {
           <Section title={t('reports.period')}>
             <Stack>
               <ChipGroup
+                showLabel={false}
                 label={t('reports.period')}
                 value={range}
                 onChange={choose}

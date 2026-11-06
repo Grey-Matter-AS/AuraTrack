@@ -13,4 +13,12 @@ export const uiStringsFor = (language: Language): UiStrings => ({
   position: (n, total) => message(language, 'ui.position', { n, total }),
   chooseTab: message(language, 'ui.chooseTab'),
   switchPatient: message(language, 'ui.switchPatient'),
+  hours: message(language, 'unit.hours'),
+  minutes: message(language, 'unit.minutes'),
+  seconds: message(language, 'unit.seconds'),
+  hShort: message(language, 'unit.hShort'),
+  minShort: message(language, 'unit.minShort'),
+  sShort: message(language, 'unit.sShort'),
+  show: message(language, 'fold.show'),
+  hide: message(language, 'fold.hide'),
 });

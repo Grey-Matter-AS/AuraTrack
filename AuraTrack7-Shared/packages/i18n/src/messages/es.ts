@@ -4,6 +4,7 @@ import { m4en } from './m4/en';
 import { m5en } from './m5/en';
 import { m6en } from './m6/en';
 import { m7en } from './m7/en';
+import { m8en } from './m8/en';
 
 // Drafted by Claude (2026-11-02); not yet checked by a native speaker (see ../labels/drafted.json for the same note on labels).
 export const es: Record<MessageKey, string> = {
@@ -11,6 +12,7 @@ export const es: Record<MessageKey, string> = {
   ...m5en,
   ...m6en,
   ...m7en,
+  ...m8en,
   ...extraTr.es,
   'common.save': 'Guardar',
   'common.review': 'Revisar',
@@ -41,7 +43,7 @@ export const es: Record<MessageKey, string> = {
   'rec.stop': 'Detener',
   'rec.endAura': 'Fin del aura',
   'rec.endSeizure': 'Fin de la crisis',
-  'rec.backToNormal': 'Vuelta a la normalidad',
+  'rec.backToNormal': 'De vuelta a lo habitual',
   'rec.addDetails': 'Añadir detalles',
   'rec.symptomStrip': 'Síntomas (un toque, hora anotada automáticamente)',
   'rec.quickNotes': 'Notas rápidas',
@@ -81,6 +83,10 @@ export const es: Record<MessageKey, string> = {
   'tab.before': 'Antes',
   'tab.during': 'Durante',
   'tab.after': 'Después',
+  'tab.prodrome': 'Señales de aviso',
+  'tab.aura': 'Aura',
+  'tab.seizure': 'Crisis',
+  'tab.recovery': 'Recuperación',
   'tab.notes': 'Notas',
   'tab.notFilled': 'aún sin rellenar',
   'tab.added': '{n} añadidos',
@@ -89,9 +95,10 @@ export const es: Record<MessageKey, string> = {
   'tab.nothingYet': 'nada aún',
   'cls.question': '¿Qué tipo de crisis fue?',
   'cls.typeLabel': 'Tipo de crisis',
-  'cls.follow': 'Las otras pestañas siguen ahora este tipo: lo que sugieren y cuáles se muestran.',
+  'cls.follow':
+    'Las otras pestañas siguen ahora este tipo, y también las respuestas ILAE de abajo que este tipo determina. Puedes cambiar cualquier respuesta.',
   'cls.notSureHint': '¿No estás seguro? Déjalo vacío: todo funciona igual y puedes definirlo más tarde.',
-  'cls.section': 'Clasificación (opcional)',
+  'cls.section': 'Clasificación ILAE 2017 para tu equipo de neurología',
   'cls.intro': 'Responde lo que sepas. «No estoy seguro» siempre vale y se puede cambiar después.',
   'cls.onset': '¿Dónde empezó?',
   'cls.awareness': 'Consciencia',
@@ -113,7 +120,7 @@ export const es: Record<MessageKey, string> = {
   'after.findings': 'Hallazgos',
   'after.chosen': 'Elegido: {list}',
   'after.recovery': 'Recuperación',
-  'after.notBack': 'Aún no ha vuelto a la normalidad',
+  'after.notBack': 'Aún no ha vuelto a lo habitual',
   'after.backAfter': 'Vuelta a la normalidad tras (minutos)',
   'notes.section': 'Notas',
   'notes.label': 'Notas para el neurólogo',

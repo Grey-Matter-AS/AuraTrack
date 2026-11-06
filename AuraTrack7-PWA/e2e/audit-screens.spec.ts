@@ -110,9 +110,23 @@ for (const device of MATRIX) {
       await page.getByRole('button', { name: new RegExp(`^${name}`) }).click();
     };
     await everyLook('editor: classification');
-    await page.getByRole('button', { name: 'Focal Impaired' }).click();
-    await page.getByRole('button', { name: 'Focal onset' }).click();
+    await page
+      .getByRole('group', { name: 'Where did it start?' })
+      .getByRole('button', { name: 'Focal', exact: true })
+      .click();
+    await page
+      .getByRole('group', { name: 'Could the person remember it afterwards?' })
+      .getByRole('button', { name: 'No', exact: true })
+      .click();
     await everyLook('editor: classification, focal');
+    const start = page.getByRole('group', { name: 'Where did it start?' });
+    await start.getByRole('button', { name: 'Generalized', exact: true }).click();
+    await everyLook('editor: classification, generalized kinds');
+    await start.getByRole('button', { name: 'Focal', exact: true }).click();
+    await page.getByRole('button', { name: 'Keep these answers as a profile' }).click();
+    await page.getByRole('dialog', { name: 'Keep as a profile' }).waitFor();
+    await everyLook('keep as a profile', '.ui-overlay', true);
+    await page.keyboard.press('Escape');
     await openTab('Before');
     await page.getByLabel('Search', { exact: true }).fill('deja');
     await page
@@ -154,6 +168,15 @@ for (const device of MATRIX) {
     await page.getByRole('button', { name: 'Symptom sets and your own symptoms' }).click();
     await page.getByRole('heading', { name: 'Symptom sets and your own symptoms' }).waitFor();
     await everyLook('saved sets');
+    await page.getByRole('button', { name: 'Back', exact: true }).click();
+    await page.getByRole('button', { name: 'Seizure profiles' }).click();
+    await page.getByRole('heading', { name: 'Seizure profiles' }).first().waitFor();
+    await everyLook('seizure profiles');
+    await page.getByRole('button', { name: 'Add a profile' }).click();
+    await page.getByRole('dialog', { name: 'Add a profile' }).waitFor();
+    await page.getByRole('group', { name: 'Where did it start?' }).getByRole('button', { name: 'Not known' }).click();
+    await everyLook('profile sheet', '.ui-overlay', true);
+    await page.keyboard.press('Escape');
     await page.getByRole('button', { name: 'Back', exact: true }).click();
     await main.getByRole('button', { name: 'Home', exact: true }).click();
 

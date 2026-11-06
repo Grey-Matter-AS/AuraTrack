@@ -1,5 +1,5 @@
 import type { EegActivity, EegSession, Seizure } from '../schemas';
-import { seizureSeconds } from './emergency';
+import { seizureLengthSeconds } from './emergency';
 
 // The EEG diary: how long a session is planned for, and how a seizure that happens during a session is tied to it.
 
@@ -66,7 +66,7 @@ export function planEegLinks(input: {
     const reference = input.activities.find((a) => a.kind === 'seizure_reference' && a.linkedSeizureId === seizure.id);
     if (reference) {
       const endTime = seizure.phases.seizureEnd?.at ?? null;
-      const durationSec = seizureSeconds(seizure.phases);
+      const durationSec = seizureLengthSeconds(seizure.phases);
       if (
         reference.endTime !== endTime ||
         reference.durationSec !== durationSec ||
@@ -84,7 +84,7 @@ export function planEegLinks(input: {
         at <= (s.status === 'active' ? input.now : (s.actualEndTime ?? s.startTime)),
     );
     if (!session) continue;
-    const seconds = seizureSeconds(seizure.phases);
+    const seconds = seizureLengthSeconds(seizure.phases);
     links.push({
       seizureId: seizure.id,
       sessionId: session.id,

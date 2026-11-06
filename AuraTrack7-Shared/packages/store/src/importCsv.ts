@@ -1,6 +1,8 @@
 import { codesForLabel } from '@auratrack/i18n';
 import {
   CSV_LIST,
+  ILAE_2025_GENERALIZED,
+  ilae2025ForSaving,
   CSV_SECTIONS,
   CSV_SECTION_NAMES,
   DOSE_STATUSES,
@@ -23,6 +25,8 @@ import {
   type SymptomEntry,
 } from '@auratrack/model';
 import { derivedId } from './import6x/ids';
+
+const ANSWERS = ['yes', 'no', 'unknown'] as const;
 import type { JsonValue } from './merge';
 import type { ImportDraft, Store, StoredType } from './store';
 
@@ -254,6 +258,12 @@ class Row {
   }
   has(column: string): boolean {
     return (this.values[column] ?? '') !== '';
+  }
+  /** One of the given codes, or null when empty. */
+  choice<T extends string>(column: string, allowed: readonly T[]): T | null {
+    const raw = this.text(column, 60).trim();
+    if (raw === '') return null;
+    return allowed.find((x) => x === raw) ?? fail(`${column}: "${raw}" is not one of ${allowed.join(', ')}`);
   }
   required(column: string): string {
     return this.has(column) ? this.text(column) : fail(`${column}: is empty`);
@@ -566,6 +576,15 @@ export async function planCsvImport(
       status,
       typeCode: codes.either(row, 'typeCode', 'type', 'seizureType'),
       ilae: null,
+      // The ILAE 2025 answers come back; the profile does not (a spreadsheet cannot say which profile record it was)
+      ilae2025: ilae2025ForSaving({
+        class: row.choice('ilae2025Start', ['focal', 'generalized', 'unknown']),
+        recall: row.choice('ilae2025Remembered', ANSWERS),
+        responsive: row.choice('ilae2025Responded', ANSWERS),
+        bilateralTonicClonic: row.choice('ilae2025BilateralTonicClonic', ANSWERS),
+        observable: row.choice('ilae2025Observable', ANSWERS),
+        generalized: row.choice('ilae2025Kind', ILAE_2025_GENERALIZED),
+      }),
       symptoms,
       afterFindings: findings,
       prodromeSecondsBefore: row.whole('warningSecondsBefore', 0, 7 * 24 * 3600),

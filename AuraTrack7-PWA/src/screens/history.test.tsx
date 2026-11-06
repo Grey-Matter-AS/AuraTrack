@@ -71,9 +71,9 @@ describe('the list', () => {
   it('says when no seizure matches the filters', async () => {
     const ctx = setup();
     const { patientId } = await seed(ctx);
-    await add(ctx, patientId, 60, 30);
+    await add(ctx, patientId, 60, 30, { typeCode: 'seizure_type.tonic_clonic' });
     const user = await openHistory(ctx);
-    await user.selectOptions(await screen.findByLabelText('Type'), 'seizure_type.tonic_clonic');
+    await user.selectOptions(await screen.findByLabelText('Type'), 'none');
     expect(await screen.findByText('No seizures match these filters.')).toBeTruthy();
   });
 

@@ -4,6 +4,7 @@ import { m4en } from './m4/en';
 import { m5en } from './m5/en';
 import { m6en } from './m6/en';
 import { m7en } from './m7/en';
+import { m8en } from './m8/en';
 
 // Drafted by Claude (2026-11-02); not yet checked by a native speaker (see ../labels/drafted.json for the same note on labels).
 export const sv: Record<MessageKey, string> = {
@@ -11,6 +12,7 @@ export const sv: Record<MessageKey, string> = {
   ...m5en,
   ...m6en,
   ...m7en,
+  ...m8en,
   ...extraTr.sv,
   'common.save': 'Spara',
   'common.review': 'Granska',
@@ -41,7 +43,7 @@ export const sv: Record<MessageKey, string> = {
   'rec.stop': 'Stopp',
   'rec.endAura': 'Aura slut',
   'rec.endSeizure': 'Anfall slut',
-  'rec.backToNormal': 'Tillbaka till normalt',
+  'rec.backToNormal': 'Som vanligt igen',
   'rec.addDetails': 'Lägg till detaljer',
   'rec.symptomStrip': 'Symtom (ett tryck, tidsstämplas automatiskt)',
   'rec.quickNotes': 'Snabbanteckningar',
@@ -81,6 +83,10 @@ export const sv: Record<MessageKey, string> = {
   'tab.before': 'Före',
   'tab.during': 'Under',
   'tab.after': 'Efter',
+  'tab.prodrome': 'Varningstecken',
+  'tab.aura': 'Aura',
+  'tab.seizure': 'Anfall',
+  'tab.recovery': 'Återhämtning',
   'tab.notes': 'Anteckningar',
   'tab.notFilled': 'inte ifyllt ännu',
   'tab.added': '{n} tillagda',
@@ -89,9 +95,10 @@ export const sv: Record<MessageKey, string> = {
   'tab.nothingYet': 'inget ännu',
   'cls.question': 'Vilken sorts anfall var det?',
   'cls.typeLabel': 'Anfallstyp',
-  'cls.follow': 'De andra flikarna följer nu den här typen: vad de föreslår och vilka som visas.',
+  'cls.follow':
+    'De andra flikarna följer nu den här typen, och det gör även ILAE-svaren nedan som typen avgör. Alla svar kan fortfarande ändras.',
   'cls.notSureHint': 'Osäker? Lämna den tom: allt fungerar ändå, och du kan ange den senare.',
-  'cls.section': 'Klassificering (valfritt)',
+  'cls.section': 'ILAE 2017-klassificering för din neurolog',
   'cls.intro': 'Svara på det du kan. ”Osäker” går alltid bra och kan ändras senare.',
   'cls.onset': 'Var började det?',
   'cls.awareness': 'Medvetenhet',
@@ -113,7 +120,7 @@ export const sv: Record<MessageKey, string> = {
   'after.findings': 'Fynd',
   'after.chosen': 'Valt: {list}',
   'after.recovery': 'Återhämtning',
-  'after.notBack': 'Inte tillbaka till normalt än',
+  'after.notBack': 'Inte som vanligt igen än',
   'after.backAfter': 'Tillbaka till normalt efter (minuter)',
   'notes.section': 'Anteckningar',
   'notes.label': 'Anteckningar till neurologen',

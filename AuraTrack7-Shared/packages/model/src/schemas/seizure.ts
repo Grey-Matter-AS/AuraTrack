@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { IdSchema } from '../ids';
-import { CodeSchema, InstantSchema, TextSchema, TimeZoneSchema, baseRecord } from './common';
+import { CodeSchema, InstantSchema, ShortTextSchema, TextSchema, TimeZoneSchema, baseRecord } from './common';
 
 /** A body area as codes: the map region, its side or sub-area, and a close-up part. */
 export const BodyAreaSchema = z.object({
@@ -37,8 +37,66 @@ export const IlaeSchema = z.object({
 });
 export type Ilae = z.infer<typeof IlaeSchema>;
 
-/** Which part of the seizure a symptom belongs to: before (prodrome and aura), during, or after (post-ictal). */
-export const PhaseNameSchema = z.enum(['before', 'during', 'after']);
+/**
+ * The generalized seizure types of the ILAE 2025 classification (Beniczky et al., Epilepsia 2025, Table 1), plus the two
+ * parent terms "absence" and "tonic_clonic" for when the subtype is not known (D-17).
+ */
+export const ILAE_2025_GENERALIZED = [
+  'absence',
+  'typical_absence',
+  'atypical_absence',
+  'myoclonic_absence',
+  'eyelid_myoclonia',
+  'tonic_clonic',
+  'myoclonic_tonic_clonic',
+  'absence_to_tonic_clonic',
+  'myoclonic',
+  'clonic',
+  'negative_myoclonus',
+  'epileptic_spasms',
+  'tonic',
+  'atonic',
+  'myoclonic_atonic',
+] as const;
+export type Ilae2025Generalized = (typeof ILAE_2025_GENERALIZED)[number];
+
+/** A yes or no answer, "not sure" (`unknown`), or not answered (null). */
+const AnswerSchema = z.enum(['yes', 'no', 'unknown']).nullable();
+
+/**
+ * The ILAE 2025 answers (basic version, D-17). Class: where it started (`unknown` = unknown whether focal or generalized).
+ * For focal and unknown: recall (awareness) and responsiveness, which together define consciousness; whether it became a
+ * bilateral tonic-clonic seizure; whether others could see signs (observable manifestations). For generalized: the kind.
+ */
+export const Ilae2025Schema = z.object({
+  class: z.enum(['focal', 'generalized', 'unknown']).nullable(),
+  recall: AnswerSchema,
+  responsive: AnswerSchema,
+  bilateralTonicClonic: AnswerSchema,
+  observable: AnswerSchema,
+  generalized: z.enum(ILAE_2025_GENERALIZED).nullable(),
+});
+export type Ilae2025 = z.infer<typeof Ilae2025Schema>;
+
+/** A seizure profile as it was when the seizure was saved: its id and its name then (D-17). */
+export const ProfileSnapshotSchema = z.object({ id: IdSchema, name: ShortTextSchema });
+export type ProfileSnapshot = z.infer<typeof ProfileSnapshotSchema>;
+
+/**
+ * Which phase a symptom belongs to, the same four phases as the times (ILAE semiology glossary): `prodrome` (warning signs
+ * before the seizure; not part of it), `aura` (felt first; part of the seizure), `seizure`, `recovery` (post-ictal, until
+ * back to usual self). The three phases written before 7.2 are read as aura, seizure and recovery.
+ */
+export const PHASE_NAMES = ['prodrome', 'aura', 'seizure', 'recovery'] as const;
+const LEGACY_PHASE: Readonly<Record<string, (typeof PHASE_NAMES)[number]>> = {
+  before: 'aura',
+  during: 'seizure',
+  after: 'recovery',
+};
+export const PhaseNameSchema = z.preprocess(
+  (v) => (typeof v === 'string' && v in LEGACY_PHASE ? LEGACY_PHASE[v] : v),
+  z.enum(PHASE_NAMES),
+);
 export type PhaseName = z.infer<typeof PhaseNameSchema>;
 
 /** How well the time between one symptom and the next is known. */
@@ -82,8 +140,12 @@ export const SeizureSchema = z.object({
   phases: PhasesSchema,
   /** 'in_progress' from the moment Start is tapped; 'complete' once the user finished the details. */
   status: z.enum(['in_progress', 'recorded', 'complete']),
+  /** The plain-language type and the ILAE 2017 answers. New seizures leave them null; older ones keep them as recorded. */
   typeCode: CodeSchema.nullable(),
   ilae: IlaeSchema.nullable(),
+  /** Added in 7.2 (D-17): the ILAE 2025 answers, and the seizure profile they came from, as it was then. */
+  ilae2025: Ilae2025Schema.nullable().optional(),
+  profile: ProfileSnapshotSchema.nullable().optional(),
   symptoms: z.array(SymptomEntrySchema).max(200),
   afterFindings: z.array(FindingEntrySchema).max(100),
   /**

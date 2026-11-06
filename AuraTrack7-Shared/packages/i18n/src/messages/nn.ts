@@ -4,6 +4,7 @@ import { m4en } from './m4/en';
 import { m5en } from './m5/en';
 import { m6en } from './m6/en';
 import { m7en } from './m7/en';
+import { m8en } from './m8/en';
 
 // Drafted by Claude (2026-11-02); not yet checked by a native speaker (see ../labels/drafted.json for the same note on labels).
 export const nn: Record<MessageKey, string> = {
@@ -11,6 +12,7 @@ export const nn: Record<MessageKey, string> = {
   ...m5en,
   ...m6en,
   ...m7en,
+  ...m8en,
   ...extraTr.nn,
   'common.save': 'Lagre',
   'common.review': 'Sjå over',
@@ -41,7 +43,7 @@ export const nn: Record<MessageKey, string> = {
   'rec.stop': 'Stopp',
   'rec.endAura': 'Slutt på aura',
   'rec.endSeizure': 'Slutt på anfall',
-  'rec.backToNormal': 'Tilbake til normalt',
+  'rec.backToNormal': 'Som vanleg igjen',
   'rec.addDetails': 'Legg til detaljar',
   'rec.symptomStrip': 'Symptom (eitt trykk, tidsstempla automatisk)',
   'rec.quickNotes': 'Hurtignotat',
@@ -81,6 +83,10 @@ export const nn: Record<MessageKey, string> = {
   'tab.before': 'Før',
   'tab.during': 'Under',
   'tab.after': 'Etter',
+  'tab.prodrome': 'Varseltegn',
+  'tab.aura': 'Aura',
+  'tab.seizure': 'Anfall',
+  'tab.recovery': 'Restitusjon',
   'tab.notes': 'Notat',
   'tab.notFilled': 'ikkje fylt ut enno',
   'tab.added': '{n} lagt til',
@@ -89,9 +95,10 @@ export const nn: Record<MessageKey, string> = {
   'tab.nothingYet': 'ingenting enno',
   'cls.question': 'Kva slags anfall var det?',
   'cls.typeLabel': 'Anfallstype',
-  'cls.follow': 'Dei andre fanene følgjer no denne typen: kva dei føreslår, og kva for nokon som blir viste.',
+  'cls.follow':
+    'Dei andre fanene følgjer no denne typen, og det gjer òg ILAE-svara nedanfor som typen avgjer. Alle svar kan framleis endrast.',
   'cls.notSureHint': 'Usikker? La han stå tom: alt fungerer likevel, og du kan setje han seinare.',
-  'cls.section': 'Klassifisering (valfritt)',
+  'cls.section': 'ILAE 2017-klassifisering for nevrologen din',
   'cls.intro': 'Svar på det du kan. «Usikker» er alltid greitt og kan endrast seinare.',
   'cls.onset': 'Kvar starta det?',
   'cls.awareness': 'Medvit',
@@ -113,7 +120,7 @@ export const nn: Record<MessageKey, string> = {
   'after.findings': 'Funn',
   'after.chosen': 'Vald: {list}',
   'after.recovery': 'Restitusjon',
-  'after.notBack': 'Ikkje tilbake til normalt enno',
+  'after.notBack': 'Ikkje som vanleg igjen enno',
   'after.backAfter': 'Tilbake til normalt etter (minutt)',
   'notes.section': 'Notat',
   'notes.label': 'Notat til nevrologen',

@@ -2,7 +2,7 @@
 // Open it at /#/dev. It lists what is in the store, imports a 6.1 backup, compares the result with 6.1's own numbers,
 // and makes and restores backups. Everything runs on this device; nothing is sent anywhere.
 import { labelText } from '@auratrack/i18n';
-import { localDateKey, seizureSeconds, type Seizure } from '@auratrack/model';
+import { localDateKey, seizureLengthSeconds, type Seizure } from '@auratrack/model';
 import type { ComparisonReport, ImportReport, RestoreReport, StoreApi, StoreStatus } from '@auratrack/store';
 import { connect, type PortLike } from '@auratrack/store/rpc';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -285,7 +285,7 @@ export default function DevPage() {
                     <tr key={s.id}>
                       <td className="pr-3">{when(s.phases.start.at)}</td>
                       <td className="pr-3">{s.typeCode ? labelText('en', s.typeCode) : '—'}</td>
-                      <td className="pr-3">{seizureSeconds(s.phases) ?? '—'} s</td>
+                      <td className="pr-3">{seizureLengthSeconds(s.phases) ?? '—'} s</td>
                       <td className="pr-3">{s.symptoms.length}</td>
                       <td className="pr-3">{s.status}</td>
                       <td className="pr-3">

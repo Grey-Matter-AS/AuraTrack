@@ -76,9 +76,10 @@ export function renderNeurologist(
     [
       { title: '#', width: 18 },
       { title: t('rep.date'), width: 62 },
-      { title: t('rep.time'), width: 34 },
+      { title: t('rep.time'), width: 46 },
       { title: t('rep.type'), grow: 2 },
-      { title: t('rep.total'), width: 40 },
+      { title: t('rep.length'), width: 40 },
+      { title: t('rep.warning'), width: 40 },
       { title: t('rep.aura'), width: 36 },
       { title: t('rep.seizure'), width: 40 },
       { title: t('rep.recovery'), width: 44 },
@@ -86,7 +87,7 @@ export function renderNeurologist(
       { title: t('rep.editedShort'), width: 28, align: 'center' },
       { title: t('rep.by'), width: 22, align: 'center' },
     ],
-    r.recent.map((e) => [String(e.index), e.date, e.time, e.type, e.total, e.aura, e.seizure, e.recovery, e.hasNote ? 'Y' : '', e.edited ? 'Y' : '', e.by]),
+    r.recent.map((e) => [String(e.index), e.date, e.time, e.type, e.length, e.warning, e.aura, e.seizure, e.recovery, e.hasNote ? 'Y' : '', e.edited ? 'Y' : '', e.by]),
     { size: 7 },
   );
 
@@ -148,7 +149,7 @@ export function renderNeurologist(
     flow.title(t('rep.details'));
     for (const d of r.details) {
       const lines = [
-        `${t('rep.total')} ${d.total} | ${t('rep.aura')} ${d.aura} | ${t('rep.seizure')} ${d.seizure} | ${t('rep.recovery')} ${d.recovery} | ${t('rep.recordedBy')}: ${d.by}`,
+        `${t('rep.length')} ${d.length} | ${t('rep.warning')} ${d.warning} | ${t('rep.aura')} ${d.aura} | ${t('rep.seizure')} ${d.seizure} | ${t('rep.recovery')} ${d.recovery} | ${t('rep.recordedBy')}: ${d.by}`,
         ...(d.badges.length > 0 ? [d.badges.join(' | ')] : []),
         ...(d.symptoms.length > 0 ? [`${t('rep.symptoms')}: ${d.symptoms.map((x) => (x.location !== '-' ? `${x.path} @ ${x.location}` : x.path)).join('; ')}`] : []),
         ...(d.afterFindings.length > 0 ? [`${t('rep.afterSymptoms')}: ${d.afterFindings.join(', ')}`] : []),
@@ -164,7 +165,7 @@ export function renderNeurologist(
     flow.title(t('rep.symptomLog'));
     for (const g of r.symptomLog) {
       flow.ensure(60);
-      flow.paragraph(`#${g.index}  ${g.date} ${g.time} - ${g.type} (${g.total})`, { size: 8.5, bold: true, gap: 3 });
+      flow.paragraph(`#${g.index}  ${g.date} ${g.time} - ${g.type} (${g.length})`, { size: 8.5, bold: true, gap: 3 });
       flow.table(
         [
           { title: t('rep.symptomPath'), grow: 3 },
@@ -217,7 +218,7 @@ export function renderEventLog(r: EventLogReport, t: ReportText, s: Surface): vo
   flow.table(
     [
       { title: t('rep.date'), width: 70 },
-      { title: t('rep.time'), width: 40 },
+      { title: t('rep.time'), width: 50 },
       { title: t('rep.type'), width: 90 },
       { title: t('rep.duration'), width: 56 },
       { title: t('rep.notes'), grow: 1 },

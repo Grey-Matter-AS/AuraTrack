@@ -15,6 +15,7 @@ export const COLORS = {
   slate: [30, 41, 59] as Color,
   blue: [37, 99, 235] as Color,
   amber: [217, 119, 6] as Color,
+  violet: [109, 40, 217] as Color,
   green: [5, 150, 105] as Color,
   white: [255, 255, 255] as Color,
 };

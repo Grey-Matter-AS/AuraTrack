@@ -1,8 +1,10 @@
 import {
-  SEIZURE_TYPES,
   buildDangerMap,
   frequencyBuckets,
-  seizureSeconds,
+  seizureKindKey,
+  AUTO_STOP_AT_S,
+  isLongRecord,
+  seizureLengthSeconds,
   timelineItems,
   type EmergencyPlan,
   type Seizure,
@@ -10,6 +12,7 @@ import {
 } from '@auratrack/model';
 import type { ReportContext } from './context';
 import { DAY_MS } from './context';
+import { ilae2025Text, seizureTitle } from './names';
 import { areaLabel, type Flag, type NeurologistInput, type NeurologistReport } from './neurologist';
 
 // The sections added in version 7 to the neurologist report (docs/plan/M5.md, item 2). Each is switched on by itself and built
@@ -76,7 +79,13 @@ export interface AdditionsData {
   periodTimeline?: PeriodTimelineData;
   between?: { symptoms: { label: string; count: number }[]; weekly: { day: string; count: number }[]; total: number };
   bodyMap?: BodyMapData;
-  ilae?: { rows: { label: string; count: number }[]; recorded: number; total: number };
+  /** ILAE 2025 types counted; `earlier`: the ILAE 2017 answers of seizures recorded before 7.2, apart. */
+  ilae?: {
+    rows: { label: string; count: number }[];
+    recorded: number;
+    total: number;
+    earlier: { rows: { label: string; count: number }[]; recorded: number };
+  };
   recovery?: { n: number; median: number | null; min: number | null; max: number | null; buckets: { label: string; count: number }[] };
   timeOfDay?: { hours: number[]; periods: { label: string; count: number }[] };
   clusters?: { episodes: { from: string; to: string; count: number }[]; long: { when: string; duration: string }[] };
@@ -145,7 +154,7 @@ export function buildAdditions(
     const before = input.seizures.filter(
       (s) => s.status !== 'in_progress' && s.cancelled !== true && s.phases.start.at >= input.from - span - 1 && s.phases.start.at < input.from,
     ).length;
-    const durations = period.map((s) => ({ s, sec: seizureSeconds(s.phases) })).filter((x): x is { s: Seizure; sec: number } => x.sec !== null);
+    const durations = period.map((s) => ({ s, sec: seizureLengthSeconds(s.phases) })).filter((x): x is { s: Seizure; sec: number } => x.sec !== null);
     const longest = durations.sort((a, b) => b.sec - a.sec)[0];
     const episodes = clusterEpisodes(period, input.plan).length;
     const last = [...period].sort((a, b) => b.phases.start.at - a.phases.start.at)[0];
@@ -181,8 +190,16 @@ export function buildAdditions(
       to: input.to,
       plan: input.plan,
     });
+    // One colour per kind of seizure (profile, ILAE 2025 type, or older type), in the order they first appear
     const typeSeries: Record<string, number> = {};
-    for (const s of period) if (s.typeCode && !(s.typeCode in typeSeries)) typeSeries[s.typeCode] = (SEIZURE_TYPES.findIndex((x) => x.code === s.typeCode) % 7) + 1;
+    const titles: Record<string, string> = {};
+    for (const s of [...period].sort((a, b) => a.phases.start.at - b.phases.start.at)) {
+      const key = seizureKindKey(s);
+      if (key && !(key in typeSeries)) {
+        typeSeries[key] = (Object.keys(typeSeries).length % 7) + 1;
+        titles[key] = seizureTitle(s, t, label);
+      }
+    }
     const days = Math.max(1, Math.round((input.to - input.from) / DAY_MS));
     const every = Math.max(1, Math.ceil(days / 8));
     const ticks: { at: number; label: string }[] = [];
@@ -193,7 +210,7 @@ export function buildAdditions(
       items,
       ticks,
       typeSeries,
-      legend: { seriesLabels: Object.entries(typeSeries).map(([code, series]) => ({ series, label: label(code) })) },
+      legend: { seriesLabels: Object.entries(typeSeries).map(([key, series]) => ({ series, label: titles[key] ?? key })) },
     };
   }
 
@@ -232,11 +249,18 @@ export function buildAdditions(
   }
 
   if (flags.ilae) {
+    // ILAE 2025 types counted; the ILAE 2017 answers of older seizures listed apart, never merged with them (D-17)
+    const types = new Map<string, number>();
+    for (const s of period) {
+      const name = ilae2025Text(s, t);
+      if (name) types.set(name, (types.get(name) ?? 0) + 1);
+    }
     const counts = new Map<string, number>();
     let recorded = 0;
     const bump = (k: string) => counts.set(k, (counts.get(k) ?? 0) + 1);
     for (const s of period) {
       const i = s.ilae;
+      if (ilae2025Text(s, t) !== null) continue;
       if (!i || (i.onset === null && i.awareness === null && i.motor === null && i.feature === null)) continue;
       recorded += 1;
       if (i.onset) bump(`${t('rep.ilaeOnset')}: ${t(`rep.ilae.${i.onset}` as never)}`);
@@ -245,7 +269,14 @@ export function buildAdditions(
       if (i.feature) bump(`${t('rep.ilaeFeature')}: ${label(i.feature)}`);
       if (i.spreadToBothSides) bump(t('rep.ilaeSpread'));
     }
-    data.ilae = { rows: [...counts].map(([l, count]) => ({ label: l, count })).sort((a, b) => a.label.localeCompare(b.label)), recorded, total: period.length };
+    const rows = (m: Map<string, number>) =>
+      [...m].map(([l, count]) => ({ label: l, count })).sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+    data.ilae = {
+      rows: rows(types),
+      recorded: [...types.values()].reduce((a, b) => a + b, 0),
+      total: period.length,
+      earlier: { rows: rows(counts), recorded },
+    };
   }
 
   if (flags.recoveryTimes) {
@@ -288,9 +319,14 @@ export function buildAdditions(
 
   if (flags.clusters) {
     const long = period
-      .filter((s) => (seizureSeconds(s.phases) ?? 0) >= input.plan.alertSec)
+      .filter((s) => isLongRecord(s, input.plan))
       .sort((a, b) => a.phases.start.at - b.phases.start.at)
-      .map((s) => ({ when: `${fmt.date(s.phases.start.at)} ${fmt.time(s.phases.start.at)}`, duration: fmt.duration(seizureSeconds(s.phases) ?? 0) }));
+      .map((s) => {
+        const length = seizureLengthSeconds(s.phases);
+        // Stopped by the timer at 12 minutes: the end is not known, so it reads "12:00+" rather than a length
+        const duration = length === null ? `${fmt.duration(AUTO_STOP_AT_S)}+` : fmt.duration(length);
+        return { when: `${fmt.date(s.phases.start.at)} ${fmt.timeSec(s.phases.start.at)}`, duration };
+      });
     data.clusters = {
       episodes: clusterEpisodes(period, input.plan).map((e) => ({ from: `${fmt.date(e.from)} ${fmt.time(e.from)}`, to: fmt.time(e.to), count: e.count })),
       long,

@@ -4,6 +4,7 @@ import { m4en } from './m4/en';
 import { m5en } from './m5/en';
 import { m6en } from './m6/en';
 import { m7en } from './m7/en';
+import { m8en } from './m8/en';
 
 // Drafted by Claude (2026-11-02); not yet checked by a native speaker (see ../labels/drafted.json for the same note on labels).
 export const fr: Record<MessageKey, string> = {
@@ -11,6 +12,7 @@ export const fr: Record<MessageKey, string> = {
   ...m5en,
   ...m6en,
   ...m7en,
+  ...m8en,
   ...extraTr.fr,
   'common.save': 'Enregistrer',
   'common.review': 'Vérifier',
@@ -41,7 +43,7 @@ export const fr: Record<MessageKey, string> = {
   'rec.stop': 'Arrêter',
   'rec.endAura': "Fin de l'aura",
   'rec.endSeizure': 'Fin de la crise',
-  'rec.backToNormal': 'Retour à la normale',
+  'rec.backToNormal': 'Retour à l’état habituel',
   'rec.addDetails': 'Ajouter des détails',
   'rec.symptomStrip': 'Symptômes (un appui, heure notée automatiquement)',
   'rec.quickNotes': 'Notes rapides',
@@ -81,6 +83,10 @@ export const fr: Record<MessageKey, string> = {
   'tab.before': 'Avant',
   'tab.during': 'Pendant',
   'tab.after': 'Après',
+  'tab.prodrome': 'Signes avant-coureurs',
+  'tab.aura': 'Aura',
+  'tab.seizure': 'Crise',
+  'tab.recovery': 'Récupération',
   'tab.notes': 'Notes',
   'tab.notFilled': 'pas encore rempli',
   'tab.added': '{n} ajouté(s)',
@@ -89,9 +95,10 @@ export const fr: Record<MessageKey, string> = {
   'tab.nothingYet': "rien pour l'instant",
   'cls.question': 'Quel type de crise était-ce ?',
   'cls.typeLabel': 'Type de crise',
-  'cls.follow': "Les autres onglets suivent maintenant ce type : ce qu'ils proposent et ceux qui sont affichés.",
+  'cls.follow':
+    'Les autres onglets suivent maintenant ce type, tout comme les réponses ILAE ci-dessous qu’il détermine. Chaque réponse reste modifiable.',
   'cls.notSureHint': 'Pas sûr ? Laissez vide : tout fonctionne quand même, et vous pourrez le définir plus tard.',
-  'cls.section': 'Classification (facultatif)',
+  'cls.section': 'Classification ILAE 2017 pour votre neurologue',
   'cls.intro': 'Répondez à ce que vous savez. « Pas sûr » convient toujours et peut être modifié plus tard.',
   'cls.onset': 'Où cela a-t-il commencé ?',
   'cls.awareness': 'Conscience',
@@ -113,7 +120,7 @@ export const fr: Record<MessageKey, string> = {
   'after.findings': 'Constatations',
   'after.chosen': 'Choisi : {list}',
   'after.recovery': 'Récupération',
-  'after.notBack': 'Pas encore revenu à la normale',
+  'after.notBack': 'Pas encore revenu à l’état habituel',
   'after.backAfter': 'Retour à la normale après (minutes)',
   'notes.section': 'Notes',
   'notes.label': 'Notes pour le neurologue',

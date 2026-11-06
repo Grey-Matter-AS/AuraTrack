@@ -153,6 +153,7 @@ The contract. Written from the TS reference, generated vectors checked by the TS
 - `AuraTrack7-Shared/spec/codes.md` + `AuraTrack7-Shared/spec/vectors/catalogue.json`: the codes catalogue.
 - `AuraTrack7-Shared/spec/crypto.md`: per-record AES-GCM with AAD, device key, the v7 backup format, recovery kit, dropbox (locked start), sealing for sync.
 - `AuraTrack7-Shared/spec/merge.md`: field-level merge, dose rank, tombstones, change log.
+- `AuraTrack7-Shared/spec/rules.md` also: ILAE 2025 consciousness and type rules, seizure profiles and their snapshot (D-17, from the PWA's M8).
 - `AuraTrack7-Shared/spec/rules.md`: emergency plan (alert 5 min, cluster 3 in 8 min), 12-minute auto-stop, seizure time from phase marks, clusters, regimen history, scheduled/missed/assumed doses, local-date rules.
 - `AuraTrack7-Shared/spec/recording.md`: the recording reducer's events and states (`rules/recording.ts`).
 - `AuraTrack7-Shared/spec/sync.md`, `AuraTrack7-Shared/spec/hub-protocol.md`: pairing, membership, session protocol, hub `/v1` API.
@@ -202,7 +203,7 @@ The contract. Written from the TS reference, generated vectors checked by the TS
 - **Done when:** F-1003 passes natively from every entry point; the dropbox merges at unlock with nothing lost (vectors).
 
 ### N8 · Seizure editor and logging (XL)
-- Classification (type, ILAE questions, "not sure"), Before (warning time, triggers, symptoms), During, After (findings, areas, recovery), Notes; overview strip; vertical timeline (F-314, one component in editor, review, detail and PDF); body map (Apple Pencil on iPad); Review; edit history; discard flagged; "leave without saving?"; only changed fields saved.
+- Classification (D-17: the patient's seizure profiles, up to 3, plus "Something different"; the ILAE 2025 questions; old type and ILAE 2017 answers shown as recorded), Before (warning time, triggers, symptoms), During, After (findings, areas, recovery), Notes; overview strip; vertical timeline (F-314, one component in editor, review, detail and PDF); body map (Apple Pencil on iPad); Review; edit history; discard flagged; "leave without saving?"; only changed fields saved.
 - Saved sets, own symptoms, quick-note labels, between-seizures log.
 - **Done when:** F-301–F-315 (editor parts), F-303, F-304, F-313 pass on both; the timeline audit passes at the largest text size.
 
@@ -357,7 +358,7 @@ The contract. Written from the TS reference, generated vectors checked by the TS
 - **Both:** X-701 health data views and statistics · X-702 dose reminders with "Taken" from the notification · X-703 real background alerts.
 
 # Decisions recorded (one note each in `decisions/`)
-D-1 native apps named AuraTrack7, PWA paused · D-2 tools and minimum OS · D-3 monorepo in six folders (PWA, Apple, Android, Server, Relay, Shared) and spec-with-vectors · D-4 privacy rules (A3) · D-5 hosted-server rule wording and the sealed relay (Cloud Run, europe-north1) · D-6 generic hub · D-7 GPL-3.0 + app-store exception + name policy (™, §7(e), registration later) · D-8 Class I self-declared, regulatory track · D-9 Play + F-Droid builds · D-10 v7 backup main import, CSV too, no 6.1 natively · D-11 native ↔ PWA through the hub or file · D-12 watches with the phones; detection early, hidden; auto-start from estimated onset · D-13 health data read-only, views + simple statistics · D-14 GitHub Actions only, signing via API key · D-15 parallel platforms per milestone.
+D-1 native apps named AuraTrack7, PWA paused · D-2 tools and minimum OS · D-3 monorepo in six folders (PWA, Apple, Android, Server, Relay, Shared) and spec-with-vectors · D-4 privacy rules (A3) · D-5 hosted-server rule wording and the sealed relay (Cloud Run, europe-north1) · D-6 generic hub · D-7 GPL-3.0 + app-store exception + name policy (™, §7(e), registration later) · D-8 Class I self-declared, regulatory track · D-9 Play + F-Droid builds · D-10 v7 backup main import, CSV too, no 6.1 natively · D-11 native ↔ PWA through the hub or file · D-12 watches with the phones; detection early, hidden; auto-start from estimated onset · D-13 health data read-only, views + simple statistics · D-14 GitHub Actions only, signing via API key · D-15 parallel platforms per milestone · D-16 type fills in ILAE answers (replaced) · D-17 ILAE 2025 and seizure profiles.
 
 # How sessions carry on (multi-session, two machines)
 - Every native session starts by reading `docs/AuraTrack7/STATUS.md`, then the current `N<n>.md`.
@@ -371,4 +372,5 @@ The roadmap changes only with your approval. Each change is logged here with its
 | Date | Change |
 |---|---|
 | 2026-11-03 | First version, approved |
+| 2026-11-04 | D-17: ILAE 2025 replaces 2017 and seizure profiles replace the type row (N2, N4, N8); built first in the PWA as M8 |
 | 2026-11-03 | The move to six folders moved from N1 to N0 (Part A, first), at your request: the PWA runs from the new layout on Vercel before accounts and money are spent |

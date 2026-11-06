@@ -9,6 +9,7 @@ import {
   filtersActive,
   frequencyBuckets,
   needsDetails,
+  seizureKindKey,
   paginate,
   timelineItems,
 } from './history';
@@ -47,6 +48,32 @@ describe('filters', () => {
       'c',
     ]);
     expect(filterSeizures(all, { ...NO_FILTERS, type: 'none' }).map((s) => s.id)).toEqual(['b']);
+  });
+
+  it('filters by profile and by ILAE 2025 type, and a profile wins over the type it has (D-17)', () => {
+    const ilae2025 = {
+      class: 'focal' as const,
+      recall: 'no' as const,
+      responsive: null,
+      bilateralTonicClonic: null,
+      observable: null,
+      generalized: null,
+    };
+    const p = seizure(at(2026, 10, 2), 60, { id: 'p', typeCode: null, ilae2025, profile: { id: 'x', name: 'Usual' } });
+    const q = seizure(at(2026, 10, 3), 60, { id: 'q', typeCode: null, ilae2025 });
+    const r = seizure(at(2026, 10, 4), 60, { id: 'r', typeCode: null, ilae2025: { ...ilae2025, class: null } });
+    expect(seizureKindKey(p)).toBe('profile:x');
+    expect(seizureKindKey(q)).toBe('ilae2025:focal_impaired_consciousness');
+    expect(seizureKindKey(r)).toBeNull();
+    expect(seizureKindKey(seizure(at(2026, 10, 5), 60))).toBe('seizure_type.focal_aware');
+    const list = [p, q, r];
+    expect(filterSeizures(list, { ...NO_FILTERS, type: 'profile:x' }).map((s) => s.id)).toEqual(['p']);
+    expect(
+      filterSeizures(list, { ...NO_FILTERS, type: 'ilae2025:focal_impaired_consciousness' }).map((s) => s.id),
+    ).toEqual(['q']);
+    expect(filterSeizures(list, { ...NO_FILTERS, type: 'none' }).map((s) => s.id)).toEqual(['r']);
+    expect(needsDetails({ ...q, status: 'complete' })).toBe(false);
+    expect(needsDetails({ ...r, status: 'complete' })).toBe(true);
   });
 
   it('filters by local day, both ends included', () => {
@@ -197,7 +224,7 @@ describe('timeline items', () => {
       ['medication', 'c1'],
       ['missed', 'd1'],
     ]);
-    expect(items[0]).toMatchObject({ seconds: 90, long: false, typeCode: 'seizure_type.focal_aware' });
+    expect(items[0]).toMatchObject({ seconds: 90, long: false, kindKey: 'seizure_type.focal_aware' });
     expect(items[3]).toMatchObject({ name: 'Lamotrigine', medicationId: 'm1' });
   });
 

@@ -2,9 +2,10 @@ import { buildDangerMap, type EegActivity } from '@auratrack/model';
 import { AppHeader, Button, Card, Dialog, Screen, Section, Stack } from '@auratrack/ui';
 import { useEffect, useMemo, useState } from 'react';
 import { useApp } from '../app/AppContext';
+import { ilae2025Name, seizureName } from '../app/seizureName';
 import { useRecords } from '../app/records';
 import { areaText } from '../editor/BodyMap';
-import { draftFromSeizure } from '../editor/draft';
+import { draftFromSeizure, recoverySecondsOf } from '../editor/draft';
 import { useEditorHost } from '../editor/EditorContext';
 import { useNav } from '../editor/nav';
 import { OverviewStrip, Timeline } from '../editor/Timeline';
@@ -40,6 +41,7 @@ export function Detail({ id }: { id: string }) {
     );
   const flags = danger[seizure.id];
   const draft = draftFromSeizure(seizure);
+  const recoverySec = recoverySecondsOf(draft);
   const linked = eegNotes.filter((n) => n.linkedSeizureId === seizure.id);
   const sources = [
     seizure.phases.start,
@@ -52,10 +54,16 @@ export function Detail({ id }: { id: string }) {
   return (
     <Screen>
       <Stack>
-        <AppHeader title={seizure.typeCode ? label(seizure.typeCode) : t('home.untyped')} onBack={() => nav.pop()} />
+        <AppHeader title={seizureName(seizure, t, label)} onBack={() => nav.pop()} />
         <Card>
           <Stack gap="0.5rem">
-            <p className="app-banner">{fmt.when(seizure.phases.start.at)}</p>
+            <p className="app-banner">{fmt.whenSec(seizure.phases.start.at)}</p>
+            {seizure.profile && ilae2025Name(seizure.ilae2025, t) ? (
+              <p className="app-note">{t('classify.result', { type: ilae2025Name(seizure.ilae2025, t) ?? '' })}</p>
+            ) : null}
+            {seizure.typeCode && (seizure.profile || ilae2025Name(seizure.ilae2025, t)) ? (
+              <p className="app-note">{t('classify.earlier', { type: label(seizure.typeCode) })}</p>
+            ) : null}
             <OverviewStrip draft={draft} />
             {entered ? <p className="app-note">{t('det.enteredLater')}</p> : null}
             {edited ? <p className="app-note">{t('det.edited')}</p> : null}
@@ -78,7 +86,7 @@ export function Detail({ id }: { id: string }) {
             <Timeline draft={draft} />
           </Section>
         ) : null}
-        {seizure.afterFindings.length > 0 || seizure.recoveryMinutes !== null || seizure.recoveryOngoing ? (
+        {seizure.afterFindings.length > 0 || recoverySec !== null || seizure.recoveryOngoing ? (
           <Section title={t('det.afterFindings')}>
             <Stack gap="0.5rem">
               {seizure.afterFindings.map((f, i) => (
@@ -87,8 +95,8 @@ export function Detail({ id }: { id: string }) {
                   {f.areas.length > 0 ? ` · ${f.areas.map((a) => areaText(a, label)).join('; ')}` : ''}
                 </p>
               ))}
-              {seizure.recoveryMinutes !== null ? (
-                <p className="app-note">{t('det.recovery', { minutes: seizure.recoveryMinutes })}</p>
+              {recoverySec !== null ? (
+                <p className="app-note">{`${t('dur.recovery')}: ${fmt.duration(recoverySec)}`}</p>
               ) : null}
               {seizure.recoveryOngoing ? <p className="app-note">{t('det.recoveryOngoing')}</p> : null}
             </Stack>

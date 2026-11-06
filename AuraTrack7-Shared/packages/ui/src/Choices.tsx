@@ -23,7 +23,10 @@ export type ChipGroupProps<V extends string> = (SingleChips<V> | MultiChips<V>) 
   options: readonly Option<V>[];
   /** Names the group for a screen reader. */
   label: string;
-  /** Also shows the label above the chips, for a group that nothing else on the screen names. */
+  /**
+   * The label shows above the chips (the default): no row of chips is left unnamed. Set false only where a heading right
+   * above already says the same words; screen readers still get the label.
+   */
   showLabel?: boolean;
   /** The chips share the row width. */
   fill?: boolean;
@@ -40,7 +43,7 @@ export function ChipGroup<V extends string>(props: ChipGroupProps<V>) {
   const chips = (
     <div
       role="group"
-      {...(props.showLabel ? { 'aria-labelledby': labelId } : { 'aria-label': props.label })}
+      {...(props.showLabel !== false ? { 'aria-labelledby': labelId } : { 'aria-label': props.label })}
       className={cx('ui-chip-group', props.fill && 'ui-chip-group--fill')}
     >
       {props.options.map((option) => (
@@ -56,7 +59,7 @@ export function ChipGroup<V extends string>(props: ChipGroupProps<V>) {
       ))}
     </div>
   );
-  if (!props.showLabel) return chips;
+  if (props.showLabel === false) return chips;
   return (
     <div className="ui-field-wrap">
       <span className="ui-label" id={labelId}>

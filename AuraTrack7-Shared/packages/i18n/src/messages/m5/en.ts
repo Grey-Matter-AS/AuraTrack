@@ -325,7 +325,7 @@ export const m5en = {
   'reports.extra.ilae': 'ILAE type',
   'reports.extra.ilaeHelp': 'How the seizures were classified.',
   'reports.extra.recoveryTimes': 'Recovery times',
-  'reports.extra.recoveryTimesHelp': 'How long it took to be back to normal.',
+  'reports.extra.recoveryTimesHelp': 'How long it took to be back to usual self.',
   'reports.extra.timeOfDay': 'Time of day, day and night',
   'reports.extra.timeOfDayHelp': 'Seizures by the hour they began.',
   'reports.extra.clusters': 'Clusters and long seizures',

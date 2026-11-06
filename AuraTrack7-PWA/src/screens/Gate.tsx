@@ -138,11 +138,13 @@ function Locked() {
           {t('lock.forgot')}
         </Button>
         <Card tone="accent">
-          <p className="app-note">{available ? t('lock.startNote') : t('lock.startUnavailable')}</p>
-          {/* Start, with no PIN. It is a recording; it joins the records when the app is unlocked. */}
-          <Button variant="danger" size="lg" fullWidth disabled={!available} onClick={actions.startRecording}>
-            {t('lock.start')}
-          </Button>
+          <Stack gap="0.75rem">
+            <p className="app-note">{available ? t('lock.startNote') : t('lock.startUnavailable')}</p>
+            {/* Start, with no PIN. It is a recording; it joins the records when the app is unlocked. */}
+            <Button variant="danger" size="lg" fullWidth disabled={!available} onClick={actions.startRecording}>
+              {t('lock.start')}
+            </Button>
+          </Stack>
         </Card>
       </Stack>
       {forgot ? <ForgotPin onClose={() => setForgot(false)} /> : null}

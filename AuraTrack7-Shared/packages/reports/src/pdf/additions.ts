@@ -1,3 +1,4 @@
+import type { PhaseName } from '@auratrack/model';
 import type { AdditionsData, BodyPart, PeriodTimelineData } from '../additions';
 import type { ReportText } from '../context';
 import type { DetailCard, NeurologistReport, SeizureTimeline } from '../neurologist';
@@ -7,7 +8,7 @@ import type { Color, Surface } from './surface';
 
 // The drawing of the sections added in version 7 (see ../additions.ts).
 
-const PHASE_COLOR: Record<'before' | 'during' | 'after', Color> = { before: COLORS.amber, during: COLORS.accent, after: COLORS.blue };
+const PHASE_COLOR: Record<PhaseName, Color> = { prodrome: COLORS.violet, aura: COLORS.amber, seizure: COLORS.accent, recovery: COLORS.blue };
 const SERIES: Color[] = [
   [59, 142, 208],
   [230, 159, 0],
@@ -37,12 +38,12 @@ interface Event {
   kind: 'mark' | 'moment';
   label: string;
   sub: string;
-  phase: 'before' | 'during' | 'after';
+  phase: PhaseName;
   atMs: number | null;
   first: boolean;
 }
 
-/** The marks and symptoms of one seizure in order: start, before, end of aura, during, end of seizure, after, back to normal. */
+/** The marks and symptoms of one seizure in order: warning signs, start, aura, end of aura, seizure, end of seizure, recovery, back to usual self. */
 function timelineEvents(tl: SeizureTimeline, t: ReportText): Event[] {
   const mark = (kind: SeizureTimeline['marks'][number]['kind'], phase: Event['phase']): Event[] => {
     const m = tl.marks.find((x) => x.kind === kind);
@@ -52,13 +53,14 @@ function timelineEvents(tl: SeizureTimeline, t: ReportText): Event[] {
   const moments = (phase: Event['phase']): Event[] =>
     tl.moments.filter((m) => m.phase === phase).map((m) => ({ kind: 'moment', label: m.label, sub: m.place, phase, atMs: m.atMs, first: m.first }));
   return [
-    ...mark('start', 'before'),
-    ...moments('before'),
-    ...mark('auraEnd', 'during'),
-    ...moments('during'),
-    ...mark('seizureEnd', 'after'),
-    ...moments('after'),
-    ...mark('recoveryEnd', 'after'),
+    ...moments('prodrome'),
+    ...mark('start', 'aura'),
+    ...moments('aura'),
+    ...mark('auraEnd', 'seizure'),
+    ...moments('seizure'),
+    ...mark('seizureEnd', 'recovery'),
+    ...moments('recovery'),
+    ...mark('recoveryEnd', 'recovery'),
   ];
 }
 
@@ -159,7 +161,7 @@ export function drawPeriodTimeline(flow: Flow, d: PeriodTimelineData, alertSecon
     const x = px(it.at);
     if (it.kind === 'seizure') {
       const r = 3 + Math.min(1, (it.seconds ?? 0) / 720) * 8;
-      const colour = SERIES[((it.typeCode ? (d.typeSeries[it.typeCode] ?? 8) : 8) - 1) % 8] ?? COLORS.soft;
+      const colour = SERIES[((it.kindKey ? (d.typeSeries[it.kindKey] ?? 8) : 8) - 1) % 8] ?? COLORS.soft;
       if (it.long) s.circle(x, flow.y + rows.seizure, r + 2.5, { stroke: COLORS.accent, lineWidth: 1.2 });
       if (it.seconds === null) s.circle(x, flow.y + rows.seizure, r, { stroke: colour, lineWidth: 1.6 });
       else s.circle(x, flow.y + rows.seizure, r, { fill: colour });
@@ -240,16 +242,18 @@ export function drawBodyMap(flow: Flow, d: NonNullable<AdditionsData['bodyMap']>
 
 export function drawIlae(flow: Flow, d: NonNullable<AdditionsData['ilae']>, t: ReportText): void {
   flow.title(t('rep.exIlae'), 100);
-  if (d.recorded === 0) return flow.paragraph(t('rep.ilaeNone'), { size: 8.5, color: COLORS.muted, gap: 8 });
+  if (d.recorded === 0 && d.earlier.recorded === 0)
+    return flow.paragraph(t('rep.ilaeNone'), { size: 8.5, color: COLORS.muted, gap: 8 });
+  const columns = [
+    { title: t('rep.type'), grow: 4 },
+    { title: t('rep.exCount'), width: 50, align: 'right' as const },
+  ];
   flow.paragraph(t('rep.ilaeCover', { recorded: d.recorded, total: d.total }), { size: 8.5, gap: 4 });
-  flow.table(
-    [
-      { title: t('rep.type'), grow: 4 },
-      { title: t('rep.exCount'), width: 50, align: 'right' },
-    ],
-    d.rows.map((r) => [r.label, String(r.count)]),
-    { size: 8 },
-  );
+  if (d.recorded > 0) flow.table(columns, d.rows.map((r) => [r.label, String(r.count)]), { size: 8 });
+  if (d.earlier.recorded > 0) {
+    flow.paragraph(t('rep.ilae2017', { recorded: d.earlier.recorded }), { size: 8.5, gap: 4 });
+    flow.table(columns, d.earlier.rows.map((r) => [r.label, String(r.count)]), { size: 8 });
+  }
 }
 
 export function drawRecovery(flow: Flow, d: NonNullable<AdditionsData['recovery']>, t: ReportText, minutes: (n: number | null) => string): void {

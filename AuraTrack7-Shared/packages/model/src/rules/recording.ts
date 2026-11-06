@@ -5,6 +5,7 @@ import {
   InstantSchema,
   PhaseNameSchema,
   TimeZoneSchema,
+  type PhaseName,
   type Phases,
   type QuickNote,
   type Seizure,
@@ -52,7 +53,7 @@ export type RecordingEvent = z.infer<typeof RecordingEventSchema>;
 export interface SessionSymptom {
   id: string;
   code: string;
-  phase: 'before' | 'during' | 'after';
+  phase: PhaseName;
   at: number;
 }
 
@@ -329,38 +330,42 @@ export interface PastSeizureInput {
   patientId: string;
   recordedBy: 'self' | 'carer';
   timeZone: string;
-  /** When the seizure began, as an instant. */
+  /** When the seizure began (its first sign, an aura included), as an instant. */
   start: number;
-  /** Start to the end of the seizure plus any recovery, in seconds. */
-  totalSec: number;
-  /** Optional: the aura before the seizure, in seconds. */
-  auraSec?: number;
-  /** Optional: the recovery after the seizure, in seconds. */
-  recoverySec?: number;
+  /** Optional: how long before the start the first warning signs came (prodrome), in seconds. Not part of the seizure. */
+  prodromeSec?: number | null;
+  /** Optional: the aura, in seconds. Part of the seizure. */
+  auraSec?: number | null;
+  /** The seizure after any aura, in seconds. */
+  seizureSec: number | null;
+  /** Optional: the recovery after the seizure, until back to usual self, in seconds. Never part of the seizure length. */
+  recoverySec?: number | null;
 }
 
-export type PastSeizureProblem = 'zero' | 'phases_too_long' | 'future';
+export type PastSeizureProblem = 'zero' | 'future';
 
-/** Checks what was typed for a past seizure. The seizure itself is whatever is left of the total after aura and recovery. */
+const whole = (n: number | null | undefined): number => Math.max(0, Math.round(n ?? 0));
+
+/** Checks what was typed for a past seizure: the seizure (aura and seizure together) must last at least one second. */
 export function pastSeizureProblem(input: PastSeizureInput, now: number): PastSeizureProblem | null {
-  if (input.totalSec < 1) return 'zero';
   if (input.start > now) return 'future';
-  if ((input.auraSec ?? 0) + (input.recoverySec ?? 0) >= input.totalSec) return 'phases_too_long';
+  if (whole(input.auraSec) + whole(input.seizureSec) < 1) return 'zero';
   return null;
 }
 
 /**
- * A seizure logged after the fact (Log Past Seizure). The phases add up to the total by construction: aura and recovery are
- * what was typed, the seizure is the rest. Every mark is saved as "entered later", and the record says it was entered by hand.
+ * A seizure logged after the fact (Log Past Seizure), from the lengths of its phases in the order they happen: the aura,
+ * the seizure, then the recovery. The seizure length (start to end of seizure) is the aura and the seizure together; the
+ * recovery comes after it. Every mark is saved as "entered later", and the record says it was entered by hand.
  */
 export function pastSeizureValues(
   input: PastSeizureInput,
 ): Omit<Seizure, 'id' | 'householdId' | 'deviceId' | 'createdAt'> {
-  const aura = Math.max(0, Math.round(input.auraSec ?? 0));
-  const recovery = Math.max(0, Math.round(input.recoverySec ?? 0));
-  const total = Math.round(input.totalSec);
+  const aura = whole(input.auraSec);
+  const recovery = whole(input.recoverySec);
+  const prodrome = whole(input.prodromeSec);
   const auraEnd = input.start + aura * 1000;
-  const seizureEnd = input.start + (total - recovery) * 1000;
+  const seizureEnd = auraEnd + whole(input.seizureSec) * 1000;
   const later = (at: number) => ({ at, source: 'entered-later' as const });
   return {
     patientId: input.patientId,
@@ -369,7 +374,7 @@ export function pastSeizureValues(
       start: later(input.start),
       auraEnd: later(auraEnd),
       seizureEnd: later(seizureEnd),
-      recoveryEnd: recovery > 0 ? later(input.start + total * 1000) : null,
+      recoveryEnd: recovery > 0 ? later(seizureEnd + recovery * 1000) : null,
     },
     status: 'recorded',
     typeCode: null,
@@ -377,6 +382,7 @@ export function pastSeizureValues(
     symptoms: [],
     afterFindings: [],
     recoveryMinutes: null,
+    ...(prodrome > 0 ? { prodromeSecondsBefore: Math.min(prodrome, 604_800) } : {}),
     recoveryOngoing: false,
     triggerCodes: [],
     notes: '',
@@ -397,7 +403,7 @@ export function sessionFromSeizure(seizure: Seizure): RecordingSession | null {
   let at = seizure.phases.start.at;
   const symptoms = seizure.symptoms.map((entry) => {
     at += entry.sincePrevious.ms ?? 0;
-    return { id: entry.id, code: entry.code, phase: entry.phase ?? 'during', at };
+    return { id: entry.id, code: entry.code, phase: entry.phase ?? 'seizure', at };
   });
   return {
     seizureId: seizure.id,

@@ -8,3 +8,4 @@ export * from './medication';
 export * from './eeg';
 export * from './wellbeing';
 export * from './csvFormat';
+export * from './ilae2025';

@@ -1,5 +1,5 @@
 import type { MessageKey, MessageParams } from '@auratrack/i18n';
-import type { CustomCode, Seizure, SymptomSet } from '@auratrack/model';
+import type { CustomCode, Seizure, SeizureProfile, SymptomSet } from '@auratrack/model';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useApp } from '../app/AppContext';
 import { draftFromSeizure, patchFromDraft, type Draft } from './draft';
@@ -23,6 +23,7 @@ interface EditorState {
   t: (key: MessageKey, params?: MessageParams) => string;
   label: (code: string) => string;
   sets: SymptomSet[];
+  profiles: SeizureProfile[];
   customCodes: CustomCode[];
   seizures: Seizure[];
   /** The change to save now, with the status the seizure should have after saving. */
@@ -102,6 +103,7 @@ export function useEditor(): EditorState {
     t: app.t,
     label: app.label,
     sets: app.sets,
+    profiles: app.profiles,
     customCodes: app.customCodes,
     seizures: app.seizures,
     patch: (status) => patchFromDraft(initial, status ? { ...draft, status } : draft, original),

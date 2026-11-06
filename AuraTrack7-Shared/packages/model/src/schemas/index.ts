@@ -9,7 +9,7 @@ import {
   SettingSchema,
   WellbeingEntrySchema,
 } from './other';
-import { InterictalEventSchema, SymptomSetSchema } from './logging';
+import { InterictalEventSchema, SeizureProfileSchema, SymptomSetSchema } from './logging';
 import { SeizureSchema } from './seizure';
 
 export * from './common';
@@ -25,6 +25,7 @@ export const RECORD_SCHEMAS = {
   seizure: SeizureSchema,
   interictalEvent: InterictalEventSchema,
   symptomSet: SymptomSetSchema,
+  seizureProfile: SeizureProfileSchema,
   medication: MedicationSchema,
   medicationChange: MedicationChangeSchema,
   doseLog: DoseLogSchema,

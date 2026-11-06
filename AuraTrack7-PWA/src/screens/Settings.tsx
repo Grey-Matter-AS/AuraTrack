@@ -14,6 +14,7 @@ import {
   DateTimeField,
   Dialog,
   NumberField,
+  NavList,
   Screen,
   Section,
   Select,
@@ -48,11 +49,13 @@ export function Settings() {
     <Screen>
       <Stack>
         <AppHeader title={t('more.settings')} onBack={() => nav.pop()} />
-        {SETTING_GROUPS.map((group) => (
-          <Button key={group} fullWidth onClick={() => nav.push('settingsGroup', { group })}>
-            {t(`settings.group.${group}` as never)}
-          </Button>
-        ))}
+        <NavList
+          items={SETTING_GROUPS.map((group) => ({
+            id: group,
+            label: t(`settings.group.${group}` as never),
+            onClick: () => nav.push('settingsGroup', { group }),
+          }))}
+        />
       </Stack>
     </Screen>
   );

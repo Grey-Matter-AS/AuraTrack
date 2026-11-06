@@ -1,4 +1,4 @@
-import type { BodyArea, PhaseName } from '../schemas';
+import { PhaseNameSchema, type BodyArea, type PhaseName } from '../schemas';
 
 // The CSV format (F-705 export, and its import): one block per kind of record, each a title line, a heading line and rows.
 // The export writes it and the import reads it, so an exported file can be edited in a spreadsheet and brought back. The empty
@@ -13,6 +13,14 @@ export const CSV_SECTIONS = {
     'timeZone',
     'type',
     'typeCode',
+    'profile',
+    'ilae2025Type',
+    'ilae2025Start',
+    'ilae2025Remembered',
+    'ilae2025Responded',
+    'ilae2025BilateralTonicClonic',
+    'ilae2025Observable',
+    'ilae2025Kind',
     'seizureSeconds',
     'totalSeconds',
     'auraEnd',
@@ -136,7 +144,8 @@ export function parseSymptomToken(token: string): { code: string; area: BodyArea
   const hash = rest.lastIndexOf('#');
   if (hash >= 0) {
     const p = rest.slice(hash + 1).trim();
-    if (p === 'before' || p === 'during' || p === 'after') phase = p;
+    const parsed = PhaseNameSchema.safeParse(p); // the four phases, and the three written before 7.2
+    if (parsed.success) phase = parsed.data;
     rest = rest.slice(0, hash);
   }
   const at = rest.indexOf('@');

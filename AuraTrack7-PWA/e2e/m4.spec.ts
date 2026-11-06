@@ -77,7 +77,7 @@ test('History lists a seizure, filters it, and opens it in full', async ({ page 
   await recordOne(page);
   await place(page, 'History');
   await expect(page.getByText('Seizures: 1')).toBeVisible();
-  await page.getByLabel('Type', { exact: true }).selectOption('seizure_type.tonic_clonic');
+  await page.getByLabel('From', { exact: true }).fill('2099-01-01');
   await expect(page.getByText('No seizures match these filters.')).toBeVisible();
   await page.getByRole('button', { name: 'Clear filters' }).click();
   await page.getByRole('button', { name: 'Chart' }).click();

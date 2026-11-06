@@ -2,6 +2,11 @@
 /* The vertical timeline: a line on the left, phase markers and symptom boxes on the right */
 .ed-timeline {
   --line: var(--border);
+  /* Where the line is, and how far in a card inside a band starts: the nodes and connectors are placed from these */
+  --rail: 1.5rem;
+  --line-x: calc(0.375rem + 2.5px);
+  --band-pad: 0.75rem;
+  --inner: calc(var(--rail) + 1px + var(--band-pad));
   position: relative;
   margin: 0;
   padding: 0 0 0 1.5rem;
@@ -15,9 +20,9 @@
   content: '';
   position: absolute;
   inset-block: 0.5rem;
-  inset-inline-start: 0.4375rem;
-  width: 3px;
-  border-radius: 3px;
+  inset-inline-start: 0.375rem;
+  width: 5px;
+  border-radius: 5px;
   background: var(--line);
 }
 .ed-timeline > li {
@@ -67,20 +72,160 @@
   color: var(--text-dim);
   overflow-wrap: anywhere;
 }
+/* A phase as one band on the line, in the colours of the strip above the tabs: a tint and a border in the phase colour, and
+   the line beside it in that colour, so the phases read apart at a glance. The tint stays light enough for text contrast. */
+.ed-band {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding: var(--band-pad);
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, var(--phase) 65%, transparent);
+  background: color-mix(in srgb, var(--phase) 16%, var(--bg-card));
+}
+.ed-band--prodrome {
+  --phase: var(--phase-prodrome);
+}
+.ed-band--aura {
+  --phase: var(--phase-aura);
+}
+.ed-band--seizure {
+  --phase: var(--phase-seizure);
+}
+.ed-band--recovery {
+  --phase: var(--phase-recovery);
+}
+.ed-timeline > li.ed-band::before {
+  top: 1rem;
+  z-index: 2;
+}
+.ed-band__rail {
+  position: absolute;
+  z-index: 1;
+  top: -0.25rem;
+  bottom: -0.25rem;
+  inset-inline-start: calc(0.375rem - var(--rail) - 1px);
+  width: 5px;
+  border-radius: 5px;
+  background: var(--phase);
+}
+.ed-section {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--fs-label);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+.ed-band__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+/* The time since the symptom before: a small card of its own, narrower than a symptom card */
+.ed-delay {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  max-width: 22rem;
+  padding: 0.375rem 0.5rem;
+  border: 1px dashed color-mix(in srgb, var(--phase, var(--border)) 50%, var(--border));
+  border-radius: 0.75rem;
+}
+/* Every section and every card has its node on the line, joined to it by a short horizontal connector */
+.ed-timeline > li.ed-band::after {
+  content: '';
+  position: absolute;
+  top: calc(1.5rem - 1.5px);
+  inset-inline-start: calc(var(--line-x) - var(--rail));
+  width: calc(var(--rail) - var(--line-x));
+  height: 3px;
+  background: color-mix(in srgb, var(--phase) 70%, transparent);
+}
+.ed-band__list > li {
+  position: relative;
+  min-width: 0;
+}
+.ed-band__list > li::before {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  top: 0.95rem;
+  inset-inline-start: calc(var(--line-x) - var(--inner) - 0.375rem);
+  width: 0.75rem;
+  height: 0.75rem;
+  box-sizing: border-box;
+  border-radius: 50%;
+  background: var(--phase, var(--text-dim));
+  border: 2px solid var(--bg-card);
+}
+.ed-band__list > li::after {
+  content: '';
+  position: absolute;
+  top: calc(1.325rem - 1.5px);
+  inset-inline-start: calc(var(--line-x) - var(--inner));
+  width: calc(var(--inner) - var(--line-x));
+  height: 3px;
+  background: color-mix(in srgb, var(--phase, var(--border)) 55%, transparent);
+}
+/* A delay card's node is hollow and its connector dashed: it is a time between, not a symptom */
+.ed-band__list > li.ed-delay::before,
+.ed-band__list > li.ed-gap::before {
+  background: var(--bg-card);
+  border-color: var(--phase, var(--border));
+}
+.ed-band__list > li.ed-delay::after,
+.ed-band__list > li.ed-gap::after {
+  background: none;
+  border-top: 3px dashed color-mix(in srgb, var(--phase, var(--border)) 55%, transparent);
+  height: 0;
+}
+/* A symptom card is one row: name and place, then its tools; on a narrow screen the tools go under the name */
+.ed-moment--row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem 0.5rem;
+}
+.ed-moment__text {
+  flex: 1 1 8rem;
+  min-width: 0;
+}
+.ed-moment__tools {
+  display: flex;
+  flex: none;
+  gap: 0.25rem;
+}
+.ed-band__list > .ed-gap {
+  padding-inline-start: 0.5rem;
+}
+.ed-timeline > li.ed-details::before {
+  display: none;
+}
 .ed-gap {
   font-size: var(--fs-small);
   color: var(--text-dim);
   font-weight: 700;
   padding-block: 0.25rem;
 }
-.ed-phase-before {
-  --phase: #d97706;
+.ed-phase-prodrome {
+  --phase: var(--phase-prodrome);
 }
-.ed-phase-during {
-  --phase: var(--danger);
+.ed-phase-aura {
+  --phase: var(--phase-aura);
 }
-.ed-phase-after {
-  --phase: var(--accent);
+.ed-phase-seizure {
+  --phase: var(--phase-seizure);
+}
+.ed-phase-recovery {
+  --phase: var(--phase-recovery);
 }
 
 /* Body map */

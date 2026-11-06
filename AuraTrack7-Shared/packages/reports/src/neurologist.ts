@@ -7,14 +7,16 @@ import {
   emergencyContactLine,
   frequencyBuckets,
   getScheduledDosesForDay,
-  isLongSeizure,
+  isLongRecord,
   localDateKey,
   nextLocalDay,
   regimenAt,
   regimenSnapshot,
   seizureSeconds,
   startOfLocalDay,
-  totalSeconds,
+  auraSeconds,
+  recoverySeconds,
+  seizureLengthSeconds,
   type BodyArea,
   type DoseLog,
   type EmergencyPlan,
@@ -27,8 +29,10 @@ import {
   type Regimen,
   type Seizure,
   type WellbeingEntry,
+  type PhaseName,
 } from '@auratrack/model';
 import { DAY_MS, type ReportContext } from './context';
+import { clinicalClass } from './names';
 
 // The neurologist report as data (R-1 in docs/plan/report-inventory.md): every section of the 6.1 report, worked out from the
 // records, with the same rules (the most-frequent lists, the flags, how adherence is counted). The PDF is drawn from this.
@@ -76,7 +80,10 @@ export interface SeizureLine {
   date: string;
   time: string;
   type: string;
-  total: string;
+  /** The seizure length: the start (aura included) to the end of the seizure; recovery is not counted. */
+  length: string;
+  /** How long before the start the first warning signs came (prodrome), or "-". */
+  warning: string;
   aura: string;
   seizure: string;
   recovery: string;
@@ -90,7 +97,10 @@ export interface DetailCard {
   time: string;
   type: string;
   by: string;
-  total: string;
+  /** The seizure length: the start (aura included) to the end of the seizure; recovery is not counted. */
+  length: string;
+  /** How long before the start the first warning signs came (prodrome), or "-". */
+  warning: string;
   aura: string;
   seizure: string;
   recovery: string;
@@ -106,14 +116,15 @@ export interface SeizureTimeline {
   totalMs: number;
   marks: { kind: 'start' | 'auraEnd' | 'seizureEnd' | 'recoveryEnd'; atMs: number; time: string }[];
   /** `atMs` is when the symptom came, counted from the start, or null when only its place in the order is known. */
-  moments: { label: string; place: string; phase: 'before' | 'during' | 'after'; atMs: number | null; first: boolean }[];
+  moments: { label: string; place: string; phase: PhaseName; atMs: number | null; first: boolean }[];
 }
 export interface SymptomGroup {
   index: number;
   date: string;
   time: string;
   type: string;
-  total: string;
+  /** The seizure length (aura included, recovery not). */
+  length: string;
   symptoms: { path: string; term: string; location: string }[];
 }
 export interface ChartData {
@@ -208,11 +219,11 @@ export function buildNeurologistReport(input: NeurologistInput, ctx: ReportConte
   const all = [...input.seizures].filter(finished).sort((a, b) => b.phases.start.at - a.phases.start.at);
   const period = all.filter((s) => s.phases.start.at >= from && s.phases.start.at <= to);
   const days = Math.max(1, Math.floor((to - from) / DAY_MS) + 1);
-  const seconds = (s: Seizure) => seizureSeconds(s.phases);
+  const seconds = (s: Seizure) => seizureLengthSeconds(s.phases);
   const lengths = period.map(seconds).filter((n): n is number => n !== null);
   const average = lengths.length > 0 ? Math.round(lengths.reduce((a, b) => a + b, 0) / lengths.length) : 0;
   const daysCovered = new Set(period.map((s) => localDateKey(s.phases.start.at))).size;
-  const typeName = (s: Seizure) => (s.typeCode ? label(s.typeCode) : t('rep.untyped'));
+  const typeName = (s: Seizure) => clinicalClass(s, t, label);
   const byType = new Map<string, number>();
   for (const s of period) byType.set(typeName(s), (byType.get(typeName(s)) ?? 0) + 1);
 
@@ -252,14 +263,14 @@ export function buildNeurologistReport(input: NeurologistInput, ctx: ReportConte
         triggerConfirmed.set(code, (triggerConfirmed.get(code) ?? 0) + 1);
     }
 
-  const long = period.filter((s) => isLongSeizure(s.phases, plan));
+  const long = period.filter((s) => isLongRecord(s, plan));
   const flags: Flag[] = [];
   if (long.length > 0)
     flags.push({
       level: 'warning',
       label: t('rep.flagLong', { count: long.length, minutes: plan.alertMinutes }),
       detail: long
-        .map((s) => `${fmt.date(s.phases.start.at)} ${fmt.time(s.phases.start.at)} (${fmt.duration(seconds(s) ?? 0)})`)
+        .map((s) => `${fmt.date(s.phases.start.at)} ${fmt.timeSec(s.phases.start.at)} (${fmt.duration(seconds(s) ?? 0)})`)
         .join('; '),
     });
   const midpoint = from + Math.floor(days / 2) * DAY_MS;
@@ -369,14 +380,14 @@ export function buildNeurologistReport(input: NeurologistInput, ctx: ReportConte
   const windowStart = to - (windowDays - 1) * DAY_MS;
   const lastTenDays = all.filter((s) => s.phases.start.at >= windowStart && s.phases.start.at <= to);
   const recentSeizures = lastTenDays.length >= lastTen.length ? lastTenDays : lastTen;
-  const part = (a: number | null, b: number | null) => (a === null || b === null ? null : Math.max(0, Math.round((b - a) / 1000)));
   const parts = (s: Seizure) => {
     const p = s.phases;
     return {
-      total: totalSeconds(p),
-      aura: part(p.start.at, p.auraEnd?.at ?? p.seizureEnd?.at ?? null) ?? 0,
+      length: seizureLengthSeconds(p),
+      warning: s.prodromeSecondsBefore ?? null,
+      aura: auraSeconds(p) ?? 0,
       seizure: seizureSeconds(p),
-      recovery: part(p.seizureEnd?.at ?? null, p.recoveryEnd?.at ?? null) ?? 0,
+      recovery: recoverySeconds(p) ?? 0,
     };
   };
   const dur = (n: number | null) => (n === null ? '-' : fmt.duration(n));
@@ -386,9 +397,10 @@ export function buildNeurologistReport(input: NeurologistInput, ctx: ReportConte
       index: i + 1,
       id: s.id,
       date: fmt.date(s.phases.start.at),
-      time: fmt.time(s.phases.start.at),
+      time: fmt.timeSec(s.phases.start.at),
       type: typeName(s),
-      total: dur(p.total),
+      length: dur(p.length),
+      warning: dur(p.warning),
       aura: dur(p.aura),
       seizure: dur(p.seizure),
       recovery: dur(p.recovery),
@@ -405,7 +417,7 @@ export function buildNeurologistReport(input: NeurologistInput, ctx: ReportConte
 
   const detailMap = new Map<string, Seizure>();
   for (const s of all.slice(0, 3)) detailMap.set(s.id, s);
-  for (const s of period) if (isLongSeizure(s.phases, plan) || isEdited(s)) detailMap.set(s.id, s);
+  for (const s of period) if (isLongRecord(s, plan) || isEdited(s)) detailMap.set(s.id, s);
   const danger = buildDangerMap(period, plan);
   const details: DetailCard[] = [...detailMap.values()]
     .sort((a, b) => b.phases.start.at - a.phases.start.at)
@@ -414,17 +426,18 @@ export function buildNeurologistReport(input: NeurologistInput, ctx: ReportConte
       return {
         id: s.id,
         date: fmt.date(s.phases.start.at),
-        time: fmt.time(s.phases.start.at),
+        time: fmt.timeSec(s.phases.start.at),
         type: typeName(s),
         by: s.recordedBy === 'carer' ? t('rep.byCarer') : t('rep.bySelf'),
-        total: dur(p.total),
+        length: dur(p.length),
+      warning: dur(p.warning),
         aura: dur(p.aura),
         seizure: dur(p.seizure),
         recovery: dur(p.recovery),
         notes: s.notes,
         video: s.video?.fileName ?? '',
         badges: [
-          isLongSeizure(s.phases, plan) ? t('rep.badgeLong', { minutes: plan.alertMinutes }) : '',
+          isLongRecord(s, plan) ? t('rep.badgeLong', { minutes: plan.alertMinutes }) : '',
           danger[s.id]?.flags.includes('cluster') ? t('rep.badgeCluster', { count: danger[s.id]?.clusterCount ?? 0 }) : '',
           s.isEmergencyStop ? t('rep.badgeAuto') : '',
           isEdited(s) ? t('rep.badgeEdited') : '',
@@ -440,9 +453,9 @@ export function buildNeurologistReport(input: NeurologistInput, ctx: ReportConte
     .map((s, i) => ({
       index: i + 1,
       date: fmt.date(s.phases.start.at),
-      time: fmt.time(s.phases.start.at),
+      time: fmt.timeSec(s.phases.start.at),
       type: typeName(s),
-      total: dur(parts(s).total),
+      length: dur(parts(s).length),
       symptoms: symptomRows(s),
     }));
 
@@ -563,7 +576,7 @@ export function buildNeurologistReport(input: NeurologistInput, ctx: ReportConte
       types: [...byType].map(([lab, count]) => ({ label: lab, count })).sort((a, b) => b.count - a.count),
       phases: [...ascending].slice(-10).map((s) => {
         const p = parts(s);
-        return { label: `${fmt.date(s.phases.start.at)} ${fmt.time(s.phases.start.at)}`, aura: p.aura, seizure: p.seizure ?? 0, recovery: p.recovery };
+        return { label: `${fmt.date(s.phases.start.at)} ${fmt.timeSec(s.phases.start.at)}`, aura: p.aura, seizure: p.seizure ?? 0, recovery: p.recovery };
       }),
       factors,
     },
@@ -608,18 +621,22 @@ export function changeLines(c: MedicationChange, t: ReportContext['t']): string[
 export function seizureTimeline(s: Seizure, ctx: ReportContext): SeizureTimeline {
   const p = s.phases;
   const t0 = p.start.at;
-  const marks: SeizureTimeline['marks'] = [{ kind: 'start', atMs: 0, time: ctx.fmt.time(t0) }];
-  if (p.auraEnd) marks.push({ kind: 'auraEnd', atMs: p.auraEnd.at - t0, time: ctx.fmt.time(p.auraEnd.at) });
-  if (p.seizureEnd) marks.push({ kind: 'seizureEnd', atMs: p.seizureEnd.at - t0, time: ctx.fmt.time(p.seizureEnd.at) });
-  if (p.recoveryEnd) marks.push({ kind: 'recoveryEnd', atMs: p.recoveryEnd.at - t0, time: ctx.fmt.time(p.recoveryEnd.at) });
+  const marks: SeizureTimeline['marks'] = [{ kind: 'start', atMs: 0, time: ctx.fmt.timeSec(t0) }];
+  if (p.auraEnd) marks.push({ kind: 'auraEnd', atMs: p.auraEnd.at - t0, time: ctx.fmt.timeSec(p.auraEnd.at) });
+  if (p.seizureEnd) marks.push({ kind: 'seizureEnd', atMs: p.seizureEnd.at - t0, time: ctx.fmt.timeSec(p.seizureEnd.at) });
+  if (p.recoveryEnd) marks.push({ kind: 'recoveryEnd', atMs: p.recoveryEnd.at - t0, time: ctx.fmt.timeSec(p.recoveryEnd.at) });
   const ordered = [...s.symptoms].sort((a, b) => a.order - b.order);
+  // Warning signs come before the start: they have no time on the seizure's clock and are never its first sign
+  const firstSign = ordered.find((sym) => (sym.phase ?? 'seizure') !== 'prodrome');
   let clock: number | null = 0;
-  const moments: SeizureTimeline['moments'] = ordered.map((sym, i) => {
+  const moments: SeizureTimeline['moments'] = ordered.map((sym) => {
+    const phase = sym.phase ?? 'seizure';
+    const place = areaLabel(sym.area, ctx.label);
+    if (phase === 'prodrome') return { label: ctx.label(sym.code), place, phase, atMs: null, first: false };
     const gap = sym.sincePrevious;
-    // The first symptom's gap is counted from the start; each later one from the symptom before it
-    clock = clock !== null && gap.kind === 'exact' && gap.ms !== null ? clock + gap.ms : i === 0 && gap.kind !== 'exact' ? null : null;
-    const phase = sym.phase ?? 'during';
-    return { label: ctx.label(sym.code), place: areaLabel(sym.area, ctx.label), phase, atMs: clock, first: i === 0 };
+    // The first sign's gap is counted from the start; each later one from the symptom before it
+    clock = clock !== null && gap.kind === 'exact' && gap.ms !== null ? clock + gap.ms : null;
+    return { label: ctx.label(sym.code), place, phase, atMs: clock, first: sym === firstSign };
   });
   return { totalMs: Math.max(0, ...marks.map((m) => m.atMs)), marks, moments };
 }

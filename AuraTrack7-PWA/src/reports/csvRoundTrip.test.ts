@@ -36,6 +36,8 @@ describe('CSV export, then import', () => {
       status: 'complete',
       typeCode: 'seizure_type.absence',
       ilae: null,
+      ilae2025: { class: 'unknown', recall: 'yes', responsive: 'unknown', bilateralTonicClonic: 'no', observable: 'yes', generalized: null },
+      profile: { id: newId(), name: 'Usual seizure' },
       symptoms: [
         { id: newId(), code: 'symptom.small_twitching.muscle_flickering', area, moment: 0, order: 0, sincePrevious: { kind: 'unknown', ms: null }, isFirst: true, phase: 'during' },
       ],
@@ -96,6 +98,7 @@ describe('CSV export, then import', () => {
     expect(Object.values(back.phases).map((m) => m?.at ?? null)).toEqual(Object.values(seizure.phases).map((m) => m?.at ?? null));
     const keep = (s: Seizure) => ({
       typeCode: s.typeCode,
+      ilae2025: s.ilae2025,
       symptoms: s.symptoms.map((x) => [x.code, x.area, x.phase]),
       afterFindings: s.afterFindings,
       triggerCodes: s.triggerCodes,
@@ -106,6 +109,9 @@ describe('CSV export, then import', () => {
       status: s.status,
     });
     expect(keep(back)).toEqual(keep(seizure));
+    // The profile's name is written for reading, but a spreadsheet cannot say which profile record it was
+    expect(text).toContain('Usual seizure');
+    expect(back.profile ?? null).toBeNull();
 
     const strip = <T extends object>(r: T) =>
       Object.fromEntries(

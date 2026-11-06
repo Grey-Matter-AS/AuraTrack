@@ -98,9 +98,31 @@ describe('the figures the additions work out', () => {
     const i = neurologistInput({ seizures: base });
     const report = buildNeurologistReport(i, ctx);
     const d = buildAdditions(i, report, ctx, { ...NO_ADDITIONS, ilae: true }).ilae!;
+    // Recorded before 7.2: counted apart, as ILAE 2017 answers
+    expect(d.recorded).toBe(0);
+    expect(d.earlier.recorded).toBe(3);
+    expect(d.earlier.rows).toContainEqual({ label: 'Onset: focal', count: 3 });
+    expect(d.earlier.rows).toContainEqual({ label: 'Spread to both sides', count: 1 });
+  });
+
+  it('counts ILAE 2025 types, and a seizure with 2025 answers is never counted again by its 2017 ones (D-17)', () => {
+    const none = { recall: null, responsive: null, bilateralTonicClonic: null, observable: null, generalized: null };
+    const focalImpaired = { ...none, class: 'focal' as const, recall: 'no' as const };
+    const base = seizures(5).map((s, i) => ({
+      ...s,
+      ilae2025: i < 2 ? focalImpaired : i === 2 ? { ...none, class: 'generalized' as const, generalized: 'atonic' as const } : null,
+      ilae: i === 0 || i === 3 ? { onset: 'focal' as const, awareness: 'aware' as const, motor: null, feature: null, spreadToBothSides: null } : null,
+      profile: i === 1 ? { id: 'p1', name: 'Usual seizure' } : null,
+    }));
+    const i = neurologistInput({ seizures: base });
+    const d = buildAdditions(i, buildNeurologistReport(i, ctx), ctx, { ...NO_ADDITIONS, ilae: true }).ilae!;
     expect(d.recorded).toBe(3);
-    expect(d.rows).toContainEqual({ label: 'Onset: focal', count: 3 });
-    expect(d.rows).toContainEqual({ label: 'Spread to both sides', count: 1 });
+    expect(d.total).toBe(5);
+    expect(d.rows).toEqual([
+      { label: 'Focal impaired consciousness seizure', count: 2 },
+      { label: 'Generalized atonic seizure', count: 1 },
+    ]);
+    expect(d.earlier.recorded).toBe(1);
   });
 
   it('the body map counts symptoms by the part of the body, and after-seizure findings apart', () => {

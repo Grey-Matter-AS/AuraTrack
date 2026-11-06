@@ -69,8 +69,8 @@ export function CloseButton({ label, ...rest }: Omit<IconButtonProps, 'label' | 
 
 /** A row of buttons that wraps, and stacks on small phones, instead of squeezing. */
 export interface RoundButtonProps extends NativeButton {
-  /** Red for starting a recording, amber for logging a past seizure. */
-  tone: 'danger' | 'warning';
+  /** Red for starting a recording, amber for logging a past seizure, grey for anything else (a symptom between seizures). */
+  tone: 'danger' | 'warning' | 'neutral';
   icon?: ReactNode;
 }
 
@@ -82,6 +82,14 @@ export function RoundButton({ tone, icon, type = 'button', children, ...rest }: 
       <span className="ui-round__label">{children}</span>
     </button>
   );
+}
+
+/**
+ * Round buttons side by side, always on one line on every screen: the row shares its width between them and their size
+ * and text scale with it, so three fit even on the smallest phone instead of wrapping.
+ */
+export function RoundButtonRow({ children }: { children: ReactNode }) {
+  return <div className="ui-round-row">{children}</div>;
 }
 
 export function ButtonRow({ stack = false, children }: { stack?: boolean; children: ReactNode }) {

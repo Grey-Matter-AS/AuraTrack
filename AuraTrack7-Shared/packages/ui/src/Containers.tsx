@@ -1,5 +1,6 @@
-import type { ElementType, HTMLAttributes, ReactNode } from 'react';
+import { useId, useState, type ElementType, type HTMLAttributes, type ReactNode } from 'react';
 import { cx } from './cx';
+import { useUiStrings } from './strings';
 
 export function Section({ title, children }: { title?: ReactNode; children: ReactNode }) {
   return (
@@ -39,4 +40,88 @@ export function Inset({ children, ...rest }: Omit<HTMLAttributes<HTMLDivElement>
 
 export function EmptyState({ children }: { children: ReactNode }) {
   return <div className="ui-empty">{children}</div>;
+}
+
+/**
+ * A row that opens to show more: the title and a short summary ("2 chosen") on the left, "Show" or "Hide" with a chevron on
+ * the right, a solid border. It reads as something to tap, never as plain text, and says whether it is open.
+ */
+export function Disclosure({
+  title,
+  summary,
+  defaultOpen = false,
+  children,
+}: {
+  title: string;
+  summary?: string;
+  defaultOpen?: boolean;
+  children: ReactNode;
+}) {
+  const strings = useUiStrings();
+  const [open, setOpen] = useState(defaultOpen);
+  const bodyId = useId();
+  return (
+    <div className={cx('ui-disclosure', open && 'ui-disclosure--open')}>
+      <button
+        type="button"
+        className="ui-disclosure__head"
+        aria-expanded={open}
+        aria-controls={bodyId}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <span className="ui-disclosure__text">
+          <span className="ui-disclosure__title">{title}</span>
+          {summary ? <span className="ui-disclosure__summary">{summary}</span> : null}
+        </span>
+        <span className="ui-disclosure__action">
+          {open ? strings.hide : strings.show}
+          <span className="ui-disclosure__chevron" aria-hidden="true" />
+        </span>
+      </button>
+      {open ? (
+        <div id={bodyId} className="ui-disclosure__body">
+          {children}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+export interface NavListItem {
+  id: string;
+  label: string;
+  /** One line under the name: what is behind it. */
+  description?: string;
+  onClick: () => void;
+}
+
+/**
+ * A grouped list of places to go, as on the settings screens of iPhone and Android: a small heading, then rows with a
+ * name, an optional line of description, and a chevron. Each row is one button.
+ */
+export function NavList({ title, items }: { title?: string; items: readonly NavListItem[] }) {
+  const headingId = useId();
+  if (items.length === 0) return null;
+  return (
+    <section className="ui-navlist" aria-labelledby={title ? headingId : undefined}>
+      {title ? (
+        <h2 id={headingId} className="ui-navlist__title">
+          {title}
+        </h2>
+      ) : null}
+      <ul className="ui-navlist__rows">
+        {items.map((item) => (
+          <li key={item.id}>
+            <button type="button" className="ui-navlist__row" onClick={item.onClick}>
+              <span className="ui-navlist__text">
+                <span className="ui-navlist__label">{item.label}</span>
+                {item.description ? <span className="ui-navlist__description">{item.description}</span> : null}
+              </span>
+              <span className="ui-navlist__chevron" aria-hidden="true" />
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
 }

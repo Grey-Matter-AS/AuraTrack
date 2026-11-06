@@ -35,10 +35,10 @@ Columns: **ID · feature · 6.1 behaviour · milestone**
 - **F-215 · v7: optional symptom strip** during recording: off by default (setting), the usual symptoms for this patient and type, one tap adds a symptom timed automatically into the running phase. No other new buttons on the recording screen. M3
 
 ## Tagging and logging (F-300), rebuilt as the tabbed editor with the vertical timeline in M3
-- **F-301 · Seizure type:** Tonic-Clonic, Focal Aware, Focal Impaired, Absence, Aura Only; skip allowed. v7: plus the ILAE 2017 guided questions, with "Not sure" everywhere; the plain-language type stays the headline. M3
+- **F-301 · Seizure type:** Tonic-Clonic, Focal Aware, Focal Impaired, Absence, Aura Only; skip allowed. v7: plus the ILAE 2017 guided questions, with "Not sure" everywhere; the plain-language type stays the headline. **7.2 (M8, D-17):** replaced by the person's seizure profiles (up to 12; the first 3 in the row, the rest under "More"; "Something different"; "Keep these answers as a profile") and the ILAE 2025 questions (basic version, the paper's plain questions about recall and responsiveness); older seizures show their type and ILAE 2017 answers as recorded, never changed. M3
 - **F-302 · Symptoms:** a group → symptom → detail → body region → sub-region → parts (multi-select) wizard. v7: replaced by the tabbed editor, a search over the symptom list, and the body map. M3
 - **F-303 · Custom symptoms and details,** remembered for next time ("added by you"). M3
-- **F-304 · Saved symptom sets** per seizure type: suggested names, "most used for <type>", managed in Settings. M3
+- **F-304 · Saved symptom sets** per seizure type (7.2: no longer tied to a type; a profile's usual signs do that job, and "often for" counts a profile's seizures): suggested names, "most used for <type>", managed in Settings. M3
 - **F-305 · Symptom order** by drag (the first is the main symptom). v7: order and intervals on the vertical timeline (F-314). M3
 - **F-306 · Summary:** editable total and phase timers (marked "edited"), the type with Change, the event date and time for past or edited seizures. v7: phase times show their source (timed, edited, entered later). M3
 - **F-307 · After-seizure findings:** 7 groups, body areas for movement and sensation findings, custom findings, "back to normal after", "not back yet". M3
@@ -62,7 +62,7 @@ Columns: **ID · feature · 6.1 behaviour · milestone**
 - **F-315 · v7: History timeline** over days and weeks: seizures (sized by duration, coloured by type), between-seizures entries, medication changes and missed doses; tap anything to open it; also for the report period. M4, M5
 
 ## History (F-400)
-- **F-401 · Seizure list:** paginated (page size setting), filters by type (including "type not set"), date range and "needs details", Clear; the filters are kept when coming back. M4
+- **F-401 · Seizure list:** paginated (page size setting), filters by type (including "type not set"; 7.2: by profile, ILAE 2025 type, or the type of an older seizure), date range and "needs details", Clear; the filters are kept when coming back. M4
 - **F-402 · Trend chart:** frequency over time with medication change markers. M4
 - **F-403 · Event detail:** type, phases, symptoms, after-seizure findings with areas and recovery, triggers, notes, video file name, EEG badge, danger flags (long seizure, cluster against the patient's rule), edit history; Edit. v7: with the vertical seizure timeline (F-314). M4
 - **F-404 · Delete with confirmation** (also removes the linked EEG note). M4

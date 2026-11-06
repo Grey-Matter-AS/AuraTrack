@@ -129,6 +129,11 @@ export interface DateTimeFieldProps extends FieldFrame {
   placeholder?: string;
   min?: string;
   max?: string;
+  /**
+   * A time or date-and-time to the second ("…T07:32:15"), the default: every time in the app is kept and shown with its
+   * seconds. Off only where a plain clock time is wanted (a medicine's schedule).
+   */
+  withSeconds?: boolean;
 }
 
 /**
@@ -146,6 +151,7 @@ export function DateTimeField({
   placeholder,
   min,
   max,
+  withSeconds = true,
 }: DateTimeFieldProps) {
   const strings = useUiStrings();
   const generated = useId();
@@ -171,6 +177,7 @@ export function DateTimeField({
           value={value}
           min={min}
           max={max}
+          step={withSeconds && (type === 'time' || type === 'datetime-local') ? 1 : undefined}
           aria-label={label ? undefined : hint}
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy(fieldId, { help, error })}
@@ -267,6 +274,86 @@ export function NumberField({
           numericCaret.onFocus(e);
         }}
         onBlur={() => setDraft(null)}
+        onChange={(e) => handle(e.target.value)}
+      />
+    </Frame>
+  );
+}
+
+export interface DurationFieldProps extends FieldFrame {
+  /** Whole seconds, or null when nothing has been entered. */
+  value: number | null;
+  onChange: (seconds: number | null) => void;
+  id?: string;
+  /** The most hours that can be typed (a week by default). */
+  maxHours?: number;
+  required?: boolean;
+}
+
+const pad2 = (n: number) => String(n).padStart(2, '0');
+/** 3725 → "01:02:05". Every length in the app reads this way, always with seconds. */
+export function formatHms(seconds: number): string {
+  const v = Math.max(0, Math.round(seconds));
+  return `${pad2(Math.floor(v / 3600))}:${pad2(Math.floor((v % 3600) / 60))}:${pad2(v % 60)}`;
+}
+/** The digits typed, read from the right: the last two are seconds, the two before minutes, the rest hours. */
+const secondsOfDigits = (digits: string): number => {
+  const d = digits.padStart(6, '0');
+  return Number(d.slice(0, -4)) * 3600 + Number(d.slice(-4, -2)) * 60 + Number(d.slice(-2));
+};
+const maskOf = (digits: string): string => {
+  const d = digits.padStart(6, '0');
+  return `${d.slice(0, -4)}:${d.slice(-4, -2)}:${d.slice(-2)}`;
+};
+
+/**
+ * A length of time in one box, HH:MM:SS, typed on the number pad and filled from the right like a microwave: 1, 2, 5 gives
+ * 00:01:25. Backspace takes the last digit off. Leaving the box tidies it (00:00:90 becomes 00:01:30). An empty box means
+ * nothing was entered (null), which is not the same as zero.
+ */
+export function DurationField({
+  label,
+  help,
+  error,
+  id,
+  value,
+  onChange,
+  maxHours = 168,
+  required = false,
+}: DurationFieldProps) {
+  const generated = useId();
+  const fieldId = id ?? generated;
+  // While typing, the digits as typed; otherwise the value, tidied
+  const [digits, setDigits] = useState<string | null>(null);
+  const shown = digits !== null ? (digits === '' ? '' : maskOf(digits)) : value === null ? '' : formatHms(value);
+  const limit = maxHours * 3600 + 59 * 60 + 59;
+  const handle = (raw: string) => {
+    const before = digits ?? (value === null ? '' : formatHms(value).replace(/\D/g, '').replace(/^0+/, ''));
+    let next = raw.replace(/\D/g, '').replace(/^0+/, '');
+    // A colon was deleted: that means the last digit
+    if (next === before && raw.length < shown.length) next = next.slice(0, -1);
+    next = next.slice(-(String(maxHours).length + 4));
+    setDigits(next);
+    onChange(next === '' ? null : Math.min(limit, secondsOfDigits(next)));
+  };
+  return (
+    <Frame label={label} help={help} error={error} id={fieldId}>
+      <input
+        id={fieldId}
+        type="text"
+        inputMode="numeric"
+        autoComplete="off"
+        placeholder="00:00:00"
+        value={shown}
+        aria-invalid={error ? true : undefined}
+        aria-required={required || undefined}
+        aria-describedby={describedBy(fieldId, { help, error })}
+        className="ui-field ui-field--number ui-field--duration"
+        onFocus={(e) => {
+          setDigits(value === null ? '' : formatHms(value).replace(/\D/g, '').replace(/^0+/, ''));
+          numericCaret.onFocus(e);
+        }}
+        onBlur={() => setDigits(null)}
         onChange={(e) => handle(e.target.value)}
       />
     </Frame>

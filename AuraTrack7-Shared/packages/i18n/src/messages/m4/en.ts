@@ -131,7 +131,7 @@ export const m4en = {
     'AuraTrack keeps everything on your device, encrypted. You can bring in a backup from AuraTrack version 6.',
   'help.recording': 'Recording a seizure',
   'help.recordingText':
-    'Press Start timer when it begins. Then press End aura, End seizure and Back to normal as they happen. Nothing else is needed. The app warns at 4 minutes, alerts at 5 minutes by default, and stops by itself at 12 minutes.',
+    'Press Start timer when it begins. Then press End aura, End seizure and Back to usual self as they happen. Nothing else is needed. The app warns at 4 minutes, alerts at 5 minutes by default, and stops by itself at 12 minutes.',
   'help.tagging': 'Adding details',
   'help.taggingText':
     'After a recording, Add details opens the editor: type, what happened before, during and after, triggers and notes. Only fill in what you know. You can come back later.',
@@ -227,7 +227,7 @@ export const m4en = {
   'det.eeg': 'Happened during an EEG session',
   'det.afterFindings': 'Afterwards',
   'det.recovery': 'Back to normal after {minutes} minutes',
-  'det.recoveryOngoing': 'Not back to normal when last noted',
+  'det.recoveryOngoing': 'Not back to usual self when last noted',
   'det.triggers': 'Possible triggers',
   'det.notes': 'Notes',
   'det.quickNotes': 'Quick notes while recording',

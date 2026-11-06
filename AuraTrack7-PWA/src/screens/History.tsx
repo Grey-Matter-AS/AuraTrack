@@ -1,6 +1,5 @@
 import {
   NO_FILTERS,
-  SEIZURE_TYPES,
   addLocalDays,
   buildDangerMap,
   endOfLocalDay,
@@ -35,6 +34,7 @@ import {
 } from '@auratrack/ui';
 import { useMemo, useState } from 'react';
 import { useApp } from '../app/AppContext';
+import { seizureKinds, seizureName, seriesOf } from '../app/seizureName';
 import { useRecordList } from '../app/records';
 import { useNav } from '../editor/nav';
 import { MainNav } from './MainNav';
@@ -50,12 +50,6 @@ const RANGE: Record<Range, { days: number; size: BucketSize }> = {
   '30d': { days: 30, size: 'day' },
   '12w': { days: 84, size: 'week' },
   '12m': { days: 365, size: 'month' },
-};
-
-/** The series colour (1 to 8) of a seizure type, the same wherever the type is drawn. */
-export const seriesOf = (typeCode: string | null): number => {
-  const index = SEIZURE_TYPES.findIndex((t) => t.code === typeCode);
-  return index < 0 ? 8 : (index % 7) + 1;
 };
 
 /** History (F-401, F-402, F-315): the list with filters, the frequency chart, and the timeline over days and weeks. */
@@ -86,7 +80,7 @@ export function History() {
 }
 
 function ListView() {
-  const { t, label, seizures, settings } = useApp();
+  const { t, label, seizures, settings, profiles } = useApp();
   const nav = useNav();
   const [filters, setFilters] = useState<HistoryFilters>(NO_FILTERS);
   const [page, setPage] = useState(1);
@@ -97,10 +91,7 @@ function ListView() {
     setFilters((f) => ({ ...f, ...next }));
     setPage(1);
   };
-  const types = [
-    { value: 'none', label: t('hist.noType') },
-    ...SEIZURE_TYPES.map((x) => ({ value: x.code, label: label(x.code) })),
-  ];
+  const types = [{ value: 'none', label: t('hist.noType') }, ...seizureKinds(seizures, profiles, t, label)];
   return (
     <Stack>
       <Section title={t('hist.filters')}>
@@ -230,7 +221,9 @@ function TrendView() {
 function TimelineView() {
   const app = useApp();
   const nav = useNav();
-  const { t, label, seizures, settings, fmt, between } = app;
+  const { t, label, seizures, settings, fmt, between, profiles } = app;
+  const kinds = useMemo(() => seizureKinds(seizures, profiles, t, label), [seizures, profiles, t, label]);
+  const seizureById = useMemo(() => new Map(seizures.map((s) => [s.id, s])), [seizures]);
   const changes = useRecordList<MedicationChange>('medicationChange');
   const doses = useRecordList<DoseLog>('doseLog', { all: true });
   const meds = useRecordList<Medication>('medication');
@@ -265,7 +258,7 @@ function TimelineView() {
     ...(i.kind === 'seizure'
       ? {
           size: Math.min(1, (i.seconds ?? 0) / 720),
-          series: seriesOf(i.typeCode),
+          series: seriesOf(i.kindKey, kinds),
           open: i.seconds === null,
           long: i.long,
         }
@@ -277,9 +270,21 @@ function TimelineView() {
     else if (item.kind === 'medication' || item.kind === 'missed') nav.push('medDetail', { id: item.medicationId });
   };
   const text = (item: TimelineItem): string => {
-    const when = zoom === 'day' ? fmt.time(item.at) : fmt.when(item.at);
-    if (item.kind === 'seizure')
-      return `${when} · ${item.typeCode ? label(item.typeCode) : t('home.untyped')}${item.seconds !== null ? ` · ${fmt.duration(item.seconds)}` : ''}`;
+    // A seizure's time is always shown to the second; medicines and the rest to the minute
+    const exact = item.kind === 'seizure';
+    const when =
+      zoom === 'day'
+        ? exact
+          ? fmt.timeSec(item.at)
+          : fmt.time(item.at)
+        : exact
+          ? fmt.whenSec(item.at)
+          : fmt.when(item.at);
+    if (item.kind === 'seizure') {
+      const seizure = seizureById.get(item.id);
+      const name = seizure ? seizureName(seizure, t, label) : t('home.untyped');
+      return `${when} · ${name}${item.seconds !== null ? ` · ${fmt.duration(item.seconds)}` : ''}`;
+    }
     if (item.kind === 'between') return `${when} · ${t('hist.between', { name: label(item.code) })}`;
     if (item.kind === 'medication')
       return `${when} · ${t('hist.medChange', { name: item.name, change: t(`med.change.${item.change}` as never) })}`;

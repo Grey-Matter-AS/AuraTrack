@@ -20,14 +20,15 @@ import { useState } from 'react';
 const LONG = 'A very long label that has to wrap instead of running off the screen or covering its neighbour';
 
 const entries: TimelineEntry[] = [
+  { kind: 'gap', id: 'g0', text: 'Warning signs began 2 h before' },
+  { kind: 'moment', id: 'p', name: 'Irritable', meta: 'Warning signs', phase: 'prodrome' },
   { kind: 'marker', id: 'a', text: 'Start · 14:05:00', phase: 'aura' },
-  { kind: 'gap', id: 'g0', text: 'Warning signs began 30 seconds before' },
-  { kind: 'moment', id: 'b', name: 'Deja vu', meta: 'Before', phase: 'before', first: true },
+  { kind: 'moment', id: 'b', name: 'Deja vu', meta: 'Aura', phase: 'aura', first: true },
   { kind: 'gap', id: 'g1', text: 'About 10 s later' },
-  { kind: 'moment', id: 'c', name: LONG, meta: `During · ${LONG}`, phase: 'during' },
+  { kind: 'moment', id: 'c', name: LONG, meta: `Seizure · ${LONG}`, phase: 'seizure' },
   { kind: 'marker', id: 'd', text: 'Seizure ends · 14:07:10', phase: 'seizure' },
-  { kind: 'moment', id: 'e', name: 'Confusion', meta: '', phase: 'after' },
-  { kind: 'marker', id: 'f', text: 'Back to normal · 14:20:00', phase: 'recovery' },
+  { kind: 'moment', id: 'e', name: 'Confusion', meta: '', phase: 'recovery' },
+  { kind: 'marker', id: 'f', text: 'Back to usual self · 14:20:00', phase: 'recovery' },
 ];
 
 const bars = Array.from({ length: 12 }, (_, i) => ({

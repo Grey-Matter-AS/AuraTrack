@@ -21,6 +21,11 @@ async function detailsThenBack(page: Page) {
   await expect(page.getByRole('button', { name: 'Start timer' })).toBeVisible();
 }
 
+/** Taps an answer to one ILAE question: each question's chips are a group named by it. */
+async function answer(page: Page, question: string, option: string) {
+  await page.getByRole('group', { name: question }).getByRole('button', { name: option, exact: true }).click();
+}
+
 async function unlock(page: Page) {
   await page.getByLabel('PIN', { exact: true }).fill(PIN);
   await page.getByRole('button', { name: 'Unlock' }).click();
@@ -115,7 +120,9 @@ test('Log past seizure saves one whose phases add up', async ({ page }) => {
   await expect(page.getByText(/entered later/)).toBeVisible();
 });
 
-test('after a recording, Add details opens the editor: type, a symptom with its place, and Save', async ({ page }) => {
+test('after a recording, Add details opens the editor: ILAE 2025 answers, a symptom with its place, and Save', async ({
+  page,
+}) => {
   await firstRun(page);
   await page.getByRole('button', { name: 'Start timer' }).click();
   await page.getByRole('button', { name: 'End seizure' }).click();
@@ -127,7 +134,9 @@ test('after a recording, Add details opens the editor: type, a symptom with its 
     await page.getByRole('button', { name: /\d (of|av) \d/ }).click();
     await page.getByRole('button', { name: new RegExp(`^${name}`) }).click();
   };
-  await page.getByRole('button', { name: 'Focal Impaired' }).click();
+  await answer(page, 'Where did it start?', 'Focal');
+  await answer(page, 'Could the person remember it afterwards?', 'No');
+  await expect(page.getByText('ILAE 2025: Focal impaired consciousness seizure')).toBeVisible();
   await openTab('During');
   await page.getByLabel('Search', { exact: true }).fill('rhythmic');
   await page
@@ -141,8 +150,39 @@ test('after a recording, Add details opens the editor: type, a symptom with its 
   await expect(page.getByRole('list', { name: 'Seizure timeline' })).toContainText(/Rhythmic Shaking/i);
   await page.getByRole('button', { name: 'Save' }).click();
   await expect(page.getByRole('button', { name: 'Start timer' })).toBeVisible();
-  await expect(page.getByText('Focal Impaired')).toBeVisible();
+  await expect(page.getByText('Focal impaired consciousness seizure')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Edit' })).toBeVisible();
+});
+
+test('seizure profiles: keep the answers as a profile, then one tap classifies the next seizure (D-17)', async ({
+  page,
+}) => {
+  await firstRun(page);
+  const recordAndOpen = async () => {
+    await page.getByRole('button', { name: 'Start timer' }).click();
+    await page.getByRole('button', { name: 'End seizure' }).click();
+    await page.getByRole('button', { name: 'Add details' }).click();
+    await expect(page.getByText('Seizure details')).toBeVisible();
+  };
+  await recordAndOpen();
+  await expect(page.getByText(/No seizure profiles yet/)).toBeVisible();
+  await answer(page, 'Where did it start?', 'Generalized');
+  await answer(page, 'Tonic-clonic', 'Not sure which');
+  await page.getByRole('button', { name: 'Keep these answers as a profile' }).click();
+  const sheet = page.getByRole('dialog', { name: 'Keep as a profile' });
+  await sheet.getByLabel('Name').fill('Night seizure');
+  await sheet.getByRole('button', { name: 'Save' }).click();
+  await expect(page.getByRole('button', { name: 'Night seizure' })).toHaveAttribute('aria-pressed', 'true');
+  await page.getByRole('button', { name: 'Save' }).click();
+  await expect(page.getByRole('button', { name: 'Start timer' })).toBeVisible();
+  await expect(page.getByText('Night seizure').first()).toBeVisible();
+
+  await recordAndOpen();
+  await page.getByRole('button', { name: 'Night seizure' }).click();
+  await expect(page.getByText('ILAE 2025: Generalized tonic-clonic seizure')).toBeVisible();
+  await page.getByRole('button', { name: 'Save' }).click();
+  await expect(page.getByRole('button', { name: 'Start timer' })).toBeVisible();
+  await expect(page.getByText('Night seizure')).toHaveCount(2);
 });
 
 test('between seizures: log one and see it on Home; saved sets: save from the editor and manage them', async ({

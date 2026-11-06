@@ -5,12 +5,14 @@ import { m4en } from './m4/en';
 import { m5en } from './m5/en';
 import { m6en } from './m6/en';
 import { m7en } from './m7/en';
+import { m8en } from './m8/en';
 
 export const en = {
   ...m4en,
   ...m5en,
   ...m6en,
   ...m7en,
+  ...m8en,
   'common.save': 'Save',
   'common.review': 'Review',
   'common.done': 'Done',
@@ -40,7 +42,7 @@ export const en = {
   'rec.stop': 'Stop',
   'rec.endAura': 'End aura',
   'rec.endSeizure': 'End seizure',
-  'rec.backToNormal': 'Back to normal',
+  'rec.backToNormal': 'Back to usual self',
   'rec.addDetails': 'Add details',
   'rec.symptomStrip': 'Symptoms (one tap, timed automatically)',
   'rec.quickNotes': 'Quick notes',
@@ -80,6 +82,10 @@ export const en = {
   'tab.before': 'Before',
   'tab.during': 'During',
   'tab.after': 'After',
+  'tab.prodrome': 'Warning signs',
+  'tab.aura': 'Aura',
+  'tab.seizure': 'Seizure',
+  'tab.recovery': 'Recovery',
   'tab.notes': 'Notes',
   'tab.notFilled': 'not filled in yet',
   'tab.added': '{n} added',
@@ -88,9 +94,10 @@ export const en = {
   'tab.nothingYet': 'nothing yet',
   'cls.question': 'What kind of seizure was it?',
   'cls.typeLabel': 'Seizure type',
-  'cls.follow': 'The other tabs now follow this type: what they suggest, and which of them are shown.',
+  'cls.follow':
+    'The other tabs now follow this type, and so do the ILAE answers below that it settles. Every answer can still be changed.',
   'cls.notSureHint': 'Not sure? Leave it empty: everything still works, and you can set it later.',
-  'cls.section': 'Classification (optional)',
+  'cls.section': 'ILAE 2017 classification for your neurologist',
   'cls.intro': 'Answer what you can. "Not sure" is always fine and can be changed later.',
   'cls.onset': 'Where did it start?',
   'cls.awareness': 'Awareness',
@@ -112,7 +119,7 @@ export const en = {
   'after.findings': 'Findings',
   'after.chosen': 'Chosen: {list}',
   'after.recovery': 'Recovery',
-  'after.notBack': 'Not back to normal yet',
+  'after.notBack': 'Not back to usual self yet',
   'after.backAfter': 'Back to normal after (minutes)',
   'notes.section': 'Notes',
   'notes.label': 'Notes for the neurologist',

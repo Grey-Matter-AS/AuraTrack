@@ -10,7 +10,7 @@ import { useApp } from '../app/AppContext';
 const pad = (n: number) => String(n).padStart(2, '0');
 const localInput = (at: number): string => {
   const d = new Date(at);
-  return `${localDateKey(d)}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return `${localDateKey(d)}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 };
 
 export function Recovery() {
@@ -32,7 +32,7 @@ export function Recovery() {
         }
       >
         <p>{t('home.badgeStopped')}</p>
-        <p className="app-note">{recovery.autoStopped.map((s) => fmt.time(s.start)).join(', ')}</p>
+        <p className="app-note">{recovery.autoStopped.map((s) => fmt.timeSec(s.start)).join(', ')}</p>
       </Dialog>
     );
   return null;
@@ -50,7 +50,7 @@ function Question({ session }: { session: RecordingSession }) {
       <Dialog
         title={t('recover.title')}
         dismissible={false}
-        message={t('recover.message', { time: fmt.time(session.start) })}
+        message={t('recover.message', { time: fmt.timeSec(session.start) })}
         actions={
           <>
             <Button

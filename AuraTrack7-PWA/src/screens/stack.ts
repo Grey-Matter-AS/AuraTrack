@@ -22,6 +22,7 @@ import { Patients } from './Patients';
 import { ReportPreview } from './ReportPreview';
 import { Reports } from './Reports';
 import { Settings, SettingsGroup } from './Settings';
+import { Profiles } from './Profiles';
 import { Sets } from './Sets';
 import { UpdateFile } from './UpdateFile';
 import { UpToDate } from './UpToDate';
@@ -37,6 +38,7 @@ export const stack = createScreenStack({
   editor: Editor,
   review: Review,
   sets: Sets,
+  profiles: Profiles,
   patients: Patients,
   settings: Settings,
   settingsGroup: SettingsGroup,

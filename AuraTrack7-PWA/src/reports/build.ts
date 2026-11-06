@@ -65,7 +65,7 @@ export function useReportMaker(): (request: ReportRequest) => MadeReport | null 
         t,
         label,
         language,
-        fmt: { date: fmt.date, dayMonth: fmt.dayMonth, longDate: fmt.longDate, time: fmt.time, duration: fmt.duration },
+        fmt: { date: fmt.date, dayMonth: fmt.dayMonth, longDate: fmt.longDate, time: fmt.time, timeSec: fmt.timeSec, duration: fmt.duration },
         now,
         appVersion: APP_VERSION,
       };

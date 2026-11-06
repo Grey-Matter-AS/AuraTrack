@@ -43,6 +43,7 @@ export function context(language = 'en'): ReportContext {
       dayMonth: (ms) => localDateKey(ms).slice(5),
       longDate: (ms) => localDateKey(ms),
       time: (ms) => `${two(new Date(ms).getHours())}:${two(new Date(ms).getMinutes())}`,
+      timeSec: (ms) => `${two(new Date(ms).getHours())}:${two(new Date(ms).getMinutes())}:${two(new Date(ms).getSeconds())}`,
       duration: (s) => `${Math.floor(s / 60)}:${two(Math.round(s % 60))}`,
     },
     now: NOW,
@@ -73,10 +74,10 @@ export function seizures(count = 40): Seizure[] {
       typeCode: i % 8 === 7 ? null : TYPES[i % TYPES.length] ?? null,
       ilae: null,
       symptoms: [
-        { id: `y${i}a`, code: 'symptom.awareness.fully_awake_aware', area: null, moment: 0, order: 0, sincePrevious: { kind: 'unknown', ms: null }, isFirst: true, phase: 'during' },
+        { id: `y${i}a`, code: 'symptom.awareness.fully_awake_aware', area: null, moment: 0, order: 0, sincePrevious: { kind: 'unknown', ms: null }, isFirst: true, phase: 'seizure' },
         ...(i % 2 === 0
-          ? [{ id: `y${i}b`, code: 'symptom.small_twitching.single_muscle_jerks', area: { region: 'body.arms', subRegion: 'body.arms.left_arm', part: null }, moment: 1, order: 1, sincePrevious: { kind: 'exact' as const, ms: 5000 }, isFirst: false, phase: 'during' as const }]
-          : [{ id: `y${i}c`, code: 'symptom.awareness.confused_dream_like', area: null, moment: 1, order: 1, sincePrevious: { kind: 'unknown' as const, ms: null }, isFirst: false, phase: 'during' as const }]),
+          ? [{ id: `y${i}b`, code: 'symptom.small_twitching.single_muscle_jerks', area: { region: 'body.arms', subRegion: 'body.arms.left_arm', part: null }, moment: 1, order: 1, sincePrevious: { kind: 'exact' as const, ms: 5000 }, isFirst: false, phase: 'seizure' as const }]
+          : [{ id: `y${i}c`, code: 'symptom.awareness.confused_dream_like', area: null, moment: 1, order: 1, sincePrevious: { kind: 'unknown' as const, ms: null }, isFirst: false, phase: 'seizure' as const }]),
       ],
       afterFindings: i % 4 === 0 ? [{ code: 'after.confused', customLabel: null, areas: [] }] : [],
       recoveryMinutes: full ? 5 : null,

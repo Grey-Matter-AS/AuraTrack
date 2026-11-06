@@ -1,7 +1,8 @@
 import { activeSession, buildDangerMap, type Seizure } from '@auratrack/model';
-import { AppHeader, Button, Card, RoundButton, Screen, Section, Stack } from '@auratrack/ui';
+import { AppHeader, Button, Card, RoundButton, RoundButtonRow, Screen, Section, Stack } from '@auratrack/ui';
 import { useEffect, useState } from 'react';
 import { useApp } from '../app/AppContext';
+import { isClassified } from '../app/seizureName';
 import { useEditorHost } from '../editor/EditorContext';
 import { useNav } from '../editor/nav';
 import { BetweenSheet } from './Between';
@@ -48,7 +49,7 @@ export function Home() {
 
   const cancelled = seizures.filter((s) => s.cancelled === true);
   const kept = seizures.filter((s) => s.cancelled !== true);
-  const lockedOnes = kept.filter((s) => s.recordedWhileLocked === true && s.typeCode === null);
+  const lockedOnes = kept.filter((s) => s.recordedWhileLocked === true && !isClassified(s));
   const recent = kept.slice(0, 5);
 
   return (
@@ -79,7 +80,7 @@ export function Home() {
             <Stack>
               <p className="app-banner">{t('home.cancelledTitle')}</p>
               <p className="app-note">
-                {fmt.when(s.phases.start.at)} · {t('home.cancelledText')}
+                {fmt.whenSec(s.phases.start.at)} · {t('home.cancelledText')}
               </p>
               <div className="ui-cluster">
                 <Button variant="danger" onClick={() => void actions.deleteSeizure(s.id)}>
@@ -91,18 +92,21 @@ export function Home() {
           </Card>
         ))}
 
-        <div className="app-round-row">
+        <RoundButtonRow>
           <RoundButton tone="danger" onClick={actions.startRecording}>
             {t('home.start')}
           </RoundButton>
           <RoundButton tone="warning" onClick={() => setLogging(true)}>
             {t('home.logPast')}
           </RoundButton>
-        </div>
+          <RoundButton tone="neutral" aria-label={t('home.betweenLog')} onClick={() => setBetweenOpen(true)}>
+            {t('home.betweenRound')}
+          </RoundButton>
+        </RoundButtonRow>
 
         {lockedOnes.map((s) => (
           <Card key={s.id} tone="accent" compact>
-            <p className="app-banner">{fmt.when(s.phases.start.at)}</p>
+            <p className="app-banner">{fmt.whenSec(s.phases.start.at)}</p>
             <p className="app-note">{t('home.lockedText')}</p>
           </Card>
         ))}
@@ -187,26 +191,25 @@ export function Home() {
           )}
         </Section>
 
-        <Section title={t('home.between')}>
-          <Stack>
-            <Button fullWidth onClick={() => setBetweenOpen(true)}>
-              {t('home.betweenLog')}
-            </Button>
-            {between.slice(0, 5).map((b) => (
-              <Card compact key={b.id}>
-                <div className="app-row">
-                  <div>
-                    <p className="app-banner">{app.label(b.symptomCode)}</p>
-                    <p className="app-note">{fmt.when(b.occurredAt)}</p>
+        {between.length > 0 ? (
+          <Section title={t('home.between')}>
+            <Stack>
+              {between.slice(0, 5).map((b) => (
+                <Card compact key={b.id}>
+                  <div className="app-row">
+                    <div>
+                      <p className="app-banner">{app.label(b.symptomCode)}</p>
+                      <p className="app-note">{fmt.when(b.occurredAt)}</p>
+                    </div>
+                    <Button size="md" variant="danger" onClick={() => void actions.deleteBetween(b.id)}>
+                      {t('between.delete')}
+                    </Button>
                   </div>
-                  <Button size="md" variant="danger" onClick={() => void actions.deleteBetween(b.id)}>
-                    {t('between.delete')}
-                  </Button>
-                </div>
-              </Card>
-            ))}
-          </Stack>
-        </Section>
+                </Card>
+              ))}
+            </Stack>
+          </Section>
+        ) : null}
       </Stack>
       {checkIn ? <CheckIn entry={null} onClose={() => setCheckIn(false)} /> : null}
       {eegSheet === 'start' ? <StartSession onClose={() => setEegSheet(null)} /> : null}

@@ -1,5 +1,6 @@
 import {
   BODY_REGIONS,
+  ilae2025Type,
   EEG_ACTIVITIES,
   FINDINGS,
   MOODS,
@@ -91,6 +92,15 @@ export function buildCsv(input: CsvInput): string {
           s.timeZone,
           s.typeCode ? label(s.typeCode) : '',
           s.typeCode ?? '',
+          // ILAE 2025 (D-17): the profile's name as saved, the type, and each answer as its code
+          s.profile?.name ?? '',
+          (s.ilae2025 ? ilae2025Type(s.ilae2025) : null) ?? '',
+          s.ilae2025?.class ?? '',
+          s.ilae2025?.recall ?? '',
+          s.ilae2025?.responsive ?? '',
+          s.ilae2025?.bilateralTonicClonic ?? '',
+          s.ilae2025?.observable ?? '',
+          s.ilae2025?.generalized ?? '',
           seizureSeconds(s.phases),
           totalSeconds(s.phases),
           stamp(s.phases.auraEnd?.at ?? null),
@@ -286,7 +296,7 @@ export const csvTemplate = (label: (code: string) => string): string =>
 export function buildCodeList(): string {
   const body = BODY_REGIONS.flatMap((r) => [r.code, ...r.subRegions.flatMap((s) => [s.code, ...s.parts.map((p) => p.code)])]);
   const kinds: [string, readonly string[]][] = [
-    ['seizure type (typeCode)', SEIZURE_TYPES.map((x) => x.code)],
+    ['seizure type before 7.2 (typeCode)', SEIZURE_TYPES.map((x) => x.code)],
     ['symptom (symptomCodes)', SYMPTOMS.map((x) => x.code)],
     ['body area (after @)', body],
     ['trigger (triggerCodes)', TRIGGERS.map((x) => x.code)],

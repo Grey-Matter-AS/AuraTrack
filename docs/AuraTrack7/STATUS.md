@@ -2,13 +2,13 @@
 
 **Read this first in every native session.** Then read `ROADMAP.md` (Part A is binding) and the current milestone's `N<n>.md`, and continue with "Next step".
 
-- **Current milestone:** N0, The move to six folders (Part A), then accounts, machines, decisions (Part B). **Part A: committed to `main` (`dcc6958`, `0ba28c7`), Vercel production built from the new layout (Root Directory `AuraTrack7-PWA`). Left: CI green on `main` and your phone check of production.**
+- **Current milestone:** N0, The move to six folders (Part A), then accounts, machines, decisions (Part B). **Part A: committed to `main` (`dcc6958`, `0ba28c7`), Vercel production built from the new layout (Root Directory `AuraTrack7-PWA`). CI green on `main` (2026-11-04, `fcc44c7`). Left: your phone check of production.**
 - **Roadmap:** approved 2026-11-03 (`ROADMAP.md`).
 - **PWA:** paused 2026-11-03. Its open checks are listed in `docs/plan/STATUS.md`.
 - **Last updated:** 2026-11-03 (WSL)
 
 ## Next step
-1. **You:** commit the CI fix (`session.peer.test.ts`) to `main` and push; check that CI goes green (check + e2e jobs).
+1. ~~Commit the CI fix and check CI~~: done, CI green on `main` (`fcc44c7`).
 2. **You:** on your phone, against production:
    - [ ] the app loads and shows Home
    - [ ] start and stop a test recording; it's in History
@@ -84,6 +84,8 @@ Baseline (all green):
 | Regulatory adviser | yours, in progress per you |
 
 ## Open questions
+- D-17 (ILAE 2025, seizure profiles): built in the PWA as M8 on branch `7.2.0---M8` (sign-off `docs/plan/M8-signoff.md`); the native apps take it in N2, N4 and N8.
+- Translation review: the M8 messages (`classify.`, `prof.`, `field.ilae2025`, `field.profile`, `rep.ilae2017`; 8 languages), and the earlier `cls.section`/`cls.follow`.
 - Version scheme of the first store release (1.0 or continuing 7.x): settled in N0.
 - Bundle and package ids: domain is `grey-matter.eu`; proposed `eu.greymatter.auratrack7` on both platforms (no hyphen: Android ids can't contain one). Waiting for your yes (N0 slice 2).
 - Contact address for security reports (`SECURITY.md`): N0.
@@ -97,3 +99,5 @@ Baseline (all green):
 | 2026-11-03 | WSL | N0 A1: coverage brought back over 90%, flaky CSV import test fixed, baseline recorded (session crashed once, resumed) |
 | 2026-11-03 | WSL | N0 A2–A4: the move on branch `n0-move`, paths updated, all checks green; waiting for your commit and the Vercel preview |
 | 2026-11-04 | WSL | Part A on `main` and in production; CI timing fix in a sync test |
+| 2026-11-04 | WSL | D-16: the seizure type fills in the ILAE answers it settles (PWA editor + model rule); heading renamed in 9 languages. Then replaced by D-17: ILAE 2025 and seizure profiles (PWA M8 plan drafted; native N2, N4, N8) |
+| 2026-11-04 | WSL | PWA M8 (D-17) built on `7.2.0---M8`: ILAE 2025 questions, seizure profiles, reports and CSV; all checks green (see `docs/plan/M8-signoff.md`) |

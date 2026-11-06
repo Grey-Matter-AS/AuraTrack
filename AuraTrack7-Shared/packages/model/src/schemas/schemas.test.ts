@@ -7,6 +7,7 @@ import {
   interictalFixture,
   medicationFixture,
   seizureFixture,
+  seizureProfileFixture,
   symptomSetFixture,
 } from './fixtures';
 import {
@@ -36,6 +37,7 @@ import {
   LOCKED_ALERT_CONTENT,
   SETTING_DEFS,
   SETTING_KEYS,
+  SeizureProfileSchema,
   SymptomSetSchema,
   settingValue,
 } from './index';
@@ -337,6 +339,37 @@ describe('added in 7.0.3: phases on symptoms, prodrome hours, between-seizures e
     expect(APPEND_ONLY_TYPES).not.toContain('interictalEvent');
     expect(MERGE_RULES.interictalEvent).toBeUndefined();
     expect(MERGE_RULES.symptomSet).toBeUndefined();
+  });
+});
+
+describe('ILAE 2025 and seizure profiles (D-17)', () => {
+  it('a profile needs a name, keeps up to 40 usual signs, and is merged field by field', () => {
+    expect(SeizureProfileSchema.parse(seizureProfileFixture())).toBeTruthy();
+    expect(SeizureProfileSchema.safeParse(seizureProfileFixture({ name: '' })).success).toBe(false);
+    expect(SeizureProfileSchema.safeParse(seizureProfileFixture({ name: 'x'.repeat(61) })).success).toBe(false);
+    expect(SeizureProfileSchema.safeParse(seizureProfileFixture({ signs: [] })).success).toBe(true);
+    const many = Array.from({ length: 41 }, () => ({ code: 'symptom.x', phase: 'during' as const }));
+    expect(SeizureProfileSchema.safeParse(seizureProfileFixture({ signs: many })).success).toBe(false);
+    expect(RECORD_TYPES).toContain('seizureProfile');
+    expect(APPEND_ONLY_TYPES).not.toContain('seizureProfile');
+  });
+
+  it('a seizure without the new fields (every one saved before 7.2) is still valid', () => {
+    const old = seizureFixture();
+    expect('ilae2025' in old).toBe(false);
+    expect(SeizureSchema.safeParse(old).success).toBe(true);
+  });
+
+  it('a seizure keeps its ILAE 2025 answers and the profile as it was', () => {
+    const seizure = seizureFixture({
+      typeCode: null,
+      ilae: null,
+      ilae2025: seizureProfileFixture().ilae,
+      profile: { id: newId(), name: 'Usual seizure' },
+    });
+    expect(SeizureSchema.parse(seizure)).toEqual(seizure);
+    const wrong = { ...seizure, ilae2025: { ...seizure.ilae2025, generalized: 'grand_mal' } };
+    expect(SeizureSchema.safeParse(wrong).success).toBe(false);
   });
 });
 

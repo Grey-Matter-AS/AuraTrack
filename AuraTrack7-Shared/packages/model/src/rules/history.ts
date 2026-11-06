@@ -1,12 +1,13 @@
 import type { DoseLog, InterictalEvent, MedicationChange, Seizure } from '../schemas';
 import { addLocalDays, localDateKey, startOfLocalDay } from './dates';
-import { isLongSeizure, seizureSeconds, type EmergencyPlan } from './emergency';
+import { isLongRecord, seizureLengthSeconds, type EmergencyPlan } from './emergency';
+import { ilae2025Type } from './ilae2025';
 
 // What History shows: the filters, the pages, the frequency chart and the timeline over days and weeks. All pure, so the
 // same numbers feed the screen and (in M5) the reports.
 
 export interface HistoryFilters {
-  /** A seizure type code, 'none' for seizures with no type set, or null for every type. */
+  /** A kind key (see seizureKindKey), 'none' for seizures not classified, or null for every kind. */
   type: string | 'none' | null;
   /** First and last local day, 'YYYY-MM-DD', or '' for no limit. */
   from: string;
@@ -15,11 +16,24 @@ export interface HistoryFilters {
 }
 export const NO_FILTERS: HistoryFilters = { type: null, from: '', to: '', needsDetails: false };
 
-type Filterable = Pick<Seizure, 'typeCode' | 'status' | 'phases'>;
+type Kinded = Pick<Seizure, 'typeCode' | 'ilae2025' | 'profile'>;
+type Filterable = Kinded & Pick<Seizure, 'status' | 'phases'>;
 
-/** A seizure waits for details when its timing is saved but nothing else, or it has no type. */
-export const needsDetails = (s: Pick<Seizure, 'typeCode' | 'status'>): boolean =>
-  s.status === 'recorded' || s.typeCode === null;
+/**
+ * What kind of seizure it is, as one key for filters and colours (D-17): `profile:<id>` for a seizure saved with a profile;
+ * `ilae2025:<type>` for one classified by ILAE 2025 alone; the plain-language type code for one recorded before 7.2
+ * (so a filter kept from then still works); null when it is not classified.
+ */
+export function seizureKindKey(s: Kinded): string | null {
+  if (s.profile) return `profile:${s.profile.id}`;
+  const type = s.ilae2025 ? ilae2025Type(s.ilae2025) : null;
+  if (type) return `ilae2025:${type}`;
+  return s.typeCode;
+}
+
+/** A seizure waits for details when its timing is saved but nothing else, or it is not classified. */
+export const needsDetails = (s: Kinded & Pick<Seizure, 'status'>): boolean =>
+  s.status === 'recorded' || seizureKindKey(s) === null;
 
 export const filtersActive = (f: HistoryFilters): boolean =>
   f.type !== null || f.from !== '' || f.to !== '' || f.needsDetails;
@@ -27,7 +41,8 @@ export const filtersActive = (f: HistoryFilters): boolean =>
 /** The seizures that pass the filters, in the order given. The days are the local days the seizure began on. */
 export function filterSeizures<T extends Filterable>(list: readonly T[], f: HistoryFilters): T[] {
   return list.filter((s) => {
-    if (f.type === 'none' ? s.typeCode !== null : f.type !== null && s.typeCode !== f.type) return false;
+    const kind = seizureKindKey(s);
+    if (f.type === 'none' ? kind !== null : f.type !== null && kind !== f.type) return false;
     if (f.needsDetails && !needsDetails(s)) return false;
     const day = localDateKey(s.phases.start.at);
     if (f.from !== '' && day < f.from) return false;
@@ -98,14 +113,14 @@ export function frequencyBuckets(
     const bucket = buckets.find((b) => b.start === key);
     if (!bucket) continue;
     bucket.count += 1;
-    if (isLongSeizure(s.phases, plan)) bucket.long += 1;
+    if (isLongRecord(s, plan)) bucket.long += 1;
   }
   return buckets;
 }
 
 /** One thing on the timeline. */
 export type TimelineItem =
-  | { kind: 'seizure'; id: string; at: number; seconds: number | null; typeCode: string | null; long: boolean }
+  | { kind: 'seizure'; id: string; at: number; seconds: number | null; kindKey: string | null; long: boolean }
   | { kind: 'between'; id: string; at: number; code: string }
   | { kind: 'medication'; id: string; at: number; medicationId: string; name: string; change: MedicationChange['type'] }
   | { kind: 'missed'; id: string; at: number; medicationId: string; name: string };
@@ -129,9 +144,9 @@ export function timelineItems(input: {
         kind: 'seizure',
         id: s.id,
         at: s.phases.start.at,
-        seconds: seizureSeconds(s.phases),
-        typeCode: s.typeCode,
-        long: isLongSeizure(s.phases, input.plan),
+        seconds: seizureLengthSeconds(s.phases),
+        kindKey: seizureKindKey(s),
+        long: isLongRecord(s, input.plan),
       });
   for (const b of input.between)
     if (within(b.occurredAt)) items.push({ kind: 'between', id: b.id, at: b.occurredAt, code: b.symptomCode });

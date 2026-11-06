@@ -1,5 +1,6 @@
 import { AppHeader, Button, ButtonRow, Card, Screen, Stack, useToast } from '@auratrack/ui';
 import { useApp } from '../app/AppContext';
+import { ilae2025Name } from '../app/seizureName';
 import { useEditor } from './EditorContext';
 import { goHome, useNav } from './nav';
 import { OverviewStrip, Timeline } from './Timeline';
@@ -18,7 +19,14 @@ export function Review() {
         <AppHeader title={t('review.title')} onBack={() => nav.pop()} />
         <OverviewStrip draft={draft} />
         <Card compact>
-          <p className="app-banner">{draft.typeCode ? label(draft.typeCode) : t('review.typeNotSet')}</p>
+          <p className="app-banner">
+            {draft.profile?.name ??
+              ilae2025Name(draft.ilae2025, t) ??
+              (draft.typeCode ? label(draft.typeCode) : t('review.typeNotSet'))}
+          </p>
+          {draft.profile && ilae2025Name(draft.ilae2025, t) ? (
+            <p className="app-note">{t('classify.result', { type: ilae2025Name(draft.ilae2025, t) ?? '' })}</p>
+          ) : null}
           {draft.notes ? <p className="app-note">{draft.notes}</p> : null}
           {draft.findings.length + draft.customFindings.length > 0 ? (
             <p className="app-note">

@@ -20,6 +20,10 @@ export interface Formats {
   longDate(at: number): string;
   /** The day and the time. */
   when(at: number): string;
+  /** "14:05:32": a seizure's times are always shown to the second. */
+  timeSec(at: number): string;
+  /** The day and the time to the second, for anything about a seizure. */
+  whenSec(at: number): string;
   /** "1:05" or "1 min 5 s"; from an hour, "1:01:05" or "1 h 1 min 5 s". */
   duration(seconds: number): string;
 }
@@ -34,6 +38,10 @@ export function makeFormats(
   const twelve = settings.timeFormat === '12h';
   const time = (at: number) =>
     new Intl.DateTimeFormat(language, { hour: '2-digit', minute: '2-digit', hour12: twelve }).format(new Date(at));
+  const timeSec = (at: number) =>
+    new Intl.DateTimeFormat(language, { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: twelve }).format(
+      new Date(at),
+    );
   const day = (at: number) => {
     const d = new Date(at);
     if (settings.dateFormat === 'ymd') return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -80,5 +88,15 @@ export function makeFormats(
     const [month, dayOfMonth] = [pad(d.getMonth() + 1), pad(d.getDate())];
     return settings.dateFormat === 'dmy' ? `${dayOfMonth}/${month}` : `${month}-${dayOfMonth}`;
   };
-  return { time, day, date, dayMonth, longDate, when: (at) => `${day(at)} ${time(at)}`, duration };
+  return {
+    time,
+    timeSec,
+    day,
+    date,
+    dayMonth,
+    longDate,
+    when: (at) => `${day(at)} ${time(at)}`,
+    whenSec: (at) => `${day(at)} ${timeSec(at)}`,
+    duration,
+  };
 }

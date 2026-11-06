@@ -34,7 +34,7 @@ export function Recording() {
   const seizureSec = session.auraEnd === null ? 0 : ((session.seizureEnd ?? nowMs) - session.auraEnd) / 1000;
   const recoverySec = session.seizureEnd !== null ? ((session.recoveryEnd ?? nowMs) - session.seizureEnd) / 1000 : 0;
 
-  const phaseNow = view.stage === 'aura' ? 'before' : view.stage === 'seizure' ? 'during' : 'after';
+  const phaseNow = view.stage === 'aura' ? 'aura' : view.stage === 'seizure' ? 'seizure' : 'recovery';
   const noteLabels =
     settings.quickNoteLabels.length > 0 ? settings.quickNoteLabels : DEFAULT_NOTES.map((key) => t(key));
   const strip = settings.symptomStrip && !self && running ? usualSymptoms(seizures) : [];

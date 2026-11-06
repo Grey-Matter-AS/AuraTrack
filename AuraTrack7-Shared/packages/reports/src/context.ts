@@ -20,6 +20,8 @@ export interface ReportContext {
     longDate(at: number): string;
     /** "14:05" */
     time(at: number): string;
+    /** "14:05:32": every time about a seizure is shown to the second. */
+    timeSec(at: number): string;
     /** "1:05" or "1 min 5 s", as the display setting says. */
     duration(seconds: number): string;
   };

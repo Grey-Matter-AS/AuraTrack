@@ -4,8 +4,9 @@ import { useState, type KeyboardEvent, type ReactNode } from 'react';
 import type { Area } from './draft';
 import { useApp } from '../app/AppContext';
 
-// Tap the figure (front or back, left and right marked), or use the lists under it. Several areas can be added one after
-// another; "whole body", "both sides" and "started one side, then spread" are one tap each.
+// Where on the body, in labelled steps: what is chosen so far at the top; the whole-body choices (one tap each); then the
+// figure (front or back, left and right marked) or the list of areas; the side or part, and the detail, only appear once an
+// area that has them is chosen.
 
 const QUICK: { value: string; area: Area }[] = [
   { value: 'whole', area: { region: 'body.whole_body', subRegion: null, part: null } },
@@ -66,10 +67,24 @@ export function BodyMap({ value, onChange }: { value: Area | null; onChange: (ar
   const rightLegX = side === 'front' ? 38 : 62;
   const L = side === 'front' ? t('map.right') : t('map.left');
   const R = side === 'front' ? t('map.left') : t('map.right');
+  const chosen = value ? areaText(value, label) : '';
   return (
     <Stack>
+      <p className="app-banner" aria-live="polite">
+        {chosen ? t('map.chosen', { area: chosen }) : t('map.nothing')}
+      </p>
       <ChipGroup
-        label={t('map.view')}
+        showLabel
+        label={t('map.whole')}
+        value={QUICK.find((q) => JSON.stringify(q.area) === JSON.stringify(value))?.value ?? null}
+        onChange={(v) =>
+          set(QUICK.find((q) => q.value === v)?.area ?? { region: 'body.whole_body', subRegion: null, part: null })
+        }
+        options={QUICK.map((q) => ({ value: q.value, label: t(QUICK_KEY[q.value as keyof typeof QUICK_KEY]) }))}
+      />
+      <ChipGroup
+        showLabel
+        label={t('map.tap')}
         value={side}
         onChange={setSide}
         options={[
@@ -128,29 +143,27 @@ export function BodyMap({ value, onChange }: { value: Area | null; onChange: (ar
         </text>
       </svg>
       <ChipGroup
-        label={t('map.quick')}
-        value={QUICK.find((q) => JSON.stringify(q.area) === JSON.stringify(value))?.value ?? null}
-        onChange={(v) =>
-          set(QUICK.find((q) => q.value === v)?.area ?? { region: 'body.whole_body', subRegion: null, part: null })
-        }
-        options={QUICK.map((q) => ({ value: q.value, label: t(QUICK_KEY[q.value as keyof typeof QUICK_KEY]) }))}
-      />
-      <ChipGroup
+        showLabel
         label={t('map.area')}
         value={value?.region ?? null}
         onChange={(v) => set({ region: v, subRegion: null, part: null })}
-        options={BODY_REGIONS.map((r) => ({ value: r.code, label: label(r.code) }))}
+        options={BODY_REGIONS.filter((r) => r.code !== 'body.whole_body').map((r) => ({
+          value: r.code,
+          label: label(r.code),
+        }))}
       />
-      {region && region.subRegions.length > 1 ? (
+      {region && region.code !== 'body.whole_body' && region.subRegions.length > 1 ? (
         <ChipGroup
+          showLabel
           label={t('map.sideOrPart')}
           value={value?.subRegion ?? null}
           onChange={(v) => set({ region: region.code, subRegion: v, part: null })}
           options={region.subRegions.map((s) => ({ value: s.code, label: label(s.code) }))}
         />
       ) : null}
-      {sub && sub.parts.length > 0 ? (
+      {sub && sub.parts.length > 0 && region?.code !== 'body.whole_body' ? (
         <ChipGroup
+          showLabel
           label={t('map.detail')}
           value={value?.part ?? null}
           onChange={(v) => set({ region: value?.region ?? '', subRegion: sub.code, part: v })}

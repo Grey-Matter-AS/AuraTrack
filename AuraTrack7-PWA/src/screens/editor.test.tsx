@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import 'fake-indexeddb/auto';
-import { newId, type Seizure } from '@auratrack/model';
+import { newId, type Seizure, type SeizureProfile } from '@auratrack/model';
 import { TEST_PIN_KDF, createStoreApi } from '@auratrack/store';
 import { act, cleanup, fireEvent, render, screen, waitFor, within, configure } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -80,31 +80,162 @@ async function openEditor(ctx: Ctx) {
 }
 
 const get = async (ctx: Ctx, id: string) => (await ctx.client.get({ type: 'seizure', id })) as unknown as Saved;
+const pressedButton = (name: string) => screen.getByRole('button', { name }).getAttribute('aria-pressed');
+const START = 'Where did it start?';
+const RECALL = 'Could the person remember it afterwards?';
+const RESPOND = 'Could the person respond normally during it?';
+const BTC = 'Did it become a tonic-clonic seizure on both sides?';
+const SIGNS = 'Could others see signs of it?';
+const DEJA_VU = 'symptom.emotions_memory.deja_vu_been_here_before';
+const SHAKING = 'symptom.big_shaking_jerking.rhythmic_shaking';
+const NO_ANSWERS = {
+  class: null,
+  recall: null,
+  responsive: null,
+  bilateralTonicClonic: null,
+  observable: null,
+  generalized: null,
+};
+/** Taps an answer to one question: the chips of each question are a group named by it. */
+const answer = (user: ReturnType<typeof userEvent.setup>, question: string, option: string) =>
+  user.click(within(screen.getByRole('group', { name: question })).getByRole('button', { name: option }));
+const profile = async (ctx: Ctx, patientId: string, name: string, position: number, over: Record<string, unknown>) =>
+  (await ctx.api.createRecord({
+    type: 'seizureProfile',
+    values: { patientId, name, position, ilae: NO_ANSWERS, signs: [], ...over },
+  })) as unknown as SeizureProfile;
 const tab = (name: string) => screen.getByRole('tab', { name: new RegExp(`^${name}`) });
 
 afterEach(cleanup);
 
 describe('the editor, tab by tab', () => {
-  it('sets the type and the ILAE answers, and saves the seizure as complete', async () => {
+  it('asks the ILAE 2025 questions that apply, names the type as they are answered, and saves only what applies', async () => {
     const ctx = setup();
     const { id } = await seed(ctx);
     const user = await openEditor(ctx);
-    await user.click(screen.getByRole('button', { name: /^Focal Aware$/i }));
-    await user.click(screen.getByRole('button', { name: 'Focal onset' }));
+    expect(screen.getByText(/No seizure profiles yet/)).toBeTruthy();
+    expect(screen.queryByRole('group', { name: RECALL })).toBeNull();
+    await answer(user, START, 'Focal');
+    await answer(user, RECALL, 'Yes');
+    await answer(user, RESPOND, 'No');
+    expect(screen.getByText('ILAE 2025: Focal impaired consciousness seizure')).toBeTruthy();
+    // Impaired consciousness: others could see signs by definition, so that is not asked
+    expect(screen.queryByRole('group', { name: SIGNS })).toBeNull();
+    expect(screen.getByText(/this follows from the answers above/)).toBeTruthy();
+    await answer(user, START, 'Generalized');
+    expect(screen.queryByRole('group', { name: RECALL })).toBeNull();
+    await answer(user, 'Other', 'Atonic (drop)');
+    expect(screen.getByText('ILAE 2025: Generalized atonic seizure')).toBeTruthy();
     await user.click(screen.getByRole('button', { name: 'Save' }));
     await screen.findByRole('button', { name: 'Start timer' });
     const saved = await get(ctx, id!);
-    expect(saved).toMatchObject({ typeCode: 'seizure_type.focal_aware', status: 'complete', ilae: { onset: 'focal' } });
+    expect(saved.profile ?? null).toBeNull();
+    expect(saved).toMatchObject({
+      status: 'complete',
+      typeCode: null,
+      ilae: null,
+      ilae2025: {
+        class: 'generalized',
+        recall: null,
+        responsive: null,
+        bilateralTonicClonic: null,
+        observable: null,
+        generalized: 'atonic',
+      },
+    });
   });
 
-  it('shows the tabs for the type: an aura-only seizure has no During tab', async () => {
+  it('fills in a profile’s answers and usual signs, and a second profile takes back what the first filled in', async () => {
     const ctx = setup();
-    await seed(ctx);
+    const { id, patientId } = await seed(ctx);
+    await profile(ctx, patientId, 'Aura feeling', 0, {
+      ilae: { ...NO_ANSWERS, class: 'focal', recall: 'yes', responsive: 'yes', observable: 'no' },
+      signs: [{ code: DEJA_VU, phase: 'before' }],
+    });
+    const night = await profile(ctx, patientId, 'Night seizure', 1, {
+      ilae: { ...NO_ANSWERS, class: 'generalized', generalized: 'tonic_clonic' },
+      signs: [{ code: SHAKING, phase: 'during' }],
+    });
     const user = await openEditor(ctx);
-    expect(screen.getAllByRole('tab').map((t) => t.textContent?.split(/(?=[a-z]*\d| not| type)/)[0])).toBeTruthy();
-    expect(screen.getByRole('tab', { name: /^During/ })).toBeTruthy();
-    await user.click(screen.getByRole('button', { name: /Aura only/i }));
+    await user.click(screen.getByRole('button', { name: 'Aura feeling' }));
+    expect(screen.getByText('ILAE 2025: Focal preserved consciousness seizure')).toBeTruthy();
+    expect(screen.getByText(/Filled in from "Aura feeling"/)).toBeTruthy();
+    // Like an aura: nothing others could see, so there is no During tab
     expect(screen.queryByRole('tab', { name: /^During/ })).toBeNull();
+    await user.click(tab('Before'));
+    expect(screen.getAllByText(/Deja Vu/i).length).toBeGreaterThan(0);
+    await user.click(tab('Classification'));
+    await answer(user, BTC, 'No');
+    await user.click(screen.getByRole('button', { name: 'Night seizure' }));
+    expect(screen.getByText('ILAE 2025: Generalized tonic-clonic seizure')).toBeTruthy();
+    expect(screen.getByRole('tab', { name: /^During/ })).toBeTruthy();
+    await user.click(tab('Before'));
+    expect(screen.queryByText(/Deja Vu/i)).toBeNull();
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    await screen.findByRole('button', { name: 'Start timer' });
+    const saved = await get(ctx, id!);
+    expect(saved.profile).toEqual({ id: night.id, name: 'Night seizure' });
+    expect(saved.ilae2025).toEqual({ ...NO_ANSWERS, class: 'generalized', generalized: 'tonic_clonic' });
+    expect(saved.symptoms.map((x) => [x.code, x.phase])).toEqual([[SHAKING, 'during']]);
+  });
+
+  it('shows the first three profiles and the others under More', async () => {
+    const ctx = setup();
+    const { patientId } = await seed(ctx);
+    for (const [i, name] of ['One', 'Two', 'Three', 'Four'].entries())
+      await profile(ctx, patientId, name, i, { ilae: { ...NO_ANSWERS, class: 'focal' } });
+    const user = await openEditor(ctx);
+    expect(screen.getByRole('button', { name: 'Three' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Four' })).toBeNull();
+    await user.click(screen.getByRole('button', { name: 'More profiles (1)' }));
+    await user.click(screen.getByRole('button', { name: 'Four' }));
+    await user.click(screen.getByRole('button', { name: 'Fewer profiles' }));
+    // The chosen one stays in view
+    expect(pressedButton('Four')).toBe('true');
+  });
+
+  it('keeps the answers as a new profile, and the seizure is saved with it', async () => {
+    const ctx = setup();
+    const { id } = await seed(ctx);
+    const user = await openEditor(ctx);
+    await answer(user, START, 'Not known');
+    await answer(user, BTC, 'Yes');
+    await user.click(screen.getByRole('button', { name: 'Keep these answers as a profile' }));
+    await user.type(screen.getByLabelText('Name'), 'Big seizure');
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Save' }));
+    await screen.findByText('Profile kept');
+    expect(pressedButton('Big seizure')).toBe('true');
+    const kept = (await ctx.client.list({ type: 'seizureProfile' })) as unknown as SeizureProfile[];
+    expect(kept).toHaveLength(1);
+    expect(kept[0]).toMatchObject({ name: 'Big seizure', ilae: { class: 'unknown', bilateralTonicClonic: 'yes' } });
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    await screen.findByRole('button', { name: 'Start timer' });
+    expect((await get(ctx, id!)).profile).toEqual({ id: kept[0]!.id, name: 'Big seizure' });
+  });
+
+  it('shows an older seizure’s type and ILAE 2017 answers as recorded, and never changes them', async () => {
+    const ctx = setup();
+    const ilae = { onset: 'focal', awareness: 'aware', motor: null, feature: null, spreadToBothSides: null };
+    const { id } = await seed(ctx, { typeCode: 'seizure_type.focal_aware', ilae });
+    const user = await openEditor(ctx);
+    expect(screen.getByText('Recorded before ILAE 2025 as: Focal Aware')).toBeTruthy();
+    expect(screen.getByText('ILAE 2017 answers: Focal onset, Aware')).toBeTruthy();
+    await answer(user, START, 'Focal');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    await screen.findByRole('button', { name: 'Start timer' });
+    expect(await get(ctx, id!)).toMatchObject({
+      typeCode: 'seizure_type.focal_aware',
+      ilae,
+      ilae2025: { ...NO_ANSWERS, class: 'focal' },
+    });
+  });
+
+  it('an older seizure recorded as aura only has no During tab', async () => {
+    const ctx = setup();
+    await seed(ctx, { typeCode: 'seizure_type.aura_only' });
+    await openEditor(ctx);
+    expect(screen.queryByRole('tab', { name: /^During/ })).toBeNull();
+    expect(screen.getByRole('tab', { name: /^Before/ })).toBeTruthy();
   });
 
   it('adds a symptom in the right phase, with the first one starred, and saves its place in the order', async () => {
@@ -249,7 +380,7 @@ describe('the editor, tab by tab', () => {
     const ctx = setup();
     const { id } = await seed(ctx);
     const user = await openEditor(ctx);
-    await user.click(screen.getByRole('button', { name: /^Focal Aware$/i }));
+    await answer(user, START, 'Focal');
     await user.click(screen.getByRole('button', { name: 'Save' }));
     await screen.findByRole('button', { name: 'Start timer' });
     await ctx.client.update({ type: 'seizure', id: id!, patch: { notes: 'later' } });
@@ -261,7 +392,7 @@ describe('the editor, tab by tab', () => {
     const list = (await screen.findAllByRole('list')).find((l) => /recorded/.test(l.textContent ?? ''))!;
     expect(within(list).getAllByRole('listitem').length).toBeGreaterThanOrEqual(3);
     expect(list.textContent).toMatch(/recorded/);
-    expect(list.textContent).toMatch(/seizure type/);
+    expect(list.textContent).toMatch(/ILAE 2025 classification/);
     expect(list.textContent).toMatch(/notes/);
   });
 });
@@ -289,7 +420,7 @@ describe('leaving, discarding and reviewing', () => {
     const ctx = setup();
     const { id } = await seed(ctx);
     const user = await openEditor(ctx);
-    await user.click(screen.getByRole('button', { name: /^Focal Aware$/i }));
+    await answer(user, START, 'Focal');
     await user.click(screen.getByRole('button', { name: 'Back' }));
     const dialog = await screen.findByRole('alertdialog');
     await user.click(within(dialog).getByRole('button', { name: 'Keep editing' }));
@@ -297,7 +428,7 @@ describe('leaving, discarding and reviewing', () => {
     await user.click(screen.getByRole('button', { name: 'Back' }));
     await user.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Leave' }));
     await screen.findByRole('button', { name: 'Start timer' });
-    expect((await get(ctx, id!)).typeCode).toBeNull();
+    expect((await get(ctx, id!)).ilae2025 ?? null).toBeNull();
   });
 
   it('leaves at once when nothing changed', async () => {

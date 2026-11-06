@@ -75,9 +75,9 @@ export function EegSession({ id }: { id: string }) {
                         : a.customText || label(a.activityCode ?? '')}
                     </p>
                     <p className="app-note">
-                      {fmt.time(a.startTime)}
+                      {a.kind === 'seizure_reference' ? fmt.timeSec(a.startTime) : fmt.time(a.startTime)}
                       {a.endTime
-                        ? ` – ${fmt.time(a.endTime)}`
+                        ? ` – ${a.kind === 'seizure_reference' ? fmt.timeSec(a.endTime) : fmt.time(a.endTime)}`
                         : a.kind === 'activity'
                           ? ` · ${t('eeg.running.session')}`
                           : ''}

@@ -1,6 +1,7 @@
-import { seizureSeconds, type buildDangerMap, type Seizure } from '@auratrack/model';
+import { seizureLengthSeconds, type buildDangerMap, type Seizure } from '@auratrack/model';
 import { Button, Card } from '@auratrack/ui';
 import { useApp } from '../app/AppContext';
+import { seizureName } from '../app/seizureName';
 import './screens.css';
 
 /** One seizure as a card: type, when, how long, the badges, and one button (Edit or Add details on Home, Open in History). */
@@ -14,7 +15,7 @@ export function SeizureCard({
   action: { label: string; onClick: () => void } | null;
 }) {
   const { t, label, fmt } = useApp();
-  const length = seizureSeconds(seizure.phases);
+  const length = seizureLengthSeconds(seizure.phases);
   const badges = [
     seizure.isManualEntry ? t('home.badgeManual') : null,
     seizure.recordedWhileLocked ? t('home.badgeLocked') : null,
@@ -28,9 +29,9 @@ export function SeizureCard({
     <Card compact>
       <div className="app-row">
         <div>
-          <p className="app-banner">{seizure.typeCode ? label(seizure.typeCode) : t('home.untyped')}</p>
+          <p className="app-banner">{seizureName(seizure, t, label)}</p>
           <p className="app-note">
-            {fmt.when(seizure.phases.start.at)}
+            {fmt.whenSec(seizure.phases.start.at)}
             {length !== null ? ` · ${fmt.duration(length)}` : ''}
           </p>
           {badges.length > 0 ? <p className="app-note">{badges.join(' · ')}</p> : null}
